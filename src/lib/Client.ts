@@ -1,6 +1,6 @@
-import { BehaviorSubject } from "rxjs";
 import { Model, Data } from "@graphand/core";
 import ClientModelAdapter from "./ClientModelAdapter";
+import BehaviorSubject from "./BehaviorSubject";
 
 type ClientOptions = {
   project: string;
