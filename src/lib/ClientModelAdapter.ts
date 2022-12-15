@@ -34,6 +34,10 @@ class ClientModelAdapter<
           method: "GET",
         });
 
+        if (!res) {
+          return null;
+        }
+
         return this.mapOrNew(res);
       } else {
         query.pageSize = 1;
@@ -44,7 +48,7 @@ class ClientModelAdapter<
           throw new Error();
         }
 
-        return list[0] as InstanceType<T>;
+        return (list[0] as InstanceType<T>) || null;
       }
     },
     getList: async (query) => {
@@ -162,7 +166,21 @@ class ClientModelAdapter<
 
       return res;
     },
-    loadSchema: async () => {},
+    getFields: async () => {
+      if (!this.client) {
+        throw new Error("MODEL_NO_CLIENT");
+      }
+
+      const res = await this.client.fetch("datamodels/query", {
+        method: "POST",
+        body: JSON.stringify({
+          filter: { slug: this.model.slug },
+          pageSize: 1,
+        }),
+      });
+
+      return res.rows?.[0]?.fields || [];
+    },
   };
 
   constructor() {
@@ -204,18 +222,6 @@ class ClientModelAdapter<
     }
 
     return i;
-  }
-
-  async loadSchema() {
-    if (!this.model.extendable) {
-      return null;
-    }
-
-    const dataModel = await DataModel.withAdapter(this.toConstructor()).get({
-      filter: { slug: this.model.slug },
-    });
-
-    return dataModel?.schema;
   }
 }
 

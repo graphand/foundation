@@ -1,5 +1,5 @@
 import { BehaviorSubject } from "rxjs";
-import { Model } from "@graphand/core";
+import { Model, Data } from "@graphand/core";
 import ClientModelAdapter from "./ClientModelAdapter";
 
 type ClientOptions = {
@@ -59,6 +59,15 @@ class Client {
     }
 
     return this.__cachedModels.get(model.slug) as T;
+  }
+
+  getDataModel(slug: string): typeof Data {
+    const Model = class extends Data {
+      static __name = `Data<${slug}>`;
+      static slug = slug;
+    };
+
+    return this.getModel(Model);
   }
 
   async login(email: string, password: string) {
