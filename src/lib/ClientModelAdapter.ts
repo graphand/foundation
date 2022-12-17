@@ -1,5 +1,4 @@
 import {
-  DataModel,
   Model,
   ModelAdapter,
   ModelAdapterFetcher,

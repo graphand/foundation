@@ -1,4 +1,4 @@
-import { Data, Model } from "@graphand/core";
+import { Model } from "@graphand/core";
 import ClientModelAdapter from "./lib/ClientModelAdapter";
 
 export const getClientFromModel = (model: typeof Model) => {
