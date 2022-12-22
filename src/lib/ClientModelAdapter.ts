@@ -1,18 +1,11 @@
-import {
-  Model,
-  ModelAdapter,
-  ModelAdapterFetcher,
-  ModelList,
-} from "@graphand/core";
+import { Adapter, AdapterFetcher, Model, ModelList } from "@graphand/core";
 import Client from "./Client";
 
-class ClientModelAdapter<
-  T extends typeof Model = typeof Model
-> extends ModelAdapter<T> {
+class ClientModelAdapter extends Adapter {
   static __client: Client;
-  private __instancesMap: Map<string, InstanceType<T>>;
+  private __instancesMap: Map<string, Model>;
 
-  fetcher: ModelAdapterFetcher<T> = {
+  fetcher: AdapterFetcher = {
     count: async (query) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
@@ -23,7 +16,7 @@ class ClientModelAdapter<
         body: JSON.stringify(query),
       });
     },
-    get: async (query = {}) => {
+    get: async (query) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -47,7 +40,7 @@ class ClientModelAdapter<
           throw new Error();
         }
 
-        return (list[0] as InstanceType<T>) || null;
+        return list[0] || null;
       }
     },
     getList: async (query) => {
@@ -63,7 +56,7 @@ class ClientModelAdapter<
       const documents = res.rows.map((r) => this.mapOrNew(r));
       const count = res.count;
 
-      return new ModelList<InstanceType<T>>(this.model, documents, count);
+      return new ModelList(this.model, documents, count);
     },
     createOne: async (payload) => {
       if (!this.client) {
@@ -110,7 +103,7 @@ class ClientModelAdapter<
           throw new Error();
         }
 
-        return list[0] as InstanceType<T>;
+        return list[0] || null;
       }
     },
     updateMultiple: async (query, update) => {
@@ -123,7 +116,7 @@ class ClientModelAdapter<
         body: JSON.stringify({ ...query, update }),
       });
 
-      return res.map((r) => this.mapOrNew(r) as InstanceType<T>);
+      return res.map((r) => this.mapOrNew(r));
     },
     deleteOne: async (query) => {
       if (!this.client) {
@@ -182,8 +175,8 @@ class ClientModelAdapter<
     },
   };
 
-  constructor() {
-    super();
+  constructor(model) {
+    super(model);
 
     this.__instancesMap = new Map();
   }
@@ -201,7 +194,7 @@ class ClientModelAdapter<
     return this.__instancesMap;
   }
 
-  private mapOrNew(payload: any): InstanceType<T> {
+  private mapOrNew(payload: any) {
     let i;
 
     if (payload._id) {

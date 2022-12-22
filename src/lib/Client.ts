@@ -1,6 +1,12 @@
 import { Model, Data } from "@graphand/core";
 import ClientModelAdapter from "./ClientModelAdapter";
 import BehaviorSubject from "./BehaviorSubject";
+// @ts-ignore
+import https from "https";
+
+const agent = new https.Agent({
+  rejectUnauthorized: false,
+});
 
 type ClientOptions = {
   project: string;
@@ -11,7 +17,6 @@ type ClientOptions = {
 class Client {
   __optionsSubject: BehaviorSubject<ClientOptions>;
   __cachedModels = new Map<string, typeof Model>();
-  __adapter: typeof ClientModelAdapter<any>;
 
   constructor(options: ClientOptions) {
     this.__optionsSubject = new BehaviorSubject(options);
@@ -31,8 +36,11 @@ class Client {
       url = input;
     } else {
       url =
-        `http://${this.options.project}.api.graphand.io.local:1337/` + input;
+        `https://${this.options.project}.api.graphand.io.local:1337/` + input;
     }
+
+    // @ts-ignore
+    init.agent ??= agent;
     init.headers ??= {};
     Object.assign(init.headers, {
       Accept: "application/json",
@@ -49,11 +57,11 @@ class Client {
     if (!this.__cachedModels.get(model.slug)) {
       const client = this;
 
-      this.__adapter ??= class extends ClientModelAdapter<T> {
+      const adapter = class extends ClientModelAdapter {
         static __client = client;
       };
 
-      const GModel = model.withAdapter(this.__adapter);
+      const GModel = model.withAdapter(adapter);
 
       this.__cachedModels.set(model.slug, GModel);
     }
