@@ -1,12 +1,14 @@
 import { Adapter, AdapterFetcher, Model, ModelList } from "@graphand/core";
 import Client from "./Client";
+import Subject from "./Subject";
 
 class ClientModelAdapter extends Adapter {
   static __client: Client;
-  private __instancesMap: Map<string, Model>;
+  __instancesMap: Map<string, Model>;
+  __updaterSubject: Subject<Array<object | string>>;
 
   fetcher: AdapterFetcher = {
-    count: async (query) => {
+    count: async ([query]) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -16,7 +18,7 @@ class ClientModelAdapter extends Adapter {
         body: JSON.stringify(query),
       });
     },
-    get: async (query) => {
+    get: async ([query], ctx) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -34,7 +36,7 @@ class ClientModelAdapter extends Adapter {
       } else {
         query.pageSize = 1;
 
-        const list = await this.fetcher.getList(query);
+        const list = await this.fetcher.getList([query], ctx);
 
         if (!list) {
           throw new Error();
@@ -43,7 +45,7 @@ class ClientModelAdapter extends Adapter {
         return list[0] || null;
       }
     },
-    getList: async (query) => {
+    getList: async ([query]) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -58,7 +60,7 @@ class ClientModelAdapter extends Adapter {
 
       return new ModelList(this.model, documents, count);
     },
-    createOne: async (payload) => {
+    createOne: async ([payload]) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -67,10 +69,12 @@ class ClientModelAdapter extends Adapter {
         method: "POST",
         body: JSON.stringify(payload),
       });
+
+      this.__updaterSubject.next([res]);
 
       return this.mapOrNew(res);
     },
-    createMultiple: async (payload) => {
+    createMultiple: async ([payload]) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -80,9 +84,11 @@ class ClientModelAdapter extends Adapter {
         body: JSON.stringify(payload),
       });
 
+      this.__updaterSubject.next(res);
+
       return res.map((r) => this.mapOrNew(r));
     },
-    updateOne: async (query, update) => {
+    updateOne: async ([query, update], ctx) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -93,20 +99,24 @@ class ClientModelAdapter extends Adapter {
           body: JSON.stringify({ update }),
         });
 
+        this.__updaterSubject.next([res]);
+
         return this.mapOrNew(res);
       } else {
         query.pageSize = 1;
 
-        const list = await this.fetcher.updateMultiple(query, update);
+        const list = await this.fetcher.updateMultiple([query, update], ctx);
 
         if (!list) {
           throw new Error();
         }
 
+        this.__updaterSubject.next(list);
+
         return list[0] || null;
       }
     },
-    updateMultiple: async (query, update) => {
+    updateMultiple: async ([query, update]) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -116,9 +126,11 @@ class ClientModelAdapter extends Adapter {
         body: JSON.stringify({ ...query, update }),
       });
 
+      this.__updaterSubject.next(res);
+
       return res.map((r) => this.mapOrNew(r));
     },
-    deleteOne: async (query) => {
+    deleteOne: async ([query], ctx) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -133,18 +145,22 @@ class ClientModelAdapter extends Adapter {
           this.instancesMap.delete(query);
         }
 
+        this.__updaterSubject.next([query]);
+
         return deleted;
       } else {
         query.pageSize = 1;
 
-        const res = await this.fetcher.deleteMultiple(query);
+        const res = await this.fetcher.deleteMultiple([query], ctx);
 
         res.forEach(this.instancesMap.delete);
+
+        this.__updaterSubject.next(res);
 
         return res?.length === 1;
       }
     },
-    deleteMultiple: async (query) => {
+    deleteMultiple: async ([query]) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -154,7 +170,9 @@ class ClientModelAdapter extends Adapter {
         body: JSON.stringify(query),
       });
 
-      res.forEach((_id) => this.instancesMap.delete(_id));
+      res.forEach(this.instancesMap.delete);
+
+      this.__updaterSubject.next(res);
 
       return res;
     },
@@ -179,6 +197,7 @@ class ClientModelAdapter extends Adapter {
     super(model);
 
     this.__instancesMap = new Map();
+    this.__updaterSubject = new Subject();
   }
 
   static get client() {

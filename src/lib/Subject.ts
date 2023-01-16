@@ -5,7 +5,7 @@ class Subject<T> {
     this.observers.forEach((observer) => observer(value));
   }
 
-  subscribe(observer: (value: T) => void) {
+  subscribe(observer: (value: T) => void): () => void {
     this.observers.push(observer);
 
     return () => {

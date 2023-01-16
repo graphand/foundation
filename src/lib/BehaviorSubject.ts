@@ -18,7 +18,7 @@ class BehaviorSubject<T> extends Subject<T> {
     this.observers.forEach((observer) => observer(value));
   }
 
-  subscribe(observer: (value: T) => void) {
+  subscribe(observer: (value: T) => void): () => void {
     this.observers.push(observer);
     observer(this.currentValue);
 
