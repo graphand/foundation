@@ -34,23 +34,24 @@ class Client {
       _model = model;
     }
 
-    return this.adaptModel(_model);
+    return this.adaptedModel(_model);
   }
 
-  adaptModel<T extends typeof Model>(model: T): T {
-    if (!this.__cachedModels.get(model.slug)) {
+  adaptedModel<T extends typeof Model>(model: T): T {
+    let _model = this.__cachedModels.get(model.slug);
+    if (!_model) {
       const client = this;
 
       const adapter = class extends ClientModelAdapter {
         static __client = client;
       };
 
-      const GModel = model.withAdapter(adapter);
+      _model = model.withAdapter(adapter);
 
-      this.__cachedModels.set(model.slug, GModel);
+      this.__cachedModels.set(model.slug, _model);
     }
 
-    return this.__cachedModels.get(model.slug) as T;
+    return _model as T;
   }
 
   // controllers
