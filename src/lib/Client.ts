@@ -1,15 +1,11 @@
-import { Model, Data } from "@graphand/core";
+import { Model, Data, controllersMap } from "@graphand/core";
 import ClientModelAdapter from "./ClientModelAdapter";
 import BehaviorSubject from "./BehaviorSubject";
-// @ts-ignore
-import https from "https";
-
-const agent = new https.Agent({
-  rejectUnauthorized: false,
-});
+import { executeController } from "../utils";
 
 type ClientOptions = {
-  project: string;
+  project?: string;
+  environment?: string;
   accessToken?: string;
   refreshToken?: string;
 };
@@ -30,30 +26,18 @@ class Client {
     this.__optionsSubject.next({ ...this.options, ...assignOpts });
   }
 
-  fetch(input: RequestInfo | URL, init: RequestInit = {}) {
-    let url;
-    if (typeof input !== "string" || input.includes(`://`)) {
-      url = input;
+  getModel<T extends typeof Model = typeof Model>(model: T | T["slug"]): T {
+    let _model: T;
+    if (typeof model === "string") {
+      _model = Model.getFromSlug(model);
     } else {
-      url =
-        `https://${this.options.project}.api.graphand.io.local:1337/` + input;
+      _model = model;
     }
 
-    // @ts-ignore
-    init.agent ??= agent;
-    init.headers ??= {};
-    Object.assign(init.headers, {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: this.options.accessToken
-        ? `Bearer ${this.options.accessToken}`
-        : undefined,
-    });
-
-    return fetch(url, init).then((r) => r.json());
+    return this.adaptModel(_model);
   }
 
-  getModel<T extends typeof Model>(model: T): T {
+  adaptModel<T extends typeof Model>(model: T): T {
     if (!this.__cachedModels.get(model.slug)) {
       const client = this;
 
@@ -69,22 +53,37 @@ class Client {
     return this.__cachedModels.get(model.slug) as T;
   }
 
-  getDataModel(slug: string): typeof Data {
-    const Model = class extends Data {
-      static __name = `Data<${slug}>`;
-      static slug = slug;
-    };
+  // controllers
 
-    return this.getModel(Model);
-  }
+  async loginAccount(credentials: { email: string; password: string }) {
+    const { email, password } = credentials;
 
-  async login(email: string, password: string) {
-    const { accessToken, refreshToken } = await this.fetch("auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+    const { accessToken, refreshToken } = await executeController(
+      this,
+      controllersMap.loginAccount,
+      { body: { email, password } }
+    );
 
     this.setOptions({ accessToken, refreshToken });
+  }
+
+  async loginUser(credentials: { email: string; password: string }) {
+    const { email, password } = credentials;
+
+    const { accessToken, refreshToken } = await executeController(
+      this,
+      controllersMap.loginUser,
+      { body: { email, password } }
+    );
+
+    this.setOptions({ accessToken, refreshToken });
+  }
+
+  async configSync(config: any, opts: { confirm?: boolean; clean?: boolean }) {
+    return await executeController(this, controllersMap.configSync, {
+      query: opts,
+      body: config,
+    });
   }
 }
 

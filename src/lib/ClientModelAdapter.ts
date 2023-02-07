@@ -1,11 +1,20 @@
-import { Adapter, AdapterFetcher, Model, ModelList } from "@graphand/core";
+import {
+  Adapter,
+  AdapterFetcher,
+  controllersMap,
+  Model,
+  ModelList,
+} from "@graphand/core";
 import Client from "./Client";
 import Subject from "./Subject";
+import { executeController } from "../utils";
 
 class ClientModelAdapter extends Adapter {
   static __client: Client;
   __instancesMap: Map<string, Model>;
   __updaterSubject: Subject<Array<object | string>>;
+
+  runValidators = false;
 
   fetcher: AdapterFetcher = {
     count: async ([query]) => {
@@ -13,9 +22,11 @@ class ClientModelAdapter extends Adapter {
         throw new Error("MODEL_NO_CLIENT");
       }
 
-      return await this.client.fetch(`${this.model.slug}/count`, {
-        method: "POST",
-        body: JSON.stringify(query),
+      return await executeController(this.client, controllersMap.modelCount, {
+        path: {
+          model: this.model.slug,
+        },
+        body: query,
       });
     },
     get: async ([query], ctx) => {
@@ -24,9 +35,17 @@ class ClientModelAdapter extends Adapter {
       }
 
       if (typeof query === "string") {
-        const res = await this.client.fetch(`${this.model.slug}/${query}`, {
-          method: "GET",
-        });
+        const res = await executeController(
+          this.client,
+          controllersMap.modelRead,
+          {
+            path: {
+              id: query,
+              model: this.model.slug,
+            },
+            body: query,
+          }
+        );
 
         if (!res) {
           return null;
@@ -50,10 +69,16 @@ class ClientModelAdapter extends Adapter {
         throw new Error("MODEL_NO_CLIENT");
       }
 
-      const res = await this.client.fetch(`${this.model.slug}/query`, {
-        method: "POST",
-        body: JSON.stringify(query),
-      });
+      const res = await executeController(
+        this.client,
+        controllersMap.modelQuery,
+        {
+          path: {
+            model: this.model.slug,
+          },
+          body: query,
+        }
+      );
 
       const documents = res.rows.map((r) => this.mapOrNew(r));
       const count = res.count;
@@ -65,10 +90,16 @@ class ClientModelAdapter extends Adapter {
         throw new Error("MODEL_NO_CLIENT");
       }
 
-      const res = await this.client.fetch(this.model.slug, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      const res = await executeController(
+        this.client,
+        controllersMap.modelCreate,
+        {
+          path: {
+            model: this.model.slug,
+          },
+          body: payload,
+        }
+      );
 
       this.__updaterSubject.next([res]);
 
@@ -79,10 +110,16 @@ class ClientModelAdapter extends Adapter {
         throw new Error("MODEL_NO_CLIENT");
       }
 
-      const res = await this.client.fetch(this.model.slug, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      const res = await executeController(
+        this.client,
+        controllersMap.modelCreate,
+        {
+          path: {
+            model: this.model.slug,
+          },
+          body: payload,
+        }
+      );
 
       this.__updaterSubject.next(res);
 
@@ -94,10 +131,17 @@ class ClientModelAdapter extends Adapter {
       }
 
       if (typeof query === "string") {
-        const res = await this.client.fetch(`${this.model.slug}/${query}`, {
-          method: "PATCH",
-          body: JSON.stringify({ update }),
-        });
+        const res = await executeController(
+          this.client,
+          controllersMap.modelUpdate,
+          {
+            path: {
+              id: query,
+              model: this.model.slug,
+            },
+            body: { update },
+          }
+        );
 
         this.__updaterSubject.next([res]);
 
@@ -121,10 +165,17 @@ class ClientModelAdapter extends Adapter {
         throw new Error("MODEL_NO_CLIENT");
       }
 
-      const res = await this.client.fetch(this.model.slug, {
-        method: "PATCH",
-        body: JSON.stringify({ ...query, update }),
-      });
+      const res = await executeController(
+        this.client,
+        controllersMap.modelUpdate,
+        {
+          path: {
+            id: "",
+            model: this.model.slug,
+          },
+          body: { ...query, update },
+        }
+      );
 
       this.__updaterSubject.next(res);
 
@@ -136,9 +187,16 @@ class ClientModelAdapter extends Adapter {
       }
 
       if (typeof query === "string") {
-        const res = await this.client.fetch(`${this.model.slug}/${query}`, {
-          method: "DELETE",
-        });
+        const res = await executeController(
+          this.client,
+          controllersMap.modelDelete,
+          {
+            path: {
+              id: query,
+              model: this.model.slug,
+            },
+          }
+        );
 
         const deleted = res === 1;
         if (deleted) {
@@ -165,10 +223,17 @@ class ClientModelAdapter extends Adapter {
         throw new Error("MODEL_NO_CLIENT");
       }
 
-      const res = await this.client.fetch(this.model.slug, {
-        method: "DELETE",
-        body: JSON.stringify(query),
-      });
+      const res = await executeController(
+        this.client,
+        controllersMap.modelDelete,
+        {
+          path: {
+            id: "",
+            model: this.model.slug,
+          },
+          body: query,
+        }
+      );
 
       res.forEach(this.instancesMap.delete);
 
@@ -176,20 +241,39 @@ class ClientModelAdapter extends Adapter {
 
       return res;
     },
-    getFields: async () => {
+    getModelDefinition: async () => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
 
-      const res = await this.client.fetch("datamodels/query", {
-        method: "POST",
-        body: JSON.stringify({
-          filter: { slug: this.model.slug },
-          pageSize: 1,
-        }),
-      });
+      const res = await executeController(
+        this.client,
+        controllersMap.modelQuery,
+        {
+          path: {
+            model: "datamodels",
+          },
+          body: {
+            filter: { slug: this.model.slug },
+            pageSize: 1,
+          },
+        }
+      );
 
-      return res.rows?.[0]?.fields || [];
+      const datamodel = res.rows?.[0];
+
+      if (!datamodel) {
+        return {
+          fields: {},
+          validators: [],
+        };
+      }
+
+      return {
+        fields: datamodel.fields,
+        validators: datamodel.validators,
+        configKey: datamodel.configKey,
+      };
     },
   };
 

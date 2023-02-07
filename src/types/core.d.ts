@@ -12,10 +12,8 @@ import {
 } from "@graphand/core";
 
 declare module "@graphand/core" {
-  class Model {
-    static subscribe: (
-      callback: (payload: Array<object | string>) => void
-    ) => () => void;
+  export class Model {
+    static subscribe: (cb: (data: (object | string)[]) => void) => () => void;
     subscribe: (callback: (previousDoc) => void) => () => void;
   }
 
