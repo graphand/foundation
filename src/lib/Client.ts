@@ -80,6 +80,25 @@ class Client {
     this.setOptions({ accessToken, refreshToken });
   }
 
+  async refreshToken() {
+    const controller = this.options.project
+      ? controllersMap.refreshTokenAccount
+      : controllersMap.refreshTokenUser;
+
+    const { accessToken, refreshToken } = await executeController(
+      this,
+      controller,
+      {
+        body: {
+          accessToken: this.options.accessToken,
+          refreshToken: this.options.refreshToken,
+        },
+      }
+    );
+
+    this.setOptions({ accessToken, refreshToken });
+  }
+
   async config(models: string[]) {
     const query = Object.fromEntries(models.map((m) => [m, true]));
     return await executeController(this, controllersMap.config, { query });

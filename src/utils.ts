@@ -118,13 +118,31 @@ export const executeController = async (
     init.headers["Authorization"] = `Bearer ${client.options.accessToken}`;
   }
 
-  return fetch(url, init).then(async (r) => {
-    const res = await r.json();
+  const _fetch = (retrying = false) => {
+    return fetch(url, init).then(async (r) => {
+      const res = await r.json();
 
-    if (res.error) {
-      throw parseError(res.error);
-    }
+      if (res.error) {
+        if (
+          r.status === 401 &&
+          res.error.code === "TOKEN_EXPIRED" &&
+          !retrying
+        ) {
+          try {
+            await client.refreshToken();
+            init.headers[
+              "Authorization"
+            ] = `Bearer ${client.options.accessToken}`;
+            return _fetch(true);
+          } catch (e) {}
+        }
 
-    return res.data;
-  });
+        throw parseError(res.error);
+      }
+
+      return res.data;
+    });
+  };
+
+  return _fetch();
 };
