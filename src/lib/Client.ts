@@ -1,4 +1,4 @@
-import { Model, Data, controllersMap } from "@graphand/core";
+import { Model, controllersMap, Account, models } from "@graphand/core";
 import ClientModelAdapter from "./ClientModelAdapter";
 import BehaviorSubject from "./BehaviorSubject";
 import { executeController } from "../utils";
@@ -85,6 +85,12 @@ class Client {
       query: opts,
       body: config,
     });
+  }
+
+  async currentAccount() {
+    const Account = this.getModel(models.Account);
+    const data = await executeController(this, controllersMap.currentAccount);
+    return new Account(data);
   }
 }
 

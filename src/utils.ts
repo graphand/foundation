@@ -1,8 +1,17 @@
-import { Model, controllersMap } from "@graphand/core";
+import {
+  Model,
+  controllersMap,
+  Validator,
+  ValidationValidatorError,
+  Field,
+  ValidationFieldError,
+} from "@graphand/core";
 import ClientModelAdapter from "./lib/ClientModelAdapter";
 import Client from "./lib/Client";
 // @ts-ignore
 import https from "https";
+import FetchError from "./lib/FetchError";
+import FetchValidationError from "./lib/FetchValidationError";
 
 const agent = new https.Agent({
   rejectUnauthorized: false,
@@ -18,6 +27,26 @@ export const getClientFromModel = (model: typeof Model) => {
   return adapter.client;
 };
 
+export const parseError = (error: any): Error => {
+  if (error.type === "ValidationError") {
+    const validators = error.reason.validators.map((v: any) => {
+      const validator = new Validator(v.validator);
+      return new ValidationValidatorError({ validator });
+    });
+
+    const fields = error.reason.fields.map((v: any) => {
+      const validationError =
+        v.validationError && parseError(v.validationError);
+      const field = v.field && new Field(v.field);
+      return new ValidationFieldError({ ...v, validationError, field });
+    });
+
+    return new FetchValidationError({ validators, fields });
+  }
+
+  return new FetchError(error);
+};
+
 export const executeController = async (
   client: Client,
   controller: typeof controllersMap[keyof typeof controllersMap],
@@ -25,7 +54,7 @@ export const executeController = async (
     path?: { [key: string]: string };
     query?: any;
     body?: any;
-  }
+  } = {}
 ) => {
   const init: RequestInit = {};
 
@@ -66,7 +95,13 @@ export const executeController = async (
   }
 
   if (opts.query) {
-    url += "?" + new URLSearchParams(opts.query);
+    const queryObjEntries = Object.entries(opts.query).filter(
+      ([, v]) => v !== undefined
+    ) as Array<[string, string]>;
+
+    if (queryObjEntries.length) {
+      url += "?" + new URLSearchParams(Object.fromEntries(queryObjEntries));
+    }
   }
 
   // @ts-ignore
@@ -83,5 +118,13 @@ export const executeController = async (
     init.headers["Authorization"] = `Bearer ${client.options.accessToken}`;
   }
 
-  return fetch(url, init).then((r) => r.json());
+  return fetch(url, init).then(async (r) => {
+    const res = await r.json();
+
+    if (res.error) {
+      throw parseError(res.error);
+    }
+
+    return res.data;
+  });
 };
