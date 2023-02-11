@@ -80,11 +80,22 @@ class Client {
     this.setOptions({ accessToken, refreshToken });
   }
 
+  async config(models: string[]) {
+    const query = Object.fromEntries(models.map((m) => [m, true]));
+    return await executeController(this, controllersMap.config, { query });
+  }
+
   async configSync(config: any, opts: { confirm?: boolean; clean?: boolean }) {
     return await executeController(this, controllersMap.configSync, {
       query: opts,
       body: config,
     });
+  }
+
+  async currentUser() {
+    const User = this.getModel(models.User);
+    const data = await executeController(this, controllersMap.currentUser);
+    return new User(data);
   }
 
   async currentAccount() {
