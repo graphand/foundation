@@ -43,7 +43,6 @@ class ClientModelAdapter extends Adapter {
               id: query,
               model: this.model.slug,
             },
-            body: query,
           }
         );
 
