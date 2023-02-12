@@ -1,7 +1,8 @@
-import { Model, controllersMap, Account, models } from "@graphand/core";
+import { Model, controllersMap, models } from "@graphand/core";
 import ClientModelAdapter from "./ClientModelAdapter";
 import BehaviorSubject from "./BehaviorSubject";
 import { executeController } from "../utils";
+import { Middleware } from "../types";
 
 type ClientOptions = {
   project?: string;
@@ -13,6 +14,7 @@ type ClientOptions = {
 class Client {
   __optionsSubject: BehaviorSubject<ClientOptions>;
   __cachedModels = new Map<string, typeof Model>();
+  __middlewares: Set<Middleware>;
 
   constructor(options: ClientOptions) {
     this.__optionsSubject = new BehaviorSubject(options);
@@ -52,6 +54,14 @@ class Client {
     }
 
     return _model as T;
+  }
+
+  middleware(middleware: Middleware) {
+    if (!this.hasOwnProperty("__middlewares") || !this.__middlewares) {
+      this.__middlewares = new Set();
+    }
+
+    this.__middlewares.add(middleware);
   }
 
   // controllers

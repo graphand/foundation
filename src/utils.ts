@@ -5,6 +5,7 @@ import {
   ValidationValidatorError,
   Field,
   ValidationFieldError,
+  CoreError,
 } from "@graphand/core";
 import ClientModelAdapter from "./lib/ClientModelAdapter";
 import Client from "./lib/Client";
@@ -12,6 +13,7 @@ import Client from "./lib/Client";
 import https from "https";
 import FetchError from "./lib/FetchError";
 import FetchValidationError from "./lib/FetchValidationError";
+import { MiddlewareData } from "./types";
 
 const agent = new https.Agent({
   rejectUnauthorized: false,
@@ -27,7 +29,7 @@ export const getClientFromModel = (model: typeof Model) => {
   return adapter.client;
 };
 
-export const parseError = (error: any): Error => {
+export const parseError = (error: any): CoreError => {
   if (error.type === "ValidationError") {
     const validators = error.reason.validators.map((v: any) => {
       const validator = new Validator(v.validator);
@@ -110,13 +112,29 @@ export const executeController = async (
   init.headers["Accept"] = "application/json";
   init.headers["Content-Type"] = "application/json";
 
-  if (controller.secured) {
-    if (!client.options.accessToken) {
-      throw new Error("CLIENT_NO_ACCESS_TOKEN");
-    }
-
+  if (controller.secured && client.options.accessToken) {
     init.headers["Authorization"] = `Bearer ${client.options.accessToken}`;
   }
+
+  const _executeMiddlewares = async (data: MiddlewareData) => {
+    const middlewares = client.__middlewares
+      ? Array.from(client.__middlewares)
+      : [];
+
+    let errors;
+    await middlewares.reduce(async (p, middleware) => {
+      await p;
+      try {
+        await middleware.call(this, data);
+      } catch (err) {
+        errors = Array.prototype.concat.apply(errors ?? [], [err]);
+      }
+    }, Promise.resolve());
+
+    if (errors?.length) {
+      throw errors[0];
+    }
+  };
 
   const _fetch = (retrying = false) => {
     return fetch(url, init).then(async (r) => {
@@ -137,8 +155,14 @@ export const executeController = async (
           } catch (e) {}
         }
 
-        throw parseError(res.error);
+        const err = parseError(res.error);
+
+        await _executeMiddlewares({ err, fetchResponse: r });
+
+        throw err;
       }
+
+      await _executeMiddlewares({ res: res.data, fetchResponse: r });
 
       return res.data;
     });
