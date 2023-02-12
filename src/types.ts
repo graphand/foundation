@@ -1,9 +1,10 @@
 import { CoreError } from "@graphand/core";
 
-export type MiddlewareData = {
-  err?: CoreError;
-  res?: any;
+export type MiddlewareInput = {
+  error?: CoreError;
+  data?: any;
   fetchResponse: Response;
+  retryToken: Symbol;
 };
 
-export type Middleware = (data: MiddlewareData) => Promise<void> | void;
+export type Middleware = (data: MiddlewareInput) => Promise<void> | void;

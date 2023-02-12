@@ -13,7 +13,7 @@ import Client from "./lib/Client";
 import https from "https";
 import FetchError from "./lib/FetchError";
 import FetchValidationError from "./lib/FetchValidationError";
-import { MiddlewareData } from "./types";
+import { MiddlewareInput } from "./types";
 
 const agent = new https.Agent({
   rejectUnauthorized: false,
@@ -116,29 +116,30 @@ export const executeController = async (
     init.headers["Authorization"] = `Bearer ${client.options.accessToken}`;
   }
 
-  const _executeMiddlewares = async (data: MiddlewareData) => {
+  const _executeMiddlewares = async (input: MiddlewareInput) => {
     const middlewares = client.__middlewares
       ? Array.from(client.__middlewares)
       : [];
 
-    let errors;
+    let err;
     await middlewares.reduce(async (p, middleware) => {
       await p;
       try {
-        await middleware.call(this, data);
-      } catch (err) {
-        errors = Array.prototype.concat.apply(errors ?? [], [err]);
+        await middleware.call(this, input);
+      } catch (e) {
+        err = Array.prototype.concat.apply(err ?? [], [e]);
       }
     }, Promise.resolve());
 
-    if (errors?.length) {
-      throw errors[0];
+    if (err) {
+      throw err;
     }
   };
 
   const _fetch = (retrying = false) => {
     return fetch(url, init).then(async (r) => {
-      const res = await r.json();
+      let res = await r.json();
+      let error;
 
       if (res.error) {
         if (
@@ -155,16 +156,24 @@ export const executeController = async (
           } catch (e) {}
         }
 
-        const err = parseError(res.error);
-
-        await _executeMiddlewares({ err, fetchResponse: r });
-
-        throw err;
+        error = parseError(res.error);
       }
 
-      await _executeMiddlewares({ res: res.data, fetchResponse: r });
+      const retryToken = Symbol();
+      const payload = { data: res.data, error, fetchResponse: r, retryToken };
+      try {
+        await _executeMiddlewares(payload);
+      } catch (e) {
+        if (Array.isArray(e) && e.includes(retryToken)) {
+          return await executeController(client, controller, opts);
+        }
+      }
 
-      return res.data;
+      if (payload?.error) {
+        throw payload.error;
+      }
+
+      return payload.data;
     });
   };
 
