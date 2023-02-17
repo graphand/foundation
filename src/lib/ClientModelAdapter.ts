@@ -210,10 +210,6 @@ class ClientModelAdapter extends Adapter {
 
         const res = await this.fetcher.deleteMultiple([query], ctx);
 
-        res.forEach(this.instancesMap.delete);
-
-        this.__updaterSubject.next(res);
-
         return res?.length === 1;
       }
     },
@@ -234,7 +230,7 @@ class ClientModelAdapter extends Adapter {
         }
       );
 
-      res.forEach(this.instancesMap.delete);
+      res.forEach((_id) => this.instancesMap.delete(_id));
 
       this.__updaterSubject.next(res);
 
