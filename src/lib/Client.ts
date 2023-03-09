@@ -5,55 +5,59 @@ import { executeController } from "../utils";
 import { Middleware } from "../types";
 
 type ClientOptions = {
+  endpoint?: string;
   project?: string;
   environment?: string;
   accessToken?: string;
   refreshToken?: string;
 };
 
+const defaultOptions: Partial<ClientOptions> = {
+  endpoint: "api.graphand.cloud",
+  environment: "master",
+};
+
 class Client {
   __optionsSubject: BehaviorSubject<ClientOptions>;
-  __cachedModels = new Map<string, typeof Model>();
   __middlewares: Set<Middleware>;
+  __adapter?: typeof ClientModelAdapter;
 
   constructor(options: ClientOptions) {
     this.__optionsSubject = new BehaviorSubject(options);
   }
 
   get options(): ClientOptions {
-    return this.__optionsSubject.getValue();
+    const opts = Object.fromEntries(
+      Object.entries(this.__optionsSubject.getValue()).filter(
+        ([_, v]) => v !== undefined
+      )
+    );
+
+    return Object.assign({}, defaultOptions, opts);
   }
 
   setOptions(assignOpts: Partial<ClientOptions>) {
     this.__optionsSubject.next({ ...this.options, ...assignOpts });
   }
 
-  getModel<T extends typeof Model = typeof Model>(model: T | T["slug"]): T {
-    let _model: T;
-    if (typeof model === "string") {
-      _model = Model.getFromSlug(model);
-    } else {
-      _model = model;
-    }
+  getClientAdapter() {
+    const client = this;
 
-    return this.adaptedModel(_model);
+    this.__adapter ??= class extends ClientModelAdapter {
+      static __client = client;
+    };
+
+    return this.__adapter;
   }
 
-  adaptedModel<T extends typeof Model>(model: T): T {
-    let _model = this.__cachedModels.get(model.slug);
-    if (!_model) {
-      const client = this;
+  getModel<T extends typeof Model = typeof Model>(model: T | T["slug"]): T {
+    const adapter = this.getClientAdapter();
 
-      const adapter = class extends ClientModelAdapter {
-        static __client = client;
-      };
-
-      _model = model.withAdapter(adapter);
-
-      this.__cachedModels.set(model.slug, _model);
+    if (typeof model === "string") {
+      return Model.getFromSlug(model, adapter);
     }
 
-    return _model as T;
+    return Model.getAdaptedModel(model, adapter);
   }
 
   middleware(middleware: Middleware) {
@@ -65,6 +69,22 @@ class Client {
   }
 
   // controllers
+
+  async infos() {
+    return await executeController(this, controllersMap.infos);
+  }
+
+  async infosProject() {
+    return await executeController(this, controllersMap.infosProject);
+  }
+
+  async registerUser(credentials: { email: string; password: string }) {
+    const { email, password } = credentials;
+
+    return await executeController(this, controllersMap.registerUser, {
+      body: { email, password },
+    });
+  }
 
   async loginAccount(credentials: { email: string; password: string }) {
     const { email, password } = credentials;
@@ -131,6 +151,14 @@ class Client {
     const Account = this.getModel(models.Account);
     const data = await executeController(this, controllersMap.currentAccount);
     return new Account(data);
+  }
+
+  async genToken(tokenId: string) {
+    return await executeController(this, controllersMap.genToken, {
+      path: {
+        id: tokenId,
+      },
+    });
   }
 }
 

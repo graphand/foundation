@@ -241,21 +241,29 @@ class ClientModelAdapter extends Adapter {
         throw new Error("MODEL_NO_CLIENT");
       }
 
-      const res = await executeController(
-        this.client,
-        controllersMap.modelQuery,
-        {
-          path: {
-            model: "datamodels",
-          },
-          body: {
-            filter: { slug: this.model.slug },
-            pageSize: 1,
-          },
-        }
-      );
+      let datamodel;
 
-      const datamodel = res.rows?.[0];
+      if ("__datamodel" in this.model) {
+        datamodel = this.model.__datamodel;
+      }
+
+      if (!datamodel) {
+        const res = await executeController(
+          this.client,
+          controllersMap.modelQuery,
+          {
+            path: {
+              model: "datamodels",
+            },
+            body: {
+              filter: { slug: this.model.slug },
+              pageSize: 1,
+            },
+          }
+        );
+
+        datamodel = res.rows?.[0];
+      }
 
       if (!datamodel) {
         return {
@@ -301,8 +309,8 @@ class ClientModelAdapter extends Adapter {
 
     if (i) {
       if (
-        (payload.updatedAt && !i.updatedAt) ||
-        new Date(payload.updatedAt) > new Date(i.updatedAt)
+        (payload._updatedAt && !i._updatedAt) ||
+        new Date(payload._updatedAt) > new Date(i._updatedAt)
       ) {
         i.setDoc(payload);
       }

@@ -82,7 +82,7 @@ export const executeController = async (
     url = path;
   } else {
     const scheme = "https://";
-    const domain = "api.graphand.io.local:1337";
+    const endpoint = client.options.endpoint;
 
     let scope = controller.scope;
     if (typeof scope === "function") {
@@ -90,9 +90,9 @@ export const executeController = async (
     }
 
     if (scope === "project") {
-      url = scheme + client.options.project + "." + domain + path;
+      url = scheme + client.options.project + "." + endpoint + path;
     } else {
-      url = scheme + domain + path;
+      url = scheme + endpoint + path;
     }
   }
 
@@ -138,42 +138,46 @@ export const executeController = async (
 
   const _fetch = (retrying = false) => {
     return fetch(url, init).then(async (r) => {
-      let res = await r.json();
-      let error;
-
-      if (res.error) {
-        if (
-          r.status === 401 &&
-          res.error.code === "TOKEN_EXPIRED" &&
-          !retrying
-        ) {
-          try {
-            await client.refreshToken();
-            init.headers[
-              "Authorization"
-            ] = `Bearer ${client.options.accessToken}`;
-            return _fetch(true);
-          } catch (e) {}
-        }
-
-        error = parseError(res.error);
-      }
-
-      const retryToken = Symbol();
-      const payload = { data: res.data, error, fetchResponse: r, retryToken };
       try {
-        await _executeMiddlewares(payload);
-      } catch (e) {
-        if (Array.isArray(e) && e.includes(retryToken)) {
-          return await executeController(client, controller, opts);
+        let res = await r.json();
+        let error;
+
+        if (res.error) {
+          if (
+            r.status === 401 &&
+            res.error.code === "TOKEN_EXPIRED" &&
+            !retrying
+          ) {
+            try {
+              await client.refreshToken();
+              init.headers[
+                "Authorization"
+              ] = `Bearer ${client.options.accessToken}`;
+              return _fetch(true);
+            } catch (e) {}
+          }
+
+          error = parseError(res.error);
         }
-      }
 
-      if (payload?.error) {
-        throw payload.error;
-      }
+        const retryToken = Symbol();
+        const payload = { data: res.data, error, fetchResponse: r, retryToken };
+        try {
+          await _executeMiddlewares(payload);
+        } catch (e) {
+          if (Array.isArray(e) && e.includes(retryToken)) {
+            return await executeController(client, controller, opts);
+          }
+        }
 
-      return payload.data;
+        if (payload?.error) {
+          throw payload.error;
+        }
+
+        return payload.data;
+      } catch (e) {
+        throw e;
+      }
     });
   };
 
