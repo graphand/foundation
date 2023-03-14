@@ -1,5 +1,4 @@
 import { CoreError } from "@graphand/core";
-import "./core";
 
 export type MiddlewareInput = {
   error?: CoreError;

@@ -10,7 +10,7 @@
   "license": "MIT",
   "source": "src/index.ts",
   "scripts": {
-    "build": "tsc && cp src/core.d.ts dist/types/core.d.ts",
+    "build": "tsc && cp src/core.ts dist/types/core.d.ts",
     "build:watch": "tsc --watch",
     "test": "jest"
   },
