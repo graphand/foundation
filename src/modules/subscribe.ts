@@ -1,34 +1,40 @@
-import ClientModelAdapter from "../lib/ClientModelAdapter";
-import { Model } from "@graphand/core";
+import { Model, ModelList } from "@graphand/core";
+import { ModelUpdaterEvent } from "../types";
 
-Model.subscribe = function (callback) {
-  const adapter = this.model.__adapter as ClientModelAdapter;
-  return adapter.__updaterSubject.subscribe((payload) => {
-    return callback.call(this, payload);
-  });
+Model.subscribe = function (cb: (event: ModelUpdaterEvent) => void) {
+  return this.getClientAdapter().updaterSubject.subscribe(cb);
 };
 
-Model.prototype.subscribe = function (callback) {
-  const adapter = this.model.__adapter as ClientModelAdapter;
-  const unsubscribe = adapter.__updaterSubject.subscribe((payload) => {
-    const _previous = this.__doc;
-    const deleted = payload.find(
-      (p: any) => typeof p === "string" && p === this._id
-    );
-    if (deleted) {
-      unsubscribe();
-      return setTimeout(() => callback.call(this, _previous));
+Model.prototype.subscribe = function (cb: () => void) {
+  const _subscriber = (event: ModelUpdaterEvent) => {
+    if (event.ids.includes(this._id)) {
+      cb();
     }
+  };
 
-    const updated = payload.find(
-      (p: any) => typeof p === "object" && p._id === this._id
-    );
-    if (updated) {
-      return setTimeout(() => callback.call(this, _previous));
+  return this.model.getClientAdapter().updaterSubject.subscribe(_subscriber);
+};
+
+ModelList.prototype.subscribe = function (cb: () => void) {
+  const _subscriber = (event: ModelUpdaterEvent) => {
+    if (event.operation === "create") {
+      cb();
+    } else if (event.operation === "delete") {
+      for (let i = 0; i < this.length; i++) {
+        if (event.ids.includes(this[i]._id)) {
+          this.splice(i, 1);
+          i--;
+        }
+      }
+      cb();
+    } else if (event.operation === "update") {
+      const listIds = this.getIds();
+      const listUpdated = event.ids.some((i: string) => listIds.includes(i));
+      if (listUpdated) {
+        cb();
+      }
     }
+  };
 
-    return;
-  });
-
-  return unsubscribe;
+  return this.model.getClientAdapter().updaterSubject.subscribe(_subscriber);
 };

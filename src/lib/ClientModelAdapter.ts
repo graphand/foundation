@@ -4,17 +4,64 @@ import {
   controllersMap,
   Model,
   ModelList,
+  ModelCrudEvent,
+  ModelCreateEvent,
+  ModelDeleteEvent,
+  ModelUpdateEvent,
 } from "@graphand/core";
 import Client from "./Client";
 import Subject from "./Subject";
 import { executeController } from "../utils";
+import { Socket } from "socket.io-client";
+import { ModelUpdaterEvent } from "../types";
 
 class ClientModelAdapter extends Adapter {
   static __client: Client;
   __instancesMap: Map<string, Model>;
-  __updaterSubject: Subject<Array<object | string>>;
+  __updaterSubject: Subject<ModelUpdaterEvent>;
+  __eventSubject: Subject<ModelCrudEvent>;
 
   runValidators = false;
+
+  constructor(data) {
+    super(data);
+
+    this.__eventSubject = new Subject();
+
+    this.__eventSubject.subscribe((event) => {
+      if (event.operation === "create" || event.operation === "update") {
+        const mappedList = event.data.map((r) => this.mapOrNew(r));
+        const updated = mappedList
+          .filter((r) => r.updated)
+          .map((r) => r.mapped._id);
+
+        if (updated?.length) {
+          this.updaterSubject.next({
+            ids: updated,
+            operation: event.operation,
+          });
+        }
+      } else if (event.operation === "delete") {
+        let updated = event.ids
+          .map((_id) => {
+            if (!this.instancesMap.has(_id)) {
+              return false;
+            }
+
+            this.instancesMap.delete(_id);
+            return _id;
+          })
+          .filter(Boolean) as Array<string>;
+
+        if (updated?.length) {
+          this.updaterSubject.next({
+            ids: updated,
+            operation: event.operation,
+          });
+        }
+      }
+    });
+  }
 
   fetcher: AdapterFetcher = {
     count: async ([query]) => {
@@ -50,7 +97,16 @@ class ClientModelAdapter extends Adapter {
           return null;
         }
 
-        return this.mapOrNew(res);
+        const { mapped, updated } = this.mapOrNew(res);
+
+        if (updated) {
+          this.updaterSubject.next({
+            ids: [mapped._id],
+            operation: "fetch",
+          });
+        }
+
+        return mapped;
       } else {
         query.pageSize = 1;
 
@@ -60,7 +116,20 @@ class ClientModelAdapter extends Adapter {
           throw new Error();
         }
 
-        return list[0] || null;
+        if (!list[0]) {
+          return null;
+        }
+
+        const { mapped, updated } = this.mapOrNew(list[0]);
+
+        if (updated) {
+          this.updaterSubject.next({
+            ids: [mapped._id],
+            operation: "fetch",
+          });
+        }
+
+        return mapped;
       }
     },
     getList: async ([query]) => {
@@ -79,10 +148,22 @@ class ClientModelAdapter extends Adapter {
         }
       );
 
-      const documents = res.rows.map((r) => this.mapOrNew(r));
+      const mappedList = res.rows.map((r) => this.mapOrNew(r));
+      const mappedRes = mappedList.map((r) => r.mapped);
+      const updated = mappedList
+        .filter((r) => r.updated)
+        .map((r) => r.mapped._id);
+
+      if (updated?.length) {
+        this.updaterSubject.next({
+          ids: updated,
+          operation: "fetch",
+        });
+      }
+
       const count = res.count;
 
-      return new ModelList(this.model, documents, count);
+      return new ModelList(this.model, mappedRes, count);
     },
     createOne: async ([payload]) => {
       if (!this.client) {
@@ -100,9 +181,14 @@ class ClientModelAdapter extends Adapter {
         }
       );
 
-      this.__updaterSubject.next([res]);
+      this.__eventSubject.next({
+        operation: "create",
+        model: this.model.slug,
+        ids: [res._id],
+        data: [res],
+      } as ModelCreateEvent);
 
-      return this.mapOrNew(res);
+      return this.mapOrNew(res).mapped;
     },
     createMultiple: async ([payload]) => {
       if (!this.client) {
@@ -120,9 +206,14 @@ class ClientModelAdapter extends Adapter {
         }
       );
 
-      this.__updaterSubject.next(res);
+      this.__eventSubject.next({
+        operation: "create",
+        model: this.model.slug,
+        ids: res.map((r) => r._id),
+        data: res,
+      } as ModelCreateEvent);
 
-      return res.map((r) => this.mapOrNew(r));
+      return res.map((r) => this.mapOrNew(r).mapped);
     },
     updateOne: async ([query, update], ctx) => {
       if (!this.client) {
@@ -142,9 +233,14 @@ class ClientModelAdapter extends Adapter {
           }
         );
 
-        this.__updaterSubject.next([res]);
+        this.__eventSubject.next({
+          operation: "update",
+          model: this.model.slug,
+          ids: [res._id],
+          data: [res],
+        } as ModelUpdateEvent);
 
-        return this.mapOrNew(res);
+        return this.mapOrNew(res).mapped;
       } else {
         query.pageSize = 1;
 
@@ -154,9 +250,14 @@ class ClientModelAdapter extends Adapter {
           throw new Error();
         }
 
-        this.__updaterSubject.next(list);
+        this.__eventSubject.next({
+          operation: "update",
+          model: this.model.slug,
+          ids: list.map((l) => l._id),
+          data: list,
+        } as ModelUpdateEvent);
 
-        return list[0] || null;
+        return this.mapOrNew(list[0]).mapped;
       }
     },
     updateMultiple: async ([query, update]) => {
@@ -176,42 +277,42 @@ class ClientModelAdapter extends Adapter {
         }
       );
 
-      this.__updaterSubject.next(res);
+      this.__eventSubject.next({
+        operation: "update",
+        model: this.model.slug,
+        ids: res.map((l) => l._id),
+        data: res,
+      } as ModelUpdateEvent);
 
-      return res.map((r) => this.mapOrNew(r));
+      return res.map((r) => this.mapOrNew(r).mapped);
     },
     deleteOne: async ([query], ctx) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
 
+      let res;
+
       if (typeof query === "string") {
-        const res = await executeController(
-          this.client,
-          controllersMap.modelDelete,
-          {
-            path: {
-              id: query,
-              model: this.model.slug,
-            },
-          }
-        );
-
-        const deleted = res === 1;
-        if (deleted) {
-          this.instancesMap.delete(query);
-        }
-
-        this.__updaterSubject.next([query]);
-
-        return deleted;
+        res = await executeController(this.client, controllersMap.modelDelete, {
+          path: {
+            id: query,
+            model: this.model.slug,
+          },
+        });
       } else {
         query.pageSize = 1;
 
-        const res = await this.fetcher.deleteMultiple([query], ctx);
-
-        return res?.length === 1;
+        res = await this.fetcher.deleteMultiple([query], ctx);
       }
+
+      this.__eventSubject.next({
+        operation: "delete",
+        model: this.model.slug,
+        ids: res,
+      } as ModelDeleteEvent);
+
+      return Boolean(res?.length);
     },
     deleteMultiple: async ([query]) => {
       if (!this.client) {
@@ -230,9 +331,11 @@ class ClientModelAdapter extends Adapter {
         }
       );
 
-      res.forEach((_id) => this.instancesMap.delete(_id));
-
-      this.__updaterSubject.next(res);
+      this.__eventSubject.next({
+        operation: "delete",
+        model: this.model.slug,
+        ids: res.map((l) => l._id),
+      } as ModelDeleteEvent);
 
       return res;
     },
@@ -240,6 +343,13 @@ class ClientModelAdapter extends Adapter {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
+
+      const sockets: Array<Socket> = Array.from(
+        this.client.__socketsMap?.values() || []
+      );
+      sockets.forEach((socket) => {
+        socket.emit("use-realtime", this.model.slug);
+      });
 
       let datamodel;
 
@@ -280,13 +390,6 @@ class ClientModelAdapter extends Adapter {
     },
   };
 
-  constructor(model) {
-    super(model);
-
-    this.__instancesMap = new Map();
-    this.__updaterSubject = new Subject();
-  }
-
   static get client() {
     return this.__client;
   }
@@ -297,29 +400,38 @@ class ClientModelAdapter extends Adapter {
   }
 
   get instancesMap() {
+    this.__instancesMap ??= new Map();
     return this.__instancesMap;
   }
 
-  private mapOrNew(payload: any) {
-    let i;
+  get updaterSubject() {
+    this.__updaterSubject ??= new Subject();
+    return this.__updaterSubject;
+  }
+
+  mapOrNew(payload: any) {
+    let mapped;
+    let updated = false;
 
     if (payload._id) {
-      i = this.instancesMap.get(payload._id);
+      mapped = this.instancesMap.get(payload._id);
     }
 
-    if (i) {
+    if (mapped) {
       if (
-        (payload._updatedAt && !i._updatedAt) ||
-        new Date(payload._updatedAt) > new Date(i._updatedAt)
+        (payload._updatedAt && !mapped._updatedAt) ||
+        new Date(payload._updatedAt) > new Date(mapped._updatedAt)
       ) {
-        i.setDoc(payload);
+        updated = true;
+        mapped.setDoc(payload);
       }
     } else {
-      i = new this.model(payload);
-      this.instancesMap.set(payload._id, i);
+      mapped = new this.model(payload);
+      this.instancesMap.set(payload._id, mapped);
+      updated = true;
     }
 
-    return i;
+    return { updated, mapped };
   }
 }
 

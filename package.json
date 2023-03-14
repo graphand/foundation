@@ -10,12 +10,13 @@
   "license": "MIT",
   "source": "src/index.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp src/core.d.ts dist/types/core.d.ts",
     "build:watch": "tsc --watch",
     "test": "jest"
   },
   "dependencies": {
-    "@graphand/core": "file:../core"
+    "@graphand/core": "file:../core",
+    "socket.io-client": "^4.6.1"
   },
   "devDependencies": {
     "cross-fetch": "^3.1.5",

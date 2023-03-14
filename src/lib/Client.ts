@@ -1,8 +1,9 @@
-import { Model, controllersMap, models } from "@graphand/core";
+import { Model, controllersMap, models, ModelCrudEvent } from "@graphand/core";
 import ClientModelAdapter from "./ClientModelAdapter";
 import BehaviorSubject from "./BehaviorSubject";
 import { executeController } from "../utils";
 import { Middleware } from "../types";
+import { io, Socket } from "socket.io-client";
 
 type ClientOptions = {
   endpoint?: string;
@@ -10,20 +11,37 @@ type ClientOptions = {
   environment?: string;
   accessToken?: string;
   refreshToken?: string;
+  sockets?: Array<SocketScope>;
 };
 
 const defaultOptions: Partial<ClientOptions> = {
   endpoint: "api.graphand.cloud",
   environment: "master",
+  sockets: ["project"],
 };
+
+type SocketScope = "project" | "global";
 
 class Client {
   __optionsSubject: BehaviorSubject<ClientOptions>;
   __middlewares: Set<Middleware>;
   __adapter?: typeof ClientModelAdapter;
+  __socketsMap: Map<SocketScope, Socket>;
 
   constructor(options: ClientOptions) {
     this.__optionsSubject = new BehaviorSubject(options);
+
+    const optionsSub = this.__optionsSubject.subscribe(() => {
+      if (
+        this.options.accessToken &&
+        this.options.endpoint &&
+        this.options.sockets?.length
+      ) {
+        this.options.sockets.forEach((scope) => {
+          this.connectSocket(scope);
+        });
+      }
+    });
   }
 
   get options(): ClientOptions {
@@ -66,6 +84,53 @@ class Client {
     }
 
     this.__middlewares.add(middleware);
+  }
+
+  connectSocket(scope: SocketScope = "project") {
+    this.__socketsMap ??= new Map();
+
+    const scheme = "wss://";
+    const endpoint = this.options.endpoint;
+
+    let url;
+
+    if (scope === "project") {
+      if (!this.options.project) {
+        throw new Error("CLIENT_NO_PROJECT");
+      }
+
+      url = scheme + this.options.project + "." + endpoint;
+    } else {
+      url = scheme + endpoint;
+    }
+
+    const socket = io(url, {
+      reconnectionDelayMax: 10000,
+      auth: {
+        token: this.options.accessToken,
+      },
+    });
+
+    socket.on("connect", () => {
+      console.log(`Socket connected on scope ${scope} (${url})`);
+
+      const adapter = this.getClientAdapter();
+      if (adapter.__modelsMap) {
+        socket.emit(
+          "use-realtime",
+          Array.from(adapter.__modelsMap.keys()).join(",")
+        );
+      }
+    });
+
+    socket.on("realtime:event", (event: ModelCrudEvent) => {
+      const model = this.getModel(event.model);
+      const adapter = model.__adapter as ClientModelAdapter;
+
+      adapter.__eventSubject.next(event);
+    });
+
+    this.__socketsMap.set(scope, socket);
   }
 
   // controllers

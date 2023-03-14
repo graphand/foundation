@@ -90,6 +90,10 @@ export const executeController = async (
     }
 
     if (scope === "project") {
+      if (!client.options.project) {
+        throw new Error("CLIENT_NO_PROJECT");
+      }
+
       url = scheme + client.options.project + "." + endpoint + path;
     } else {
       url = scheme + endpoint + path;
@@ -111,6 +115,12 @@ export const executeController = async (
   init.headers ??= {};
   init.headers["Accept"] = "application/json";
   init.headers["Content-Type"] = "application/json";
+
+  if (init.method !== "GET") {
+    init.headers["Sockets"] = Array.from(client.__socketsMap.values()).map(
+      (s) => s.id
+    );
+  }
 
   if (controller.secured && client.options.accessToken) {
     init.headers["Authorization"] = `Bearer ${client.options.accessToken}`;

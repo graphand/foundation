@@ -10,11 +10,16 @@ import {
   DefaultFieldRelationDefinition,
   DefaultFieldIdDefinition,
 } from "@graphand/core";
+import { ModelUpdaterEvent } from "./types";
 
 declare module "@graphand/core" {
   export class Model {
-    static subscribe: (cb: (data: (object | string)[]) => void) => () => void;
-    subscribe: (callback: (previousDoc) => void) => () => void;
+    static subscribe: (cb: (event: ModelUpdaterEvent) => void) => () => void;
+    subscribe: (cb: () => void) => () => void;
+  }
+
+  export class ModelList<T extends Model> extends Array<T> {
+    subscribe: (cb: () => void) => () => void;
   }
 
   export type FieldIdDefinition<
