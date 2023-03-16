@@ -7,20 +7,20 @@ import {
   ValidationFieldError,
   CoreError,
 } from "@graphand/core";
-import ClientModelAdapter from "./lib/ClientModelAdapter";
-import Client from "./lib/Client";
+import ClientAdapter from "./ClientAdapter";
+import Client from "./Client";
 // @ts-ignore
 import https from "https";
-import FetchError from "./lib/FetchError";
-import FetchValidationError from "./lib/FetchValidationError";
-import { MiddlewareInput } from "./types";
+import FetchError from "./FetchError";
+import FetchValidationError from "./FetchValidationError";
+import { MiddlewareInput } from "../types";
 
 const agent = new https.Agent({
   rejectUnauthorized: false,
 });
 
 export const getClientFromModel = (model: typeof Model) => {
-  const adapter = model.__adapter as ClientModelAdapter;
+  const adapter = model.__adapter as ClientAdapter;
 
   if (!adapter.client) {
     throw new Error("MODEL_NO_CLIENT");
@@ -116,7 +116,7 @@ export const executeController = async (
   init.headers["Accept"] = "application/json";
   init.headers["Content-Type"] = "application/json";
 
-  if (init.method !== "GET") {
+  if (init.method !== "GET" && client.__socketsMap?.size) {
     init.headers["Sockets"] = Array.from(client.__socketsMap.values()).map(
       (s) => s.id
     );

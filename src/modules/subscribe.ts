@@ -1,9 +1,9 @@
 import { Model, ModelList } from "@graphand/core";
 import { ModelUpdaterEvent } from "../types";
-import ClientModelAdapter from "../lib/ClientModelAdapter";
+import ClientAdapter from "../lib/ClientAdapter";
 
 Model.subscribe = function (cb: (event: ModelUpdaterEvent) => void) {
-  const adapter = this.__adapter as ClientModelAdapter;
+  const adapter = this.__adapter as ClientAdapter;
   return adapter.updaterSubject.subscribe(cb);
 };
 
@@ -14,7 +14,7 @@ Model.prototype.subscribe = function (cb: () => void) {
     }
   };
 
-  const adapter = this.model.__adapter as ClientModelAdapter;
+  const adapter = this.model.__adapter as ClientAdapter;
   return adapter.updaterSubject.subscribe(_subscriber);
 };
 
@@ -39,6 +39,6 @@ ModelList.prototype.subscribe = function (cb: () => void) {
     }
   };
 
-  const adapter = this.model.__adapter as ClientModelAdapter;
+  const adapter = this.model.__adapter as ClientAdapter;
   return adapter.updaterSubject.subscribe(_subscriber);
 };

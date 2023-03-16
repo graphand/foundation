@@ -11,11 +11,11 @@ import {
 } from "@graphand/core";
 import Client from "./Client";
 import Subject from "./Subject";
-import { executeController } from "../utils";
+import { executeController } from "./utils";
 import { Socket } from "socket.io-client";
 import { ModelUpdaterEvent } from "../types";
 
-class ClientModelAdapter extends Adapter {
+class ClientAdapter extends Adapter {
   static __client: Client;
   __instancesMap: Map<string, Model>;
   __updaterSubject: Subject<ModelUpdaterEvent>;
@@ -435,4 +435,4 @@ class ClientModelAdapter extends Adapter {
   }
 }
 
-export default ClientModelAdapter;
+export default ClientAdapter;

@@ -1,7 +1,7 @@
 import { Model, controllersMap, models, ModelCrudEvent } from "@graphand/core";
-import ClientModelAdapter from "./ClientModelAdapter";
+import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
-import { executeController } from "../utils";
+import { executeController } from "./utils";
 import { Middleware } from "../types";
 import { io, Socket } from "socket.io-client";
 
@@ -25,7 +25,7 @@ type SocketScope = "project" | "global";
 class Client {
   __optionsSubject: BehaviorSubject<ClientOptions>;
   __middlewares: Set<Middleware>;
-  __adapter?: typeof ClientModelAdapter;
+  __adapter?: typeof ClientAdapter;
   __socketsMap: Map<SocketScope, Socket>;
 
   constructor(options: ClientOptions) {
@@ -61,7 +61,7 @@ class Client {
   getClientAdapter() {
     const client = this;
 
-    this.__adapter ??= class extends ClientModelAdapter {
+    this.__adapter ??= class extends ClientAdapter {
       static __client = client;
     };
 
@@ -125,12 +125,16 @@ class Client {
 
     socket.on("realtime:event", (event: ModelCrudEvent) => {
       const model = this.getModel(event.model);
-      const adapter = model.__adapter as ClientModelAdapter;
+      const adapter = model.__adapter as ClientAdapter;
 
       adapter.__eventSubject.next(event);
     });
 
     this.__socketsMap.set(scope, socket);
+  }
+
+  close() {
+    this.__socketsMap?.forEach((socket) => socket.close());
   }
 
   // controllers
