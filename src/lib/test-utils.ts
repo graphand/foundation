@@ -17,6 +17,7 @@ export const generateRandomString = () => {
 export const fetchWatcher = async (
   model: typeof Model,
   _id: string,
+  operation = "fetch",
   timeout = 1000
 ) => {
   const adapter = model.__adapter as ClientAdapter;
@@ -25,7 +26,7 @@ export const fetchWatcher = async (
 
   return new Promise((resolve) => {
     unsub = adapter.updaterSubject.subscribe((e) => {
-      if (e.operation === "fetch" && e.ids.includes(_id)) {
+      if (e.operation === operation && e.ids.includes(_id)) {
         resolve(true);
       }
     });

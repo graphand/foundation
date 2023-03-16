@@ -152,4 +152,95 @@ describe("ClientAdapter", () => {
       await expect(fetchWatcher2).resolves.toBeTruthy();
     });
   });
+
+  describe("ClientAdapter.get", () => {
+    it("Model.get should returns the instance from _id", async () => {
+      const created = await model.create({ title: "title" });
+
+      const fetched = await model.get(created._id);
+
+      expect(fetched).toBeInstanceOf(model);
+      expect(fetched._id).toBe(created._id);
+      expect(fetched.title).toBe(created.title);
+    });
+
+    it("Model.get should returns the instance from filter", async () => {
+      const title = generateRandomString();
+
+      const created = await model.create({ title });
+
+      const fetched = await model.get({ filter: { title } });
+
+      expect(fetched).toBeInstanceOf(model);
+      expect(fetched._id).toBe(created._id);
+      expect(fetched.title).toBe(created.title);
+    });
+
+    it("Model.get should returns the instance from ids", async () => {
+      const title = generateRandomString();
+
+      const created = await model.create({ title });
+
+      const fetched = await model.get({ ids: [created._id] });
+
+      expect(fetched).toBeInstanceOf(model);
+      expect(fetched._id).toBe(created._id);
+      expect(fetched.title).toBe(created.title);
+    });
+
+    it("Model.get should returns the instance from instancesMap", async () => {
+      const created = await model.create({ title: "title" });
+
+      const fetched = await model.get(created._id);
+
+      expect(fetched).toBeInstanceOf(model);
+      expect(fetched).toBe(created);
+    });
+
+    it("Model.get should returns the instance from instancesMap when fetching", async () => {
+      const created = await model.create({ title: "title" });
+
+      const fetched = await model.get({
+        filter: { $expr: { $eq: ["$_id", { $toObjectId: created._id }] } },
+      });
+
+      expect(fetched).toBeInstanceOf(model);
+      expect(fetched).toBe(created);
+    });
+
+    it("Model.get should emit fetch event on updaterSubject", async () => {
+      const created = await model.create({ title: "title" });
+
+      const fetchWatcherPromiseFetch = fetchWatcher(model, created._id);
+      const fetchWatcherPromiseLocalUpdate = fetchWatcher(
+        model,
+        created._id,
+        "localUpdate"
+      );
+
+      await model.get({ ids: [created._id] });
+
+      await expect(fetchWatcherPromiseFetch).resolves.toBeTruthy();
+      await expect(fetchWatcherPromiseLocalUpdate).resolves.toBeFalsy();
+    });
+
+    it("Model.get should emit localUpdate event on updaterSubject if upserted in instancesMap", async () => {
+      const created = await model.create({ title: "title" });
+
+      const adapter = model.__adapter as ClientAdapter;
+      adapter.instancesMap.delete(created._id);
+
+      const fetchWatcherPromiseFetch = fetchWatcher(model, created._id);
+      const fetchWatcherPromiseLocalUpdate = fetchWatcher(
+        model,
+        created._id,
+        "localUpdate"
+      );
+
+      await model.get({ ids: [created._id] });
+
+      await expect(fetchWatcherPromiseFetch).resolves.toBeTruthy();
+      await expect(fetchWatcherPromiseLocalUpdate).resolves.toBeTruthy();
+    });
+  });
 });
