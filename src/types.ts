@@ -9,7 +9,7 @@ export type MiddlewareInput = {
 
 export type ModelUpdaterEvent = {
   ids: Array<string>;
-  operation: "create" | "update" | "delete" | "fetch";
+  operation: "create" | "update" | "delete" | "localUpdate" | "fetch";
 };
 
 export type Middleware = (data: MiddlewareInput) => Promise<void> | void;

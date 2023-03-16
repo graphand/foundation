@@ -103,10 +103,15 @@ class ClientAdapter extends Adapter {
 
         const { mapped, updated } = this.mapOrNew(res);
 
+        this.updaterSubject.next({
+          ids: [mapped._id],
+          operation: "fetch",
+        });
+
         if (updated) {
           this.updaterSubject.next({
             ids: [mapped._id],
-            operation: "fetch",
+            operation: "localUpdate",
           });
         }
 
@@ -126,10 +131,15 @@ class ClientAdapter extends Adapter {
 
         const { mapped, updated } = this.mapOrNew(list[0]);
 
+        this.updaterSubject.next({
+          ids: [mapped._id],
+          operation: "fetch",
+        });
+
         if (updated) {
           this.updaterSubject.next({
             ids: [mapped._id],
-            operation: "fetch",
+            operation: "localUpdate",
           });
         }
 
@@ -158,10 +168,15 @@ class ClientAdapter extends Adapter {
         .filter((r) => r.updated)
         .map((r) => r.mapped._id);
 
+      this.updaterSubject.next({
+        ids: mappedRes.map((r) => r._id),
+        operation: "fetch",
+      });
+
       if (updated?.length) {
         this.updaterSubject.next({
           ids: updated,
-          operation: "fetch",
+          operation: "localUpdate",
         });
       }
 

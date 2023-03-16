@@ -141,7 +141,7 @@ export const executeController = async (
   };
 
   const _fetch = (retrying = false) => {
-    debug(`fetching ${url} ...`);
+    debug(`fetching ${url} [${init.method}] ...`);
     return fetch(url, init).then(async (r) => {
       try {
         let res = await r.json();

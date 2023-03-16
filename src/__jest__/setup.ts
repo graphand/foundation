@@ -1,4 +1,5 @@
 import Client from "../lib/Client";
+import "cross-fetch/polyfill";
 
 const clientOptions = JSON.parse(process.env.CLIENT_OPTIONS);
 
