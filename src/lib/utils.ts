@@ -9,15 +9,11 @@ import {
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import Client from "./Client";
-// @ts-ignore
-import https from "https";
 import FetchError from "./FetchError";
 import FetchValidationError from "./FetchValidationError";
 import { MiddlewareInput } from "../types";
 
-const agent = new https.Agent({
-  rejectUnauthorized: false,
-});
+const debug = require("debug")("graphand:client");
 
 export const getClientFromModel = (model: typeof Model) => {
   const adapter = model.__adapter as ClientAdapter;
@@ -110,8 +106,6 @@ export const executeController = async (
     }
   }
 
-  // @ts-ignore
-  init.agent ??= agent;
   init.headers ??= {};
   init.headers["Accept"] = "application/json";
   init.headers["Content-Type"] = "application/json";
@@ -147,6 +141,7 @@ export const executeController = async (
   };
 
   const _fetch = (retrying = false) => {
+    debug(`fetching ${url} ...`);
     return fetch(url, init).then(async (r) => {
       try {
         let res = await r.json();

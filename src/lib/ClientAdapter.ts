@@ -82,6 +82,10 @@ class ClientAdapter extends Adapter {
       }
 
       if (typeof query === "string") {
+        if (this.instancesMap.has(query)) {
+          return this.instancesMap.get(query);
+        }
+
         const res = await executeController(
           this.client,
           controllersMap.modelRead,

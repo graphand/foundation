@@ -12,10 +12,11 @@
   "scripts": {
     "build": "tsc && cp src/core.ts dist/types/core.d.ts",
     "build:watch": "tsc --watch",
-    "test": "jest"
+    "test": "DEBUG=graphand:* jest"
   },
   "dependencies": {
     "@graphand/core": "file:../core",
+    "debug": "^4.3.4",
     "socket.io-client": "^4.6.1"
   },
   "devDependencies": {

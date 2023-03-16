@@ -1,8 +1,10 @@
 import Client from "../lib/Client";
 
+const clientOptions = JSON.parse(process.env.CLIENT_OPTIONS);
+
 const client = new Client({
-  endpoint: "api.graphand.cloud",
-  sockets: [],
+  ...clientOptions,
+  project: process.env.PROJECT_ID,
 });
 
 globalThis.client = client;
