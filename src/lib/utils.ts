@@ -6,6 +6,7 @@ import {
   Field,
   ValidationFieldError,
   CoreError,
+  JSONQuery,
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import Client from "./Client";
@@ -187,4 +188,19 @@ export const executeController = async (
   };
 
   return _fetch();
+};
+
+export const canUseIds = (query: JSONQuery): boolean | Array<string> => {
+  if (
+    !query.ids?.length ||
+    query.filter ||
+    query.pageSize ||
+    query.limit ||
+    query.skip ||
+    query.sort
+  ) {
+    return false;
+  }
+
+  return [...query.ids];
 };

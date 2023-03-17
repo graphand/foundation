@@ -11,7 +11,7 @@ import {
 } from "@graphand/core";
 import Client from "./Client";
 import Subject from "./Subject";
-import { executeController } from "./utils";
+import { canUseIds, executeController } from "./utils";
 import { Socket } from "socket.io-client";
 import { ModelUpdaterEvent } from "../types";
 
@@ -117,6 +117,10 @@ class ClientAdapter extends Adapter {
 
         return mapped;
       } else {
+        if (canUseIds(query)) {
+          return this.fetcher.get([query.ids[0]], ctx);
+        }
+
         query.pageSize = 1;
 
         const list = await this.fetcher.getList([query], ctx);
@@ -151,6 +155,20 @@ class ClientAdapter extends Adapter {
         throw new Error("MODEL_NO_CLIENT");
       }
 
+      const _canUseIds = canUseIds(query) as Array<string>;
+      let _fromIdsList: Array<Model> = [];
+
+      if (_canUseIds) {
+        const existingIds = query.ids.filter((id) => this.instancesMap.has(id));
+        _fromIdsList = existingIds.map((id) => this.instancesMap.get(id));
+
+        if (_fromIdsList.length === query.ids.length) {
+          return new ModelList(this.model, _fromIdsList, _fromIdsList.length);
+        }
+
+        query.ids = query.ids.filter((id) => !this.instancesMap.has(id));
+      }
+
       const res = await executeController(
         this.client,
         controllersMap.modelQuery,
@@ -180,9 +198,18 @@ class ClientAdapter extends Adapter {
         });
       }
 
-      const count = res.count;
+      let count = res.count;
+      let list = mappedRes;
 
-      return new ModelList(this.model, mappedRes, count);
+      if (_canUseIds) {
+        count += _fromIdsList.length;
+        list = mappedRes.concat(_fromIdsList);
+        list = list.sort((a, b) => {
+          return _canUseIds.indexOf(a._id) - _canUseIds.indexOf(b._id);
+        });
+      }
+
+      return new ModelList(this.model, list, count);
     },
     createOne: async ([payload]) => {
       if (!this.client) {
