@@ -197,7 +197,8 @@ export const canUseIds = (query: JSONQuery): boolean | Array<string> => {
     query.pageSize ||
     query.limit ||
     query.skip ||
-    query.sort
+    query.sort ||
+    query.populate
   ) {
     return false;
   }

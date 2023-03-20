@@ -5,10 +5,9 @@ import {
 } from "../../lib/test-utils";
 import { Model } from "@graphand/core";
 import ClientAdapter from "../../lib/ClientAdapter";
-import { FieldTextDefinition } from "@graphand/core/src/fields";
 
 class TestModel extends Model {
-  title: FieldTextDefinition;
+  title: FieldDefinitionText;
 }
 
 describe("ClientAdapter", () => {
