@@ -3,18 +3,114 @@ import {
   generateModel,
   generateRandomString,
 } from "../../lib/test-utils";
-import { Model } from "@graphand/core";
+import { Model, FieldTypes } from "@graphand/core";
 import ClientAdapter from "../../lib/ClientAdapter";
+import { ModelList } from "@graphand/core/dist";
 
 class TestModel extends Model {
   title: FieldDefinitionText;
 }
 
+class TestModel2 extends Model {
+  title: FieldDefinitionText;
+  relSingle: FieldDefinitionRelation<{
+    model: TestModel;
+    multiple: false;
+  }>;
+  relMultiple: FieldDefinitionRelation<{
+    model: TestModel;
+    multiple: false;
+  }>;
+  obj: FieldDefinitionJSON<{
+    nestedRelSingle: FieldDefinitionRelation<{
+      model: TestModel;
+      multiple: false;
+    }>;
+    nestedRelMultiple: FieldDefinitionRelation<{
+      model: TestModel;
+      multiple: true;
+    }>;
+  }>;
+}
+
+class TestModel3 extends Model {
+  title: FieldDefinitionText;
+  relSingle: FieldDefinitionRelation<{
+    model: TestModel2;
+    multiple: false;
+  }>;
+  relMultiple: FieldDefinitionRelation<{
+    model: TestModel2;
+    multiple: false;
+  }>;
+}
+
 describe("ClientAdapter", () => {
   let model: typeof TestModel;
+  let model2: typeof TestModel2;
+  let model3: typeof TestModel3;
 
   beforeAll(async () => {
     model = await generateModel();
+    model2 = await generateModel(undefined, {
+      title: {
+        type: FieldTypes.TEXT,
+      },
+      relSingle: {
+        type: FieldTypes.RELATION,
+        options: {
+          ref: model.slug,
+          multiple: false,
+        },
+      },
+      relMultiple: {
+        type: FieldTypes.RELATION,
+        options: {
+          ref: model.slug,
+          multiple: true,
+        },
+      },
+      obj: {
+        type: FieldTypes.JSON,
+        options: {
+          fields: {
+            nestedRelSingle: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: model.slug,
+                multiple: false,
+              },
+            },
+            nestedRelMultiple: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: model.slug,
+                multiple: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    model3 = await generateModel(undefined, {
+      title: {
+        type: FieldTypes.TEXT,
+      },
+      relSingle: {
+        type: FieldTypes.RELATION,
+        options: {
+          ref: model2.slug,
+          multiple: false,
+        },
+      },
+      relMultiple: {
+        type: FieldTypes.RELATION,
+        options: {
+          ref: model2.slug,
+          multiple: true,
+        },
+      },
+    });
   });
 
   describe("ClientAdapter.create", () => {
@@ -246,6 +342,208 @@ describe("ClientAdapter", () => {
 
       await expect(fetchWatcherPromiseFetch).resolves.toBeTruthy();
       await expect(fetchWatcherPromiseLocalUpdate).resolves.toBeTruthy();
+    });
+
+    it("Model.get should be able to populate single relation", async () => {
+      const instance1 = await model.create({
+        title: generateRandomString(),
+      });
+
+      const instance2 = await model2.create({
+        title: generateRandomString(),
+        relSingle: instance1._id,
+      });
+
+      const adapter = model.__adapter as ClientAdapter;
+      adapter.instancesMap.delete(instance1._id);
+      const fetched = await model2.get({
+        ids: [instance2._id],
+        populate: ["relSingle"],
+      });
+
+      expect(fetched.__doc.relSingle).toBe(instance1._id);
+      expect(adapter.instancesMap.has(instance1._id)).toBeTruthy();
+      await expect(fetched.relSingle).resolves.toBeInstanceOf(model);
+    });
+
+    it("Model.get with populate should emit fetch event on updaterSubject", async () => {
+      const instance1 = await model.create({
+        title: generateRandomString(),
+      });
+
+      const instance2 = await model2.create({
+        title: generateRandomString(),
+        relSingle: instance1._id,
+      });
+
+      const fetchWatcherPromiseLocalUpdate = fetchWatcher(model, instance1._id);
+
+      await model2.get({
+        ids: [instance2._id],
+        populate: ["relSingle"],
+      });
+
+      await expect(fetchWatcherPromiseLocalUpdate).resolves.toBeTruthy();
+    });
+
+    it("Model.get with populate should emit localUpdate event on updaterSubject if upserted in instancesMap", async () => {
+      const instance1 = await model.create({
+        title: generateRandomString(),
+      });
+
+      const instance2 = await model2.create({
+        title: generateRandomString(),
+        relSingle: instance1._id,
+      });
+
+      const adapter = model.__adapter as ClientAdapter;
+      adapter.instancesMap.delete(instance1._id);
+
+      const fetchWatcherPromiseLocalUpdate = fetchWatcher(
+        model,
+        instance1._id,
+        "localUpdate"
+      );
+
+      await model2.get({
+        ids: [instance2._id],
+        populate: ["relSingle"],
+      });
+
+      await expect(fetchWatcherPromiseLocalUpdate).resolves.toBeTruthy();
+    });
+
+    it("Model.get should be able to populate multiple relation", async () => {
+      const instance1 = await model.create({
+        title: generateRandomString(),
+      });
+
+      const instance2 = await model.create({
+        title: generateRandomString(),
+      });
+
+      const instance3 = await model2.create({
+        title: generateRandomString(),
+        relMultiple: [instance1._id, instance2._id],
+      });
+
+      const adapter = model.__adapter as ClientAdapter;
+      adapter.instancesMap.delete(instance1._id);
+      adapter.instancesMap.delete(instance2._id);
+      const fetched = await model2.get({
+        ids: [instance3._id],
+        populate: ["relMultiple"],
+      });
+
+      expect(adapter.instancesMap.has(instance1._id)).toBeTruthy();
+      expect(adapter.instancesMap.has(instance2._id)).toBeTruthy();
+
+      expect(fetched.__doc.relMultiple).toEqual([instance1._id, instance2._id]);
+
+      await expect(fetched.relMultiple).resolves.toBeInstanceOf(ModelList);
+      await expect(fetched.relMultiple).resolves.toHaveProperty("length", 2);
+      await expect(fetched.relMultiple).resolves.toHaveProperty("count", 2);
+    });
+
+    it("Model.get should be able to populate single relation within json", async () => {
+      const instance1 = await model.create({
+        title: generateRandomString(),
+      });
+
+      const instance2 = await model2.create({
+        title: generateRandomString(),
+        obj: {
+          nestedRelSingle: instance1._id,
+        },
+      });
+
+      const adapter = model.__adapter as ClientAdapter;
+      adapter.instancesMap.delete(instance1._id);
+      const fetched = await model2.get({
+        ids: [instance2._id],
+        populate: ["obj.nestedRelSingle"],
+      });
+
+      expect(adapter.instancesMap.has(instance1._id)).toBeTruthy();
+
+      expect(fetched.__doc.obj).toEqual({ nestedRelSingle: instance1._id });
+      await expect(fetched.obj.nestedRelSingle).resolves.toBeInstanceOf(model);
+    });
+
+    it("Model.get should be able to populate multiple relation within json", async () => {
+      const instance1 = await model.create({
+        title: generateRandomString(),
+      });
+
+      const instance2 = await model.create({
+        title: generateRandomString(),
+      });
+
+      const instance3 = await model2.create({
+        title: generateRandomString(),
+        obj: {
+          nestedRelMultiple: [instance1._id, instance2._id],
+        },
+      });
+
+      const adapter = model.__adapter as ClientAdapter;
+      adapter.instancesMap.delete(instance1._id);
+      adapter.instancesMap.delete(instance2._id);
+      const fetched = await model2.get({
+        ids: [instance3._id],
+        populate: ["obj.nestedRelMultiple"],
+      });
+
+      expect(adapter.instancesMap.has(instance1._id)).toBeTruthy();
+      expect(adapter.instancesMap.has(instance2._id)).toBeTruthy();
+
+      expect(fetched.__doc.obj).toEqual({
+        nestedRelMultiple: [instance1._id, instance2._id],
+      });
+      expect(fetched.__doc.obj.nestedRelMultiple).toEqual([
+        instance1._id,
+        instance2._id,
+      ]);
+
+      const obj = fetched.obj;
+
+      await expect(obj.nestedRelMultiple).resolves.toBeInstanceOf(ModelList);
+      await expect(obj.nestedRelMultiple).resolves.toHaveProperty("length", 2);
+      await expect(obj.nestedRelMultiple).resolves.toHaveProperty("count", 2);
+    });
+
+    it("Model.get should be able to populate nested single relations", async () => {
+      const instance1 = await model.create({
+        title: generateRandomString(),
+      });
+
+      const instance2 = await model2.create({
+        title: generateRandomString(),
+        relSingle: instance1._id,
+      });
+
+      const instance3 = await model3.create({
+        title: generateRandomString(),
+        relSingle: instance2._id,
+      });
+
+      const adapter = model.__adapter as ClientAdapter;
+      const adapter2 = model2.__adapter as ClientAdapter;
+      adapter.instancesMap.delete(instance1._id);
+      adapter2.instancesMap.delete(instance2._id);
+      const fetched = await model3.get({
+        ids: [instance3._id],
+        populate: [{ path: "relSingle", populate: ["relSingle"] }],
+      });
+
+      expect(adapter.instancesMap.has(instance1._id)).toBeTruthy();
+      expect(adapter2.instancesMap.has(instance2._id)).toBeTruthy();
+
+      expect(fetched.__doc.relSingle).toEqual(instance2._id);
+      await expect(fetched.relSingle).resolves.toBeInstanceOf(model2);
+
+      const instance2FromMap = adapter2.instancesMap.get(instance2._id);
+      expect(instance2FromMap.__doc.relSingle).toEqual(instance1._id);
     });
   });
 

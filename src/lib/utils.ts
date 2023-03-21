@@ -7,6 +7,12 @@ import {
   ValidationFieldError,
   CoreError,
   JSONQuery,
+  FieldTypes,
+  getFieldFromPath,
+  getValueFromPath,
+  PopulateOption,
+  setValueOnPath,
+  DocumentDefinition,
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import Client from "./Client";
@@ -204,4 +210,110 @@ export const canUseIds = (query: JSONQuery): boolean | Array<string> => {
   }
 
   return [...query.ids];
+};
+
+export const getPopulatedFromQuery = (
+  query: string | JSONQuery
+): Array<PopulateOption> => {
+  if (typeof query !== "object" || !query.populate) {
+    return;
+  }
+
+  const populatedArr = Array.isArray(query.populate)
+    ? query.populate
+    : [query.populate];
+
+  return populatedArr
+    .map((p) => {
+      if (typeof p === "string") {
+        return {
+          path: p,
+        };
+      }
+
+      if (typeof p === "object" && p.path) {
+        return {
+          path: p.path,
+          filter: p.filter,
+          populate: p.populate,
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+};
+
+export const parsePopulated = <T extends typeof Model>(
+  model: T,
+  documents: Array<DocumentDefinition>,
+  populated: Array<PopulateOption>
+) => {
+  if (!populated?.length) {
+    return;
+  }
+
+  populated.forEach((p) => {
+    const _field = getFieldFromPath(model, p.path);
+
+    if (_field?.type !== FieldTypes.RELATION) {
+      return;
+    }
+
+    const field = _field as Field<FieldTypes.RELATION>;
+
+    const refModel = Model.getFromSlug.call(model, field.options.ref);
+
+    const adapter = refModel.__adapter as ClientAdapter;
+
+    if (!adapter) {
+      return;
+    }
+
+    documents.forEach((d) => {
+      const populatedValue = getValueFromPath(d, p.path);
+      let rows;
+      let encodedValue;
+
+      if (!populatedValue || typeof populatedValue !== "object") {
+        return;
+      }
+
+      if (Array.isArray(populatedValue)) {
+        rows = populatedValue;
+        encodedValue = populatedValue.map((v) => v._id);
+      } else {
+        rows = [populatedValue];
+        encodedValue = populatedValue?._id || null;
+      }
+
+      if (p.populate) {
+        parsePopulated(
+          refModel,
+          rows,
+          getPopulatedFromQuery({ populate: p.populate })
+        );
+      }
+
+      setValueOnPath(d, p.path, encodedValue);
+
+      const mappedList = rows.map((r) => adapter.mapOrNew(r));
+      const mappedRes = mappedList.map((r) => r.mapped);
+      const updated = mappedList
+        .filter((r) => r.updated)
+        .map((r) => r.mapped._id);
+
+      adapter.updaterSubject.next({
+        ids: mappedRes.map((r) => r._id),
+        operation: "fetch",
+      });
+
+      if (updated?.length) {
+        adapter.updaterSubject.next({
+          ids: updated,
+          operation: "localUpdate",
+        });
+      }
+    });
+  });
 };

@@ -11,7 +11,12 @@ import {
 } from "@graphand/core";
 import Client from "./Client";
 import Subject from "./Subject";
-import { canUseIds, executeController } from "./utils";
+import {
+  canUseIds,
+  executeController,
+  getPopulatedFromQuery,
+  parsePopulated,
+} from "./utils";
 import { Socket } from "socket.io-client";
 import { ModelUpdaterEvent } from "../types";
 
@@ -101,6 +106,8 @@ class ClientAdapter extends Adapter {
           return null;
         }
 
+        parsePopulated(this.model, [res], getPopulatedFromQuery(query));
+
         const { mapped, updated } = this.mapOrNew(res);
 
         this.updaterSubject.next({
@@ -133,24 +140,28 @@ class ClientAdapter extends Adapter {
           return null;
         }
 
-        const { mapped, updated } = this.mapOrNew(list[0]);
+        return list[0];
 
-        this.updaterSubject.next({
-          ids: [mapped._id],
-          operation: "fetch",
-        });
-
-        if (updated) {
-          this.updaterSubject.next({
-            ids: [mapped._id],
-            operation: "localUpdate",
-          });
-        }
-
-        return mapped;
+        // parsePopulated(this.model, list, getPopulatedFromQuery(query));
+        //
+        // const { mapped, updated } = this.mapOrNew(list[0]);
+        //
+        // this.updaterSubject.next({
+        //   ids: [mapped._id],
+        //   operation: "fetch",
+        // });
+        //
+        // if (updated) {
+        //   this.updaterSubject.next({
+        //     ids: [mapped._id],
+        //     operation: "localUpdate",
+        //   });
+        // }
+        //
+        // return mapped;
       }
     },
-    getList: async ([query]) => {
+    getList: async ([query], ctx) => {
       if (!this.client) {
         throw new Error("MODEL_NO_CLIENT");
       }
@@ -179,6 +190,8 @@ class ClientAdapter extends Adapter {
           body: query,
         }
       );
+
+      parsePopulated(this.model, res.rows, getPopulatedFromQuery(query));
 
       const mappedList = res.rows.map((r) => this.mapOrNew(r));
       const mappedRes = mappedList.map((r) => r.mapped);

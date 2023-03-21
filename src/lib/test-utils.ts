@@ -41,18 +41,20 @@ export const fetchWatcher = async (
   });
 };
 
-export const generateModel = async (slug?: string) => {
+export const generateModel = async (
+  slug?: string,
+  fields: FieldsDefinition = {
+    title: {
+      type: FieldTypes.TEXT,
+    },
+  }
+) => {
   slug ??= generateRandomString();
 
   const datamodel = await globalThis.client.getModel(models.DataModel).create({
     name: slug,
     slug,
-    fields: {
-      title: {
-        type: FieldTypes.TEXT,
-        options: {},
-      },
-    },
+    fields,
     configKey: "title",
   });
 
