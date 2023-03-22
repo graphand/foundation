@@ -21,6 +21,7 @@
   "include": ["src"],
   "exclude": [
     "node_modules",
+    "../core",
     "**/node_modules/*",
     "src/__jest__",
     "src/__tests__",

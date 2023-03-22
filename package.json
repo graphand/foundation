@@ -4,14 +4,14 @@
   "description": "",
   "homepage": "https://github.com/graphand/client",
   "repository": "graphand/core",
-  "main": "dist/index.js",
+  "main": "dist/client.min.js",
   "types": "dist/types/index.d.ts",
   "author": "Pierre Cabrière",
   "license": "MIT",
   "source": "src/index.ts",
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
+    "build": "webpack",
+    "build:watch": "webpack --watch",
     "test": "DEBUG=graphand:* jest"
   },
   "dependencies": {
@@ -27,6 +27,9 @@
     "jest": "^29.5.0",
     "prettier": "^2.8.0",
     "ts-jest": "^29.0.5",
-    "typescript": "^5.0.2"
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.2",
+    "webpack": "^5.76.2",
+    "webpack-cli": "^5.0.1"
   }
 }

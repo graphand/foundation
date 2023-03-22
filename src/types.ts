@@ -1,5 +1,5 @@
 import "@graphand/core/global";
-import { CoreError } from "@graphand/core";
+import type { CoreError } from "@graphand/core";
 
 declare module "@graphand/core" {
   export class Model {

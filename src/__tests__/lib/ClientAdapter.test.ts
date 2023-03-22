@@ -3,9 +3,8 @@ import {
   generateModel,
   generateRandomString,
 } from "../../lib/test-utils";
-import { Model, FieldTypes } from "@graphand/core";
+import { Model, FieldTypes, ModelList } from "@graphand/core";
 import ClientAdapter from "../../lib/ClientAdapter";
-import { ModelList } from "@graphand/core/dist";
 
 class TestModel extends Model {
   title: FieldDefinitionText;
