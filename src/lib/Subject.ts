@@ -10,7 +10,6 @@ class Subject<T> {
 
     return () => {
       const index = this.#observers.indexOf(observer);
-      const lastIndex = this.#observers.lastIndexOf(observer);
       this.#observers.splice(index, 1);
     };
   }

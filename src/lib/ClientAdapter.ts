@@ -403,13 +403,6 @@ class ClientAdapter extends Adapter {
         throw new Error("MODEL_NO_CLIENT");
       }
 
-      const sockets: Array<Socket> = Array.from(
-        this.client.__socketsMap?.values() || []
-      );
-      sockets.forEach((socket) => {
-        socket.emit("use-realtime", this.model.slug);
-      });
-
       let datamodel;
 
       if ("__datamodel" in this.model) {

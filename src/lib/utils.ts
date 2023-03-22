@@ -19,6 +19,7 @@ import Client from "./Client";
 import FetchError from "./FetchError";
 import FetchValidationError from "./FetchValidationError";
 import { MiddlewareInput } from "../types";
+import { Socket } from "socket.io-client";
 
 const debug = require("debug")("graphand:client");
 
@@ -316,4 +317,11 @@ export const parsePopulated = <T extends typeof Model>(
       }
     });
   });
+};
+
+export const useRealtimeOnSocket = (socket: Socket, slugs: Array<string>) => {
+  const slugsStr = slugs.join(",");
+
+  debug(`emit on socket ${socket.id} to use realtime for models ${slugsStr}`);
+  socket.emit("use-realtime", slugsStr);
 };

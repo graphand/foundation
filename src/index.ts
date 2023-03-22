@@ -1,6 +1,6 @@
-import Client from "./lib/Client";
+import "./modules";
 import "./types";
-import "./modules/subscribe";
+import Client from "./lib/Client";
 
 export { Client };
 

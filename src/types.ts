@@ -3,6 +3,7 @@ import type { CoreError } from "@graphand/core";
 
 declare module "@graphand/core" {
   export class Model {
+    static realtime: () => void;
     static subscribe: (cb: (event: ModelUpdaterEvent) => void) => () => void;
     subscribe: (cb: () => void) => () => void;
   }

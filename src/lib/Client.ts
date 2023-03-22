@@ -1,9 +1,11 @@
 import { Model, controllersMap, models, ModelCrudEvent } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
-import { executeController } from "./utils";
+import { executeController, useRealtimeOnSocket } from "./utils";
 import { Middleware } from "../types";
 import { io, Socket } from "socket.io-client";
+
+const debug = require("debug")("graphand:client");
 
 type ClientOptions = {
   endpoint?: string;
@@ -112,14 +114,11 @@ class Client {
     });
 
     socket.on("connect", () => {
-      console.log(`Socket connected on scope ${scope} (${url})`);
+      debug(`Socket connected on scope ${scope} (${url})`);
 
       const adapter = this.getClientAdapter();
       if (adapter.__modelsMap) {
-        socket.emit(
-          "use-realtime",
-          Array.from(adapter.__modelsMap.keys()).join(",")
-        );
+        useRealtimeOnSocket(socket, Array.from(adapter.__modelsMap.keys()));
       }
     });
 

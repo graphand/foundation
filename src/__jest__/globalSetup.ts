@@ -20,7 +20,10 @@ export default async () => {
     organization: "640920dbee6309dc4bd5290d",
   });
 
-  process.env.CLIENT_OPTIONS = JSON.stringify(client.options);
+  process.env.CLIENT_OPTIONS = JSON.stringify({
+    ...client.options,
+    project: project._id,
+  });
   process.env.PROJECT_ID = project._id;
 
   globalThis.client = client;

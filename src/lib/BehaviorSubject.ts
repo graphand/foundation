@@ -16,6 +16,11 @@ class BehaviorSubject<T> extends Subject<T> {
     this.currentValue = value;
     super.next(value);
   }
+
+  subscribe(observer: (value: T) => void): () => void {
+    observer(this.currentValue);
+    return super.subscribe(observer);
+  }
 }
 
 export default BehaviorSubject;
