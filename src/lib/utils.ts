@@ -8,11 +8,11 @@ import {
   CoreError,
   JSONQuery,
   FieldTypes,
-  getFieldFromPath,
-  getValueFromPath,
   PopulateOption,
-  setValueOnPath,
   DocumentDefinition,
+  getFieldsPathsFromPath,
+  getFieldFromDefinition,
+  FieldsPathItem,
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import Client from "./Client";
@@ -20,6 +20,8 @@ import FetchError from "./FetchError";
 import FetchValidationError from "./FetchValidationError";
 import { MiddlewareInput } from "../types";
 import { Socket } from "socket.io-client";
+import ClientError from "./ClientError";
+import ErrorCodes from "../enums/error-codes";
 
 const debug = require("debug")("graphand:client");
 
@@ -27,7 +29,11 @@ export const getClientFromModel = (model: typeof Model) => {
   const adapter = model.__adapter as ClientAdapter;
 
   if (!adapter.client) {
-    throw new Error("MODEL_NO_CLIENT");
+    throw new ClientError({
+      code: ErrorCodes.MODEL_NO_CLIENT,
+      message:
+        "Model must be initialized with a client. Please use client.getModel() method first",
+    });
   }
 
   return adapter.client;
@@ -41,9 +47,17 @@ export const parseError = (error: any): CoreError => {
     });
 
     const fields = error.reason.fields.map((v: any) => {
-      const validationError =
-        v.validationError && parseError(v.validationError);
-      const field = v.field && new Field(v.field);
+      let validationError: CoreError;
+      let field: Field;
+
+      if (v.validationError) {
+        validationError = parseError(v.validationError);
+      }
+      if (v.field) {
+        const { type, options, path } = v.field;
+        field = new Field({ type, options }, path);
+      }
+
       return new ValidationFieldError({ ...v, validationError, field });
     });
 
@@ -55,7 +69,7 @@ export const parseError = (error: any): CoreError => {
 
 export const executeController = async (
   client: Client,
-  controller: typeof controllersMap[keyof typeof controllersMap],
+  controller: (typeof controllersMap)[keyof typeof controllersMap],
   opts: {
     path?: { [key: string]: string };
     query?: any;
@@ -95,7 +109,10 @@ export const executeController = async (
 
     if (scope === "project") {
       if (!client.options.project) {
-        throw new Error("CLIENT_NO_PROJECT");
+        throw new ClientError({
+          code: ErrorCodes.CLIENT_NO_PROJECT,
+          message: "Client must be configured with a project to use controller",
+        });
       }
 
       url = scheme + client.options.project + "." + endpoint + path;
@@ -149,7 +166,7 @@ export const executeController = async (
   };
 
   const _fetch = (retrying = false) => {
-    debug(`fetching ${url} [${init.method}] ...`);
+    debug(`fetching ${url} [${init.method}] ...`, JSON.stringify(init));
     return fetch(url, init).then(async (r) => {
       try {
         let res = await r.json();
@@ -189,6 +206,7 @@ export const executeController = async (
 
         return payload.data;
       } catch (e) {
+        debug(`error on fetching ${url} :`, e.message);
         throw e;
       }
     });
@@ -245,7 +263,107 @@ export const getPopulatedFromQuery = (
     .filter(Boolean);
 };
 
-export const parsePopulated = <T extends typeof Model>(
+const _decodePopulate = async (
+  p: PopulateOption,
+  d: DocumentDefinition,
+  fieldsPaths: Array<FieldsPathItem>,
+  model: typeof Model
+) => {
+  for (const [i, fp] of fieldsPaths.entries()) {
+    if (fp.field.type === FieldTypes.ARRAY && d[fp.key]) {
+      const _field = fp.field as Field<FieldTypes.ARRAY>;
+      const itemsField = getFieldFromDefinition(
+        _field.options.items,
+        model.__adapter,
+        _field.__path + ".[]"
+      );
+
+      let arrValue = Array.isArray(d[fp.key]) ? d[fp.key] : [d[fp.key]];
+      arrValue = arrValue.map((v) => ({ "[]": v }));
+      const restPath = fieldsPaths.slice(i + 1);
+
+      if (itemsField.type === FieldTypes.RELATION) {
+        const _itemsField = itemsField as Field<FieldTypes.RELATION>;
+        const refModel = Model.getFromSlug.call(model, _itemsField.options.ref);
+        const adapter = refModel.__adapter as ClientAdapter;
+        const rows = arrValue.map((v) => v["[]"]);
+
+        if (p.populate) {
+          await parsePopulated(
+            refModel,
+            rows,
+            getPopulatedFromQuery({ populate: p.populate })
+          );
+        }
+
+        const mappedList = rows.map((r) => adapter.mapOrNew(r));
+        const mappedRes = mappedList.map((r) => r.mapped);
+        const updated = mappedList
+          .filter((r) => r.updated)
+          .map((r) => r.mapped._id);
+
+        adapter.updaterSubject.next({
+          ids: mappedRes.map((r) => r._id),
+          operation: "fetch",
+        });
+
+        if (updated?.length) {
+          adapter.updaterSubject.next({
+            ids: updated,
+            operation: "localUpdate",
+          });
+        }
+
+        arrValue = mappedRes.map((r) => ({ "[]": r._id }));
+      } else {
+        const _fieldsPaths = [{ key: "[]", field: itemsField }, ...restPath];
+
+        await Promise.all(
+          arrValue.map((d) => _decodePopulate(p, d, _fieldsPaths, model))
+        );
+      }
+
+      d[fp.key] = arrValue.map((v) => v["[]"]);
+    } else if (fp.field.type === FieldTypes.RELATION) {
+      const _field = fp.field as Field<FieldTypes.RELATION>;
+      const refModel = Model.getFromSlug.call(model, _field.options.ref);
+      const adapter = refModel.__adapter as ClientAdapter;
+
+      const value = d[fp.key];
+      if (value && typeof value === "object" && value?._id) {
+        if (p.populate) {
+          await parsePopulated(
+            refModel,
+            [value],
+            getPopulatedFromQuery({ populate: p.populate })
+          );
+        }
+
+        const { mapped, updated } = adapter.mapOrNew(value);
+
+        adapter.updaterSubject.next({
+          ids: [mapped._id],
+          operation: "fetch",
+        });
+
+        if (updated) {
+          adapter.updaterSubject.next({
+            ids: [mapped._id],
+            operation: "localUpdate",
+          });
+        }
+
+        d[fp.key] = mapped._id;
+      }
+    } else if (fp.field.type === FieldTypes.JSON) {
+      const restPath = fieldsPaths.slice(i + 1);
+
+      await _decodePopulate(p, d[fp.key], restPath, model);
+    }
+  }
+};
+
+export const parsePopulated = async <T extends typeof Model>(
   model: T,
   documents: Array<DocumentDefinition>,
   populated: Array<PopulateOption>
@@ -254,74 +372,26 @@ export const parsePopulated = <T extends typeof Model>(
     return;
   }
 
-  populated.forEach((p) => {
-    const _field = getFieldFromPath(model, p.path);
+  await Promise.all(
+    populated.map(async (p) => {
+      const fieldsPaths = getFieldsPathsFromPath(model, p.path);
 
-    if (_field?.type !== FieldTypes.RELATION) {
-      return;
-    }
-
-    const field = _field as Field<FieldTypes.RELATION>;
-
-    const refModel = Model.getFromSlug.call(model, field.options.ref);
-
-    const adapter = refModel.__adapter as ClientAdapter;
-
-    if (!adapter) {
-      return;
-    }
-
-    documents.forEach((d) => {
-      const populatedValue = getValueFromPath(d, p.path);
-      let rows;
-      let encodedValue;
-
-      if (!populatedValue || typeof populatedValue !== "object") {
-        return;
-      }
-
-      if (Array.isArray(populatedValue)) {
-        rows = populatedValue;
-        encodedValue = populatedValue.map((v) => v._id);
-      } else {
-        rows = [populatedValue];
-        encodedValue = populatedValue?._id || null;
-      }
-
-      if (p.populate) {
-        parsePopulated(
-          refModel,
-          rows,
-          getPopulatedFromQuery({ populate: p.populate })
-        );
-      }
-
-      setValueOnPath(d, p.path, encodedValue);
-
-      const mappedList = rows.map((r) => adapter.mapOrNew(r));
-      const mappedRes = mappedList.map((r) => r.mapped);
-      const updated = mappedList
-        .filter((r) => r.updated)
-        .map((r) => r.mapped._id);
-
-      adapter.updaterSubject.next({
-        ids: mappedRes.map((r) => r._id),
-        operation: "fetch",
-      });
-
-      if (updated?.length) {
-        adapter.updaterSubject.next({
-          ids: updated,
-          operation: "localUpdate",
-        });
-      }
-    });
-  });
+      await Promise.all(
+        documents.map((d) => _decodePopulate(p, d, fieldsPaths, model))
+      );
+    })
+  );
 };
 
 export const useRealtimeOnSocket = (socket: Socket, slugs: Array<string>) => {
-  const slugsStr = slugs.join(",");
+  if (!socket.connected) {
+    throw new ClientError({
+      message: "Socket must be connected to use realtime",
+      code: ErrorCodes.SOCKET_NOT_CONNECTED,
+    });
+  }
 
+  const slugsStr = slugs.join(",");
   debug(`emit on socket ${socket.id} to use realtime for models ${slugsStr}`);
   socket.emit("use-realtime", slugsStr);
 };

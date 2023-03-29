@@ -18,7 +18,7 @@ export const fetchWatcher = async (
   model: typeof Model,
   _id: string,
   operation = "fetch",
-  timeout = 1000
+  timeout = 600
 ) => {
   const adapter = model.__adapter as ClientAdapter;
   let unsub;

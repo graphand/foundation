@@ -12,7 +12,7 @@
   "scripts": {
     "build": "webpack",
     "build:watch": "webpack --watch",
-    "test": "DEBUG=graphand:* jest"
+    "test": "jest"
   },
   "dependencies": {
     "debug": "^4.3.4",

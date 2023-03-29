@@ -1,0 +1,7 @@
+enum ErrorCodes {
+  SOCKET_NOT_CONNECTED = "SOCKET_NOT_CONNECTED",
+  CLIENT_NO_PROJECT = "CLIENT_NO_PROJECT",
+  MODEL_NO_CLIENT = "MODEL_NO_CLIENT",
+}
+
+export default ErrorCodes;

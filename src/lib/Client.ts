@@ -1,11 +1,20 @@
-import { Model, controllersMap, models, ModelCrudEvent } from "@graphand/core";
+import {
+  Model,
+  controllersMap,
+  models,
+  ModelCrudEvent,
+  getAdaptedModel,
+} from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
 import { executeController, useRealtimeOnSocket } from "./utils";
 import { Middleware } from "../types";
 import { io, Socket } from "socket.io-client";
+import ClientError from "./ClientError";
+import ErrorCodes from "../enums/error-codes";
 
 const debug = require("debug")("graphand:client");
+const debugSocket = require("debug")("graphand:socket");
 
 type ClientOptions = {
   endpoint?: string;
@@ -77,7 +86,7 @@ class Client {
       return Model.getFromSlug(model, adapter);
     }
 
-    return Model.getAdaptedModel(model, adapter);
+    return getAdaptedModel(model, adapter);
   }
 
   middleware(middleware: Middleware) {
@@ -98,7 +107,10 @@ class Client {
 
     if (scope === "project") {
       if (!this.options.project) {
-        throw new Error("CLIENT_NO_PROJECT");
+        throw new ClientError({
+          code: ErrorCodes.CLIENT_NO_PROJECT,
+          message: "Client must be configured with a project to use socket",
+        });
       }
 
       url = scheme + this.options.project + "." + endpoint;
@@ -108,18 +120,29 @@ class Client {
 
     const socket = io(url, {
       reconnectionDelayMax: 10000,
+      rejectUnauthorized: false,
       auth: {
         token: this.options.accessToken,
       },
     });
 
+    debugSocket(`Connecting socket on scope ${scope} (${url}) ...`);
+
     socket.on("connect", () => {
-      debug(`Socket connected on scope ${scope} (${url})`);
+      debugSocket(`Socket connected on scope ${scope} (${url})`);
 
       const adapter = this.getClientAdapter();
       if (adapter.__modelsMap) {
         useRealtimeOnSocket(socket, Array.from(adapter.__modelsMap.keys()));
       }
+    });
+
+    socket.on("connect_error", (e) => {
+      debugSocket(`Socket error on scope ${scope} (${url}) : ${e.message}`);
+    });
+
+    socket.on("disconnect", () => {
+      debugSocket(`Socket disconnected on scope ${scope} (${url})`);
     });
 
     socket.on("realtime:event", (event: ModelCrudEvent) => {

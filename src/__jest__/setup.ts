@@ -1,6 +1,8 @@
 import "../modules";
 import Client from "../lib/Client";
-import "cross-fetch/polyfill";
+
+jest.setTimeout(10000);
+// jest.retryTimes(2);
 
 const clientOptions = JSON.parse(process.env.CLIENT_OPTIONS);
 

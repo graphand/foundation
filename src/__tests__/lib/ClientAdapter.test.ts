@@ -12,35 +12,26 @@ class TestModel extends Model {
 
 class TestModel2 extends Model {
   title: FieldDefinitionText;
-  relSingle: FieldDefinitionRelation<{
-    model: TestModel;
-    multiple: false;
-  }>;
-  relMultiple: FieldDefinitionRelation<{
-    model: TestModel;
-    multiple: false;
+  relSingle: FieldDefinitionRelation<TestModel>;
+  relMultiple: FieldDefinitionArray<{
+    type: FieldTypes.RELATION;
+    definition: TestModel;
   }>;
   obj: FieldDefinitionJSON<{
-    nestedRelSingle: FieldDefinitionRelation<{
-      model: TestModel;
-      multiple: false;
-    }>;
-    nestedRelMultiple: FieldDefinitionRelation<{
-      model: TestModel;
-      multiple: true;
+    nestedRelSingle: FieldDefinitionRelation<TestModel>;
+    nestedRelMultiple: FieldDefinitionArray<{
+      type: FieldTypes.RELATION;
+      definition: TestModel;
     }>;
   }>;
 }
 
 class TestModel3 extends Model {
   title: FieldDefinitionText;
-  relSingle: FieldDefinitionRelation<{
-    model: TestModel2;
-    multiple: false;
-  }>;
-  relMultiple: FieldDefinitionRelation<{
-    model: TestModel2;
-    multiple: false;
+  relSingle: FieldDefinitionRelation<TestModel2>;
+  relMultiple: FieldDefinitionArray<{
+    type: FieldTypes.RELATION;
+    definition: TestModel2;
   }>;
 }
 
@@ -59,14 +50,17 @@ describe("ClientAdapter", () => {
         type: FieldTypes.RELATION,
         options: {
           ref: model.slug,
-          multiple: false,
         },
       },
       relMultiple: {
-        type: FieldTypes.RELATION,
+        type: FieldTypes.ARRAY,
         options: {
-          ref: model.slug,
-          multiple: true,
+          items: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: model.slug,
+            },
+          },
         },
       },
       obj: {
@@ -77,14 +71,17 @@ describe("ClientAdapter", () => {
               type: FieldTypes.RELATION,
               options: {
                 ref: model.slug,
-                multiple: false,
               },
             },
             nestedRelMultiple: {
-              type: FieldTypes.RELATION,
+              type: FieldTypes.ARRAY,
               options: {
-                ref: model.slug,
-                multiple: true,
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: model.slug,
+                  },
+                },
               },
             },
           },
@@ -99,14 +96,17 @@ describe("ClientAdapter", () => {
         type: FieldTypes.RELATION,
         options: {
           ref: model2.slug,
-          multiple: false,
         },
       },
       relMultiple: {
-        type: FieldTypes.RELATION,
+        type: FieldTypes.ARRAY,
         options: {
-          ref: model2.slug,
-          multiple: true,
+          items: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: model2.slug,
+            },
+          },
         },
       },
     });
@@ -427,8 +427,10 @@ describe("ClientAdapter", () => {
       });
 
       const adapter = model.__adapter as ClientAdapter;
+      const adapter2 = model2.__adapter as ClientAdapter;
       adapter.instancesMap.delete(instance1._id);
       adapter.instancesMap.delete(instance2._id);
+      adapter2.instancesMap.delete(instance3._id);
       const fetched = await model2.get({
         ids: [instance3._id],
         populate: ["relMultiple"],
@@ -457,7 +459,9 @@ describe("ClientAdapter", () => {
       });
 
       const adapter = model.__adapter as ClientAdapter;
+      const adapter2 = model2.__adapter as ClientAdapter;
       adapter.instancesMap.delete(instance1._id);
+      adapter2.instancesMap.delete(instance2._id);
       const fetched = await model2.get({
         ids: [instance2._id],
         populate: ["obj.nestedRelSingle"],

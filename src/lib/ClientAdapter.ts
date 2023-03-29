@@ -17,8 +17,9 @@ import {
   getPopulatedFromQuery,
   parsePopulated,
 } from "./utils";
-import { Socket } from "socket.io-client";
 import { ModelUpdaterEvent } from "../types";
+import ClientError from "./ClientError";
+import ErrorCodes from "../enums/error-codes";
 
 class ClientAdapter extends Adapter {
   static __client: Client;
@@ -71,7 +72,11 @@ class ClientAdapter extends Adapter {
   fetcher: AdapterFetcher = {
     count: async ([query]) => {
       if (!this.client) {
-        throw new Error("MODEL_NO_CLIENT");
+        throw new ClientError({
+          code: ErrorCodes.MODEL_NO_CLIENT,
+          message:
+            "Model must be initialized with a client. Please use client.getModel() method first",
+        });
       }
 
       return await executeController(this.client, controllersMap.modelCount, {
@@ -83,7 +88,11 @@ class ClientAdapter extends Adapter {
     },
     get: async ([query], ctx) => {
       if (!this.client) {
-        throw new Error("MODEL_NO_CLIENT");
+        throw new ClientError({
+          code: ErrorCodes.MODEL_NO_CLIENT,
+          message:
+            "Model must be initialized with a client. Please use client.getModel() method first",
+        });
       }
 
       if (typeof query === "string") {
@@ -132,38 +141,20 @@ class ClientAdapter extends Adapter {
 
         const list = await this.fetcher.getList([query], ctx);
 
-        if (!list) {
-          throw new Error();
-        }
-
-        if (!list[0]) {
+        if (!list?.[0]) {
           return null;
         }
 
         return list[0];
-
-        // parsePopulated(this.model, list, getPopulatedFromQuery(query));
-        //
-        // const { mapped, updated } = this.mapOrNew(list[0]);
-        //
-        // this.updaterSubject.next({
-        //   ids: [mapped._id],
-        //   operation: "fetch",
-        // });
-        //
-        // if (updated) {
-        //   this.updaterSubject.next({
-        //     ids: [mapped._id],
-        //     operation: "localUpdate",
-        //   });
-        // }
-        //
-        // return mapped;
       }
     },
     getList: async ([query], ctx) => {
       if (!this.client) {
-        throw new Error("MODEL_NO_CLIENT");
+        throw new ClientError({
+          code: ErrorCodes.MODEL_NO_CLIENT,
+          message:
+            "Model must be initialized with a client. Please use client.getModel() method first",
+        });
       }
 
       const _canUseIds = canUseIds(query) as Array<string>;
@@ -226,7 +217,11 @@ class ClientAdapter extends Adapter {
     },
     createOne: async ([payload]) => {
       if (!this.client) {
-        throw new Error("MODEL_NO_CLIENT");
+        throw new ClientError({
+          code: ErrorCodes.MODEL_NO_CLIENT,
+          message:
+            "Model must be initialized with a client. Please use client.getModel() method first",
+        });
       }
 
       const res = await executeController(
@@ -251,7 +246,11 @@ class ClientAdapter extends Adapter {
     },
     createMultiple: async ([payload]) => {
       if (!this.client) {
-        throw new Error("MODEL_NO_CLIENT");
+        throw new ClientError({
+          code: ErrorCodes.MODEL_NO_CLIENT,
+          message:
+            "Model must be initialized with a client. Please use client.getModel() method first",
+        });
       }
 
       const res = await executeController(
@@ -276,7 +275,11 @@ class ClientAdapter extends Adapter {
     },
     updateOne: async ([query, update], ctx) => {
       if (!this.client) {
-        throw new Error("MODEL_NO_CLIENT");
+        throw new ClientError({
+          code: ErrorCodes.MODEL_NO_CLIENT,
+          message:
+            "Model must be initialized with a client. Please use client.getModel() method first",
+        });
       }
 
       if (typeof query === "string") {
@@ -306,7 +309,7 @@ class ClientAdapter extends Adapter {
         const list = await this.fetcher.updateMultiple([query, update], ctx);
 
         if (!list) {
-          throw new Error();
+          return null;
         }
 
         this.__eventSubject.next({
@@ -321,7 +324,11 @@ class ClientAdapter extends Adapter {
     },
     updateMultiple: async ([query, update]) => {
       if (!this.client) {
-        throw new Error("MODEL_NO_CLIENT");
+        throw new ClientError({
+          code: ErrorCodes.MODEL_NO_CLIENT,
+          message:
+            "Model must be initialized with a client. Please use client.getModel() method first",
+        });
       }
 
       const res = await executeController(
@@ -347,7 +354,11 @@ class ClientAdapter extends Adapter {
     },
     deleteOne: async ([query], ctx) => {
       if (!this.client) {
-        throw new Error("MODEL_NO_CLIENT");
+        throw new ClientError({
+          code: ErrorCodes.MODEL_NO_CLIENT,
+          message:
+            "Model must be initialized with a client. Please use client.getModel() method first",
+        });
       }
 
       let res;
@@ -375,7 +386,11 @@ class ClientAdapter extends Adapter {
     },
     deleteMultiple: async ([query]) => {
       if (!this.client) {
-        throw new Error("MODEL_NO_CLIENT");
+        throw new ClientError({
+          code: ErrorCodes.MODEL_NO_CLIENT,
+          message:
+            "Model must be initialized with a client. Please use client.getModel() method first",
+        });
       }
 
       const res = await executeController(
@@ -400,7 +415,11 @@ class ClientAdapter extends Adapter {
     },
     getModelDefinition: async () => {
       if (!this.client) {
-        throw new Error("MODEL_NO_CLIENT");
+        throw new ClientError({
+          code: ErrorCodes.MODEL_NO_CLIENT,
+          message:
+            "Model must be initialized with a client. Please use client.getModel() method first",
+        });
       }
 
       let datamodel;
@@ -475,7 +494,7 @@ class ClientAdapter extends Adapter {
         new Date(payload._updatedAt) > new Date(mapped._updatedAt)
       ) {
         updated = true;
-        mapped.setDoc(payload);
+        mapped.__doc = payload;
       }
     } else {
       mapped = new this.model(payload);

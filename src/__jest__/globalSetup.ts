@@ -1,11 +1,12 @@
 import Client from "../lib/Client";
-import "cross-fetch/polyfill";
 import { models } from "@graphand/core";
 import { generateRandomString } from "../lib/test-utils";
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 export default async () => {
   const client = new Client({
-    endpoint: "api.graphand.cloud",
+    endpoint: "api.graphand.io.local:1337",
     sockets: [],
   });
 
@@ -14,10 +15,12 @@ export default async () => {
     password: "test123",
   });
 
+  const organization = await client.getModel(models.Organization).get({});
+
   const project = await client.getModel(models.Project).create({
     name: generateRandomString(),
     slug: generateRandomString(),
-    organization: "640920dbee6309dc4bd5290d",
+    organization: organization?._id,
   });
 
   process.env.CLIENT_OPTIONS = JSON.stringify({
