@@ -9,7 +9,10 @@ import {
   models,
   ModelUpdateEvent,
   ModelCrudEvent,
+  Rule,
+  FieldsRestriction,
 } from "@graphand/core";
+import { ClientOptions } from "src/types";
 import Client from "./Client";
 import ClientAdapter from "./ClientAdapter";
 
@@ -67,18 +70,46 @@ export const generateModel = async (
     title: {
       type: FieldTypes.TEXT,
     },
-  }
+  },
+  client?: Client
 ) => {
   slug ??= generateRandomString();
+  client ??= globalThis.client;
 
-  const datamodel = await globalThis.client.getModel(models.DataModel).create({
+  const datamodel = await client.getModel(models.DataModel).create({
     name: slug,
     slug,
     fields,
     configKey: "title",
   });
 
-  return globalThis.client.getModel(datamodel.slug);
+  return client.getModel(datamodel.slug);
+};
+
+export const mockAccountWithRole = async ({
+  rules,
+  fieldsRestrictions,
+  client,
+}: {
+  rules?: Array<Rule>;
+  fieldsRestrictions?: Array<FieldsRestriction>;
+  client?: Client;
+}) => {
+  client ??= globalThis.client;
+
+  const role = await client.getModel(models.Role).create({
+    slug: generateRandomString(),
+    rules,
+    fieldsRestrictions,
+  });
+
+  const account = await client.getModel(models.Account).create({
+    email: generateRandomString() + "@test.com",
+    password: "test",
+    role: role._id,
+  });
+
+  return account;
 };
 
 export const mockModel = ({
@@ -121,57 +152,16 @@ export const mockModel = ({
   return Test;
 };
 
-export const mockModelWithDatamodel = async ({
-  scope = ModelEnvScopes.ENV,
-  fields = {
-    title: {
-      type: FieldTypes.TEXT,
-      options: {},
-    },
-  },
-  validators = [],
-}: {
-  scope?: ModelEnvScopes;
-  fields?: FieldsDefinition;
-  validators?: ValidatorsDefinition;
-} = {}) => {
-  const uidSlug = generateRandomString();
-
-  class Test extends Data {
-    static slug = uidSlug;
-    static scope = scope;
-    static fields = fields;
-    static validators = validators;
-
-    constructor(doc) {
-      super(doc);
-
-      this.defineFieldsProperties();
-    }
-
-    title;
-  }
-
-  Test.__datamodel = new DataModel({
-    slug: uidSlug,
-    fields,
-    validators,
-  });
-
-  return Test;
-};
-
-export const getClient = () => {
+export const getClient = (assignOpts: Partial<ClientOptions> = {}) => {
   const clientOptions = JSON.parse(process.env.CLIENT_OPTIONS);
   return new Client({
     ...clientOptions,
+    ...assignOpts,
   });
 };
 
 export const getClientWithSocket = () => {
-  const clientOptions = JSON.parse(process.env.CLIENT_OPTIONS);
-  return new Client({
-    ...clientOptions,
+  return getClient({
     sockets: ["project"],
   });
 };

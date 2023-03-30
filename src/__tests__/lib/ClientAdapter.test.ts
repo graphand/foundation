@@ -41,8 +41,8 @@ describe("ClientAdapter", () => {
   let model3: typeof TestModel3;
 
   beforeAll(async () => {
-    model = await generateModel();
-    model2 = await generateModel(undefined, {
+    model = (await generateModel()) as typeof model;
+    model2 = (await generateModel(undefined, {
       title: {
         type: FieldTypes.TEXT,
       },
@@ -87,8 +87,8 @@ describe("ClientAdapter", () => {
           },
         },
       },
-    });
-    model3 = await generateModel(undefined, {
+    })) as typeof model2;
+    model3 = (await generateModel(undefined, {
       title: {
         type: FieldTypes.TEXT,
       },
@@ -109,7 +109,7 @@ describe("ClientAdapter", () => {
           },
         },
       },
-    });
+    })) as typeof model3;
   });
 
   describe("ClientAdapter.create", () => {
@@ -207,6 +207,8 @@ describe("ClientAdapter", () => {
         { title: title1 },
         { title: title2 },
       ]);
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       await expect(eventPromise).resolves.toEqual({
         operation: "create",

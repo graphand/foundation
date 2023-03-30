@@ -168,6 +168,14 @@ class Client {
     });
   }
 
+  async genAccountToken(accountId: string) {
+    return await executeController(this, controllersMap.genAccountToken, {
+      path: {
+        id: accountId,
+      },
+    });
+  }
+
   async loginAccount(credentials: { email: string; password: string }) {
     const { email, password } = credentials;
 
