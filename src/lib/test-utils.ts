@@ -161,6 +161,13 @@ export const mockModelWithDatamodel = async ({
   return Test;
 };
 
+export const getClient = () => {
+  const clientOptions = JSON.parse(process.env.CLIENT_OPTIONS);
+  return new Client({
+    ...clientOptions,
+  });
+};
+
 export const getClientWithSocket = () => {
   const clientOptions = JSON.parse(process.env.CLIENT_OPTIONS);
   return new Client({

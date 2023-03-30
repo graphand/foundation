@@ -3,11 +3,12 @@ import {
   generateRandomString,
   getClientWithSocket,
   generateModel,
+  getClient,
 } from "../lib/test-utils";
 import Client from "../lib/Client";
+import ClientAdapter from "../lib/ClientAdapter";
 
 describe("test realtime", () => {
-  const client = globalThis.client as Client;
   let model;
 
   beforeAll(async () => {
@@ -16,6 +17,7 @@ describe("test realtime", () => {
   });
 
   it("should receive event from socket when creating a document", async () => {
+    const client = getClient();
     const clientWithSocket = getClientWithSocket();
     const _model = clientWithSocket.getModel(model);
 
@@ -25,7 +27,7 @@ describe("test realtime", () => {
 
     const fetchPromise = fetchWatcher(_model, {
       fn: (e) => {
-        if (e.operation === "create" && e.__fromSocket) {
+        if (e.operation === "create" && e.__socketId) {
           id = e.ids[0];
           return true;
         }
@@ -49,7 +51,7 @@ describe("test realtime", () => {
 
     const fetchPromise = fetchWatcher(_model, {
       fn: (e) => {
-        if (e.operation === "create" && e.__fromSocket) {
+        if (e.operation === "create" && e.__socketId) {
           return true;
         }
       },
@@ -61,5 +63,136 @@ describe("test realtime", () => {
     });
 
     await expect(fetchPromise).resolves.toBeFalsy();
+  });
+
+  it("should receive events from socket when creating multiple document", async () => {
+    const client = getClient();
+    const clientWithSocket = getClientWithSocket();
+    const _model = clientWithSocket.getModel(model);
+
+    await _model.initialize();
+
+    let ids;
+
+    const fetchPromise = fetchWatcher(_model, {
+      fn: (e) => {
+        if (e.operation === "create" && e.__socketId) {
+          ids = e.ids;
+          return true;
+        }
+      },
+      subject: "event",
+    });
+
+    const created = await client.getModel(model).createMultiple([
+      {
+        title: generateRandomString(),
+      },
+      {
+        title: generateRandomString(),
+      },
+      {
+        title: generateRandomString(),
+      },
+    ]);
+
+    await expect(fetchPromise).resolves.toBeTruthy();
+
+    const createdIds = created.map((doc) => doc._id);
+    expect(ids).toEqual(createdIds);
+  });
+
+  it("should receive all ids even when creating multiple documents", async () => {
+    const client = getClient();
+    const clientWithSocket = getClientWithSocket();
+    const _model = clientWithSocket.getModel(model);
+
+    await _model.initialize();
+
+    let idsSet = new Set<string>();
+    let idsArr: Array<string> = [];
+
+    const adapter = _model.__adapter as ClientAdapter;
+    const unsub = adapter.__eventSubject.subscribe((e) => {
+      if (e.operation === "create" && e.__socketId) {
+        e.ids.forEach(idsSet.add.bind(idsSet));
+        idsArr = idsArr.concat(e.ids);
+      }
+    });
+
+    await Promise.all(
+      Array.from({ length: 20 }).map(() => {
+        return client.getModel(model).create({
+          title: generateRandomString(),
+        });
+      })
+    );
+
+    await Promise.all(
+      Array.from({ length: 10 }).map(() => {
+        return client.getModel(model).createMultiple([
+          {
+            title: generateRandomString(),
+          },
+          {
+            title: generateRandomString(),
+          },
+        ]);
+      })
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    unsub();
+
+    expect(idsSet.size).toEqual(40);
+    expect(idsArr.length).toEqual(40);
+  });
+
+  it("should receive all ids even when creating many documents", async () => {
+    const client = getClient();
+    const clientWithSocket = getClientWithSocket();
+    const _model = clientWithSocket.getModel(model);
+
+    await _model.initialize();
+
+    let idsSet = new Set<string>();
+    let idsArr: Array<string> = [];
+
+    const adapter = _model.__adapter as ClientAdapter;
+    const unsub = adapter.__eventSubject.subscribe((e) => {
+      if (e.operation === "create" && e.__socketId) {
+        e.ids.forEach(idsSet.add.bind(idsSet));
+        idsArr = idsArr.concat(e.ids);
+      }
+    });
+
+    await Promise.all(
+      Array.from({ length: 200 }).map(() => {
+        return client.getModel(model).create({
+          title: generateRandomString(),
+        });
+      })
+    );
+
+    await Promise.all(
+      Array.from({ length: 100 }).map(() => {
+        return client.getModel(model).createMultiple([
+          {
+            title: generateRandomString(),
+          },
+          {
+            title: generateRandomString(),
+          },
+        ]);
+      })
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    unsub();
+
+    expect(idsSet.size).toEqual(400);
+    expect(idsArr.length).toEqual(400);
   });
 });

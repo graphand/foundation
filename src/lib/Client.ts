@@ -138,7 +138,7 @@ class Client {
       const model = this.getModel(event.model);
       const adapter = model.__adapter as ClientAdapter;
 
-      event.__fromSocket = true;
+      event.__socketId = socket.id;
 
       adapter.__eventSubject.next(event);
     });
