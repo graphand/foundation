@@ -21,8 +21,6 @@ describe("test realtime", () => {
     const clientWithSocket = getClientWithSocket();
     const _model = clientWithSocket.getModel(model);
 
-    await _model.initialize();
-
     let id;
 
     const fetchPromise = fetchWatcher(_model, {
@@ -70,8 +68,6 @@ describe("test realtime", () => {
     const clientWithSocket = getClientWithSocket();
     const _model = clientWithSocket.getModel(model);
 
-    await _model.initialize();
-
     let ids;
 
     const fetchPromise = fetchWatcher(_model, {
@@ -102,59 +98,10 @@ describe("test realtime", () => {
     expect(ids).toEqual(createdIds);
   });
 
-  it("should receive all ids even when creating multiple documents", async () => {
-    const client = getClient();
-    const clientWithSocket = getClientWithSocket();
-    const _model = clientWithSocket.getModel(model);
-
-    await _model.initialize();
-
-    let idsSet = new Set<string>();
-    let idsArr: Array<string> = [];
-
-    const adapter = _model.__adapter as ClientAdapter;
-    const unsub = adapter.__eventSubject.subscribe((e) => {
-      if (e.operation === "create" && e.__socketId) {
-        e.ids.forEach(idsSet.add.bind(idsSet));
-        idsArr = idsArr.concat(e.ids);
-      }
-    });
-
-    await Promise.all(
-      Array.from({ length: 20 }).map(() => {
-        return client.getModel(model).create({
-          title: generateRandomString(),
-        });
-      })
-    );
-
-    await Promise.all(
-      Array.from({ length: 10 }).map(() => {
-        return client.getModel(model).createMultiple([
-          {
-            title: generateRandomString(),
-          },
-          {
-            title: generateRandomString(),
-          },
-        ]);
-      })
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    unsub();
-
-    expect(idsSet.size).toEqual(40);
-    expect(idsArr.length).toEqual(40);
-  });
-
   it("should receive all ids even when creating many documents", async () => {
     const client = getClient();
     const clientWithSocket = getClientWithSocket();
     const _model = clientWithSocket.getModel(model);
-
-    await _model.initialize();
 
     let idsSet = new Set<string>();
     let idsArr: Array<string> = [];
@@ -194,5 +141,63 @@ describe("test realtime", () => {
 
     expect(idsSet.size).toEqual(400);
     expect(idsArr.length).toEqual(400);
+  });
+
+  it("should receive event from socket when updating a document", async () => {
+    const client = getClient();
+    const clientWithSocket = getClientWithSocket();
+    const _model = clientWithSocket.getModel(model);
+
+    const instance = await client.getModel(model).create({
+      title: generateRandomString(),
+    });
+
+    const fetchPromise = fetchWatcher(_model, {
+      fn: (e) => {
+        return (
+          e.operation === "update" &&
+          e.ids.includes(instance._id) &&
+          e.__socketId
+        );
+      },
+      subject: "event",
+    });
+
+    await instance.update({
+      $set: {
+        title: generateRandomString(),
+      },
+    });
+
+    await expect(fetchPromise).resolves.toBeTruthy();
+  });
+
+  it("should not receive event from socket on the updator client", async () => {
+    const client = getClient();
+    const clientWithSocket = getClientWithSocket();
+    const _model = clientWithSocket.getModel(model);
+
+    const instance = await client.getModel(model).create({
+      title: generateRandomString(),
+    });
+
+    const fetchPromise = fetchWatcher(_model, {
+      fn: (e) => {
+        return (
+          e.operation === "update" &&
+          e.ids.includes(instance._id) &&
+          e.__socketId
+        );
+      },
+      subject: "event",
+    });
+
+    await _model.update(instance._id, {
+      $set: {
+        title: "newTitle",
+      },
+    });
+
+    await expect(fetchPromise).resolves.toBeFalsy();
   });
 });
