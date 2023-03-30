@@ -8,7 +8,7 @@ import {
 import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
 import { executeController, useRealtimeOnSocket } from "./utils";
-import { Middleware } from "../types";
+import { Middleware, ClientOptions, SocketScope } from "../types";
 import { io, Socket } from "socket.io-client";
 import ClientError from "./ClientError";
 import ErrorCodes from "../enums/error-codes";
@@ -16,22 +16,11 @@ import ErrorCodes from "../enums/error-codes";
 const debug = require("debug")("graphand:client");
 const debugSocket = require("debug")("graphand:socket");
 
-type ClientOptions = {
-  endpoint?: string;
-  project?: string;
-  environment?: string;
-  accessToken?: string;
-  refreshToken?: string;
-  sockets?: Array<SocketScope>;
-};
-
 const defaultOptions: Partial<ClientOptions> = {
   endpoint: "api.graphand.cloud",
   environment: "master",
   sockets: ["project"],
 };
-
-type SocketScope = "project" | "global";
 
 class Client {
   __optionsSubject: BehaviorSubject<ClientOptions>;
@@ -145,9 +134,11 @@ class Client {
       debugSocket(`Socket disconnected on scope ${scope} (${url})`);
     });
 
-    socket.on("realtime:event", (event: ModelCrudEvent) => {
+    socket.on("realtime:event", (event: ModelCrudEvent & any) => {
       const model = this.getModel(event.model);
       const adapter = model.__adapter as ClientAdapter;
+
+      event.__fromSocket = true;
 
       adapter.__eventSubject.next(event);
     });

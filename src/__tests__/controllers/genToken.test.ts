@@ -69,8 +69,6 @@ describe("controller genToken", () => {
   });
 
   it("should emit update generation event on socket", async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     const token = await clientWithSocket.getModel(Token).create({
       name: generateRandomString(),
       role: roleId,

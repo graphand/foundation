@@ -26,3 +26,14 @@ export type ModelUpdaterEvent = {
 };
 
 export type Middleware = (data: MiddlewareInput) => Promise<void> | void;
+
+export type ClientOptions = {
+  endpoint?: string;
+  project?: string;
+  environment?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  sockets?: Array<SocketScope>;
+};
+
+export type SocketScope = "project" | "global";

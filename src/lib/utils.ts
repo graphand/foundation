@@ -136,9 +136,9 @@ export const executeController = async (
   init.headers["Content-Type"] = "application/json";
 
   if (init.method !== "GET" && client.__socketsMap?.size) {
-    init.headers["Sockets"] = Array.from(client.__socketsMap.values()).map(
-      (s) => s.id
-    );
+    init.headers["Sockets"] = Array.from(client.__socketsMap.values())
+      .map((s) => s.id)
+      .filter(Boolean);
   }
 
   if (controller.secured && client.options.accessToken) {
@@ -385,10 +385,11 @@ export const parsePopulated = async <T extends typeof Model>(
 
 export const useRealtimeOnSocket = (socket: Socket, slugs: Array<string>) => {
   if (!socket.connected) {
-    throw new ClientError({
-      message: "Socket must be connected to use realtime",
-      code: ErrorCodes.SOCKET_NOT_CONNECTED,
-    });
+    return;
+    // throw new ClientError({
+    //   message: "Socket must be connected to use realtime",
+    //   code: ErrorCodes.SOCKET_NOT_CONNECTED,
+    // });
   }
 
   const slugsStr = slugs.join(",");
