@@ -150,13 +150,13 @@ describe("ClientAdapter", () => {
 
       expect(adapter.instancesMap.get(created._id)).toBe(created);
 
-      let fetchWatcherPromise = fetchWatcher(model, created._id);
+      let fetchWatcherPromise = fetchWatcher(model, { _id: created._id });
 
       await expect(model.get(created._id)).resolves.toBe(created);
 
       await expect(fetchWatcherPromise).resolves.toBeFalsy();
 
-      fetchWatcherPromise = fetchWatcher(model, created._id);
+      fetchWatcherPromise = fetchWatcher(model, { _id: created._id });
 
       await expect(model.get({ filter: { _id: created._id } })).resolves.toBe(
         created
@@ -228,8 +228,8 @@ describe("ClientAdapter", () => {
       expect(adapter.instancesMap.get(created[0]._id)).toBe(created[0]);
       expect(adapter.instancesMap.get(created[1]._id)).toBe(created[1]);
 
-      let fetchWatcher1 = fetchWatcher(model, created[0]._id);
-      let fetchWatcher2 = fetchWatcher(model, created[1]._id);
+      let fetchWatcher1 = fetchWatcher(model, { _id: created[0]._id });
+      let fetchWatcher2 = fetchWatcher(model, { _id: created[1]._id });
 
       await expect(model.get(created[0]._id)).resolves.toBe(created[0]);
       await expect(model.get(created[1]._id)).resolves.toBe(created[1]);
@@ -237,8 +237,8 @@ describe("ClientAdapter", () => {
       await expect(fetchWatcher1).resolves.toBeFalsy();
       await expect(fetchWatcher2).resolves.toBeFalsy();
 
-      fetchWatcher1 = fetchWatcher(model, created[0]._id);
-      fetchWatcher2 = fetchWatcher(model, created[1]._id);
+      fetchWatcher1 = fetchWatcher(model, { _id: created[0]._id });
+      fetchWatcher2 = fetchWatcher(model, { _id: created[1]._id });
 
       await model.getList({
         filter: { _id: { $in: [created[0]._id, created[1]._id] } },
@@ -277,7 +277,7 @@ describe("ClientAdapter", () => {
 
       const created = await model.create({ title });
 
-      const fetchWatcherPromise = fetchWatcher(model, created._id);
+      const fetchWatcherPromise = fetchWatcher(model, { _id: created._id });
 
       const fetched = await model.get({ ids: [created._id] });
 
@@ -311,12 +311,13 @@ describe("ClientAdapter", () => {
     it("Model.get should emit fetch event on updaterSubject", async () => {
       const created = await model.create({ title: "title" });
 
-      const fetchWatcherPromiseFetch = fetchWatcher(model, created._id);
-      const fetchWatcherPromiseLocalUpdate = fetchWatcher(
-        model,
-        created._id,
-        "localUpdate"
-      );
+      const fetchWatcherPromiseFetch = fetchWatcher(model, {
+        _id: created._id,
+      });
+      const fetchWatcherPromiseLocalUpdate = fetchWatcher(model, {
+        _id: created._id,
+        operation: "localUpdate",
+      });
 
       await model.get({ filter: { _id: created._id } });
 
@@ -330,12 +331,13 @@ describe("ClientAdapter", () => {
       const adapter = model.__adapter as ClientAdapter;
       adapter.instancesMap.delete(created._id);
 
-      const fetchWatcherPromiseFetch = fetchWatcher(model, created._id);
-      const fetchWatcherPromiseLocalUpdate = fetchWatcher(
-        model,
-        created._id,
-        "localUpdate"
-      );
+      const fetchWatcherPromiseFetch = fetchWatcher(model, {
+        _id: created._id,
+      });
+      const fetchWatcherPromiseLocalUpdate = fetchWatcher(model, {
+        _id: created._id,
+        operation: "localUpdate",
+      });
 
       await model.get({ ids: [created._id] });
 
@@ -375,7 +377,7 @@ describe("ClientAdapter", () => {
         relSingle: instance1._id,
       });
 
-      const fetchWatcherPromise = fetchWatcher(model, instance1._id);
+      const fetchWatcherPromise = fetchWatcher(model, { _id: instance1._id });
 
       await model2.get({
         ids: [instance2._id],
@@ -398,11 +400,10 @@ describe("ClientAdapter", () => {
       const adapter = model.__adapter as ClientAdapter;
       adapter.instancesMap.delete(instance1._id);
 
-      const fetchWatcherPromiseLocalUpdate = fetchWatcher(
-        model,
-        instance1._id,
-        "localUpdate"
-      );
+      const fetchWatcherPromiseLocalUpdate = fetchWatcher(model, {
+        _id: instance1._id,
+        operation: "localUpdate",
+      });
 
       await model2.get({
         ids: [instance2._id],
@@ -569,16 +570,14 @@ describe("ClientAdapter", () => {
       adapter.instancesMap.delete(instance1._id);
       adapter2.instancesMap.delete(instance2._id);
 
-      const fetchWatcherPromiseLocalUpdate1 = fetchWatcher(
-        model,
-        instance1._id,
-        "localUpdate"
-      );
-      const fetchWatcherPromiseLocalUpdate2 = fetchWatcher(
-        model2,
-        instance2._id,
-        "localUpdate"
-      );
+      const fetchWatcherPromiseLocalUpdate1 = fetchWatcher(model, {
+        _id: instance1._id,
+        operation: "localUpdate",
+      });
+      const fetchWatcherPromiseLocalUpdate2 = fetchWatcher(model2, {
+        _id: instance2._id,
+        operation: "localUpdate",
+      });
 
       const fetched = await model3.get({
         ids: [instance3._id],
@@ -616,16 +615,14 @@ describe("ClientAdapter", () => {
       const adapter = model.__adapter as ClientAdapter;
       const adapter2 = model2.__adapter as ClientAdapter;
 
-      const fetchWatcherPromiseLocalUpdate1 = fetchWatcher(
-        model,
-        instance1._id,
-        "localUpdate"
-      );
-      const fetchWatcherPromiseLocalUpdate2 = fetchWatcher(
-        model2,
-        instance2._id,
-        "localUpdate"
-      );
+      const fetchWatcherPromiseLocalUpdate1 = fetchWatcher(model, {
+        _id: instance1._id,
+        operation: "localUpdate",
+      });
+      const fetchWatcherPromiseLocalUpdate2 = fetchWatcher(model2, {
+        _id: instance2._id,
+        operation: "localUpdate",
+      });
 
       const fetched = await model3.get({
         ids: [instance3._id],
@@ -675,7 +672,7 @@ describe("ClientAdapter", () => {
       expect(fetched.__doc.relMultiple).toEqual([instance2._id]);
 
       // now should be able to get instance1 without fetching it
-      const fetchWatcherPromise = fetchWatcher(model, instance1._id);
+      const fetchWatcherPromise = fetchWatcher(model, { _id: instance1._id });
 
       const fetchedInstance1 = await model.get({
         ids: [instance1._id],
@@ -716,7 +713,7 @@ describe("ClientAdapter", () => {
         { title: generateRandomString() },
       ]);
 
-      const fetchWatcherPromise = fetchWatcher(model, created1._id);
+      const fetchWatcherPromise = fetchWatcher(model, { _id: created1._id });
 
       const fetchedList = await model.getList({
         ids: [created1._id, created2._id],
@@ -734,8 +731,8 @@ describe("ClientAdapter", () => {
         { title: generateRandomString() },
       ]);
 
-      let fetchWatcherPromise1 = fetchWatcher(model, created1._id);
-      let fetchWatcherPromise2 = fetchWatcher(model, created2._id);
+      let fetchWatcherPromise1 = fetchWatcher(model, { _id: created1._id });
+      let fetchWatcherPromise2 = fetchWatcher(model, { _id: created2._id });
 
       const adapter = model.__adapter as ClientAdapter;
       adapter.instancesMap.delete(created1._id);
@@ -784,7 +781,9 @@ describe("ClientAdapter", () => {
       adapter.instancesMap.delete(createdList[3]._id);
       adapter.instancesMap.delete(createdList[7]._id);
 
-      const fetchWatcherPromise = fetchWatcher(model, createdList[1]._id);
+      const fetchWatcherPromise = fetchWatcher(model, {
+        _id: createdList[1]._id,
+      });
 
       const fetchedList = await model.getList({
         ids: [...ids],
@@ -805,7 +804,9 @@ describe("ClientAdapter", () => {
 
       const ids = createdList.map((item) => item._id);
 
-      const fetchWatcherPromise = fetchWatcher(model, createdList[0]._id);
+      const fetchWatcherPromise = fetchWatcher(model, {
+        _id: createdList[0]._id,
+      });
 
       const fetchedList = await model.getList({
         ids: [...ids],

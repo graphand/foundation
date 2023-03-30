@@ -23,18 +23,15 @@ describe("test realtime", () => {
 
     let id;
 
-    const fetchPromise = fetchWatcher(
-      _model,
-      (e) => {
+    const fetchPromise = fetchWatcher(_model, {
+      fn: (e) => {
         if (e.operation === "create" && e.__fromSocket) {
           id = e.ids[0];
           return true;
         }
       },
-      undefined,
-      undefined,
-      "event"
-    );
+      subject: "event",
+    });
 
     const created = await client.getModel(model).create({
       title: generateRandomString(),
@@ -50,17 +47,14 @@ describe("test realtime", () => {
 
     const _model = clientWithSocket.getModel(model);
 
-    const fetchPromise = fetchWatcher(
-      _model,
-      (e) => {
+    const fetchPromise = fetchWatcher(_model, {
+      fn: (e) => {
         if (e.operation === "create" && e.__fromSocket) {
           return true;
         }
       },
-      undefined,
-      undefined,
-      "event"
-    );
+      subject: "event",
+    });
 
     await _model.create({
       title: generateRandomString(),

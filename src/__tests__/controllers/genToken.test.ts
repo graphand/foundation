@@ -75,11 +75,10 @@ describe("controller genToken", () => {
       maxGen: 2,
     });
 
-    const fetchPromise = fetchWatcher(
-      clientWithSocket.getModel(Token),
-      token._id,
-      "update"
-    );
+    const fetchPromise = fetchWatcher(clientWithSocket.getModel(Token), {
+      _id: token._id,
+      operation: "update",
+    });
 
     expect(token.generation).toBe(0);
 

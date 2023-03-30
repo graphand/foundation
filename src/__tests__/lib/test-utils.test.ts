@@ -11,13 +11,15 @@ describe("test-utils", () => {
   it("fetchWatcher should returns true if the model has been fetched", async () => {
     const created = await model.create({ title: "title" } as any);
 
-    await expect(fetchWatcher(model, created._id)).resolves.toBeFalsy();
+    await expect(
+      fetchWatcher(model, { _id: created._id })
+    ).resolves.toBeFalsy();
 
     const fetchSpy = jest.spyOn(globalThis, "fetch");
 
     expect(fetchSpy).not.toHaveBeenCalled();
 
-    const fetchWatcherPromise = fetchWatcher(model, created._id);
+    const fetchWatcherPromise = fetchWatcher(model, { _id: created._id });
 
     await model.get({ filter: { _id: created._id } });
 

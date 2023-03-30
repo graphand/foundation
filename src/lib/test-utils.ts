@@ -7,6 +7,8 @@ import {
   FieldsDefinition,
   Model,
   models,
+  ModelUpdateEvent,
+  ModelCrudEvent,
 } from "@graphand/core";
 import Client from "./Client";
 import ClientAdapter from "./ClientAdapter";
@@ -17,25 +19,36 @@ export const generateRandomString = () => {
 
 export const fetchWatcher = async (
   model: typeof Model,
-  _idOrFn: string | ((e) => boolean),
-  operation = "fetch",
-  timeout = 600,
-  subject: "updater" | "event" = "updater"
+  opts: {
+    _id?: string;
+    fn?: (e: ModelUpdateEvent | ModelCrudEvent | any) => boolean;
+    operation?: "fetch" | "create" | "update" | "delete" | "localUpdate";
+    timeout?: number;
+    subject?: "updater" | "event";
+  }
 ) => {
   const adapter = model.__adapter as ClientAdapter;
   let unsub;
   let _timeout;
 
-  const s =
-    subject === "updater" ? adapter.updaterSubject : adapter.__eventSubject;
+  let subject: any = adapter.updaterSubject;
+  const operation = opts.operation ?? "fetch";
+
+  if (opts.subject === "event") {
+    subject = adapter.__eventSubject;
+  }
+
+  const fn =
+    opts.fn ??
+    ((e) => {
+      return e.operation === operation && e.ids.includes(String(opts._id));
+    });
+
+  const timeout = opts.timeout ?? 600;
 
   return new Promise((resolve) => {
-    unsub = s.subscribe((e) => {
-      if (typeof _idOrFn === "function") {
-        if (_idOrFn(e)) resolve(true);
-      } else if (e.operation === operation && e.ids.includes(String(_idOrFn))) {
-        resolve(true);
-      }
+    unsub = subject.subscribe((e) => {
+      if (fn(e)) resolve(true);
     });
 
     _timeout = setTimeout(() => {
