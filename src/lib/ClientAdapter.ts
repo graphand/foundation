@@ -115,7 +115,7 @@ class ClientAdapter extends Adapter {
           return null;
         }
 
-        parsePopulated(this.model, [res], getPopulatedFromQuery(query));
+        await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
 
         const { mapped, updated } = this.mapOrNew(res);
 
@@ -182,7 +182,7 @@ class ClientAdapter extends Adapter {
         }
       );
 
-      parsePopulated(this.model, res.rows, getPopulatedFromQuery(query));
+      await parsePopulated(this.model, res.rows, getPopulatedFromQuery(query));
 
       const mappedList = res.rows.map((r) => this.mapOrNew(r));
       const mappedRes = mappedList.map((r) => r.mapped);
@@ -483,6 +483,10 @@ class ClientAdapter extends Adapter {
   mapOrNew(payload: any) {
     let mapped;
     let updated = false;
+
+    if (!payload || typeof payload !== "object") {
+      throw new Error("Invalid payload");
+    }
 
     if (payload._id) {
       mapped = this.instancesMap.get(payload._id);

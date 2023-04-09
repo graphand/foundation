@@ -12,7 +12,7 @@ import {
   Rule,
   FieldsRestriction,
 } from "@graphand/core";
-import { ClientOptions } from "src/types";
+import { ClientOptions } from "../types";
 import Client from "./Client";
 import ClientAdapter from "./ClientAdapter";
 
@@ -72,7 +72,7 @@ export const generateModel = async (
     },
   },
   client?: Client
-) => {
+): Promise<any> => {
   slug ??= generateRandomString();
   client ??= globalThis.client;
 

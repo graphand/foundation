@@ -42,7 +42,7 @@ export const getClientFromModel = (model: typeof Model) => {
 export const parseError = (error: any): CoreError => {
   if (error.type === "ValidationError") {
     const validators = error.reason.validators.map((v: any) => {
-      const validator = new Validator(v.validator);
+      const validator = new Validator(v.validator, v.validator.path);
       return new ValidationValidatorError({ validator });
     });
 
@@ -61,6 +61,7 @@ export const parseError = (error: any): CoreError => {
       return new ValidationFieldError({ ...v, validationError, field });
     });
 
+    console.log(error);
     return new FetchValidationError({ validators, fields });
   }
 
@@ -269,97 +270,118 @@ const _decodePopulate = async (
   fieldsPaths: Array<FieldsPathItem>,
   model: typeof Model
 ) => {
-  for (const [i, fp] of fieldsPaths.entries()) {
-    if (fp.field.type === FieldTypes.ARRAY && d[fp.key]) {
-      const _field = fp.field as Field<FieldTypes.ARRAY>;
-      const itemsField = getFieldFromDefinition(
-        _field.options.items,
-        model.__adapter,
-        _field.__path + ".[]"
-      );
+  if (!d || !fieldsPaths.length) {
+    return;
+  }
 
-      let arrValue = Array.isArray(d[fp.key]) ? d[fp.key] : [d[fp.key]];
-      arrValue = arrValue.map((v) => ({ "[]": v }));
-      const restPath = fieldsPaths.slice(i + 1);
+  const [fp, ...restPath] = fieldsPaths;
 
-      if (itemsField.type === FieldTypes.RELATION) {
-        const _itemsField = itemsField as Field<FieldTypes.RELATION>;
-        const refModel = Model.getFromSlug.call(model, _itemsField.options.ref);
-        const adapter = refModel.__adapter as ClientAdapter;
-        const rows = arrValue.map((v) => v["[]"]);
+  if (!fp?.field) {
+    return;
+  }
 
-        if (p.populate) {
-          await parsePopulated(
-            refModel,
-            rows,
-            getPopulatedFromQuery({ populate: p.populate })
-          );
-        }
+  if (fp.field.type === FieldTypes.ARRAY && d[fp.key]) {
+    const _field = fp.field as Field<FieldTypes.ARRAY>;
+    const itemsField = getFieldFromDefinition(
+      _field.options.items,
+      model.__adapter,
+      _field.__path + ".[]"
+    );
 
-        const mappedList = rows.map((r) => adapter.mapOrNew(r));
-        const mappedRes = mappedList.map((r) => r.mapped);
-        const updated = mappedList
-          .filter((r) => r.updated)
-          .map((r) => r.mapped._id);
+    let arrValue = Array.isArray(d[fp.key]) ? d[fp.key] : [d[fp.key]];
 
-        adapter.updaterSubject.next({
-          ids: mappedRes.map((r) => r._id),
-          operation: "fetch",
-        });
+    if (itemsField.type === FieldTypes.RELATION) {
+      const _itemsField = itemsField as Field<FieldTypes.RELATION>;
+      const refModel = Model.getFromSlug.call(model, _itemsField.options.ref);
+      const adapter = refModel.__adapter as ClientAdapter;
 
-        if (updated?.length) {
-          adapter.updaterSubject.next({
-            ids: updated,
-            operation: "localUpdate",
-          });
-        }
-
-        arrValue = mappedRes.map((r) => ({ "[]": r._id }));
-      } else {
-        const _fieldsPaths = [{ key: "[]", field: itemsField }, ...restPath];
-
-        await Promise.all(
-          arrValue.map((d) => _decodePopulate(p, d, _fieldsPaths, model))
+      if (p.populate) {
+        await parsePopulated(
+          refModel,
+          arrValue,
+          getPopulatedFromQuery({ populate: p.populate })
         );
       }
 
-      d[fp.key] = arrValue.map((v) => v["[]"]);
-    } else if (fp.field.type === FieldTypes.RELATION) {
-      const _field = fp.field as Field<FieldTypes.RELATION>;
-      const refModel = Model.getFromSlug.call(model, _field.options.ref);
-      const adapter = refModel.__adapter as ClientAdapter;
+      const mappedList = arrValue.map((r) => adapter.mapOrNew(r));
+      const mappedRes = mappedList.map((r) => r.mapped);
+      const updated = mappedList
+        .filter((r) => r.updated)
+        .map((r) => r.mapped._id);
 
-      const value = d[fp.key];
-      if (value && typeof value === "object" && value?._id) {
-        if (p.populate) {
-          await parsePopulated(
-            refModel,
-            [value],
-            getPopulatedFromQuery({ populate: p.populate })
-          );
-        }
+      adapter.updaterSubject.next({
+        ids: mappedRes.map((r) => r._id),
+        operation: "fetch",
+      });
 
-        const { mapped, updated } = adapter.mapOrNew(value);
-
+      if (updated?.length) {
         adapter.updaterSubject.next({
-          ids: [mapped._id],
-          operation: "fetch",
+          ids: updated,
+          operation: "localUpdate",
         });
-
-        if (updated) {
-          adapter.updaterSubject.next({
-            ids: [mapped._id],
-            operation: "localUpdate",
-          });
-        }
-
-        d[fp.key] = mapped._id;
       }
-    } else if (fp.field.type === FieldTypes.JSON) {
-      const restPath = fieldsPaths.slice(i + 1);
 
-      await _decodePopulate(p, d[fp.key], restPath, model);
+      d[fp.key] = mappedRes.map((r) => r._id);
+
+      return;
     }
+
+    const _fieldsPaths = [
+      { key: "[]", field: itemsField },
+      ...restPath.splice(1),
+    ];
+
+    const encodedValues = arrValue.map((v) => ({ "[]": v }));
+
+    await Promise.all(
+      encodedValues.map((_d) => _decodePopulate(p, _d, _fieldsPaths, model))
+    );
+
+    d[fp.key] = encodedValues.map((v) => v["[]"]);
+
+    return;
+  }
+
+  if (fp.field.type === FieldTypes.RELATION) {
+    const _field = fp.field as Field<FieldTypes.RELATION>;
+    const refModel = Model.getFromSlug.call(model, _field.options.ref);
+    const adapter = refModel.__adapter as ClientAdapter;
+
+    const value = d[fp.key];
+    if (!value || typeof value !== "object" || !value?._id) {
+      return;
+    }
+
+    if (p.populate) {
+      await parsePopulated(
+        refModel,
+        [value],
+        getPopulatedFromQuery({ populate: p.populate })
+      );
+    }
+
+    const { mapped, updated } = adapter.mapOrNew(value);
+
+    adapter.updaterSubject.next({
+      ids: [mapped._id],
+      operation: "fetch",
+    });
+
+    if (updated) {
+      adapter.updaterSubject.next({
+        ids: [mapped._id],
+        operation: "localUpdate",
+      });
+    }
+
+    d[fp.key] = mapped._id;
+
+    return;
+  }
+
+  if (fp.field.type === FieldTypes.JSON) {
+    await _decodePopulate(p, d[fp.key], restPath, model);
+    return;
   }
 };
 
@@ -371,6 +393,8 @@ export const parsePopulated = async <T extends typeof Model>(
   if (!populated?.length) {
     return;
   }
+
+  await model.initialize();
 
   await Promise.all(
     populated.map(async (p) => {

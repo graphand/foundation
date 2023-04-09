@@ -1,5 +1,5 @@
 import "@graphand/core/global";
-import type { CoreError } from "@graphand/core";
+import type { CoreError, CoreErrorDefinition } from "@graphand/core";
 
 declare module "@graphand/core" {
   export class Model {
@@ -37,3 +37,7 @@ export type ClientOptions = {
 };
 
 export type SocketScope = "project" | "global";
+
+export type FetchErrorDefinition = CoreErrorDefinition & {
+  type?: string;
+};

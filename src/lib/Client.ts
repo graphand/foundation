@@ -89,6 +89,7 @@ class Client {
   connectSocket(scope: SocketScope = "project") {
     this.__socketsMap ??= new Map();
 
+    const client = this;
     const scheme = "wss://";
     const endpoint = this.options.endpoint;
 
@@ -135,7 +136,7 @@ class Client {
     });
 
     socket.on("realtime:event", (event: ModelCrudEvent & any) => {
-      const model = this.getModel(event.model);
+      const model = client.getModel(event.model);
       const adapter = model.__adapter as ClientAdapter;
 
       event.__socketId = socket.id;
@@ -219,13 +220,16 @@ class Client {
     this.setOptions({ accessToken, refreshToken });
   }
 
-  async config(models: string[]) {
+  async ql(models: string[]) {
     const query = Object.fromEntries(models.map((m) => [m, true]));
-    return await executeController(this, controllersMap.config, { query });
+    return await executeController(this, controllersMap.ql, { query });
   }
 
-  async configSync(config: any, opts: { confirm?: boolean; clean?: boolean }) {
-    return await executeController(this, controllersMap.configSync, {
+  async qlSync(
+    config: Record<string, Record<string, any>>,
+    opts: { confirm?: boolean; clean?: boolean }
+  ) {
+    return await executeController(this, controllersMap.qlSync, {
       query: opts,
       body: config,
     });
