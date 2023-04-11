@@ -11,6 +11,7 @@ import {
   ModelCrudEvent,
   Rule,
   FieldsRestriction,
+  defineFieldsProperties,
 } from "@graphand/core";
 import { ClientOptions } from "../types";
 import Client from "./Client";
@@ -30,7 +31,7 @@ export const fetchWatcher = async (
     subject?: "updater" | "event";
   }
 ) => {
-  const adapter = model.__adapter as ClientAdapter;
+  const adapter = model.getAdapter() as ClientAdapter;
   let unsub;
   let _timeout;
 
@@ -165,7 +166,7 @@ export const mockModel = ({
     constructor(doc) {
       super(doc);
 
-      this.defineFieldsProperties();
+      defineFieldsProperties(this);
     }
 
     title;

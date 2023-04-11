@@ -11,7 +11,7 @@ async function loadDatamodelPage(datamodel: DataModel) {
     const client = getClientFromModel(datamodel.model);
     const PageModel: typeof Model = client.getModel(datamodel.slug);
 
-    const adapter = PageModel.__adapter as ClientAdapter;
+    const adapter = PageModel.getAdapter() as ClientAdapter;
 
     adapter.mapOrNew(datamodel.__doc._page);
   }

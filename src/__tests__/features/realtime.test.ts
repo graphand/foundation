@@ -108,7 +108,7 @@ describe("test realtime", () => {
       let idsSet = new Set<string>();
       let idsArr: Array<string> = [];
 
-      const adapter = _model.__adapter as ClientAdapter;
+      const adapter = _model.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
         if (e.operation === "create" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
@@ -170,7 +170,7 @@ describe("test realtime", () => {
 
       let idsSet = new Set<string>();
 
-      const adapter = _model2.__adapter as ClientAdapter;
+      const adapter = _model2.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
         if (e.operation === "create" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
@@ -321,7 +321,7 @@ describe("test realtime", () => {
         }))
       );
 
-      const adapter = _model.__adapter as ClientAdapter;
+      const adapter = _model.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
         if (e.operation === "update" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
@@ -394,7 +394,7 @@ describe("test realtime", () => {
 
       let idsSet = new Set<string>();
 
-      const adapter = _model2.__adapter as ClientAdapter;
+      const adapter = _model2.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
         if (e.operation === "update" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
@@ -522,7 +522,7 @@ describe("test realtime", () => {
         }))
       );
 
-      const adapter = _model.__adapter as ClientAdapter;
+      const adapter = _model.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
         if (e.operation === "delete" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
@@ -580,7 +580,7 @@ describe("test realtime", () => {
 
       let idsSet = new Set<string>();
 
-      const adapter = _model2.__adapter as ClientAdapter;
+      const adapter = _model2.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
         if (e.operation === "delete" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));

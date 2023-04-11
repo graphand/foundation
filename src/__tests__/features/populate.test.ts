@@ -122,7 +122,7 @@ describe("test populate", () => {
       relSingle: instance1._id,
     });
 
-    const adapter = model.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
     adapter.instancesMap.delete(instance1._id);
     const fetched = await model2.get({
       ids: [instance2._id],
@@ -164,7 +164,7 @@ describe("test populate", () => {
       relSingle: instance1._id,
     });
 
-    const adapter = model.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
     adapter.instancesMap.delete(instance1._id);
 
     const fetchWatcherPromiseLocalUpdate = fetchWatcher(model, {
@@ -194,8 +194,8 @@ describe("test populate", () => {
       relMultiple: [instance1._id, instance2._id],
     });
 
-    const adapter = model.__adapter as ClientAdapter;
-    const adapter2 = model2.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
+    const adapter2 = model2.getAdapter() as ClientAdapter;
     adapter.instancesMap.delete(instance1._id);
     adapter.instancesMap.delete(instance2._id);
     adapter2.instancesMap.delete(instance3._id);
@@ -226,8 +226,8 @@ describe("test populate", () => {
       },
     });
 
-    const adapter = model.__adapter as ClientAdapter;
-    const adapter2 = model2.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
+    const adapter2 = model2.getAdapter() as ClientAdapter;
     adapter.instancesMap.delete(instance1._id);
     adapter2.instancesMap.delete(instance2._id);
     const fetched = await model2.get({
@@ -257,7 +257,7 @@ describe("test populate", () => {
       },
     });
 
-    const adapter = model.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
     adapter.instancesMap.delete(instance1._id);
     adapter.instancesMap.delete(instance2._id);
     const fetched = await model2.get({
@@ -298,8 +298,8 @@ describe("test populate", () => {
       relSingle: instance2._id,
     });
 
-    const adapter = model.__adapter as ClientAdapter;
-    const adapter2 = model2.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
+    const adapter2 = model2.getAdapter() as ClientAdapter;
     adapter.instancesMap.delete(instance1._id);
     adapter2.instancesMap.delete(instance2._id);
     const fetched = await model3.get({
@@ -332,8 +332,8 @@ describe("test populate", () => {
       relSingle: instance2._id,
     });
 
-    const adapter = model.__adapter as ClientAdapter;
-    const adapter2 = model2.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
+    const adapter2 = model2.getAdapter() as ClientAdapter;
     adapter.instancesMap.delete(instance1._id);
     adapter2.instancesMap.delete(instance2._id);
 
@@ -379,8 +379,8 @@ describe("test populate", () => {
       relSingle: instance2._id,
     });
 
-    const adapter = model.__adapter as ClientAdapter;
-    const adapter2 = model2.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
+    const adapter2 = model2.getAdapter() as ClientAdapter;
 
     const fetchWatcherPromiseLocalUpdate1 = fetchWatcher(model, {
       _id: instance1._id,
@@ -424,8 +424,8 @@ describe("test populate", () => {
       relMultiple: [instance2._id],
     });
 
-    const adapter = model.__adapter as ClientAdapter;
-    const adapter2 = model2.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
+    const adapter2 = model2.getAdapter() as ClientAdapter;
     adapter.instancesMap.delete(instance1._id);
     adapter2.instancesMap.delete(instance2._id);
     const fetched = await model3.get({
@@ -461,7 +461,7 @@ describe("test populate", () => {
       relSingle: instance1._id,
     });
 
-    const adapter = model.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
     adapter.instancesMap.delete(instance1._id);
     const fetched = await model2.getList({
       ids: [instance2._id],
@@ -488,7 +488,7 @@ describe("test populate", () => {
       relMultiple: [instance1._id, instance2._id],
     });
 
-    const adapter = model.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
     adapter.instancesMap.delete(instance1._id);
     adapter.instancesMap.delete(instance2._id);
     const fetched = await model2.getList({
@@ -662,9 +662,9 @@ describe("test populate", () => {
       }))
     );
 
-    const instancesMap1 = (_model1.__adapter as ClientAdapter).instancesMap;
-    const instancesMap2 = (_model2.__adapter as ClientAdapter).instancesMap;
-    const instancesMap3 = (_model3.__adapter as ClientAdapter).instancesMap;
+    const instancesMap1 = (_model1.getAdapter() as ClientAdapter).instancesMap;
+    const instancesMap2 = (_model2.getAdapter() as ClientAdapter).instancesMap;
+    const instancesMap3 = (_model3.getAdapter() as ClientAdapter).instancesMap;
 
     instancesMap1.clear();
     instancesMap2.clear();

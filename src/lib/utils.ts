@@ -26,7 +26,7 @@ import ErrorCodes from "../enums/error-codes";
 const debug = require("debug")("graphand:client");
 
 export const getClientFromModel = (model: typeof Model) => {
-  const adapter = model.__adapter as ClientAdapter;
+  const adapter = model.getAdapter() as ClientAdapter;
 
   if (!adapter.client) {
     throw new ClientError({
@@ -283,7 +283,7 @@ const _decodePopulate = async (
     const _field = fp.field as Field<FieldTypes.ARRAY>;
     const itemsField = getFieldFromDefinition(
       _field.options.items,
-      model.__adapter,
+      model.getAdapter(),
       _field.__path + ".[]"
     );
 
@@ -292,7 +292,7 @@ const _decodePopulate = async (
     if (itemsField.type === FieldTypes.RELATION) {
       const _itemsField = itemsField as Field<FieldTypes.RELATION>;
       const refModel = Model.getFromSlug.call(model, _itemsField.options.ref);
-      const adapter = refModel.__adapter as ClientAdapter;
+      const adapter = refModel.getAdapter() as ClientAdapter;
 
       if (p.populate) {
         await parsePopulated(
@@ -344,7 +344,7 @@ const _decodePopulate = async (
   if (fp.field.type === FieldTypes.RELATION) {
     const _field = fp.field as Field<FieldTypes.RELATION>;
     const refModel = Model.getFromSlug.call(model, _field.options.ref);
-    const adapter = refModel.__adapter as ClientAdapter;
+    const adapter = refModel.getAdapter() as ClientAdapter;
 
     const value = d[fp.key];
     if (!value || typeof value !== "object" || !value?._id) {

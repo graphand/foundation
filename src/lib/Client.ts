@@ -25,7 +25,7 @@ const defaultOptions: Partial<ClientOptions> = {
 class Client {
   __optionsSubject: BehaviorSubject<ClientOptions>;
   __middlewares: Set<Middleware>;
-  __adapter?: typeof ClientAdapter;
+  __adapterClass?: typeof ClientAdapter;
   __socketsMap: Map<SocketScope, Socket>;
 
   constructor(options: ClientOptions) {
@@ -61,11 +61,15 @@ class Client {
   getClientAdapter() {
     const client = this;
 
-    this.__adapter ??= class extends ClientAdapter {
+    this.__adapterClass ??= class extends ClientAdapter {
       static __client = client;
     };
 
-    return this.__adapter;
+    return this.__adapterClass;
+  }
+
+  declareGlobally() {
+    globalThis.__GLOBAL_ADAPTER__ = this.getClientAdapter();
   }
 
   getModel<T extends typeof Model = typeof Model>(model: T | T["slug"]): T {
@@ -137,7 +141,7 @@ class Client {
 
     socket.on("realtime:event", (event: ModelCrudEvent & any) => {
       const model = client.getModel(event.model);
-      const adapter = model.__adapter as ClientAdapter;
+      const adapter = model.getAdapter() as ClientAdapter;
 
       event.__socketId = socket.id;
 

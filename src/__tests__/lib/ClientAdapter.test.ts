@@ -121,7 +121,7 @@ describe("ClientAdapter", () => {
     });
 
     it("Model.create should emit on updater subject", async () => {
-      const adapter = model.__adapter as ClientAdapter;
+      const adapter = model.getAdapter() as ClientAdapter;
 
       const eventPromise = new Promise((resolve) => {
         const unsub = adapter.updaterSubject.subscribe((e) => {
@@ -144,7 +144,7 @@ describe("ClientAdapter", () => {
     });
 
     it("Model.create should add instances to map and then returns from get", async () => {
-      const adapter = model.__adapter as ClientAdapter;
+      const adapter = model.getAdapter() as ClientAdapter;
 
       const created = await model.create({ title: "title" });
 
@@ -186,7 +186,7 @@ describe("ClientAdapter", () => {
     });
 
     it("Model.createMultiple should emit on updater subject", async () => {
-      const adapter = model.__adapter as ClientAdapter;
+      const adapter = model.getAdapter() as ClientAdapter;
 
       const eventPromise = new Promise((resolve) => {
         const unsub = adapter.updaterSubject.subscribe((e) => {
@@ -217,7 +217,7 @@ describe("ClientAdapter", () => {
     });
 
     it("Model.createMultiple should add instances to map and then returns from get", async () => {
-      const adapter = model.__adapter as ClientAdapter;
+      const adapter = model.getAdapter() as ClientAdapter;
 
       const title1 = generateRandomString();
       const title2 = generateRandomString();
@@ -330,7 +330,7 @@ describe("ClientAdapter", () => {
     it("Model.get should emit localUpdate event on updaterSubject if upserted in instancesMap", async () => {
       const created = await model.create({ title: "title" });
 
-      const adapter = model.__adapter as ClientAdapter;
+      const adapter = model.getAdapter() as ClientAdapter;
       adapter.instancesMap.delete(created._id);
 
       const fetchWatcherPromiseFetch = fetchWatcher(model, {
@@ -397,7 +397,7 @@ describe("ClientAdapter", () => {
       let fetchWatcherPromise1 = fetchWatcher(model, { _id: created1._id });
       let fetchWatcherPromise2 = fetchWatcher(model, { _id: created2._id });
 
-      const adapter = model.__adapter as ClientAdapter;
+      const adapter = model.getAdapter() as ClientAdapter;
       adapter.instancesMap.delete(created1._id);
 
       const fetchedList = await model.getList({
@@ -418,7 +418,7 @@ describe("ClientAdapter", () => {
 
       const ids = createdList.map((item) => item._id);
 
-      const adapter = model.__adapter as ClientAdapter;
+      const adapter = model.getAdapter() as ClientAdapter;
       adapter.instancesMap.delete(createdList[0]._id);
       adapter.instancesMap.delete(createdList[2]._id);
       adapter.instancesMap.delete(createdList[3]._id);
@@ -438,7 +438,7 @@ describe("ClientAdapter", () => {
 
       const ids = createdList.map((item) => item._id);
 
-      const adapter = model.__adapter as ClientAdapter;
+      const adapter = model.getAdapter() as ClientAdapter;
       adapter.instancesMap.delete(createdList[0]._id);
       adapter.instancesMap.delete(createdList[2]._id);
       adapter.instancesMap.delete(createdList[3]._id);

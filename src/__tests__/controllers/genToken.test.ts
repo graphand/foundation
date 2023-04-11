@@ -62,7 +62,7 @@ describe("controller genToken", () => {
     await expect(client.genToken(token._id)).resolves.toBeDefined();
 
     // @ts-ignore
-    client.getModel(Token).__adapter.instancesMap.delete(token._id);
+    client.getModel(Token).getAdapter().instancesMap.delete(token._id);
     const updatedToken = await client.getModel(Token).get(token._id);
 
     expect(updatedToken.generation).toBe(1);

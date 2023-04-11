@@ -42,7 +42,7 @@ describe("test pages models", () => {
   });
 
   it("should be able to get datamodel & page instance with only one fetch", async () => {
-    const adapter = model.__adapter as ClientAdapter;
+    const adapter = model.getAdapter() as ClientAdapter;
     adapter.instancesMap.clear();
 
     const DM = globalThis.client.getModel(models.DataModel);
