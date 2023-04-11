@@ -4,7 +4,7 @@
   "description": "",
   "homepage": "https://github.com/graphand/client",
   "repository": "graphand/core",
-  "main": "dist/client.min.js",
+  "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
   "author": "Pierre Cabrière",
   "license": "MIT",

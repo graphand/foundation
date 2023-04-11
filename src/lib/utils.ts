@@ -61,7 +61,6 @@ export const parseError = (error: any): CoreError => {
       return new ValidationFieldError({ ...v, validationError, field });
     });
 
-    console.log(error);
     return new FetchValidationError({ validators, fields });
   }
 
@@ -93,7 +92,7 @@ export const executeController = async (
 
   const path = controller.path.replace(/\:(\w+)(\?)?/g, (match, p1) => {
     scopeArgs[p1] = opts.path[p1];
-    return opts.path[p1];
+    return opts.path[p1] || "";
   });
 
   let url;

@@ -47,6 +47,8 @@ Model.realtime = async function () {
   });
 };
 
+globalThis._Model = Model;
+
 Model.hook("before", "initialize", async function () {
   await this.realtime();
 });

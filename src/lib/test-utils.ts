@@ -65,22 +65,50 @@ export const fetchWatcher = async (
 };
 
 export const generateModel = async (
-  slug?: string,
-  fields: FieldsDefinition = {
+  modelOrSlug?:
+    | string
+    | {
+        slug?: string;
+        fields?: FieldsDefinition;
+        validators?: ValidatorsDefinition;
+        configKey?: string;
+        isPage?: boolean;
+      },
+  _fields: FieldsDefinition = {
     title: {
       type: FieldTypes.TEXT,
     },
   },
   client?: Client
 ): Promise<any> => {
+  let slug;
+  let fields;
+  let validators;
+  let configKey;
+  let isPage;
+
+  if (typeof modelOrSlug === "string") {
+    slug = modelOrSlug;
+  } else if (modelOrSlug) {
+    slug = modelOrSlug.slug;
+    fields = modelOrSlug.fields;
+    validators = modelOrSlug.validators;
+    configKey = modelOrSlug.configKey;
+    isPage = modelOrSlug.isPage;
+  }
+
   slug ??= generateRandomString();
   client ??= globalThis.client;
+  fields ??= _fields;
+  configKey ??= Object.keys(fields)[0];
 
   const datamodel = await client.getModel(models.DataModel).create({
     name: slug,
     slug,
     fields,
-    configKey: "title",
+    validators,
+    isPage,
+    configKey,
   });
 
   return client.getModel(datamodel.slug);
@@ -143,11 +171,11 @@ export const mockModel = ({
     title;
   }
 
-  Test.__datamodel = new DataModel({
-    slug: uidSlug,
-    fields,
-    validators,
-  });
+  // Test.__datamodel = new DataModel({
+  //   slug: uidSlug,
+  //   fields,
+  //   validators,
+  // });
 
   return Test;
 };

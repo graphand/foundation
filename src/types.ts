@@ -4,6 +4,7 @@ import type { CoreError, CoreErrorDefinition } from "@graphand/core";
 declare module "@graphand/core" {
   export class Model {
     static realtime: () => void;
+    static clearCache: () => void;
     static subscribe: (cb: (event: ModelUpdaterEvent) => void) => () => void;
     subscribe: (cb: () => void) => () => void;
   }

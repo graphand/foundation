@@ -95,6 +95,44 @@ class ClientAdapter extends Adapter {
         });
       }
 
+      if (this.model.isPage) {
+        if (this.instancesMap.size) {
+          return this.instancesMap.values().next()?.value;
+        }
+
+        const res = await executeController(
+          this.client,
+          controllersMap.modelRead,
+          {
+            path: {
+              model: this.model.slug,
+            },
+          }
+        );
+
+        if (!res) {
+          return null;
+        }
+
+        await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
+
+        const { mapped, updated } = this.mapOrNew(res);
+
+        this.updaterSubject.next({
+          ids: [mapped._id],
+          operation: "fetch",
+        });
+
+        if (updated) {
+          this.updaterSubject.next({
+            ids: [mapped._id],
+            operation: "localUpdate",
+          });
+        }
+
+        return mapped;
+      }
+
       if (typeof query === "string") {
         if (this.instancesMap.has(query)) {
           return this.instancesMap.get(query);
@@ -412,52 +450,6 @@ class ClientAdapter extends Adapter {
       } as ModelDeleteEvent);
 
       return res;
-    },
-    getModelDefinition: async () => {
-      if (!this.client) {
-        throw new ClientError({
-          code: ErrorCodes.MODEL_NO_CLIENT,
-          message:
-            "Model must be initialized with a client. Please use client.getModel() method first",
-        });
-      }
-
-      let datamodel;
-
-      if ("__datamodel" in this.model) {
-        datamodel = this.model.__datamodel;
-      }
-
-      if (!datamodel) {
-        const res = await executeController(
-          this.client,
-          controllersMap.modelQuery,
-          {
-            path: {
-              model: "datamodels",
-            },
-            body: {
-              filter: { slug: this.model.slug },
-              pageSize: 1,
-            },
-          }
-        );
-
-        datamodel = res.rows?.[0];
-      }
-
-      if (!datamodel) {
-        return {
-          fields: {},
-          validators: [],
-        };
-      }
-
-      return {
-        fields: datamodel.fields,
-        validators: datamodel.validators,
-        configKey: datamodel.configKey,
-      };
     },
   };
 
