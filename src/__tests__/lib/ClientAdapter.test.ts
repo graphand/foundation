@@ -17,7 +17,7 @@ class TestModel2 extends Model {
     type: FieldTypes.RELATION;
     definition: TestModel;
   }>;
-  obj: FieldDefinitionJSON<{
+  obj: FieldDefinitionNested<{
     nestedRelSingle: FieldDefinitionRelation<TestModel>;
     nestedRelMultiple: FieldDefinitionArray<{
       type: FieldTypes.RELATION;
@@ -64,7 +64,7 @@ describe("ClientAdapter", () => {
         },
       },
       obj: {
-        type: FieldTypes.JSON,
+        type: FieldTypes.NESTED,
         options: {
           fields: {
             nestedRelSingle: {

@@ -5,7 +5,7 @@ import ClientAdapter from "src/lib/ClientAdapter";
 class TestModelPage extends Data {
   title: FieldDefinitionText;
   random: FieldDefinitionNumber;
-  obj: FieldDefinitionJSON<{
+  obj: FieldDefinitionNested<{
     nestedField: FieldDefinitionText;
   }>;
 }
@@ -23,7 +23,7 @@ describe("test pages models", () => {
           type: FieldTypes.NUMBER,
         },
         obj: {
-          type: FieldTypes.JSON,
+          type: FieldTypes.NESTED,
           options: {
             fields: {
               nestedField: {

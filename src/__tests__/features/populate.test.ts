@@ -17,7 +17,7 @@ class TestModel2 extends Model {
     type: FieldTypes.RELATION;
     definition: TestModel;
   }>;
-  obj: FieldDefinitionJSON<{
+  obj: FieldDefinitionNested<{
     nestedRelSingle: FieldDefinitionRelation<TestModel>;
     nestedRelMultiple: FieldDefinitionArray<{
       type: FieldTypes.RELATION;
@@ -64,7 +64,7 @@ describe("test populate", () => {
         },
       },
       obj: {
-        type: FieldTypes.JSON,
+        type: FieldTypes.NESTED,
         options: {
           fields: {
             nestedRelSingle: {
@@ -534,7 +534,7 @@ describe("test populate", () => {
         },
       },
       obj: {
-        type: FieldTypes.JSON,
+        type: FieldTypes.NESTED,
         options: {
           fields: {
             relSingle: {
@@ -570,11 +570,11 @@ describe("test populate", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
                 options: {
                   fields: {
                     nested: {
-                      type: FieldTypes.JSON,
+                      type: FieldTypes.NESTED,
                       options: {
                         fields: {
                           relSingle: {

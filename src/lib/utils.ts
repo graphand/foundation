@@ -378,7 +378,7 @@ const _decodePopulate = async (
     return;
   }
 
-  if (fp.field.type === FieldTypes.JSON) {
+  if (fp.field.type === FieldTypes.NESTED) {
     await _decodePopulate(p, d[fp.key], restPath, model);
     return;
   }
