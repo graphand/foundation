@@ -10,8 +10,10 @@
   "license": "MIT",
   "source": "src/index.ts",
   "scripts": {
-    "build": "webpack",
-    "build:watch": "webpack --watch",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "bundle": "webpack",
+    "bundle:watch": "webpack --watch",
     "test": "jest"
   },
   "dependencies": {

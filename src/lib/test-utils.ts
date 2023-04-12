@@ -72,8 +72,8 @@ export const generateModel = async (
         slug?: string;
         fields?: FieldsDefinition;
         validators?: ValidatorsDefinition;
-        configKey?: string;
-        isPage?: boolean;
+        keyField?: string;
+        single?: boolean;
       },
   _fields: FieldsDefinition = {
     title: {
@@ -85,8 +85,8 @@ export const generateModel = async (
   let slug;
   let fields;
   let validators;
-  let configKey;
-  let isPage;
+  let keyField;
+  let single;
 
   if (typeof modelOrSlug === "string") {
     slug = modelOrSlug;
@@ -94,22 +94,22 @@ export const generateModel = async (
     slug = modelOrSlug.slug;
     fields = modelOrSlug.fields;
     validators = modelOrSlug.validators;
-    configKey = modelOrSlug.configKey;
-    isPage = modelOrSlug.isPage;
+    keyField = modelOrSlug.keyField;
+    single = modelOrSlug.single;
   }
 
   slug ??= generateRandomString();
   client ??= globalThis.client;
   fields ??= _fields;
-  configKey ??= Object.keys(fields)[0];
+  keyField ??= Object.keys(fields)[0];
 
   const datamodel = await client.getModel(models.DataModel).create({
     name: slug,
     slug,
     fields,
     validators,
-    isPage,
-    configKey,
+    single,
+    keyField,
   });
 
   return Model.getFromSlug(datamodel.slug);

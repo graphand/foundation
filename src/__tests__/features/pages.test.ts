@@ -33,11 +33,11 @@ describe("test pages models", () => {
           },
         },
       },
-      isPage: true,
+      single: true,
     })) as typeof model;
   });
 
-  it("should not be able to create page model instance as it should be created whith datamodel", async () => {
+  it("should not be able to create single model instance as it should be created whith datamodel", async () => {
     await expect(model.create({})).rejects.toThrow(CoreError);
   });
 
@@ -60,7 +60,7 @@ describe("test pages models", () => {
     expect(adapter.instancesMap.size).toBe(1);
   });
 
-  it("should be able to update page model instance", async () => {
+  it("should be able to update single model instance", async () => {
     const page = await model.get();
 
     expect(page).toBeInstanceOf(model);

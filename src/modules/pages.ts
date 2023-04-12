@@ -7,13 +7,13 @@ async function loadDatamodelPage(datamodel: DataModel) {
     return;
   }
 
-  if (datamodel.isPage && datamodel.__doc._page) {
+  if (datamodel.single && datamodel.__doc._doc) {
     const client = getClientFromModel(datamodel.model);
     const PageModel: typeof Model = client.getModel(datamodel.slug);
 
     const adapter = PageModel.getAdapter() as ClientAdapter;
 
-    adapter.mapOrNew(datamodel.__doc._page);
+    adapter.mapOrNew(datamodel.__doc._doc);
   }
 }
 

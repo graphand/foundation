@@ -95,7 +95,7 @@ class ClientAdapter extends Adapter {
         });
       }
 
-      if (this.model.isPage) {
+      if (this.model.single) {
         if (this.instancesMap.size) {
           return this.instancesMap.values().next()?.value;
         }
