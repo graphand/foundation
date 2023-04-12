@@ -112,7 +112,7 @@ export const generateModel = async (
     configKey,
   });
 
-  return client.getModel(datamodel.slug);
+  return Model.getFromSlug(datamodel.slug);
 };
 
 export const mockAccountWithRole = async ({

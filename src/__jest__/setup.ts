@@ -10,8 +10,10 @@ const client = new Client({
   ...clientOptions,
 });
 
+client.declareGlobally();
+
 globalThis.client = client;
 
 afterAll(async () => {
-  globalThis.client.close();
+  client.close();
 });

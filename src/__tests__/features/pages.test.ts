@@ -43,15 +43,13 @@ describe("test pages models", () => {
 
   it("should be able to get datamodel & page instance with only one fetch", async () => {
     const adapter = model.getAdapter() as ClientAdapter;
-    adapter.instancesMap.clear();
 
-    const DM = globalThis.client.getModel(models.DataModel);
-
-    DM.clearCache();
+    model.clearCache();
+    models.DataModel.clearCache();
 
     expect(adapter.instancesMap.size).toBe(0);
 
-    const datamodel = await DM.get({
+    const datamodel = await models.DataModel.get({
       filter: {
         slug: model.slug,
       },
@@ -60,5 +58,26 @@ describe("test pages models", () => {
     expect(datamodel).toBeInstanceOf(models.DataModel);
 
     expect(adapter.instancesMap.size).toBe(1);
+  });
+
+  it("should be able to update page model instance", async () => {
+    const page = await model.get();
+
+    expect(page).toBeInstanceOf(model);
+
+    await page.update({
+      $set: {
+        "obj.nestedField": "test",
+      },
+    });
+
+    expect(page.obj.nestedField).toBe("test");
+
+    globalThis.client.getModel(models.DataModel).clearCache();
+    model.clearCache();
+
+    const page2 = await model.get();
+
+    expect(page.obj.nestedField).toBe("test");
   });
 });

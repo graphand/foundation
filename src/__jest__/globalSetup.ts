@@ -10,14 +10,16 @@ export default async () => {
     sockets: [],
   });
 
+  client.declareGlobally();
+
   await client.loginUser({
     email: "hello@pierrecabriere.fr",
     password: "test123",
   });
 
-  const organization = await client.getModel(models.Organization).get({});
+  const organization = await models.Organization.get({});
 
-  const project = await client.getModel(models.Project).create({
+  const project = await models.Project.create({
     name: generateRandomString(),
     slug: generateRandomString(),
     organization: organization?._id,
@@ -27,6 +29,7 @@ export default async () => {
     ...client.options,
     project: project._id,
   });
+
   process.env.PROJECT_ID = project._id;
 
   globalThis.client = client;

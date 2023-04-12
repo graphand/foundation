@@ -35,7 +35,7 @@ describe("test realtime", () => {
         subject: "event",
       });
 
-      const created = await client.getModel(model).create({
+      const created = await model.create({
         title: generateRandomString(),
       });
 
@@ -82,7 +82,7 @@ describe("test realtime", () => {
         subject: "event",
       });
 
-      const created = await client.getModel(model).createMultiple([
+      const created = await model.createMultiple([
         {
           title: generateRandomString(),
         },
@@ -118,7 +118,7 @@ describe("test realtime", () => {
 
       await Promise.all(
         Array.from({ length: 50 }).map(() => {
-          return client.getModel(model).create({
+          return model.create({
             title: generateRandomString(),
           });
         })
@@ -126,7 +126,7 @@ describe("test realtime", () => {
 
       await Promise.all(
         Array.from({ length: 50 }).map(() => {
-          return client.getModel(model).createMultiple([
+          return model.createMultiple([
             {
               title: generateRandomString(),
             },
@@ -177,12 +177,10 @@ describe("test realtime", () => {
         }
       });
 
-      const _model = client.getModel(model);
-
       const randomLength1 = Math.floor(Math.random() * 20);
       const randomLength2 = Math.floor(Math.random() * 20);
 
-      const created = await _model.createMultiple(
+      const created = await model.createMultiple(
         Array.from({ length: randomLength1 })
           .map(() => ({
             title: "a",

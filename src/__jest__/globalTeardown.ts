@@ -3,7 +3,7 @@ import { models } from "@graphand/core";
 export default async () => {
   const client = globalThis.client;
 
-  await client.getModel(models.Project).delete({
+  await models.Project.delete({
     ids: [process.env.PROJECT_ID],
   });
 

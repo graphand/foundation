@@ -111,7 +111,7 @@ export const executeController = async (
       if (!client.options.project) {
         throw new ClientError({
           code: ErrorCodes.CLIENT_NO_PROJECT,
-          message: "Client must be configured with a project to use controller",
+          message: `Client must be configured with a project to use controller on path ${controller.path}`,
         });
       }
 
