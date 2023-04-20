@@ -144,6 +144,8 @@ describe("test populate", () => {
       relSingle: instance1._id,
     });
 
+    model.clearCache();
+
     const fetchWatcherPromise = fetchWatcher(model, { _id: instance1._id });
 
     await model2.get({
@@ -154,7 +156,7 @@ describe("test populate", () => {
     await expect(fetchWatcherPromise).resolves.toBeTruthy();
   });
 
-  it("Model.get with populate should emit localUpdate event on updaterSubject if upserted in instancesMap", async () => {
+  it("Model.get with populate should emit fetch event on updaterSubject if upserted in instancesMap", async () => {
     const instance1 = await model.create({
       title: generateRandomString(),
     });
@@ -169,7 +171,7 @@ describe("test populate", () => {
 
     const fetchWatcherPromiseLocalUpdate = fetchWatcher(model, {
       _id: instance1._id,
-      operation: "localUpdate",
+      operation: "fetch",
     });
 
     await model2.get({
@@ -317,7 +319,7 @@ describe("test populate", () => {
     expect(instance2FromMap.__doc.relSingle).toEqual(instance1._id);
   });
 
-  it("Model.get with populate on nested single relations should emit localUpdate event on updaterSubject if upserted in instancesMap", async () => {
+  it("Model.get with populate on nested single relations should emit fetch event on updaterSubject if upserted in instancesMap", async () => {
     const instance1 = await model.create({
       title: generateRandomString(),
     });
@@ -339,11 +341,11 @@ describe("test populate", () => {
 
     const fetchWatcherPromiseLocalUpdate1 = fetchWatcher(model, {
       _id: instance1._id,
-      operation: "localUpdate",
+      operation: "fetch",
     });
     const fetchWatcherPromiseLocalUpdate2 = fetchWatcher(model2, {
       _id: instance2._id,
-      operation: "localUpdate",
+      operation: "fetch",
     });
 
     const fetched = await model3.get({
@@ -364,7 +366,7 @@ describe("test populate", () => {
     await expect(fetchWatcherPromiseLocalUpdate2).resolves.toBeTruthy();
   });
 
-  it("Model.get with populate on nested single relations should not emit localUpdate event on updaterSubject if fetched documents are not upserted in instancesMap", async () => {
+  it("Model.get with populate on nested single relations should not emit fetch event on updaterSubject if fetched documents are not upserted in instancesMap", async () => {
     const instance1 = await model.create({
       title: generateRandomString(),
     });
@@ -384,11 +386,11 @@ describe("test populate", () => {
 
     const fetchWatcherPromiseLocalUpdate1 = fetchWatcher(model, {
       _id: instance1._id,
-      operation: "localUpdate",
+      operation: "fetch",
     });
     const fetchWatcherPromiseLocalUpdate2 = fetchWatcher(model2, {
       _id: instance2._id,
-      operation: "localUpdate",
+      operation: "fetch",
     });
 
     const fetched = await model3.get({

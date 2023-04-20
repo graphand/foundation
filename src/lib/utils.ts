@@ -308,15 +308,10 @@ const _decodePopulate = async (
         .filter((r) => r.updated)
         .map((r) => r.mapped._id);
 
-      adapter.updaterSubject.next({
-        ids: mappedRes.map((r) => r._id),
-        operation: "fetch",
-      });
-
-      if (updated?.length) {
+      if (updated.length) {
         adapter.updaterSubject.next({
           ids: updated,
-          operation: "localUpdate",
+          operation: "fetch",
         });
       }
 
@@ -361,15 +356,10 @@ const _decodePopulate = async (
 
     const { mapped, updated } = adapter.mapOrNew(value);
 
-    adapter.updaterSubject.next({
-      ids: [mapped._id],
-      operation: "fetch",
-    });
-
     if (updated) {
       adapter.updaterSubject.next({
         ids: [mapped._id],
-        operation: "localUpdate",
+        operation: "fetch",
       });
     }
 

@@ -1,6 +1,6 @@
 import { CoreError, Data, FieldTypes, models } from "@graphand/core";
 import { generateModel } from "../../lib/test-utils";
-import ClientAdapter from "src/lib/ClientAdapter";
+import ClientAdapter from "../../lib/ClientAdapter";
 
 class TestModelPage extends Data {
   title: FieldDefinitionText;
@@ -37,8 +37,12 @@ describe("test pages models", () => {
     })) as typeof model;
   });
 
-  it("should not be able to create single model instance as it should be created whith datamodel", async () => {
+  it("should not be able to create single model instance as it should be created within datamodel", async () => {
     await expect(model.create({})).rejects.toThrow(CoreError);
+  });
+
+  it("should not be able to delete the model instance", async () => {
+    await expect(model.delete()).rejects.toThrow(CoreError);
   });
 
   it("should be able to get datamodel & page instance with only one fetch", async () => {

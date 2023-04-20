@@ -26,7 +26,7 @@ export const fetchWatcher = async (
   opts: {
     _id?: string;
     fn?: (e: ModelUpdateEvent | ModelCrudEvent | any) => boolean;
-    operation?: "fetch" | "create" | "update" | "delete" | "localUpdate";
+    operation?: "fetch" | "create" | "update" | "delete";
     timeout?: number;
     subject?: "updater" | "event";
   }

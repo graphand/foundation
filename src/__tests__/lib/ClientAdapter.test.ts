@@ -155,14 +155,6 @@ describe("ClientAdapter", () => {
       await expect(model.get(created._id)).resolves.toBe(created);
 
       await expect(fetchWatcherPromise).resolves.toBeFalsy();
-
-      fetchWatcherPromise = fetchWatcher(model, { _id: created._id });
-
-      await expect(model.get({ filter: { _id: created._id } })).resolves.toBe(
-        created
-      );
-
-      await expect(fetchWatcherPromise).resolves.toBeTruthy();
     });
   });
 
@@ -246,6 +238,18 @@ describe("ClientAdapter", () => {
         filter: { _id: { $in: [created[0]._id, created[1]._id] } },
       });
 
+      await expect(fetchWatcher1).resolves.toBeFalsy();
+      await expect(fetchWatcher2).resolves.toBeFalsy();
+
+      model.clearCache();
+
+      fetchWatcher1 = fetchWatcher(model, { _id: created[0]._id });
+      fetchWatcher2 = fetchWatcher(model, { _id: created[1]._id });
+
+      await model.getList({
+        filter: { _id: { $in: [created[0]._id, created[1]._id] } },
+      });
+
       await expect(fetchWatcher1).resolves.toBeTruthy();
       await expect(fetchWatcher2).resolves.toBeTruthy();
     });
@@ -310,24 +314,7 @@ describe("ClientAdapter", () => {
       expect(fetched).toBe(created);
     });
 
-    it("Model.get should emit fetch event on updaterSubject", async () => {
-      const created = await model.create({ title: "title" });
-
-      const fetchWatcherPromiseFetch = fetchWatcher(model, {
-        _id: created._id,
-      });
-      const fetchWatcherPromiseLocalUpdate = fetchWatcher(model, {
-        _id: created._id,
-        operation: "localUpdate",
-      });
-
-      await model.get({ filter: { _id: created._id } });
-
-      await expect(fetchWatcherPromiseFetch).resolves.toBeTruthy();
-      await expect(fetchWatcherPromiseLocalUpdate).resolves.toBeFalsy();
-    });
-
-    it("Model.get should emit localUpdate event on updaterSubject if upserted in instancesMap", async () => {
+    it("Model.get should emit fetch event on updaterSubject if upserted in instancesMap", async () => {
       const created = await model.create({ title: "title" });
 
       const adapter = model.getAdapter() as ClientAdapter;
@@ -338,13 +325,29 @@ describe("ClientAdapter", () => {
       });
       const fetchWatcherPromiseLocalUpdate = fetchWatcher(model, {
         _id: created._id,
-        operation: "localUpdate",
+        operation: "fetch",
       });
 
       await model.get({ ids: [created._id] });
 
       await expect(fetchWatcherPromiseFetch).resolves.toBeTruthy();
       await expect(fetchWatcherPromiseLocalUpdate).resolves.toBeTruthy();
+    });
+
+    it("Model.get should not emit fetch event on updaterSubject if not upserted in instancesMap", async () => {
+      const created = await model.create({ title: "title" });
+
+      const fetchWatcherPromiseFetch = fetchWatcher(model, {
+        _id: created._id,
+      });
+      const fetchWatcherPromiseLocalUpdate = fetchWatcher(model, {
+        _id: created._id,
+        operation: "fetch",
+      });
+
+      await model.get({ filter: { _id: created._id } });
+
+      await expect(fetchWatcherPromiseFetch).resolves.toBeFalsy();
     });
   });
 
@@ -431,7 +434,7 @@ describe("ClientAdapter", () => {
       expect(fetchedList.getIds()).toEqual(ids);
     });
 
-    it("Model.getList should fetch entire list if needed", async () => {
+    it("Model.getList should not update cached items", async () => {
       const createdList = await model.createMultiple(
         Array(10).fill({ title: generateRandomString() })
       );
@@ -448,6 +451,10 @@ describe("ClientAdapter", () => {
         _id: createdList[1]._id,
       });
 
+      const fetchWatcherPromise2 = fetchWatcher(model, {
+        _id: createdList[2]._id,
+      });
+
       const fetchedList = await model.getList({
         ids: [...ids],
         filter: { title: { $exists: true } },
@@ -457,7 +464,8 @@ describe("ClientAdapter", () => {
       expect(fetchedList.count).toBe(10);
       expect(fetchedList.getIds()).toEqual(ids);
 
-      await expect(fetchWatcherPromise).resolves.toBeTruthy();
+      await expect(fetchWatcherPromise).resolves.toBeFalsy();
+      await expect(fetchWatcherPromise2).resolves.toBeTruthy();
     });
 
     it("Model.getList should respect pagination", async () => {

@@ -9,9 +9,9 @@ async function loadDatamodelPage(datamodel: DataModel) {
 
   if (datamodel.single && datamodel.__doc._doc) {
     const client = getClientFromModel(datamodel.model);
-    const PageModel: typeof Model = client.getModel(datamodel.slug);
+    const DocModel: typeof Model = client.getModel(datamodel.slug);
 
-    const adapter = PageModel.getAdapter() as ClientAdapter;
+    const adapter = DocModel.getAdapter() as ClientAdapter;
 
     adapter.mapOrNew(datamodel.__doc._doc);
   }

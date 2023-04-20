@@ -131,13 +131,13 @@ class Client {
       }
     });
 
-    socket.on("connect_error", (e) => {
-      debugSocket(`Socket error on scope ${scope} (${url}) : ${e.message}`);
-    });
+    // socket.on("connect_error", (e) => {
+    //   debugSocket(`Socket error on scope ${scope} (${url}) : ${e}`);
+    // });
 
-    socket.on("disconnect", () => {
-      debugSocket(`Socket disconnected on scope ${scope} (${url})`);
-    });
+    // socket.on("disconnect", () => {
+    //   debugSocket(`Socket disconnected on scope ${scope} (${url})`);
+    // });
 
     socket.on("realtime:event", (event: ModelCrudEvent & any) => {
       const model = client.getModel(event.model);
@@ -229,11 +229,11 @@ class Client {
     return await executeController(this, controllersMap.ql, { query });
   }
 
-  async qlSync(
+  async sync(
     config: Record<string, Record<string, any>>,
     opts: { confirm?: boolean; clean?: boolean }
   ) {
-    return await executeController(this, controllersMap.qlSync, {
+    return await executeController(this, controllersMap.sync, {
       query: opts,
       body: config,
     });

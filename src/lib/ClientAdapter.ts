@@ -26,6 +26,7 @@ class ClientAdapter extends Adapter {
   __instancesMap: Map<string, Model>;
   __updaterSubject: Subject<ModelUpdaterEvent>;
   __eventSubject: Subject<ModelCrudEvent>;
+  __queriesMap: Map<string, Promise<any>>;
 
   runValidators = false;
 
@@ -35,6 +36,8 @@ class ClientAdapter extends Adapter {
     this.__eventSubject = new Subject();
 
     this.__eventSubject.subscribe((event) => {
+      this.queriesMap.clear();
+
       if (event.operation === "create" || event.operation === "update") {
         const mappedList = event.data.map((r) => this.mapOrNew(r));
         const updated = mappedList
@@ -95,96 +98,97 @@ class ClientAdapter extends Adapter {
         });
       }
 
-      if (this.model.single) {
-        if (this.instancesMap.size) {
-          return this.instancesMap.values().next()?.value;
-        }
+      const cacheKey = "get:" + JSON.stringify(query);
 
-        const res = await executeController(
-          this.client,
-          controllersMap.modelRead,
-          {
-            path: {
-              model: this.model.slug,
-            },
-          }
-        );
-
-        if (!res) {
-          return null;
-        }
-
-        await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
-
-        const { mapped, updated } = this.mapOrNew(res);
-
-        this.updaterSubject.next({
-          ids: [mapped._id],
-          operation: "fetch",
-        });
-
-        if (updated) {
-          this.updaterSubject.next({
-            ids: [mapped._id],
-            operation: "localUpdate",
-          });
-        }
-
-        return mapped;
+      if (this.queriesMap.has(cacheKey)) {
+        return this.queriesMap.get(cacheKey);
       }
 
-      if (typeof query === "string") {
-        if (this.instancesMap.has(query)) {
-          return this.instancesMap.get(query);
-        }
-
-        const res = await executeController(
-          this.client,
-          controllersMap.modelRead,
-          {
-            path: {
-              id: query,
-              model: this.model.slug,
-            },
+      const resPromise = (async () => {
+        if (this.model.single) {
+          if (this.instancesMap.size) {
+            return this.instancesMap.values().next()?.value;
           }
-        );
 
-        if (!res) {
-          return null;
+          const res = await executeController(
+            this.client,
+            controllersMap.modelRead,
+            {
+              path: {
+                model: this.model.slug,
+              },
+            }
+          );
+
+          if (!res) {
+            return null;
+          }
+
+          await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
+
+          const { mapped, updated } = this.mapOrNew(res);
+
+          if (updated) {
+            this.updaterSubject.next({
+              ids: [mapped._id],
+              operation: "fetch",
+            });
+          }
+
+          return mapped;
         }
 
-        await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
+        if (typeof query === "string") {
+          if (this.instancesMap.has(query)) {
+            return this.instancesMap.get(query);
+          }
 
-        const { mapped, updated } = this.mapOrNew(res);
+          const res = await executeController(
+            this.client,
+            controllersMap.modelRead,
+            {
+              path: {
+                id: query,
+                model: this.model.slug,
+              },
+            }
+          );
 
-        this.updaterSubject.next({
-          ids: [mapped._id],
-          operation: "fetch",
-        });
+          if (!res) {
+            return null;
+          }
 
-        if (updated) {
-          this.updaterSubject.next({
-            ids: [mapped._id],
-            operation: "localUpdate",
-          });
+          await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
+
+          const { mapped, updated } = this.mapOrNew(res);
+
+          if (updated) {
+            this.updaterSubject.next({
+              ids: [mapped._id],
+              operation: "fetch",
+            });
+          }
+
+          return mapped;
+        } else {
+          if (canUseIds(query)) {
+            return this.fetcher.get([query.ids[0]], ctx);
+          }
+
+          query.pageSize = 1;
+
+          const list = await this.fetcher.getList([query], ctx);
+
+          if (!list?.[0]) {
+            return null;
+          }
+
+          return list[0];
         }
+      })();
 
-        return mapped;
-      } else {
-        if (canUseIds(query)) {
-          return this.fetcher.get([query.ids[0]], ctx);
-        }
-
-        query.pageSize = 1;
-
-        const list = await this.fetcher.getList([query], ctx);
-
-        if (!list?.[0]) {
-          return null;
-        }
-
-        return list[0];
-      }
+      this.queriesMap.set(cacheKey, resPromise);
+      return resPromise;
     },
     getList: async ([query], ctx) => {
       if (!this.client) {
@@ -195,63 +199,75 @@ class ClientAdapter extends Adapter {
         });
       }
 
-      const _canUseIds = canUseIds(query) as Array<string>;
-      let _fromIdsList: Array<Model> = [];
+      const cacheKey = "getList:" + JSON.stringify(query);
 
-      if (_canUseIds) {
-        const existingIds = query.ids.filter((id) => this.instancesMap.has(id));
-        _fromIdsList = existingIds.map((id) => this.instancesMap.get(id));
+      if (this.queriesMap.has(cacheKey)) {
+        return this.queriesMap.get(cacheKey);
+      }
 
-        if (_fromIdsList.length === query.ids.length) {
-          return new ModelList(this.model, _fromIdsList, _fromIdsList.length);
+      const resPromise = (async () => {
+        const _canUseIds = canUseIds(query) as Array<string>;
+        let _fromIdsList: Array<Model> = [];
+
+        if (_canUseIds) {
+          const existingIds = query.ids.filter((id) =>
+            this.instancesMap.has(id)
+          );
+          _fromIdsList = existingIds.map((id) => this.instancesMap.get(id));
+
+          if (_fromIdsList.length === query.ids.length) {
+            return new ModelList(this.model, _fromIdsList);
+          }
+
+          query.ids = query.ids.filter((id) => !this.instancesMap.has(id));
         }
 
-        query.ids = query.ids.filter((id) => !this.instancesMap.has(id));
-      }
+        const res = await executeController(
+          this.client,
+          controllersMap.modelQuery,
+          {
+            path: {
+              model: this.model.slug,
+            },
+            body: query,
+          }
+        );
 
-      const res = await executeController(
-        this.client,
-        controllersMap.modelQuery,
-        {
-          path: {
-            model: this.model.slug,
-          },
-          body: query,
+        await parsePopulated(
+          this.model,
+          res.rows,
+          getPopulatedFromQuery(query)
+        );
+
+        const mappedList = res.rows.map((r) => this.mapOrNew(r));
+        const mappedRes = mappedList.map((r) => r.mapped);
+        const updated = mappedList
+          .filter((r) => r.updated)
+          .map((r) => r.mapped._id);
+
+        if (updated?.length) {
+          this.updaterSubject.next({
+            ids: updated,
+            operation: "fetch",
+          });
         }
-      );
 
-      await parsePopulated(this.model, res.rows, getPopulatedFromQuery(query));
+        let count = res.count;
+        let list = mappedRes;
 
-      const mappedList = res.rows.map((r) => this.mapOrNew(r));
-      const mappedRes = mappedList.map((r) => r.mapped);
-      const updated = mappedList
-        .filter((r) => r.updated)
-        .map((r) => r.mapped._id);
+        if (_canUseIds) {
+          count += _fromIdsList.length;
+          list = mappedRes.concat(_fromIdsList);
+          list = list.sort((a, b) => {
+            return _canUseIds.indexOf(a._id) - _canUseIds.indexOf(b._id);
+          });
+        }
 
-      this.updaterSubject.next({
-        ids: mappedRes.map((r) => r._id),
-        operation: "fetch",
-      });
+        return new ModelList(this.model, list, query, count);
+      })();
 
-      if (updated?.length) {
-        this.updaterSubject.next({
-          ids: updated,
-          operation: "localUpdate",
-        });
-      }
-
-      let count = res.count;
-      let list = mappedRes;
-
-      if (_canUseIds) {
-        count += _fromIdsList.length;
-        list = mappedRes.concat(_fromIdsList);
-        list = list.sort((a, b) => {
-          return _canUseIds.indexOf(a._id) - _canUseIds.indexOf(b._id);
-        });
-      }
-
-      return new ModelList(this.model, list, count);
+      this.queriesMap.set(cacheKey, resPromise);
+      return resPromise;
     },
     createOne: async ([payload]) => {
       if (!this.client) {
@@ -470,6 +486,12 @@ class ClientAdapter extends Adapter {
   get updaterSubject() {
     this.__updaterSubject ??= new Subject();
     return this.__updaterSubject;
+  }
+
+  get queriesMap() {
+    return new Map();
+    this.__queriesMap ??= new Map();
+    return this.__queriesMap;
   }
 
   mapOrNew(payload: any) {

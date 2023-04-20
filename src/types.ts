@@ -6,11 +6,14 @@ declare module "@graphand/core" {
     static realtime: () => void;
     static clearCache: () => void;
     static subscribe: (cb: (event: ModelUpdaterEvent) => void) => () => void;
-    subscribe: (cb: () => void) => () => void;
+    subscribe: (cb: (event: ModelUpdaterEvent) => void) => () => void;
   }
 
   export class ModelList<T extends Model> extends Array<T> {
-    subscribe: (cb: () => void) => () => void;
+    subscribe: (
+      cb: (event: ModelUpdaterEvent) => void,
+      cbLoading?: (loading: boolean) => void
+    ) => () => void;
   }
 }
 
@@ -23,7 +26,7 @@ export type MiddlewareInput = {
 
 export type ModelUpdaterEvent = {
   ids: Array<string>;
-  operation: "create" | "update" | "delete" | "localUpdate" | "fetch";
+  operation: "create" | "update" | "delete" | "fetch";
 };
 
 export type Middleware = (data: MiddlewareInput) => Promise<void> | void;
