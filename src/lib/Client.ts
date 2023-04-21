@@ -242,12 +242,14 @@ class Client {
   async currentUser() {
     const User = this.getModel(models.User);
     const data = await executeController(this, controllersMap.currentUser);
+    // TODO: return mapOrNew user
     return new User(data);
   }
 
   async currentAccount() {
     const Account = this.getModel(models.Account);
     const data = await executeController(this, controllersMap.currentAccount);
+    // TODO: return mapOrNew account
     return new Account(data);
   }
 

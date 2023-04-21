@@ -82,12 +82,20 @@ class ClientAdapter extends Adapter {
         });
       }
 
-      return await executeController(this.client, controllersMap.modelCount, {
-        path: {
-          model: this.model.slug,
-        },
-        body: query,
-      });
+      const cacheKey = "count:" + JSON.stringify(query);
+      let resPromise = this.queriesMap.get(cacheKey);
+
+      resPromise = (async () => {
+        return await executeController(this.client, controllersMap.modelCount, {
+          path: {
+            model: this.model.slug,
+          },
+          body: query,
+        });
+      })();
+
+      this.queriesMap.set(cacheKey, resPromise);
+      return resPromise;
     },
     get: async ([query], ctx) => {
       if (!this.client) {
@@ -99,12 +107,13 @@ class ClientAdapter extends Adapter {
       }
 
       const cacheKey = "get:" + JSON.stringify(query);
+      let resPromise = this.queriesMap.get(cacheKey);
 
-      if (this.queriesMap.has(cacheKey)) {
-        return this.queriesMap.get(cacheKey);
+      if (resPromise) {
+        return resPromise;
       }
 
-      const resPromise = (async () => {
+      resPromise = (async () => {
         if (this.model.single) {
           if (this.instancesMap.size) {
             return this.instancesMap.values().next()?.value;
@@ -200,12 +209,13 @@ class ClientAdapter extends Adapter {
       }
 
       const cacheKey = "getList:" + JSON.stringify(query);
+      let resPromise = this.queriesMap.get(cacheKey);
 
-      if (this.queriesMap.has(cacheKey)) {
-        return this.queriesMap.get(cacheKey);
+      if (resPromise) {
+        return resPromise;
       }
 
-      const resPromise = (async () => {
+      resPromise = (async () => {
         const _canUseIds = canUseIds(query) as Array<string>;
         let _fromIdsList: Array<Model> = [];
 
@@ -267,7 +277,7 @@ class ClientAdapter extends Adapter {
       })();
 
       this.queriesMap.set(cacheKey, resPromise);
-      return resPromise;
+      return await resPromise;
     },
     createOne: async ([payload]) => {
       if (!this.client) {
@@ -489,7 +499,6 @@ class ClientAdapter extends Adapter {
   }
 
   get queriesMap() {
-    return new Map();
     this.__queriesMap ??= new Map();
     return this.__queriesMap;
   }
