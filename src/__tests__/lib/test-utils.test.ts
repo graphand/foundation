@@ -1,4 +1,8 @@
-import { fetchWatcher, generateModel } from "../../lib/test-utils";
+import {
+  fetchWatcher,
+  generateModel,
+  generateRandomString,
+} from "../../lib/test-utils";
 import { Model } from "@graphand/core";
 
 describe("test-utils", () => {
@@ -31,7 +35,9 @@ describe("test-utils", () => {
   });
 
   it("fetchWatcher should returns false if the model has been fetched but is in cache", async () => {
-    const created = await model.create({ title: "title" } as any);
+    const created = await model.create({
+      title: generateRandomString(),
+    } as any);
 
     await expect(
       fetchWatcher(model, { _id: created._id })

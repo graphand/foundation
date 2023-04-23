@@ -13,7 +13,9 @@ describe("test realtime", () => {
   let model;
 
   beforeAll(async () => {
-    const _model = await generateModel();
+    const _model = await generateModel({
+      keyField: null,
+    });
     model = _model.getBaseClass();
   });
 

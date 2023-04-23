@@ -114,10 +114,11 @@ describe("ClientAdapter", () => {
 
   describe("ClientAdapter.create", () => {
     it("Model.create should returns the created instance", async () => {
-      const created = await model.create({ title: "title" });
+      const title = generateRandomString();
+      const created = await model.create({ title });
       expect(created).toBeInstanceOf(model);
       expect(typeof created._id).toBe("string");
-      expect(created.title).toBe("title");
+      expect(created.title).toBe(title);
     });
 
     it("Model.create should emit on updater subject", async () => {
@@ -135,7 +136,7 @@ describe("ClientAdapter", () => {
         }, 1000);
       });
 
-      const created = await model.create({ title: "title" });
+      const created = await model.create({ title: generateRandomString() });
 
       await expect(eventPromise).resolves.toEqual({
         operation: "create",
@@ -257,7 +258,7 @@ describe("ClientAdapter", () => {
 
   describe("ClientAdapter.get", () => {
     it("Model.get should returns the instance from _id", async () => {
-      const created = await model.create({ title: "title" });
+      const created = await model.create({ title: generateRandomString() });
 
       const fetched = await model.get(created._id);
 
@@ -295,7 +296,7 @@ describe("ClientAdapter", () => {
     });
 
     it("Model.get should returns the instance from instancesMap", async () => {
-      const created = await model.create({ title: "title" });
+      const created = await model.create({ title: generateRandomString() });
 
       const fetched = await model.get(created._id);
 
@@ -304,7 +305,7 @@ describe("ClientAdapter", () => {
     });
 
     it("Model.get should returns the instance from instancesMap when fetching", async () => {
-      const created = await model.create({ title: "title" });
+      const created = await model.create({ title: generateRandomString() });
 
       const fetched = await model.get({
         filter: { $expr: { $eq: ["$_id", { $toObjectId: created._id }] } },
@@ -315,7 +316,7 @@ describe("ClientAdapter", () => {
     });
 
     it("Model.get should emit fetch event on updaterSubject if upserted in instancesMap", async () => {
-      const created = await model.create({ title: "title" });
+      const created = await model.create({ title: generateRandomString() });
 
       const adapter = model.getAdapter() as ClientAdapter;
       adapter.instancesMap.delete(created._id);
@@ -335,7 +336,7 @@ describe("ClientAdapter", () => {
     });
 
     it("Model.get should not emit fetch event on updaterSubject if not upserted in instancesMap", async () => {
-      const created = await model.create({ title: "title" });
+      const created = await model.create({ title: generateRandomString() });
 
       const fetchWatcherPromiseFetch = fetchWatcher(model, {
         _id: created._id,
@@ -416,7 +417,7 @@ describe("ClientAdapter", () => {
 
     it("Model.getList should fetch only ids not in cache if querying ids and keep order", async () => {
       const createdList = await model.createMultiple(
-        Array(10).fill({ title: generateRandomString() })
+        Array.from({ length: 10 }, () => ({ title: generateRandomString() }))
       );
 
       const ids = createdList.map((item) => item._id);
@@ -436,7 +437,7 @@ describe("ClientAdapter", () => {
 
     it("Model.getList should not update cached items", async () => {
       const createdList = await model.createMultiple(
-        Array(10).fill({ title: generateRandomString() })
+        Array.from({ length: 10 }, () => ({ title: generateRandomString() }))
       );
 
       const ids = createdList.map((item) => item._id);
@@ -470,7 +471,7 @@ describe("ClientAdapter", () => {
 
     it("Model.getList should respect pagination", async () => {
       const createdList = await model.createMultiple(
-        Array(10).fill({ title: generateRandomString() })
+        Array.from({ length: 10 }, () => ({ title: generateRandomString() }))
       );
 
       const ids = createdList.map((item) => item._id);

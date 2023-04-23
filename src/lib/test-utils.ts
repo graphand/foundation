@@ -48,7 +48,7 @@ export const fetchWatcher = async (
       return e.operation === operation && e.ids.includes(String(opts._id));
     });
 
-  const timeout = opts.timeout ?? 600;
+  const timeout = opts.timeout ?? 500;
 
   return new Promise((resolve) => {
     unsub = subject.subscribe((e) => {
@@ -65,7 +65,7 @@ export const fetchWatcher = async (
   });
 };
 
-export const generateModel = async (
+export const generateModel = async <T extends typeof Model = any>(
   modelOrSlug?:
     | string
     | {
@@ -81,7 +81,7 @@ export const generateModel = async (
     },
   },
   client?: Client
-): Promise<any> => {
+): Promise<T> => {
   let slug;
   let fields;
   let validators;
@@ -98,10 +98,10 @@ export const generateModel = async (
     single = modelOrSlug.single;
   }
 
-  slug ??= generateRandomString();
-  client ??= globalThis.client;
-  fields ??= _fields;
-  keyField ??= Object.keys(fields)[0];
+  slug = slug === undefined ? generateRandomString() : slug;
+  client = client === undefined ? globalThis.client : client;
+  fields = fields === undefined ? _fields : fields;
+  keyField = keyField === undefined ? Object.keys(fields)[0] : keyField;
 
   const datamodel = await client.getModel(models.DataModel).create({
     name: slug,
@@ -112,7 +112,7 @@ export const generateModel = async (
     keyField,
   });
 
-  return Model.getFromSlug(datamodel.slug);
+  return Model.getFromSlug(datamodel.slug) as T;
 };
 
 export const mockAccountWithRole = async ({

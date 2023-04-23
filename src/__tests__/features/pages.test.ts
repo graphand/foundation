@@ -71,6 +71,7 @@ describe("test pages models", () => {
 
     await page.update({
       $set: {
+        title: "test",
         "obj.nestedField": "test",
       },
     });

@@ -190,8 +190,15 @@ export const executeController = async (
           error = parseError(res.error);
         }
 
+        if (res.exceptions?.length) {
+          res.exceptions.forEach((e: any) => {
+            console.warn(e.message);
+          });
+        }
+
         const retryToken = Symbol();
         const payload = { data: res.data, error, fetchResponse: r, retryToken };
+
         try {
           await _executeMiddlewares(payload);
         } catch (e) {

@@ -239,7 +239,7 @@ describe("test subscribe feature", () => {
       const model = await generateModel();
 
       const docs = await model.createMultiple(
-        Array.from({ length: 10 }, (_, i) => ({ title: `test${i}` }))
+        Array.from({ length: 10 }, (_, i) => ({ title: "test" + i }))
       );
 
       const list = await model.getList({ ids: docs.map((d) => d._id) });
@@ -248,7 +248,7 @@ describe("test subscribe feature", () => {
 
       await model.update(
         {
-          ids: [docs[3]._id, docs[4]._id],
+          ids: [docs[3]._id],
         },
         {
           $set: { title: "test" },
@@ -263,15 +263,15 @@ describe("test subscribe feature", () => {
       const model = await generateModel();
 
       const docs = await model.createMultiple(
-        Array.from({ length: 10 }, (_, i) => ({ title: `test${i}` }))
+        Array.from({ length: 10 }, (_, i) => ({ title: "test" + i }))
       );
 
       const list = await model.getList({ ids: docs.map((d) => d._id) });
 
       const eventsPromise = _captureEventsOnList(list);
 
-      await docs[3].update({ $set: { title: "test" } });
-      await docs[4].update({ $set: { title: "test" } });
+      await docs[3].update({ $set: { title: "testEdited1" } });
+      await docs[4].update({ $set: { title: "testEdited2" } });
 
       const eventsCount = await eventsPromise;
       expect(eventsCount).toBe(2);
@@ -281,7 +281,7 @@ describe("test subscribe feature", () => {
       const model = await generateModel();
 
       const docs = await model.createMultiple(
-        Array.from({ length: 10 }, (_, i) => ({ title: `test${i}` }))
+        Array.from({ length: 10 }, (_, i) => ({ title: "test" + i }))
       );
 
       const list = await model.getList({
@@ -292,7 +292,7 @@ describe("test subscribe feature", () => {
 
       await model.update(
         {
-          ids: [docs[2]._id, docs[7]._id],
+          ids: [docs[2]._id],
         },
         {
           $set: { title: "test" },
@@ -307,12 +307,14 @@ describe("test subscribe feature", () => {
       const model = await generateModel();
 
       const docs = await model.createMultiple(
-        Array.from({ length: 10 }, (_, i) => ({ title: "inList" }))
+        Array.from({ length: 10 }, (_, i) => ({ title: "inList" + i }))
       );
 
       const list = await model.getList({
         filter: {
-          title: "inList",
+          title: {
+            $regex: "inList",
+          },
         },
       });
 
@@ -333,12 +335,14 @@ describe("test subscribe feature", () => {
       const model = await generateModel();
 
       const docs = await model.createMultiple(
-        Array.from({ length: 10 }, (_, i) => ({ title: "inList" }))
+        Array.from({ length: 10 }, (_, i) => ({ title: "inList" + i }))
       );
 
       const list = await model.getList({
         filter: {
-          title: "inList",
+          title: {
+            $regex: "inList",
+          },
         },
       });
 
@@ -363,12 +367,14 @@ describe("test subscribe feature", () => {
       const model = await generateModel();
 
       const docs = await model.createMultiple(
-        Array.from({ length: 10 }, (_, i) => ({ title: "inList" }))
+        Array.from({ length: 10 }, (_, i) => ({ title: "inList" + i }))
       );
 
       const list = await model.getList({
         filter: {
-          title: "inList",
+          title: {
+            $regex: "inList",
+          },
         },
       });
 
