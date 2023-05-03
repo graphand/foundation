@@ -1,5 +1,10 @@
 import "@graphand/core/global";
-import type { CoreError, CoreErrorDefinition } from "@graphand/core";
+import type {
+  AuthMethods,
+  AuthProviders,
+  CoreError,
+  CoreErrorDefinition,
+} from "@graphand/core";
 
 declare module "@graphand/core" {
   export class Model {
@@ -38,6 +43,7 @@ export type ClientOptions = {
   accessToken?: string;
   refreshToken?: string;
   sockets?: Array<SocketScope>;
+  handleAuthRedirect?: boolean;
 };
 
 export type SocketScope = "project" | "global";

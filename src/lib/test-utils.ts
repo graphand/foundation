@@ -134,7 +134,6 @@ export const mockAccountWithRole = async ({
 
   const account = await client.getModel(models.Account).create({
     email: generateRandomString() + "@test.com",
-    password: "test",
     role: role._id,
   });
 

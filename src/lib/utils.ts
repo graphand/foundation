@@ -18,7 +18,7 @@ import ClientAdapter from "./ClientAdapter";
 import Client from "./Client";
 import FetchError from "./FetchError";
 import FetchValidationError from "./FetchValidationError";
-import { MiddlewareInput } from "../types";
+import { ClientOptions, MiddlewareInput } from "../types";
 import { Socket } from "socket.io-client";
 import ClientError from "./ClientError";
 import ErrorCodes from "../enums/error-codes";
@@ -415,4 +415,33 @@ export const useRealtimeOnSocket = (socket: Socket, slugs: Array<string>) => {
   const slugsStr = slugs.join(",");
   debug(`emit on socket ${socket.id} to use realtime for models ${slugsStr}`);
   socket.emit("use-realtime", slugsStr);
+};
+
+export const handleAuthRedirect = (options: ClientOptions) => {
+  if (typeof globalThis.window === "undefined") {
+    throw new ClientError({
+      message: "handleAuthRedirect must be called on a browser environment",
+    });
+  }
+
+  const _window: any = globalThis.window;
+
+  const url = new URL(_window.location.href);
+  const authResult = url.searchParams.get("authResult");
+  if (authResult) {
+    const { accessToken, refreshToken } = JSON.parse(authResult);
+    console.log({
+      accessToken,
+    });
+    if (accessToken) {
+      options.accessToken = accessToken;
+    }
+    if (refreshToken) {
+      options.refreshToken = refreshToken;
+    }
+
+    const parsedUrl = new URL(_window.location.href);
+    parsedUrl.searchParams.delete("authResult");
+    globalThis.history?.replaceState({}, "", parsedUrl.toString());
+  }
 };

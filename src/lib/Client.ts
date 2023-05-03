@@ -4,10 +4,19 @@ import {
   models,
   ModelCrudEvent,
   getAdaptedModel,
+  AuthProviders,
+  AuthMethods,
+  AuthProviderInput,
+  AuthMethodInput,
+  AuthInput,
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
-import { executeController, useRealtimeOnSocket } from "./utils";
+import {
+  executeController,
+  handleAuthRedirect,
+  useRealtimeOnSocket,
+} from "./utils";
 import { Middleware, ClientOptions, SocketScope } from "../types";
 import { io, Socket } from "socket.io-client";
 import ClientError from "./ClientError";
@@ -29,6 +38,10 @@ class Client {
   __socketsMap: Map<SocketScope, Socket>;
 
   constructor(options: ClientOptions) {
+    if (options.handleAuthRedirect) {
+      handleAuthRedirect(options);
+    }
+
     this.__optionsSubject = new BehaviorSubject(options);
 
     const optionsSub = this.__optionsSubject.subscribe(() => {
@@ -181,14 +194,111 @@ class Client {
     });
   }
 
-  async loginAccount(credentials: { email: string; password: string }) {
-    const { email, password } = credentials;
+  async loginAccount<
+    P extends AuthProviders = AuthProviders.PASSWORD,
+    M extends AuthMethods = AuthMethods.WINDOW
+  >(
+    providerOrData:
+      | P
+      | ({
+          provider?: P;
+          method?: M;
+        } & (AuthInput<P, M> | {})),
+    methodOrData?:
+      | M
+      | ({
+          method?: M;
+        } & (AuthInput<P, M> | {})),
+    data?: AuthInput<P, M>
+  ) {
+    let body: AuthInput<P, M>;
 
-    const { accessToken, refreshToken } = await executeController(
-      this,
-      controllersMap.loginAccount,
-      { body: { email, password } }
-    );
+    if (data && typeof data === "object") {
+      body = data as typeof body;
+    } else {
+      body = {} as typeof body;
+    }
+
+    if (typeof providerOrData === "string") {
+      body.provider = providerOrData;
+    } else if (providerOrData) {
+      Object.assign(body, providerOrData);
+    }
+
+    if (typeof methodOrData === "string") {
+      body.method = methodOrData;
+    } else if (methodOrData) {
+      Object.assign(body, methodOrData);
+    }
+
+    let redirect;
+
+    if (body.method === AuthMethods.REDIRECT) {
+      redirect = "redirect" in body ? body.redirect : window.location.href;
+    }
+
+    body.method ??= AuthMethods.WINDOW as M;
+
+    const res = await executeController(this, controllersMap.loginAccount, {
+      query: {
+        redirect,
+      },
+      body,
+    });
+
+    let accessToken = res.accessToken;
+    let refreshToken = res.refreshToken;
+
+    const _withWindow = async () => {
+      const authWindow = window.open(res.url, "_blank");
+
+      // Create a Promise to wait for the authentication result (e.g., using postMessage)
+      const authResult: {
+        accessToken: string;
+        refreshToken: string;
+      } = await new Promise((resolve, reject) => {
+        window.addEventListener("message", (event) => {
+          if (event.data.type === "authResult") {
+            authWindow.close();
+            resolve(event.data);
+          }
+        });
+
+        // Set a timeout to handle errors or user closing the window
+        setTimeout(() => {
+          reject(new Error("Login timed out"));
+        }, 300000); // 5 minutes
+      });
+
+      accessToken = authResult.accessToken;
+      refreshToken = authResult.refreshToken;
+    };
+
+    const _withRedirect = async () => {
+      window.location.href = res.url;
+      throw new Error("Redirecting to auth url... You can ignore this error");
+    };
+
+    if (res.url) {
+      switch (body.method) {
+        case AuthMethods.REDIRECT:
+          await _withRedirect();
+          break;
+        case AuthMethods.WINDOW:
+        default:
+          await _withWindow();
+          break;
+      }
+    }
+
+    if (!accessToken || !refreshToken) {
+      throw new Error("No access token or refresh token found");
+    }
+
+    console.log({
+      accessToken,
+      refreshToken,
+    });
 
     this.setOptions({ accessToken, refreshToken });
   }
