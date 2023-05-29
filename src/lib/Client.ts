@@ -6,21 +6,36 @@ import {
   getAdaptedModel,
   AuthProviders,
   AuthMethods,
-  AuthProviderInput,
-  AuthMethodInput,
-  AuthInput,
+  AuthProviderCredentials,
+  AuthMethodOptions,
+  InputModelPayload,
+  Account,
+  AuthProviderConfigurePayload,
+  ControllerDefinition,
+  HookPhase,
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
 import {
   executeController,
+  getControllerUrl,
   handleAuthRedirect,
+  handleAuthResponse,
+  useFormsOnSocket,
   useRealtimeOnSocket,
 } from "./utils";
-import { Middleware, ClientOptions, SocketScope } from "../types";
+import {
+  ClientOptions,
+  SocketScope,
+  FormSocketEvent,
+  ClientHook,
+  ClientHookPayload,
+} from "../types";
 import { io, Socket } from "socket.io-client";
 import ClientError from "./ClientError";
 import ErrorCodes from "../enums/error-codes";
+import defaultAuthControllersMap from "./defaultAuthControllersMap";
+import Subject from "./Subject";
 
 const debug = require("debug")("graphand:client");
 const debugSocket = require("debug")("graphand:socket");
@@ -29,13 +44,17 @@ const defaultOptions: Partial<ClientOptions> = {
   endpoint: "api.graphand.cloud",
   environment: "master",
   sockets: ["project"],
+  authControllersMap: defaultAuthControllersMap,
 };
 
 class Client {
+  static __hooks: Set<ClientHook<any, any>>;
+
   __optionsSubject: BehaviorSubject<ClientOptions>;
-  __middlewares: Set<Middleware>;
   __adapterClass?: typeof ClientAdapter;
   __socketsMap: Map<SocketScope, Socket>;
+  __sendingFormKeysSubject: BehaviorSubject<Set<string>>;
+  __formsEventSubject: Subject<FormSocketEvent>;
 
   constructor(options: ClientOptions) {
     if (options.handleAuthRedirect) {
@@ -43,6 +62,7 @@ class Client {
     }
 
     this.__optionsSubject = new BehaviorSubject(options);
+    this.__sendingFormKeysSubject = new BehaviorSubject(new Set());
 
     const optionsSub = this.__optionsSubject.subscribe(() => {
       if (
@@ -55,6 +75,34 @@ class Client {
         });
       }
     });
+
+    const sendingFormKeysSub = this.__sendingFormKeysSubject.subscribe(
+      (sendingKeys) => {
+        const projectSocket = this.__socketsMap?.get("project");
+        if (projectSocket && sendingKeys?.size) {
+          useFormsOnSocket(projectSocket, Array.from(sendingKeys));
+        }
+      }
+    );
+  }
+
+  src(
+    idOrName: string,
+    opts: {
+      w?: string | number;
+      h?: string | number;
+      fit?: "cover" | "contain" | "fill" | "inside" | "outside";
+    } = {},
+    _private = false
+  ) {
+    const controller = _private
+      ? controllersMap.mediaPrivate
+      : controllersMap.mediaPublic;
+    const { w, h, fit } = opts;
+    return getControllerUrl(this, controller, {
+      path: { idOrName },
+      query: { w, h, fit },
+    });
   }
 
   get options(): ClientOptions {
@@ -65,6 +113,55 @@ class Client {
     );
 
     return Object.assign({}, defaultOptions, opts);
+  }
+
+  get formsEvent() {
+    this.__formsEventSubject ??= new Subject();
+    return this.__formsEventSubject;
+  }
+
+  static hook<P extends HookPhase, C extends ControllerDefinition>(
+    phase: P,
+    fn: ClientHook<P, C>["fn"],
+    controller?: C,
+    order: number = 0
+  ) {
+    const hook: ClientHook<P, C> = { phase, fn, controller, order };
+
+    this.__hooks ??= new Set();
+    this.__hooks.add(hook);
+  }
+
+  async executeHooks<P extends HookPhase, C extends ControllerDefinition>(
+    phase: P,
+    controller: C,
+    payload: ClientHookPayload<P>
+  ): Promise<void> {
+    const constructor = this.constructor as typeof Client;
+    const hooks = Array.from(constructor.__hooks || [])
+      .filter((hook) => {
+        if (hook.phase !== phase) {
+          return false;
+        }
+
+        if (hook.controller && hook.controller !== controller) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => a.order - b.order);
+
+    await hooks.reduce(async (p, hook) => {
+      await p;
+
+      try {
+        await hook.fn.call(this, payload);
+      } catch (e) {
+        payload.err ??= [];
+        payload.err.push(e);
+      }
+    }, Promise.resolve());
   }
 
   setOptions(assignOpts: Partial<ClientOptions>) {
@@ -93,14 +190,6 @@ class Client {
     }
 
     return getAdaptedModel(model, adapter);
-  }
-
-  middleware(middleware: Middleware) {
-    if (!this.hasOwnProperty("__middlewares") || !this.__middlewares) {
-      this.__middlewares = new Set();
-    }
-
-    this.__middlewares.add(middleware);
   }
 
   connectSocket(scope: SocketScope = "project") {
@@ -142,6 +231,11 @@ class Client {
       if (adapter.__modelsMap) {
         useRealtimeOnSocket(socket, Array.from(adapter.__modelsMap.keys()));
       }
+
+      const sendingFormKeys = this.__sendingFormKeysSubject.getValue();
+      if (sendingFormKeys.size) {
+        useFormsOnSocket(socket, Array.from(sendingFormKeys));
+      }
     });
 
     // socket.on("connect_error", (e) => {
@@ -152,13 +246,18 @@ class Client {
     //   debugSocket(`Socket disconnected on scope ${scope} (${url})`);
     // });
 
-    socket.on("realtime:event", (event: ModelCrudEvent & any) => {
+    socket.on("realtime:event", (event: ModelCrudEvent) => {
       const model = client.getModel(event.model);
       const adapter = model.getAdapter() as ClientAdapter;
 
+      // @ts-ignore
       event.__socketId = socket.id;
 
       adapter.__eventSubject.next(event);
+    });
+
+    socket.on("form:event", (event: FormSocketEvent) => {
+      this.__formsEventSubject?.next(event);
     });
 
     this.__socketsMap.set(scope, socket);
@@ -170,24 +269,31 @@ class Client {
 
   // controllers
 
+  async executeController(
+    controller: Parameters<typeof executeController>[1],
+    opts?: Parameters<typeof executeController>[2]
+  ) {
+    return await executeController(this, controller, opts);
+  }
+
   async infos() {
-    return await executeController(this, controllersMap.infos);
+    return await this.executeController(controllersMap.infos);
   }
 
   async infosProject() {
-    return await executeController(this, controllersMap.infosProject);
+    return await this.executeController(controllersMap.infosProject);
   }
 
   async registerUser(credentials: { email: string; password: string }) {
     const { email, password } = credentials;
 
-    return await executeController(this, controllersMap.registerUser, {
+    return await this.executeController(controllersMap.registerUser, {
       body: { email, password },
     });
   }
 
   async genAccountToken(accountId: string) {
-    return await executeController(this, controllersMap.genAccountToken, {
+    return await this.executeController(controllersMap.genAccountToken, {
       path: {
         id: accountId,
       },
@@ -199,19 +305,31 @@ class Client {
     M extends AuthMethods = AuthMethods.WINDOW
   >(
     providerOrData:
-      | P
-      | ({
+      | {
           provider?: P;
           method?: M;
-        } & (AuthInput<P, M> | {})),
+          credentials?: AuthProviderCredentials<P>;
+          options?: AuthMethodOptions<M>;
+        }
+      | P,
     methodOrData?:
-      | M
-      | ({
+      | {
           method?: M;
-        } & (AuthInput<P, M> | {})),
-    data?: AuthInput<P, M>
+          credentials?: AuthProviderCredentials<P>;
+          options?: AuthMethodOptions<M>;
+        }
+      | M,
+    data?: {
+      credentials?: AuthProviderCredentials<P>;
+      options?: AuthMethodOptions<M>;
+    }
   ) {
-    let body: AuthInput<P, M>;
+    let body: {
+      provider: P;
+      method: M;
+      credentials: AuthProviderCredentials<P>;
+      options: AuthMethodOptions<M>;
+    };
 
     if (data && typeof data === "object") {
       body = data as typeof body;
@@ -231,76 +349,135 @@ class Client {
       Object.assign(body, methodOrData);
     }
 
-    let redirect;
+    body.method ??= AuthMethods.WINDOW as M;
 
     if (body.method === AuthMethods.REDIRECT) {
-      redirect = "redirect" in body ? body.redirect : window.location.href;
+      body.options ??= {} as any;
+      const options = body.options as AuthMethodOptions<AuthMethods.REDIRECT>;
+      options.redirect ??= window.location.href;
+    }
+
+    const res = await this.executeController(controllersMap.loginAccount, {
+      body,
+    });
+
+    const { accessToken, refreshToken } = await handleAuthResponse(
+      res,
+      body.method,
+      this
+    );
+
+    this.setOptions({
+      accessToken,
+      refreshToken,
+    });
+  }
+
+  async registerAccount<
+    P extends AuthProviders = AuthProviders.PASSWORD,
+    M extends AuthMethods = AuthMethods.WINDOW
+  >(
+    providerOrData:
+      | {
+          provider?: P;
+          method?: M;
+          account?: Omit<InputModelPayload<typeof Account>, "role">;
+          configuration?: AuthProviderConfigurePayload<P>;
+          options?: AuthMethodOptions<M>;
+        }
+      | P,
+    methodOrData?:
+      | {
+          method?: M;
+          account?: Omit<InputModelPayload<typeof Account>, "role">;
+          configuration?: AuthProviderConfigurePayload<P>;
+          options?: AuthMethodOptions<M>;
+        }
+      | M,
+    data?: {
+      account?: Omit<InputModelPayload<typeof Account>, "role">;
+      configuration?: AuthProviderConfigurePayload<P>;
+      options?: AuthMethodOptions<M>;
+    }
+  ) {
+    let body: {
+      provider: P;
+      method: M;
+      account?: Omit<InputModelPayload<typeof Account>, "role">;
+      configuration?: AuthProviderConfigurePayload<P>;
+      options: AuthMethodOptions<M>;
+    };
+
+    if (data && typeof data === "object") {
+      body = data as typeof body;
+    } else {
+      body = {} as typeof body;
+    }
+
+    if (typeof providerOrData === "string") {
+      body.provider = providerOrData;
+    } else if (providerOrData) {
+      Object.assign(body, providerOrData);
+    }
+
+    if (typeof methodOrData === "string") {
+      body.method = methodOrData;
+    } else if (methodOrData) {
+      Object.assign(body, methodOrData);
     }
 
     body.method ??= AuthMethods.WINDOW as M;
 
-    const res = await executeController(this, controllersMap.loginAccount, {
-      query: {
-        redirect,
-      },
+    if (body.method === AuthMethods.REDIRECT) {
+      body.options ??= {} as any;
+      const options = body.options as AuthMethodOptions<AuthMethods.REDIRECT>;
+      options.redirect ??= window.location.href;
+    }
+
+    const res = await this.executeController(controllersMap.registerAccount, {
       body,
     });
 
-    let accessToken = res.accessToken;
-    let refreshToken = res.refreshToken;
-
-    const _withWindow = async () => {
-      const authWindow = window.open(res.url, "_blank");
-
-      // Create a Promise to wait for the authentication result (e.g., using postMessage)
-      const authResult: {
-        accessToken: string;
-        refreshToken: string;
-      } = await new Promise((resolve, reject) => {
-        window.addEventListener("message", (event) => {
-          if (event.data.type === "authResult") {
-            authWindow.close();
-            resolve(event.data);
-          }
-        });
-
-        // Set a timeout to handle errors or user closing the window
-        setTimeout(() => {
-          reject(new Error("Login timed out"));
-        }, 300000); // 5 minutes
-      });
-
-      accessToken = authResult.accessToken;
-      refreshToken = authResult.refreshToken;
-    };
-
-    const _withRedirect = async () => {
-      window.location.href = res.url;
-      throw new Error("Redirecting to auth url... You can ignore this error");
-    };
-
-    if (res.url) {
-      switch (body.method) {
-        case AuthMethods.REDIRECT:
-          await _withRedirect();
-          break;
-        case AuthMethods.WINDOW:
-        default:
-          await _withWindow();
-          break;
-      }
-    }
-
-    if (!accessToken || !refreshToken) {
-      throw new Error("No access token or refresh token found");
-    }
-
-    console.log({
-      accessToken,
-      refreshToken,
-    });
+    const { accessToken, refreshToken } = await handleAuthResponse(
+      res,
+      body.method,
+      this
+    );
 
     this.setOptions({ accessToken, refreshToken });
+  }
+
+  async configureAuth<P extends AuthProviders>(
+    providerOrData:
+      | {
+          provider?: P;
+          configuration?: AuthProviderConfigurePayload<P>;
+        }
+      | P,
+    data?: {
+      configuration?: AuthProviderConfigurePayload<P>;
+    }
+  ) {
+    let body: {
+      provider: P;
+      configuration?: AuthProviderConfigurePayload<P>;
+    };
+
+    if (data && typeof data === "object") {
+      body = data as typeof body;
+    } else {
+      body = {} as typeof body;
+    }
+
+    if (typeof providerOrData === "string") {
+      body.provider = providerOrData;
+    } else if (providerOrData) {
+      Object.assign(body, providerOrData);
+    }
+
+    return await this.executeController(controllersMap.configureAuth, {
+      body,
+    });
   }
 
   async loginUser(credentials: { email: string; password: string }) {
@@ -336,14 +513,14 @@ class Client {
 
   async ql(models: string[]) {
     const query = Object.fromEntries(models.map((m) => [m, true]));
-    return await executeController(this, controllersMap.ql, { query });
+    return await this.executeController(controllersMap.ql, { query });
   }
 
   async sync(
     config: Record<string, Record<string, any>>,
     opts: { confirm?: boolean; clean?: boolean }
   ) {
-    return await executeController(this, controllersMap.sync, {
+    return await this.executeController(controllersMap.sync, {
       query: opts,
       body: config,
     });
@@ -351,20 +528,20 @@ class Client {
 
   async currentUser() {
     const User = this.getModel(models.User);
-    const data = await executeController(this, controllersMap.currentUser);
+    const data = await this.executeController(controllersMap.currentUser);
     // TODO: return mapOrNew user
     return new User(data);
   }
 
   async currentAccount() {
     const Account = this.getModel(models.Account);
-    const data = await executeController(this, controllersMap.currentAccount);
+    const data = await this.executeController(controllersMap.currentAccount);
     // TODO: return mapOrNew account
     return new Account(data);
   }
 
   async genToken(tokenId: string) {
-    return await executeController(this, controllersMap.genToken, {
+    return await this.executeController(controllersMap.genToken, {
       path: {
         id: tokenId,
       },

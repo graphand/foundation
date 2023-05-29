@@ -5,9 +5,6 @@ import {
   Model,
   ModelList,
   ModelCrudEvent,
-  ModelCreateEvent,
-  ModelDeleteEvent,
-  ModelUpdateEvent,
 } from "@graphand/core";
 import Client from "./Client";
 import Subject from "./Subject";
@@ -279,7 +276,7 @@ class ClientAdapter extends Adapter {
       this.queriesMap.set(cacheKey, resPromise);
       return await resPromise;
     },
-    createOne: async ([payload]) => {
+    createOne: async ([payload], ctx) => {
       if (!this.client) {
         throw new ClientError({
           code: ErrorCodes.MODEL_NO_CLIENT,
@@ -296,6 +293,7 @@ class ClientAdapter extends Adapter {
             model: this.model.slug,
           },
           body: payload,
+          sendAsFormData: ctx?.sendAsFormData,
         }
       );
 
@@ -304,7 +302,7 @@ class ClientAdapter extends Adapter {
         model: this.model.slug,
         ids: [res._id],
         data: [res],
-      } as ModelCreateEvent);
+      } as ModelCrudEvent);
 
       return this.mapOrNew(res).mapped;
     },
@@ -333,7 +331,7 @@ class ClientAdapter extends Adapter {
         model: this.model.slug,
         ids: res.map((r) => r._id),
         data: res,
-      } as ModelCreateEvent);
+      } as ModelCrudEvent);
 
       return res.map((r) => this.mapOrNew(r).mapped);
     },
@@ -364,7 +362,7 @@ class ClientAdapter extends Adapter {
           model: this.model.slug,
           ids: [res._id],
           data: [res],
-        } as ModelUpdateEvent);
+        } as ModelCrudEvent);
 
         return this.mapOrNew(res).mapped;
       } else {
@@ -381,7 +379,7 @@ class ClientAdapter extends Adapter {
           model: this.model.slug,
           ids: list.map((l) => l._id),
           data: list,
-        } as ModelUpdateEvent);
+        } as ModelCrudEvent);
 
         return this.mapOrNew(list[0]).mapped;
       }
@@ -412,7 +410,7 @@ class ClientAdapter extends Adapter {
         model: this.model.slug,
         ids: res.map((l) => l._id),
         data: res,
-      } as ModelUpdateEvent);
+      } as ModelCrudEvent);
 
       return res.map((r) => this.mapOrNew(r).mapped);
     },
@@ -444,7 +442,7 @@ class ClientAdapter extends Adapter {
         operation: "delete",
         model: this.model.slug,
         ids: res,
-      } as ModelDeleteEvent);
+      } as ModelCrudEvent);
 
       return Boolean(res?.length);
     },
@@ -473,7 +471,7 @@ class ClientAdapter extends Adapter {
         operation: "delete",
         model: this.model.slug,
         ids: res.map((l) => l._id),
-      } as ModelDeleteEvent);
+      } as ModelCrudEvent);
 
       return res;
     },

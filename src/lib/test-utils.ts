@@ -3,11 +3,9 @@ import {
   FieldTypes,
   ValidatorsDefinition,
   Data,
-  DataModel,
   FieldsDefinition,
   Model,
   models,
-  ModelUpdateEvent,
   ModelCrudEvent,
   Rule,
   FieldsRestriction,
@@ -25,7 +23,7 @@ export const fetchWatcher = async (
   model: typeof Model,
   opts: {
     _id?: string;
-    fn?: (e: ModelUpdateEvent | ModelCrudEvent | any) => boolean;
+    fn?: (e: ModelCrudEvent | any) => boolean;
     operation?: "fetch" | "create" | "update" | "delete";
     timeout?: number;
     subject?: "updater" | "event";

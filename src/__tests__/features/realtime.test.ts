@@ -112,6 +112,7 @@ describe("test realtime", () => {
 
       const adapter = _model.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
+        // @ts-ignore
         if (e.operation === "create" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
           idsArr = idsArr.concat(e.ids);
@@ -174,6 +175,7 @@ describe("test realtime", () => {
 
       const adapter = _model2.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
+        // @ts-ignore
         if (e.operation === "create" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
         }
@@ -323,6 +325,7 @@ describe("test realtime", () => {
 
       const adapter = _model.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
+        // @ts-ignore
         if (e.operation === "update" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
           idsArr = idsArr.concat(e.ids);
@@ -396,6 +399,7 @@ describe("test realtime", () => {
 
       const adapter = _model2.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
+        // @ts-ignore
         if (e.operation === "update" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
         }
@@ -524,6 +528,7 @@ describe("test realtime", () => {
 
       const adapter = _model.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
+        // @ts-ignore
         if (e.operation === "delete" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
           idsArr = idsArr.concat(e.ids);
@@ -582,6 +587,7 @@ describe("test realtime", () => {
 
       const adapter = _model2.getAdapter() as ClientAdapter;
       const unsub = adapter.__eventSubject.subscribe((e) => {
+        // @ts-ignore
         if (e.operation === "delete" && e.__socketId) {
           e.ids.forEach(idsSet.add.bind(idsSet));
         }

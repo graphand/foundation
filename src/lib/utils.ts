@@ -13,12 +13,14 @@ import {
   getFieldsPathsFromPath,
   getFieldFromDefinition,
   FieldsPathItem,
+  AuthMethods,
+  ControllerDefinition,
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import Client from "./Client";
 import FetchError from "./FetchError";
 import FetchValidationError from "./FetchValidationError";
-import { ClientOptions, MiddlewareInput } from "../types";
+import { ClientHookPayload, ClientOptions, ExecuteOpts } from "../types";
 import { Socket } from "socket.io-client";
 import ClientError from "./ClientError";
 import ErrorCodes from "../enums/error-codes";
@@ -67,32 +69,21 @@ export const parseError = (error: any): CoreError => {
   return new FetchError(error);
 };
 
-export const executeController = async (
+export const getControllerUrl = (
   client: Client,
   controller: (typeof controllersMap)[keyof typeof controllersMap],
   opts: {
     path?: { [key: string]: string };
     query?: any;
     body?: any;
+    sendAsFormData?: boolean;
   } = {}
 ) => {
-  const init: RequestInit = {};
-
-  const methods = new Set(controller.methods);
-
-  if (opts?.body) {
-    methods.delete("GET");
-    init.body = JSON.stringify(opts.body);
-  }
-
-  const [method] = methods;
-  init.method = method;
-
   const scopeArgs: any = {};
 
   const path = controller.path.replace(/\:(\w+)(\?)?/g, (match, p1) => {
     scopeArgs[p1] = opts.path[p1];
-    return opts.path[p1] || "";
+    return opts.path[p1] ? encodeURIComponent(opts.path[p1]) : "";
   });
 
   let url;
@@ -121,6 +112,9 @@ export const executeController = async (
     }
   }
 
+  // remove trailing slash
+  url = url.replace(/\/$/, "");
+
   if (opts.query) {
     const queryObjEntries = Object.entries(opts.query).filter(
       ([, v]) => v !== undefined
@@ -131,9 +125,88 @@ export const executeController = async (
     }
   }
 
-  init.headers ??= {};
-  init.headers["Accept"] = "application/json";
-  init.headers["Content-Type"] = "application/json";
+  return url;
+};
+
+export const executeController = async (
+  client: Client,
+  controller: ControllerDefinition,
+  opts: ExecuteOpts = {}
+) => {
+  const retryToken = Symbol();
+  const payloadBefore: ClientHookPayload<"before"> = {
+    controller,
+    retryToken,
+    opts,
+  };
+
+  await client.executeHooks("before", controller, payloadBefore);
+
+  if (payloadBefore.err?.length) {
+    if (payloadBefore.err.includes(retryToken)) {
+      return await executeController(client, controller, opts);
+    }
+
+    throw payloadBefore.err[0];
+  }
+
+  let sendingFormKey;
+  const init: RequestInit = {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  };
+
+  const methods = new Set(controller.methods);
+
+  if (opts?.body) {
+    methods.delete("GET");
+    if (opts.sendAsFormData) {
+      const parsePayloadToFormData = (payload: any): FormData => {
+        const formData = new FormData();
+
+        const traverseObject = (obj: any, parentKey?: string) => {
+          for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              const value = obj[key];
+
+              if (value instanceof Blob) {
+                const fileKey = Math.random().toString(36).substr(2, 9);
+                formData.append(fileKey, value);
+                obj[key] = `file:${fileKey}`;
+              } else if (typeof value === "object" && value !== null) {
+                traverseObject(value);
+              }
+            }
+          }
+        };
+
+        traverseObject(payload);
+
+        formData.append("data", JSON.stringify(payload));
+
+        return formData;
+      };
+
+      sendingFormKey = String(new Date().getTime());
+
+      console.log("sendingFormKey", sendingFormKey);
+
+      const sendingKeys = client.__sendingFormKeysSubject.getValue();
+      sendingKeys.add(sendingFormKey);
+      client.__sendingFormKeysSubject.next(sendingKeys);
+
+      init.body = parsePayloadToFormData(opts.body);
+      init.headers["Form-Key"] = sendingFormKey;
+      delete init.headers["Content-Type"];
+    } else {
+      init.body = JSON.stringify(opts.body);
+    }
+  }
+
+  const [method] = methods;
+  init.method = method;
 
   if (init.method !== "GET" && client.__socketsMap?.size) {
     init.headers["Sockets"] = Array.from(client.__socketsMap.values())
@@ -145,81 +218,68 @@ export const executeController = async (
     init.headers["Authorization"] = `Bearer ${client.options.accessToken}`;
   }
 
-  const _executeMiddlewares = async (input: MiddlewareInput) => {
-    const middlewares = client.__middlewares
-      ? Array.from(client.__middlewares)
-      : [];
-
-    let err;
-    await middlewares.reduce(async (p, middleware) => {
-      await p;
-      try {
-        await middleware.call(this, input);
-      } catch (e) {
-        err = Array.prototype.concat.apply(err ?? [], [e]);
-      }
-    }, Promise.resolve());
-
-    if (err) {
-      throw err;
-    }
-  };
+  const url = getControllerUrl(client, controller, opts);
 
   const _fetch = (retrying = false) => {
     debug(`fetching ${url} [${init.method}] ...`, JSON.stringify(init));
     return fetch(url, init).then(async (r) => {
-      try {
-        let res = await r.json();
-        let error;
+      let res = await r.json();
+      let error;
 
-        if (res.error) {
-          if (
-            r.status === 401 &&
-            res.error.code === "TOKEN_EXPIRED" &&
-            !retrying
-          ) {
-            try {
-              await client.refreshToken();
-              init.headers[
-                "Authorization"
-              ] = `Bearer ${client.options.accessToken}`;
-              return _fetch(true);
-            } catch (e) {}
-          }
-
-          error = parseError(res.error);
+      if (res.error) {
+        if (
+          r.status === 401 &&
+          res.error.code === "TOKEN_EXPIRED" &&
+          !retrying
+        ) {
+          try {
+            await client.refreshToken();
+            init.headers[
+              "Authorization"
+            ] = `Bearer ${client.options.accessToken}`;
+            return _fetch(true);
+          } catch (e) {}
         }
 
-        if (res.exceptions?.length) {
-          res.exceptions.forEach((e: any) => {
-            console.warn(e.message);
-          });
-        }
-
-        const retryToken = Symbol();
-        const payload = { data: res.data, error, fetchResponse: r, retryToken };
-
-        try {
-          await _executeMiddlewares(payload);
-        } catch (e) {
-          if (Array.isArray(e) && e.includes(retryToken)) {
-            return await executeController(client, controller, opts);
-          }
-        }
-
-        if (payload?.error) {
-          throw payload.error;
-        }
-
-        return payload.data;
-      } catch (e) {
-        debug(`error on fetching ${url} :`, e.message);
-        throw e;
+        error = parseError(res.error);
       }
+
+      if (res.exceptions?.length) {
+        res.exceptions.forEach((e: any) => {
+          console.warn(e.message);
+        });
+      }
+
+      const payloadAfter: ClientHookPayload<"after"> = {
+        ...payloadBefore,
+        data: res.data,
+        fetchResponse: r,
+      };
+
+      await client.executeHooks("after", controller, payloadAfter);
+
+      if (payloadAfter.err?.length) {
+        if (payloadAfter.err.includes(retryToken)) {
+          return await executeController(client, controller, opts);
+        }
+
+        throw payloadAfter.err[0];
+      }
+
+      return payloadAfter.data;
     });
   };
 
-  return _fetch();
+  return _fetch()
+    .catch((e) => {
+      debug(`error on fetching ${url} :`, e.message);
+      throw e;
+    })
+    .finally(() => {
+      const sendingKeys = client.__sendingFormKeysSubject.getValue();
+      sendingKeys.delete(sendingFormKey);
+      client.__sendingFormKeysSubject.next(sendingKeys);
+    });
 };
 
 export const canUseIds = (query: JSONQuery): boolean | Array<string> => {
@@ -415,6 +475,73 @@ export const useRealtimeOnSocket = (socket: Socket, slugs: Array<string>) => {
   const slugsStr = slugs.join(",");
   debug(`emit on socket ${socket.id} to use realtime for models ${slugsStr}`);
   socket.emit("use-realtime", slugsStr);
+};
+
+export const useFormsOnSocket = (socket: Socket, keys: Array<string>) => {
+  if (!socket.connected) {
+    return;
+    // throw new ClientError({
+    //   message: "Socket must be connected to use realtime",
+    //   code: ErrorCodes.SOCKET_NOT_CONNECTED,
+    // });
+  }
+
+  const keysStr = keys.join(",");
+  debug(`emit on socket ${socket.id} to use forms with keys ${keysStr}`);
+  socket.emit("use-forms", keysStr);
+};
+
+export const handleAuthResponse = async (
+  res: {
+    url?: string;
+    accessToken?: string;
+    refreshToken?: string;
+  },
+  method: AuthMethods,
+  client: Client
+): Promise<{
+  accessToken: string;
+  refreshToken: string;
+}> => {
+  let accessToken = res.accessToken;
+  let refreshToken = res.refreshToken;
+
+  if (accessToken && refreshToken) {
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  if (res.url) {
+    const controller = client.options.authControllersMap.get(method);
+    if (!controller) {
+      throw new ClientError({
+        message: `auth controller for method ${method} not implemented`,
+      });
+    }
+
+    const authResult = await controller(res.url, client);
+
+    accessToken = authResult.accessToken;
+    refreshToken = authResult.refreshToken;
+  }
+
+  if (!accessToken || !refreshToken) {
+    throw new ClientError({
+      message: "No access token or refresh token",
+    });
+  }
+
+  console.log({
+    accessToken,
+    refreshToken,
+  });
+
+  return {
+    accessToken,
+    refreshToken,
+  };
 };
 
 export const handleAuthRedirect = (options: ClientOptions) => {
