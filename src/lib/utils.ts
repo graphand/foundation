@@ -224,7 +224,6 @@ export const executeController = async (
     debug(`fetching ${url} [${init.method}] ...`, JSON.stringify(init));
     return fetch(url, init).then(async (r) => {
       let res = await r.json();
-      let error;
 
       if (res.error) {
         if (
@@ -241,7 +240,8 @@ export const executeController = async (
           } catch (e) {}
         }
 
-        error = parseError(res.error);
+        payloadBefore.err ??= [];
+        payloadBefore.err.push(parseError(res.error));
       }
 
       if (res.exceptions?.length) {

@@ -83,6 +83,6 @@ describe("test pages models", () => {
 
     const page2 = await model.get();
 
-    expect(page.obj.nestedField).toBe("test");
+    expect(page2.obj.nestedField).toBe("test");
   });
 });
