@@ -14,9 +14,20 @@ import {
 import { ClientOptions } from "../types";
 import Client from "./Client";
 import ClientAdapter from "./ClientAdapter";
+import fs from "fs";
+import path from "path";
+import mime from "mime";
 
 export const generateRandomString = () => {
   return "a" + Math.random().toString(36).substring(7);
+};
+
+export const getFile = async (fileName = "sample.png") => {
+  const filePath = path.resolve(__dirname, `../__tests__/assets/${fileName}`);
+  const buffer = fs.readFileSync(filePath);
+  const name = path.basename(filePath);
+  const type = mime.getType(filePath);
+  return new File([new Blob([buffer], { type })], name, { type });
 };
 
 export const fetchWatcher = async (

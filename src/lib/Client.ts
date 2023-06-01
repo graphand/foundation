@@ -13,6 +13,7 @@ import {
   AuthProviderConfigurePayload,
   ControllerDefinition,
   HookPhase,
+  FormProcessEvent,
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
@@ -27,7 +28,6 @@ import {
 import {
   ClientOptions,
   SocketScope,
-  FormSocketEvent,
   ClientHook,
   ClientHookPayload,
 } from "../types";
@@ -54,7 +54,7 @@ class Client {
   __adapterClass?: typeof ClientAdapter;
   __socketsMap: Map<SocketScope, Socket>;
   __sendingFormKeysSubject: BehaviorSubject<Set<string>>;
-  __formsEventSubject: Subject<FormSocketEvent>;
+  __formsEventSubject: Subject<FormProcessEvent>;
 
   constructor(options: ClientOptions) {
     if (options.handleAuthRedirect) {
@@ -99,10 +99,15 @@ class Client {
       ? controllersMap.mediaPrivate
       : controllersMap.mediaPublic;
     const { w, h, fit } = opts;
-    return getControllerUrl(this, controller, {
-      path: { idOrName },
-      query: { w, h, fit },
-    });
+
+    const path = { idOrName };
+    const query: any = { w, h, fit };
+
+    if (_private) {
+      query.token = this.options.accessToken;
+    }
+
+    return getControllerUrl(this, controller, { path, query });
   }
 
   get options(): ClientOptions {
@@ -256,7 +261,7 @@ class Client {
       adapter.__eventSubject.next(event);
     });
 
-    socket.on("form:event", (event: FormSocketEvent) => {
+    socket.on("form:event", (event: FormProcessEvent) => {
       this.__formsEventSubject?.next(event);
     });
 

@@ -69,8 +69,6 @@ export type ClientExecutorCtx = {
   sendAsFormData?: boolean;
 };
 
-export type FormSocketEvent = {};
-
 export type ClientHook<P extends HookPhase, C extends ControllerDefinition> = {
   phase: P;
   fn: (input: ClientHookPayload<P>) => Promise<void> | void;

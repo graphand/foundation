@@ -166,12 +166,18 @@ export const executeController = async (
       const parsePayloadToFormData = (payload: any): FormData => {
         const formData = new FormData();
 
-        const traverseObject = (obj: any, parentKey?: string) => {
+        const traverseObject = (obj: any) => {
           for (const key in obj) {
             if (obj.hasOwnProperty(key)) {
               const value = obj[key];
 
               if (value instanceof Blob) {
+                if (!value.type) {
+                  throw new ClientError({
+                    code: ErrorCodes.INVALID_FILE_TYPE,
+                    message: `File ${key} has invalid type ${value.type}`,
+                  });
+                }
                 const fileKey = Math.random().toString(36).substr(2, 9);
                 formData.append(fileKey, value);
                 obj[key] = `file:${fileKey}`;
