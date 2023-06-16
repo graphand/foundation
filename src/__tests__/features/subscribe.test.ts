@@ -100,7 +100,10 @@ describe("test subscribe feature", () => {
 
       const doc = await model.create({ title: "test" });
 
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const events = await eventsPromise;
+
       expect(events).toBeInstanceOf(Array);
       expect(events.length).toBe(1);
       expect(events[0]).toEqual({

@@ -14,6 +14,10 @@ import {
   ControllerDefinition,
   HookPhase,
   FormProcessEvent,
+  AdapterFetcher,
+  SockethookHandler,
+  SockethookEvent,
+  SockethookResponse,
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
@@ -224,6 +228,7 @@ class Client {
       rejectUnauthorized: false,
       auth: {
         token: this.options.accessToken,
+        project: this.options.project,
       },
     });
 
@@ -270,6 +275,74 @@ class Client {
 
   close() {
     this.__socketsMap?.forEach((socket) => socket.close());
+  }
+
+  async sockethook<
+    P extends HookPhase = HookPhase,
+    A extends keyof AdapterFetcher = keyof AdapterFetcher,
+    T extends typeof Model = typeof Model
+  >(name: string, fn: SockethookHandler<P, A, T>, retryTimes = 0) {
+    const socket = this.__socketsMap.get("project");
+
+    if (!socket) {
+      throw new ClientError({
+        message: "Project socket is not configured",
+      });
+    }
+
+    socket.on("sockethooks:event", async (event: SockethookEvent<P, A, T>) => {
+      if (event.hook.name !== name) return;
+
+      debug(`Receiving event on sockethook ${name} with data`, event.data);
+
+      const response: SockethookResponse<P, A, T> = {
+        operation: event.operation,
+      };
+
+      try {
+        const res = await fn(event.data);
+        if (res) {
+          Object.assign(response, res);
+        }
+      } catch (e) {
+        response.err ??= [];
+        response.err.push(e);
+      }
+
+      if (response.err?.length) {
+        response.err = response.err.map((e) => {
+          if (e instanceof Error) {
+            return {
+              message: e.message,
+            };
+          }
+
+          return e;
+        });
+      }
+
+      debug(`Emitting response on sockethook ${name}`, response);
+      socket.emit("sockethooks:response", response);
+    });
+
+    const _join = () => {
+      debug(`Joining sockethook ${name} with socket ${socket.id} ...`);
+
+      retryTimes = 0;
+
+      socket.emit("sockethooks:join", [
+        {
+          name,
+          signature: fn.toString(),
+        },
+      ]);
+    };
+
+    socket.on("connect", _join);
+
+    if (socket.connected) {
+      _join();
+    }
   }
 
   // controllers

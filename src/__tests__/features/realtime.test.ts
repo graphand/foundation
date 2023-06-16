@@ -21,7 +21,6 @@ describe("test realtime", () => {
 
   describe("create", () => {
     it("should receive event from socket when creating a document", async () => {
-      const client = getClient();
       const clientWithSocket = getClientWithSocket();
       const _model = clientWithSocket.getModel(model);
 

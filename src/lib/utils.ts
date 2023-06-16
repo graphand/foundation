@@ -197,8 +197,6 @@ export const executeController = async (
 
       sendingFormKey = String(new Date().getTime());
 
-      console.log("sendingFormKey", sendingFormKey);
-
       const sendingKeys = client.__sendingFormKeysSubject.getValue();
       sendingKeys.add(sendingFormKey);
       client.__sendingFormKeysSubject.next(sendingKeys);
