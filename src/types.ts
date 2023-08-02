@@ -32,6 +32,8 @@ declare module "@graphand/core" {
   }
 }
 
+export type SubjectObserver<T> = (value: T, previousValue: T) => void;
+
 export type ModelUpdaterEvent = {
   ids: Array<string>;
   operation: "create" | "update" | "delete" | "fetch";
@@ -43,9 +45,14 @@ export type ClientOptions = {
   environment?: string;
   accessToken?: string;
   refreshToken?: string;
+  genKeyToken?: {
+    keyId: string;
+    identityToken: string;
+  };
   sockets?: Array<SocketScope>;
   handleAuthRedirect?: boolean;
   authControllersMap?: AuthControllersMap;
+  hostname?: string;
 };
 
 export type SocketScope = "project" | "global";

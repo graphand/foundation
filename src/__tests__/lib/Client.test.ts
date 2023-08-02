@@ -63,4 +63,60 @@ describe("test client", () => {
 
     expect(jestWatcherFn).toBeCalledTimes(2);
   });
+
+  it("should connect sockets only if needed", async () => {
+    const client = getClient({
+      sockets: ["project"],
+    });
+
+    const jestWatcherFn = jest.fn((scope: string) => {
+      client.__socketsMap ??= new Map();
+      client.__socketsMap.set(scope as any, true as any);
+    });
+
+    client.connectSocket = jestWatcherFn;
+
+    client.setOptions({
+      sockets: ["global"],
+    });
+
+    expect(jestWatcherFn).toBeCalledTimes(1);
+    expect(client.__socketsMap?.has("global")).toBeTruthy();
+    expect(client.__socketsMap?.has("project")).toBeFalsy();
+
+    client.setOptions({
+      sockets: ["global"],
+    });
+
+    expect(jestWatcherFn).toBeCalledTimes(1);
+
+    client.setOptions({
+      sockets: ["global", "project"],
+    });
+
+    expect(jestWatcherFn).toBeCalledTimes(2);
+    expect(client.__socketsMap?.has("global")).toBeTruthy();
+    expect(client.__socketsMap?.has("project")).toBeTruthy();
+  });
+
+  it("should reconnect all sockets if needed", async () => {
+    const client = getClient({
+      sockets: ["global", "project"],
+    });
+
+    const jestWatcherFn = jest.fn((scope: string) => {
+      client.__socketsMap ??= new Map();
+      client.__socketsMap.set(scope as any, true as any);
+    });
+
+    client.connectSocket = jestWatcherFn;
+
+    expect(jestWatcherFn).toBeCalledTimes(0);
+
+    client.setOptions({
+      endpoint: "...",
+    });
+
+    expect(jestWatcherFn).toBeCalledTimes(2);
+  });
 });

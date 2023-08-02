@@ -29,8 +29,10 @@ describe("test forms", () => {
 
     unsubscribe();
 
-    const startEvent = events.find((e: FormProcessEvent) => e.type === "start");
-    const endEvent = events.find((e: FormProcessEvent) => e.type === "end");
+    const startEvent = events.find(
+      (e: FormProcessEvent) => e?.type === "start"
+    );
+    const endEvent = events.find((e: FormProcessEvent) => e?.type === "end");
 
     expect(startEvent).toBeTruthy();
     expect(endEvent).toBeTruthy();

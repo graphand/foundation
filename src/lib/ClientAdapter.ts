@@ -147,6 +147,12 @@ class ClientAdapter extends Adapter {
         if (typeof query === "string") {
           if (this.instancesMap.has(query)) {
             return this.instancesMap.get(query);
+          } else if (this.model.keyField) {
+            const arr = Array.from(this.instancesMap.values());
+            const found = arr.find((r) => r[this.model.keyField] === query);
+            if (found) {
+              return found;
+            }
           }
 
           const res = await executeController(

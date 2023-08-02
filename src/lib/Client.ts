@@ -60,6 +60,9 @@ class Client {
   __sendingFormKeysSubject: BehaviorSubject<Set<string>>;
   __formsEventSubject: Subject<FormProcessEvent>;
 
+  __unsubscribeOptions: () => void;
+  __unsubscribeForms: () => void;
+
   constructor(options: ClientOptions) {
     if (options.handleAuthRedirect) {
       handleAuthRedirect(options);
@@ -68,19 +71,45 @@ class Client {
     this.__optionsSubject = new BehaviorSubject(options);
     this.__sendingFormKeysSubject = new BehaviorSubject(new Set());
 
-    const optionsSub = this.__optionsSubject.subscribe(() => {
-      if (
-        this.options.accessToken &&
-        this.options.endpoint &&
-        this.options.sockets?.length
-      ) {
-        this.options.sockets.forEach((scope) => {
-          this.connectSocket(scope);
-        });
-      }
-    });
+    this.__unsubscribeOptions = this.__optionsSubject.subscribe(
+      (nextVal, prevVal) => {
+        if (prevVal) {
+          const nextAuthMethod = nextVal.genKeyToken || nextVal.accessToken;
+          const prevAuthMethod = prevVal.genKeyToken || prevVal.accessToken;
+          if (
+            nextVal.endpoint !== prevVal.endpoint ||
+            nextAuthMethod !== prevAuthMethod
+          ) {
+            nextVal.sockets.forEach((scope) => {
+              this.connectSocket(scope);
+            });
+          } else if (nextVal.sockets?.join() !== prevVal.sockets?.join()) {
+            const toConnect = nextVal.sockets.filter(
+              (scope) => !prevVal.sockets.includes(scope)
+            );
 
-    const sendingFormKeysSub = this.__sendingFormKeysSubject.subscribe(
+            const toDisconnect = prevVal.sockets.filter(
+              (scope) => !nextVal.sockets.includes(scope)
+            );
+
+            toConnect.forEach((scope) => {
+              this.connectSocket(scope);
+            });
+
+            toDisconnect.forEach((scope) => {
+              this.__socketsMap?.get(scope)?.disconnect();
+              this.__socketsMap?.delete(scope);
+            });
+          }
+        } else if (this.options.sockets?.length && this.options.endpoint) {
+          this.options.sockets.forEach((scope) => {
+            this.connectSocket(scope);
+          });
+        }
+      }
+    );
+
+    this.__unsubscribeForms = this.__sendingFormKeysSubject.subscribe(
       (sendingKeys) => {
         const projectSocket = this.__socketsMap?.get("project");
         if (projectSocket && sendingKeys?.size) {
@@ -104,7 +133,7 @@ class Client {
       : controllersMap.mediaPublic;
     const { w, h, fit } = opts;
 
-    const path = { idOrName };
+    const path = { id: idOrName };
     const query: any = { w, h, fit };
 
     if (_private) {
@@ -227,8 +256,10 @@ class Client {
       reconnectionDelayMax: 10000,
       rejectUnauthorized: false,
       auth: {
-        token: this.options.accessToken,
+        accessToken: this.options.accessToken,
         project: this.options.project,
+        hostname: this.options.hostname || undefined,
+        genKeyToken: this.options.genKeyToken,
       },
     });
 
@@ -248,9 +279,13 @@ class Client {
       }
     });
 
-    // socket.on("connect_error", (e) => {
-    //   debugSocket(`Socket error on scope ${scope} (${url}) : ${e}`);
-    // });
+    socket.on("connect_error", (e) => {
+      debugSocket(`Socket error on scope ${scope} (${url}) : ${e}`);
+    });
+
+    socket.on("info", (info) => {
+      debugSocket(`Socket info : ${info?.message}`);
+    });
 
     // socket.on("disconnect", () => {
     //   debugSocket(`Socket disconnected on scope ${scope} (${url})`);
@@ -274,6 +309,8 @@ class Client {
   }
 
   close() {
+    this.__unsubscribeOptions?.();
+    this.__unsubscribeForms?.();
     this.__socketsMap?.forEach((socket) => socket.close());
   }
 
@@ -281,8 +318,8 @@ class Client {
     P extends HookPhase = HookPhase,
     A extends keyof AdapterFetcher = keyof AdapterFetcher,
     T extends typeof Model = typeof Model
-  >(name: string, fn: SockethookHandler<P, A, T>, retryTimes = 0) {
-    const socket = this.__socketsMap.get("project");
+  >(name: string, fn: SockethookHandler<P, A, T>) {
+    const socket = this.__socketsMap?.get("project");
 
     if (!socket) {
       throw new ClientError({
@@ -290,14 +327,24 @@ class Client {
       });
     }
 
-    socket.on("sockethooks:event", async (event: SockethookEvent<P, A, T>) => {
+    socket.on("sockethooks:ping", async (event: SockethookEvent<P, A, T>) => {
       if (event.hook.name !== name) return;
-
-      debug(`Receiving event on sockethook ${name} with data`, event.data);
 
       const response: SockethookResponse<P, A, T> = {
         operation: event.operation,
       };
+
+      socket.emit("sockethooks:pong", response);
+    });
+
+    socket.on("sockethooks:event", async (event: SockethookEvent<P, A, T>) => {
+      if (event.hook.name !== name) return;
+
+      const response: SockethookResponse<P, A, T> = {
+        operation: event.operation,
+      };
+
+      debug(`Receiving event on sockethook ${name} with data`, event.data);
 
       try {
         const res = await fn(event.data);
@@ -328,8 +375,6 @@ class Client {
     const _join = () => {
       debug(`Joining sockethook ${name} with socket ${socket.id} ...`);
 
-      retryTimes = 0;
-
       socket.emit("sockethooks:join", [
         {
           name,
@@ -338,11 +383,11 @@ class Client {
       ]);
     };
 
-    socket.on("connect", _join);
-
     if (socket.connected) {
       _join();
     }
+
+    socket.on("connect", _join);
   }
 
   // controllers
@@ -618,10 +663,29 @@ class Client {
     return new Account(data);
   }
 
-  async genToken(tokenId: string) {
-    return await this.executeController(controllersMap.genToken, {
+  async genTokenToken(tokenId: string) {
+    return await this.executeController(controllersMap.genTokenToken, {
       path: {
         id: tokenId,
+      },
+    });
+  }
+
+  async genKeyToken(keyId: string, identityToken: string) {
+    return await this.executeController(controllersMap.genTokenToken, {
+      path: {
+        id: keyId,
+      },
+      body: {
+        identityToken,
+      },
+    });
+  }
+
+  async statusSockethook(sockethookId: string) {
+    return await this.executeController(controllersMap.statusSockethook, {
+      path: {
+        id: sockethookId,
       },
     });
   }

@@ -1,11 +1,19 @@
-class Subject<T> {
-  #observers: Array<(value: T) => void> = [];
+import { SubjectObserver } from "../types";
 
-  next(value: T) {
-    this.#observers.forEach((observer) => observer(value));
+class Subject<T> {
+  #observers: Array<SubjectObserver<T>> = [];
+  #previousValue: T;
+
+  setPreviousValue(value: T) {
+    this.#previousValue = value;
   }
 
-  subscribe(observer: (value: T) => void): () => void {
+  next(value: T) {
+    this.#observers.forEach((observer) => observer(value, this.#previousValue));
+    this.#previousValue = value;
+  }
+
+  subscribe(observer: SubjectObserver<T>): () => void {
     this.#observers.push(observer);
 
     return () => {

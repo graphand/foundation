@@ -197,8 +197,14 @@ export const getClient = (assignOpts: Partial<ClientOptions> = {}) => {
   });
 };
 
-export const getClientWithSocket = () => {
+export const getClientWithSocket = (
+  opts: {
+    accessToken?: ClientOptions["accessToken"];
+    genKeyToken?: ClientOptions["genKeyToken"];
+  } = {}
+) => {
   return getClient({
     sockets: ["project"],
+    ...opts,
   });
 };

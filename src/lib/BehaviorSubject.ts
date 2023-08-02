@@ -1,24 +1,26 @@
+import { SubjectObserver } from "../types";
 import Subject from "./Subject";
 
 class BehaviorSubject<T> extends Subject<T> {
-  private currentValue: T;
+  #currentValue: T;
 
   constructor(initialValue: T) {
     super();
-    this.currentValue = initialValue;
+    this.#currentValue = initialValue;
+    this.setPreviousValue(initialValue);
   }
 
   getValue() {
-    return this.currentValue;
+    return this.#currentValue;
   }
 
   next(value: T) {
-    this.currentValue = value;
+    this.#currentValue = value;
     super.next(value);
   }
 
-  subscribe(observer: (value: T) => void): () => void {
-    observer(this.currentValue);
+  subscribe(observer: SubjectObserver<T>): () => void {
+    observer(this.#currentValue, undefined);
     return super.subscribe(observer);
   }
 }

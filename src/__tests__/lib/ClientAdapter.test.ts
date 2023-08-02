@@ -295,6 +295,38 @@ describe("ClientAdapter", () => {
       await expect(fetchWatcherPromise).resolves.toBeFalsy();
     });
 
+    it("Model.get should returns the instance from string _id without fetching", async () => {
+      const title = generateRandomString();
+
+      const created = await model.create({ title });
+
+      const fetchWatcherPromise = fetchWatcher(model, { _id: created._id });
+
+      const fetched = await model.get(created._id);
+
+      expect(fetched).toBeInstanceOf(model);
+      expect(fetched._id).toBe(created._id);
+      expect(fetched.title).toBe(created.title);
+
+      await expect(fetchWatcherPromise).resolves.toBeFalsy();
+    });
+
+    it("Model.get should returns the instance from string keyField without fetching", async () => {
+      const title = generateRandomString();
+
+      const created = await model.create({ title });
+
+      const fetchWatcherPromise = fetchWatcher(model, { _id: created._id });
+
+      const fetched = await model.get(title);
+
+      expect(fetched).toBeInstanceOf(model);
+      expect(fetched._id).toBe(created._id);
+      expect(fetched.title).toBe(created.title);
+
+      await expect(fetchWatcherPromise).resolves.toBeFalsy();
+    });
+
     it("Model.get should returns the instance from instancesMap", async () => {
       const created = await model.create({ title: generateRandomString() });
 

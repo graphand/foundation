@@ -2,11 +2,9 @@ import { ModelUpdaterEvent } from "../../types";
 import { generateModel, getClientWithSocket } from "../../lib/test-utils";
 import { Model, ModelList } from "@graphand/core";
 
-const TIMEOUT = 300;
-
 const _captureEventsOnModel = async (
   model: typeof Model,
-  waitingDelay = TIMEOUT
+  waitingDelay = 500
 ): Promise<Array<ModelUpdaterEvent>> => {
   const events: Array<ModelUpdaterEvent> = [];
 
@@ -22,7 +20,7 @@ const _captureEventsOnModel = async (
 
 const _captureEventsOnInstance = async (
   instance: Model,
-  waitingDelay = 300
+  waitingDelay = 500
 ): Promise<number> => {
   let eventsCount = 0;
 
@@ -38,7 +36,7 @@ const _captureEventsOnInstance = async (
 
 const _captureEventsOnList = async (
   list: ModelList<Model>,
-  waitingDelay = 300
+  waitingDelay = 500
 ): Promise<number> => {
   let eventsCount = 0;
 
@@ -99,8 +97,6 @@ describe("test subscribe feature", () => {
       );
 
       const doc = await model.create({ title: "test" });
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const events = await eventsPromise;
 

@@ -8,7 +8,7 @@ describe("test medias", () => {
 
     expect(media).toBeInstanceOf(models.Media);
     expect(media.name).toContain("sample.png");
-    expect(media.mimetype).toBe("image/png");
+    expect(media._mimetype).toBe("image/png");
 
     const url = globalThis.client.src(media.name);
     const res = await fetch(url);
@@ -29,7 +29,7 @@ describe("test medias", () => {
 
     expect(media).toBeInstanceOf(models.Media);
     expect(media.name).toContain("sample.png");
-    expect(media.mimetype).toBe("image/png");
+    expect(media._mimetype).toBe("image/png");
 
     const url = globalThis.client.src(media.name, undefined, true);
     const res = await fetch(url);
@@ -47,7 +47,7 @@ describe("test medias", () => {
 
     expect(media).toBeInstanceOf(models.Media);
     expect(media.name).toContain("sample.png");
-    expect(media.mimetype).toBe("image/png");
+    expect(media._mimetype).toBe("image/png");
 
     const url = globalThis.client.src(media.name, {
       w: 10,

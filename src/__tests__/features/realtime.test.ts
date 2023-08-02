@@ -67,7 +67,6 @@ describe("test realtime", () => {
     });
 
     it("should receive events from socket when creating multiple document", async () => {
-      const client = getClient();
       const clientWithSocket = getClientWithSocket();
       const _model = clientWithSocket.getModel(model);
 
