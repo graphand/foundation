@@ -97,8 +97,7 @@ class Client {
             });
 
             toDisconnect.forEach((scope) => {
-              this.__socketsMap?.get(scope)?.disconnect();
-              this.__socketsMap?.delete(scope);
+              this.disconnectSocket(scope);
             });
           }
         } else if (this.options.sockets?.length && this.options.endpoint) {
@@ -305,13 +304,36 @@ class Client {
       this.__formsEventSubject?.next(event);
     });
 
+    if (this.__socketsMap.has(scope)) {
+      this.disconnectSocket(scope);
+    }
+
     this.__socketsMap.set(scope, socket);
+  }
+
+  disconnectSocket(scope: SocketScope = "project") {
+    const socket = this.__socketsMap?.get(scope);
+
+    if (!socket) {
+      throw new ClientError({
+        message: `Socket on scope ${scope} is not configured`,
+      });
+    }
+
+    debugSocket(`Disconnecting socket on scope ${scope} ...`);
+
+    socket.close();
+    this.__socketsMap.delete(scope);
   }
 
   close() {
     this.__unsubscribeOptions?.();
     this.__unsubscribeForms?.();
-    this.__socketsMap?.forEach((socket) => socket.close());
+    if (this.__socketsMap) {
+      Array.from(this.__socketsMap?.keys() || []).forEach((socket) => {
+        this.disconnectSocket(socket);
+      });
+    }
   }
 
   async sockethook<

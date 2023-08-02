@@ -71,6 +71,8 @@ describe("test sockethooks", () => {
     await client.getModel(model.slug).create({});
 
     expect(fn).toBeCalledTimes(1);
+
+    client.close();
   });
 
   it("should not be able to handle sockethook without genKeyToken option", async () => {
@@ -92,6 +94,8 @@ describe("test sockethooks", () => {
     await expect(client.getModel(model.slug).create({})).rejects.toThrow(
       "no socket handler found"
     );
+
+    client.close();
   });
 
   it("should be able to reconnect and then handle sockethook", async () => {
@@ -112,6 +116,8 @@ describe("test sockethooks", () => {
     await expect(client.getModel(model.slug).create({})).resolves.toBeDefined();
 
     expect(fn).toBeCalledTimes(1);
+
+    client.close();
   });
 
   it("should be able to reconnect during sockethook execution", async () => {
@@ -134,6 +140,8 @@ describe("test sockethooks", () => {
     await expect(createPromise).resolves.toBeDefined();
 
     expect(fn).toBeCalledTimes(1);
+
+    client.close();
   });
 
   it("should execute sockethooks in order", async () => {
@@ -155,6 +163,8 @@ describe("test sockethooks", () => {
 
     expect(order.length).toBe(length);
     expect(order).toEqual(Array.from({ length }).map((_, i) => i));
+
+    client.close();
   });
 
   it("should be able to update title from within a sockethook", async () => {
@@ -180,6 +190,8 @@ describe("test sockethooks", () => {
     });
 
     expect(i.title).toBe(newTitle);
+
+    client.close();
   });
 
   it("should not be able to update title from within a sockethook if its not blocking", async () => {
@@ -203,5 +215,94 @@ describe("test sockethooks", () => {
     });
 
     expect(i.title).not.toBe(newTitle);
+
+    client.close();
+  });
+
+  it("should be able to handle multiple sockethooks", async () => {
+    const { client, sockethook, model } = await _createSockethook();
+    const secondSockethook = await client.getModel(Sockethook).create({
+      name: generateRandomString(),
+      phase: "before",
+      action: "createOne",
+      on: model.slug,
+    });
+
+    const fn1 = jest.fn();
+    const fn2 = jest.fn();
+
+    client.sockethook(sockethook.name, fn1);
+    client.sockethook(secondSockethook.name, fn2);
+
+    await client.getModel(model.slug).create({});
+
+    expect(fn1).toBeCalledTimes(1);
+    expect(fn2).toBeCalledTimes(1);
+
+    client.close();
+  });
+
+  it("should handle sockethook even with an erroneous sockethook present", async () => {
+    const { client, sockethook, model } = await _createSockethook({
+      blocking: true,
+    });
+    const erroneousSockethook = await client.getModel(Sockethook).create({
+      name: generateRandomString(),
+      phase: "before",
+      action: "createOne",
+      on: model.slug,
+      blocking: true,
+    });
+
+    const fn = jest.fn();
+
+    client.sockethook(sockethook.name, fn);
+    client.sockethook(erroneousSockethook.name, () => {
+      throw new Error("Erroneous sockethook");
+    });
+
+    await expect(client.getModel(model.slug).create({})).rejects.toThrow(
+      "Erroneous sockethook"
+    );
+
+    expect(fn).toBeCalledTimes(1);
+
+    client.close();
+  });
+
+  it("should handle parallel calls to the same sockethook correctly", async () => {
+    const { client, sockethook, model } = await _createSockethook();
+
+    const fn = jest.fn();
+
+    client.sockethook(sockethook.name, fn);
+
+    await Promise.all([
+      client.getModel(model.slug).create({}),
+      client.getModel(model.slug).create({}),
+    ]);
+
+    expect(fn).toBeCalledTimes(2);
+
+    client.close();
+  });
+
+  it("should throw an error if sockethook is handled with 2 different functions", async () => {
+    const { client, sockethook, model } = await _createSockethook();
+    const client2 = getClient({
+      ...client.options,
+    });
+
+    client.sockethook(sockethook.name, function a() {});
+    client2.sockethook(sockethook.name, function b() {});
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    await expect(client.getModel(model.slug).create({})).rejects.toThrow(
+      "different signatures"
+    );
+
+    client.close();
+    client2.close();
   });
 });
