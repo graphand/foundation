@@ -13,7 +13,7 @@ describe("test utils", () => {
         name: generateRandomString(),
         slug: generateRandomString(),
         organization: process.env.ORGANIZATION_ID,
-        accessTokenLifetime: 1,
+        accessTokenLifetime: 2,
       });
 
       client = getClient({
@@ -56,7 +56,7 @@ describe("test utils", () => {
         },
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       const { exp: expBefore } = jwt.decode(newClient.options.accessToken);
 
@@ -106,7 +106,7 @@ describe("test utils", () => {
 
       expect(spy).toHaveBeenCalledTimes(0);
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       await Promise.all([
         newClient.getModel(Account).getList(),

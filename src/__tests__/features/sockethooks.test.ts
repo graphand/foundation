@@ -305,4 +305,55 @@ describe("test sockethooks", () => {
     client.close();
     client2.close();
   });
+
+  it("should be able to create a document from within a sockethook", async () => {
+    const { client, sockethook, model } = await _createSockethook({
+      blocking: true,
+    });
+
+    // generating new model
+    const model2 = await generateModel({ keyField: null });
+
+    client.sockethook<"before", "createOne", any>(
+      sockethook.name,
+      async (data) => {
+        await client.getModel(model2.slug).create({
+          title: generateRandomString(),
+        });
+      }
+    );
+
+    await client.getModel(model.slug).create({
+      title: generateRandomString(),
+    });
+
+    await expect(client.getModel(model.slug).getList()).resolves.toHaveLength(
+      1
+    );
+    await expect(client.getModel(model2.slug).getList()).resolves.toHaveLength(
+      1
+    );
+
+    client.close();
+  });
+
+  it("should throw error if deadlock loop is detected", async () => {
+    const { client, sockethook, model } = await _createSockethook({
+      blocking: true,
+    });
+
+    client.sockethook<"before", "createOne", any>(sockethook.name, async () => {
+      await client.getModel(model.slug).create({
+        title: generateRandomString(),
+      });
+    });
+
+    await expect(
+      client.getModel(model.slug).create({
+        title: generateRandomString(),
+      })
+    ).rejects.toThrow("Deadlock detected");
+
+    client.close();
+  });
 });
