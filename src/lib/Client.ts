@@ -59,6 +59,7 @@ class Client {
   __socketsMap: Map<SocketScope, Socket>;
   __sendingFormKeysSubject: BehaviorSubject<Set<string>>;
   __formsEventSubject: Subject<FormProcessEvent>;
+  __refreshingTokenPromise?: Promise<void>;
 
   __unsubscribeOptions: () => void;
   __unsubscribeForms: () => void;
@@ -73,9 +74,10 @@ class Client {
 
     this.__unsubscribeOptions = this.__optionsSubject.subscribe(
       (nextVal, prevVal) => {
+        const nextAuthMethod = nextVal?.genKeyToken || nextVal?.accessToken;
+        const prevAuthMethod = prevVal?.genKeyToken || prevVal?.accessToken;
+
         if (prevVal) {
-          const nextAuthMethod = nextVal.genKeyToken || nextVal.accessToken;
-          const prevAuthMethod = prevVal.genKeyToken || prevVal.accessToken;
           if (
             nextVal.endpoint !== prevVal.endpoint ||
             nextAuthMethod !== prevAuthMethod
@@ -638,22 +640,70 @@ class Client {
   }
 
   async refreshToken() {
+    if (this.__refreshingTokenPromise) {
+      return await this.__refreshingTokenPromise;
+    }
+
+    if (!this.options.accessToken || !this.options.refreshToken) {
+      // TODO: throw a more specific error
+      throw new ClientError();
+    }
+
     const controller = this.options.project
       ? controllersMap.refreshTokenAccount
       : controllersMap.refreshTokenUser;
 
-    const { accessToken, refreshToken } = await executeController(
-      this,
-      controller,
-      {
-        body: {
-          accessToken: this.options.accessToken,
-          refreshToken: this.options.refreshToken,
-        },
-      }
-    );
+    this.__refreshingTokenPromise = new Promise(async (resolve, reject) => {
+      try {
+        const { accessToken, refreshToken } = await executeController(
+          this,
+          controller,
+          {
+            body: {
+              accessToken: this.options.accessToken,
+              refreshToken: this.options.refreshToken,
+            },
+          }
+        );
 
-    this.setOptions({ accessToken, refreshToken });
+        this.setOptions({ accessToken, refreshToken });
+
+        resolve();
+      } catch (err) {
+        reject(err);
+      } finally {
+        delete this.__refreshingTokenPromise;
+      }
+    });
+
+    return await this.__refreshingTokenPromise;
+  }
+
+  async refreshTokenWithKey() {
+    if (this.__refreshingTokenPromise) {
+      return await this.__refreshingTokenPromise;
+    }
+
+    if (!this.options.genKeyToken) {
+      // TODO: throw a more specific error
+      throw new ClientError();
+    }
+
+    this.__refreshingTokenPromise = new Promise(async (resolve, reject) => {
+      try {
+        const { keyId, identityToken } = this.options.genKeyToken;
+        const accessToken = await this.genKeyToken(keyId, identityToken);
+        this.setOptions({ accessToken });
+
+        resolve();
+      } catch (err) {
+        reject(err);
+      } finally {
+        delete this.__refreshingTokenPromise;
+      }
+    });
+
+    return await this.__refreshingTokenPromise;
   }
 
   async ql(models: string[]) {
@@ -694,7 +744,7 @@ class Client {
   }
 
   async genKeyToken(keyId: string, identityToken: string) {
-    return await this.executeController(controllersMap.genTokenToken, {
+    return await this.executeController(controllersMap.genKeyToken, {
       path: {
         id: keyId,
       },

@@ -183,6 +183,10 @@ describe("ClientAdapter", () => {
 
       const eventPromise = new Promise((resolve) => {
         const unsub = adapter.updaterSubject.subscribe((e) => {
+          if (e.operation !== "create" || e.ids.length !== 2) {
+            return;
+          }
+
           unsub();
           resolve(e);
         });

@@ -218,7 +218,20 @@ export const executeController = async (
       .filter(Boolean);
   }
 
-  if (controller.secured && client.options.accessToken) {
+  if (controller.secured) {
+    if (client.__refreshingTokenPromise) {
+      await client.__refreshingTokenPromise;
+    }
+
+    if (!client.options.accessToken && client.options.genKeyToken) {
+      await client.refreshTokenWithKey();
+    }
+
+    if (!client.options.accessToken) {
+      // TODO: throw a more specific error
+      throw new ClientError();
+    }
+
     init.headers["Authorization"] = `Bearer ${client.options.accessToken}`;
   }
 

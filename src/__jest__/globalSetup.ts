@@ -30,6 +30,7 @@ export default async () => {
     project: project._id,
   });
 
+  process.env.ORGANIZATION_ID = organization?._id;
   process.env.PROJECT_ID = project._id;
 
   globalThis.project = project;

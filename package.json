@@ -24,6 +24,7 @@
     "@graphand/core": "*"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.0.2",
     "@graphand/core": "file:../core",
     "@types/jest": "^29.4.4",
     "@types/node": "^20.4.6",
