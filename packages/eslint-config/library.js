@@ -6,12 +6,9 @@ const project = resolve(process.cwd(), "tsconfig.json");
 module.exports = {
   extends: ["eslint:recommended", "prettier", "turbo"],
   plugins: ["only-warn"],
-  globals: {
-    React: true,
-    JSX: true,
-  },
   env: {
     node: true,
+    jest: true,
   },
   settings: {
     "import/resolver": {
@@ -31,4 +28,16 @@ module.exports = {
       files: ["*.js?(x)", "*.ts?(x)"],
     },
   ],
+  rules: {
+    "no-dupe-class-members": "off",
+    "no-unused-vars": [
+      "error",
+      {
+        vars: "all",
+        args: "after-used",
+        ignoreRestSiblings: true,
+        argsIgnorePattern: "^_", // Ignore parameters that start with an underscore
+      },
+    ],
+  },
 };
