@@ -1,5 +1,6 @@
-import { ClientExecutorCtx } from "./types";
+import { ClientTransactionCtx } from "./types";
 
 declare global {
-  export type ExecutorCtx = ClientExecutorCtx;
+  export type TransactionCtx = ClientTransactionCtx;
+  export type SerializerCtx = any;
 }

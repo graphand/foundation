@@ -9,12 +9,13 @@ import {
   JSONQuery,
   FieldTypes,
   PopulateOption,
-  DocumentDefinition,
   getFieldsPathsFromPath,
   getFieldFromDefinition,
   FieldsPathItem,
   AuthMethods,
   ControllerDefinition,
+  ModelJSON,
+  JSONTypeObject,
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import Client from "./Client";
@@ -71,7 +72,7 @@ export const parseError = (error: any): CoreError => {
 
 export const getControllerUrl = (
   client: Client,
-  controller: (typeof controllersMap)[keyof typeof controllersMap],
+  controller: ControllerDefinition,
   opts: {
     path?: { [key: string]: string };
     query?: any;
@@ -82,34 +83,15 @@ export const getControllerUrl = (
   const scopeArgs: any = {};
 
   const path = controller.path.replace(/\:(\w+)(\?)?/g, (match, p1) => {
-    scopeArgs[p1] = opts.path[p1];
-    return opts.path[p1] ? encodeURIComponent(opts.path[p1]) : "";
+    scopeArgs[p1] = opts.path?.[p1];
+    return opts.path?.[p1] ? encodeURIComponent(opts.path[p1]) : "";
   });
 
-  let url;
+  let url: string;
   if (typeof path !== "string" || path.includes(`://`)) {
     url = path;
   } else {
-    const scheme = "https://";
-    const endpoint = client.options.endpoint;
-
-    let scope = controller.scope;
-    if (typeof scope === "function") {
-      scope = scope(scopeArgs);
-    }
-
-    if (scope === "project") {
-      if (!client.options.project) {
-        throw new ClientError({
-          code: ErrorCodes.CLIENT_NO_PROJECT,
-          message: `Client must be configured with a project to use controller on path ${controller.path}`,
-        });
-      }
-
-      url = scheme + client.options.project + "." + endpoint + path;
-    } else {
-      url = scheme + endpoint + path;
-    }
+    url = client.getBaseUrl() + path;
   }
 
   // remove trailing slash
@@ -158,10 +140,15 @@ export const executeController = async (
     },
   };
 
+  if (client.options?.headers) {
+    Object.assign(init.headers, client.options.headers);
+  }
+
   const methods = new Set(controller.methods);
 
   if (opts?.body) {
-    methods.delete("GET");
+    methods.delete("get");
+
     if (opts.sendAsFormData) {
       const parsePayloadToFormData = (payload: any): FormData => {
         const formData = new FormData();
@@ -210,21 +197,15 @@ export const executeController = async (
   }
 
   const [method] = methods;
-  init.method = method;
+  init.method ??= method.toUpperCase();
 
-  if (init.method !== "GET" && client.__socketsMap?.size) {
-    init.headers["Sockets"] = Array.from(client.__socketsMap.values())
-      .map((s) => s.id)
-      .filter(Boolean);
+  if (init.method !== "GET" && client.__socket?.id) {
+    init.headers["Sockets"] = client.__socket.id;
   }
 
   if (controller.secured) {
     if (client.__refreshingTokenPromise) {
       await client.__refreshingTokenPromise;
-    }
-
-    if (!client.options.accessToken && client.options.genKeyToken) {
-      await client.refreshTokenWithKey();
     }
 
     if (!client.options.accessToken) {
@@ -240,29 +221,67 @@ export const executeController = async (
   const _fetch = (retrying = false) => {
     debug(`fetching ${url} [${init.method}] ...`, JSON.stringify(init));
     return fetch(url, init).then(async (r) => {
-      let res = await r.json();
-
-      if (res.error) {
-        if (
-          r.status === 401 &&
-          res.error.code === "TOKEN_EXPIRED" &&
-          !retrying
-        ) {
-          try {
-            await client.refreshToken();
-            init.headers[
-              "Authorization"
-            ] = `Bearer ${client.options.accessToken}`;
-            return _fetch(true);
-          } catch (e) {}
-        }
-
-        payloadBefore.err ??= [];
-        payloadBefore.err.push(parseError(res.error));
+      if (r.status === 204) {
+        return;
       }
 
-      if (res.exceptions?.length) {
-        res.exceptions.forEach((e: any) => {
+      let _text: string;
+      let _json: JSONTypeObject;
+
+      const _getText = async (): Promise<string> => {
+        if (_text) {
+          return _text;
+        }
+
+        _text ??= await r.text();
+        return _text;
+      };
+
+      const _getJson = async (): Promise<JSONTypeObject> => {
+        if (_json) {
+          return _json;
+        }
+
+        const t = await _getText();
+        _json ??= JSON.parse(t);
+        return _json;
+      };
+
+      if (r.status === 401) {
+        const json = await _getJson();
+        if (
+          typeof json.error === "object" &&
+          "code" in json.error &&
+          json.error.code === "TOKEN_EXPIRED" &&
+          !retrying
+        ) {
+          await client.refreshToken();
+          init.headers[
+            "Authorization"
+          ] = `Bearer ${client.options.accessToken}`;
+          return _fetch(true);
+        }
+      }
+
+      if (!r.ok) {
+        const json = await _getJson();
+
+        if (typeof json.error === "object") {
+          payloadBefore.err ??= [];
+          payloadBefore.err.push(parseError(json.error));
+        }
+      }
+
+      const res = await _getJson();
+
+      if (
+        "exceptions" in res &&
+        Array.isArray(res.exceptions) &&
+        res.exceptions?.length
+      ) {
+        const _exceptions = res.exceptions as Array<any>;
+        const exceptions = _exceptions.map(parseError);
+        exceptions.forEach((e: any) => {
           console.warn(e.message);
         });
       }
@@ -301,6 +320,8 @@ export const executeController = async (
 
 export const canUseIds = (query: JSONQuery): boolean | Array<string> => {
   if (
+    !query.ids ||
+    !Array.isArray(query.ids) ||
     !query.ids?.length ||
     query.filter ||
     query.pageSize ||
@@ -337,7 +358,7 @@ export const getPopulatedFromQuery = (
       if (typeof p === "object" && p.path) {
         return {
           path: p.path,
-          filter: p.filter,
+          query: p.query,
           populate: p.populate,
         };
       }
@@ -347,13 +368,13 @@ export const getPopulatedFromQuery = (
     .filter(Boolean);
 };
 
-const _decodePopulate = async (
+const _decodePopulate = async <T extends typeof Model>(
   p: PopulateOption,
-  d: DocumentDefinition,
+  d: ModelJSON<T>,
   fieldsPaths: Array<FieldsPathItem>,
-  model: typeof Model
+  model: T
 ) => {
-  if (!d || !fieldsPaths.length) {
+  if (!d || !fieldsPaths?.length) {
     return;
   }
 
@@ -368,14 +389,14 @@ const _decodePopulate = async (
     const itemsField = getFieldFromDefinition(
       _field.options.items,
       model.getAdapter(),
-      _field.__path + ".[]"
+      _field.path + ".[]"
     );
 
     let arrValue = Array.isArray(d[fp.key]) ? d[fp.key] : [d[fp.key]];
 
     if (itemsField.type === FieldTypes.RELATION) {
       const _itemsField = itemsField as Field<FieldTypes.RELATION>;
-      const refModel = Model.getFromSlug.call(model, _itemsField.options.ref);
+      const refModel = model.getClient().getModel(_itemsField.options.ref);
       const adapter = refModel.getAdapter() as ClientAdapter;
 
       if (p.populate) {
@@ -422,7 +443,7 @@ const _decodePopulate = async (
 
   if (fp.field.type === FieldTypes.RELATION) {
     const _field = fp.field as Field<FieldTypes.RELATION>;
-    const refModel = Model.getFromSlug.call(model, _field.options.ref);
+    const refModel = model.getClient().getModel(_field.options.ref);
     const adapter = refModel.getAdapter() as ClientAdapter;
 
     const value = d[fp.key];
@@ -460,7 +481,7 @@ const _decodePopulate = async (
 
 export const parsePopulated = async <T extends typeof Model>(
   model: T,
-  documents: Array<DocumentDefinition>,
+  documents: Array<ModelJSON<T>>,
   populated: Array<PopulateOption>
 ) => {
   if (!populated?.length) {
@@ -491,10 +512,10 @@ export const useRealtimeOnSocket = (socket: Socket, slugs: Array<string>) => {
 
   const slugsStr = slugs.join(",");
   debug(`emit on socket ${socket.id} to use realtime for models ${slugsStr}`);
-  socket.emit("use-realtime", slugsStr);
+  socket.emit("subscribeModels", slugsStr);
 };
 
-export const useFormsOnSocket = (socket: Socket, keys: Array<string>) => {
+export const useUploadsOnSocket = (socket: Socket, keys: Array<string>) => {
   if (!socket.connected) {
     return;
     // throw new ClientError({
@@ -504,8 +525,8 @@ export const useFormsOnSocket = (socket: Socket, keys: Array<string>) => {
   }
 
   const keysStr = keys.join(",");
-  debug(`emit on socket ${socket.id} to use forms with keys ${keysStr}`);
-  socket.emit("use-forms", keysStr);
+  debug(`emit on socket ${socket.id} to use uploads with keys ${keysStr}`);
+  socket.emit("subscribeUploads", keysStr);
 };
 
 export const handleAuthResponse = async (

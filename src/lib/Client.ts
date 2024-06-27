@@ -1,23 +1,17 @@
 import {
   Model,
   controllersMap,
-  models,
   ModelCrudEvent,
-  getAdaptedModel,
   AuthProviders,
   AuthMethods,
-  AuthProviderCredentials,
   AuthMethodOptions,
-  InputModelPayload,
-  Account,
   AuthProviderConfigurePayload,
   ControllerDefinition,
   HookPhase,
-  FormProcessEvent,
-  AdapterFetcher,
-  SockethookHandler,
-  SockethookEvent,
-  SockethookResponse,
+  UploadEvent,
+  Account,
+  ModelJSON,
+  MediaTransformOptions,
 } from "@graphand/core";
 import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
@@ -26,18 +20,17 @@ import {
   getControllerUrl,
   handleAuthRedirect,
   handleAuthResponse,
-  useFormsOnSocket,
+  useUploadsOnSocket,
   useRealtimeOnSocket,
 } from "./utils";
 import {
   ClientOptions,
-  SocketScope,
   ClientHook,
   ClientHookPayload,
+  LoginData,
 } from "../types";
 import { io, Socket } from "socket.io-client";
 import ClientError from "./ClientError";
-import ErrorCodes from "../enums/error-codes";
 import defaultAuthControllersMap from "./defaultAuthControllersMap";
 import Subject from "./Subject";
 
@@ -47,8 +40,9 @@ const debugSocket = require("debug")("graphand:socket");
 const defaultOptions: Partial<ClientOptions> = {
   endpoint: "api.graphand.cloud",
   environment: "master",
-  sockets: ["project"],
+  socket: true,
   authControllersMap: defaultAuthControllersMap,
+  ssl: true,
 };
 
 class Client {
@@ -56,9 +50,9 @@ class Client {
 
   __optionsSubject: BehaviorSubject<ClientOptions>;
   __adapterClass?: typeof ClientAdapter;
-  __socketsMap: Map<SocketScope, Socket>;
+  __socket: Socket;
   __sendingFormKeysSubject: BehaviorSubject<Set<string>>;
-  __formsEventSubject: Subject<FormProcessEvent>;
+  __uploadEventsSubject: Subject<UploadEvent>;
   __refreshingTokenPromise?: Promise<void>;
 
   __unsubscribeOptions: () => void;
@@ -73,69 +67,44 @@ class Client {
     this.__sendingFormKeysSubject = new BehaviorSubject(new Set());
 
     this.__unsubscribeOptions = this.__optionsSubject.subscribe(
-      (nextVal, prevVal) => {
-        const nextAuthMethod = nextVal?.genKeyToken || nextVal?.accessToken;
-        const prevAuthMethod = prevVal?.genKeyToken || prevVal?.accessToken;
-
-        if (prevVal) {
+      (next, prev) => {
+        if (prev) {
           if (
-            nextVal.endpoint !== prevVal.endpoint ||
-            nextAuthMethod !== prevAuthMethod
+            next.socket &&
+            (next.endpoint !== prev.endpoint ||
+              next?.accessToken !== prev.accessToken)
           ) {
-            nextVal.sockets.forEach((scope) => {
-              this.connectSocket(scope);
-            });
-          } else if (nextVal.sockets?.join() !== prevVal.sockets?.join()) {
-            const toConnect = nextVal.sockets.filter(
-              (scope) => !prevVal.sockets.includes(scope)
-            );
-
-            const toDisconnect = prevVal.sockets.filter(
-              (scope) => !nextVal.sockets.includes(scope)
-            );
-
-            toConnect.forEach((scope) => {
-              this.connectSocket(scope);
-            });
-
-            toDisconnect.forEach((scope) => {
-              this.disconnectSocket(scope);
-            });
+            this.connectSocket();
+          } else if (next.socket !== prev.socket) {
+            if (next.socket) {
+              this.connectSocket();
+            } else {
+              this.disconnectSocket();
+            }
           }
-        } else if (this.options.sockets?.length && this.options.endpoint) {
-          this.options.sockets.forEach((scope) => {
-            this.connectSocket(scope);
-          });
+        } else if (next.socket && !this.__socket) {
+          this.connectSocket();
         }
       }
     );
 
     this.__unsubscribeForms = this.__sendingFormKeysSubject.subscribe(
       (sendingKeys) => {
-        const projectSocket = this.__socketsMap?.get("project");
-        if (projectSocket && sendingKeys?.size) {
-          useFormsOnSocket(projectSocket, Array.from(sendingKeys));
+        if (this.__socket && sendingKeys?.size) {
+          useUploadsOnSocket(this.__socket, Array.from(sendingKeys));
         }
       }
     );
   }
 
-  src(
-    idOrName: string,
-    opts: {
-      w?: string | number;
-      h?: string | number;
-      fit?: "cover" | "contain" | "fill" | "inside" | "outside";
-    } = {},
-    _private = false
-  ) {
+  src(idOrName: string, opts: MediaTransformOptions = {}, _private = false) {
     const controller = _private
       ? controllersMap.mediaPrivate
       : controllersMap.mediaPublic;
-    const { w, h, fit } = opts;
+    const { w, h, q, fit } = opts;
 
     const path = { id: idOrName };
-    const query: any = { w, h, fit };
+    const query: MediaTransformOptions & { token?: string } = { w, h, q, fit };
 
     if (_private) {
       query.token = this.options.accessToken;
@@ -154,9 +123,9 @@ class Client {
     return Object.assign({}, defaultOptions, opts);
   }
 
-  get formsEvent() {
-    this.__formsEventSubject ??= new Subject();
-    return this.__formsEventSubject;
+  get uploadEvents() {
+    this.__uploadEventsSubject ??= new Subject();
+    return this.__uploadEventsSubject;
   }
 
   static hook<P extends HookPhase, C extends ControllerDefinition>(
@@ -221,200 +190,99 @@ class Client {
     globalThis.__GLOBAL_ADAPTER__ = this.getClientAdapter();
   }
 
-  getModel<T extends typeof Model = typeof Model>(model: T | T["slug"]): T {
-    const adapter = this.getClientAdapter();
+  getModel: (typeof Model)["getClass"] = (input) => {
+    return Model.getClass(input, this.getClientAdapter());
+  };
 
-    if (typeof model === "string") {
-      return Model.getFromSlug(model, adapter);
-    }
-
-    return getAdaptedModel(model, adapter);
+  getBaseUrl(scheme?: string) {
+    scheme ??= this.options.ssl ? "https" : "http";
+    let url: string = scheme + "://";
+    if (this.options.scope) url += this.options.scope + ".";
+    if (this.options.endpoint) url += this.options.endpoint;
+    return url;
   }
 
-  connectSocket(scope: SocketScope = "project") {
-    this.__socketsMap ??= new Map();
-
-    const client = this;
-    const scheme = "wss://";
-    const endpoint = this.options.endpoint;
-
-    let url;
-
-    if (scope === "project") {
-      if (!this.options.project) {
-        throw new ClientError({
-          code: ErrorCodes.CLIENT_NO_PROJECT,
-          message: "Client must be configured with a project to use socket",
-        });
-      }
-
-      url = scheme + this.options.project + "." + endpoint;
-    } else {
-      url = scheme + endpoint;
-    }
+  connectSocket() {
+    const scheme = this.options.ssl ? "wss" : "ws";
+    const url = this.getBaseUrl(scheme);
 
     const socket = io(url, {
       reconnectionDelayMax: 10000,
       rejectUnauthorized: false,
       auth: {
         accessToken: this.options.accessToken,
-        project: this.options.project,
-        hostname: this.options.hostname || undefined,
-        genKeyToken: this.options.genKeyToken,
+        project: this.options.scope,
       },
     });
 
-    debugSocket(`Connecting socket on scope ${scope} (${url}) ...`);
+    debugSocket(`Connecting socket on ${url} ...`);
 
     socket.on("connect", () => {
-      debugSocket(`Socket connected on scope ${scope} (${url})`);
+      debugSocket(`Socket connected`);
 
       const adapter = this.getClientAdapter();
-      if (adapter.__modelsMap) {
-        useRealtimeOnSocket(socket, Array.from(adapter.__modelsMap.keys()));
+      if (adapter._modelsRegistry?.size) {
+        useRealtimeOnSocket(socket, Array.from(adapter._modelsRegistry.keys()));
       }
 
       const sendingFormKeys = this.__sendingFormKeysSubject.getValue();
       if (sendingFormKeys.size) {
-        useFormsOnSocket(socket, Array.from(sendingFormKeys));
+        useUploadsOnSocket(socket, Array.from(sendingFormKeys));
       }
     });
 
     socket.on("connect_error", (e) => {
-      debugSocket(`Socket error on scope ${scope} (${url}) : ${e}`);
+      debugSocket(`Socket error : ${e}`);
     });
 
     socket.on("info", (info) => {
       debugSocket(`Socket info : ${info?.message}`);
     });
 
-    // socket.on("disconnect", () => {
-    //   debugSocket(`Socket disconnected on scope ${scope} (${url})`);
-    // });
+    socket.on("disconnect", () => {
+      debugSocket(`Socket disconnected`);
+    });
 
     socket.on("realtime:event", (event: ModelCrudEvent) => {
-      const model = client.getModel(event.model);
+      const model = this.getModel(event.model);
       const adapter = model.getAdapter() as ClientAdapter;
 
-      // @ts-ignore
-      event.__socketId = socket.id;
+      Object.assign(event, { __socketId: socket.id });
 
       adapter.__eventSubject.next(event);
     });
 
-    socket.on("form:event", (event: FormProcessEvent) => {
-      this.__formsEventSubject?.next(event);
+    socket.on("upload:event", (event: UploadEvent) => {
+      this.__uploadEventsSubject?.next(event);
     });
 
-    if (this.__socketsMap.has(scope)) {
-      this.disconnectSocket(scope);
+    if (this.__socket) {
+      this.__socket.close();
     }
 
-    this.__socketsMap.set(scope, socket);
+    this.__socket = socket;
   }
 
-  disconnectSocket(scope: SocketScope = "project") {
-    const socket = this.__socketsMap?.get(scope);
-
-    if (!socket) {
+  disconnectSocket() {
+    if (!this.__socket) {
       throw new ClientError({
-        message: `Socket on scope ${scope} is not configured`,
+        message: `Socket is not configured`,
       });
     }
 
-    debugSocket(`Disconnecting socket on scope ${scope} ...`);
+    debugSocket(`Disconnecting socket ...`);
 
-    socket.close();
-    this.__socketsMap.delete(scope);
+    this.__socket.close();
+    this.__socket = null;
   }
 
   close() {
     this.__unsubscribeOptions?.();
     this.__unsubscribeForms?.();
-    if (this.__socketsMap) {
-      Array.from(this.__socketsMap?.keys() || []).forEach((socket) => {
-        this.disconnectSocket(socket);
-      });
+    if (this.__socket) {
+      this.disconnectSocket();
     }
   }
-
-  async sockethook<
-    P extends HookPhase = HookPhase,
-    A extends keyof AdapterFetcher = keyof AdapterFetcher,
-    T extends typeof Model = typeof Model
-  >(name: string, fn: SockethookHandler<P, A, T>) {
-    const socket = this.__socketsMap?.get("project");
-
-    if (!socket) {
-      throw new ClientError({
-        message: "Project socket is not configured",
-      });
-    }
-
-    socket.on("sockethooks:ping", async (event: SockethookEvent<P, A, T>) => {
-      if (event.hook.name !== name) return;
-
-      const response: SockethookResponse<P, A, T> = {
-        operation: event.operation,
-      };
-
-      socket.emit("sockethooks:pong", response);
-    });
-
-    socket.on("sockethooks:event", async (event: SockethookEvent<P, A, T>) => {
-      if (event.hook.name !== name) return;
-
-      const response: SockethookResponse<P, A, T> = {
-        operation: event.operation,
-      };
-
-      debug(`Receiving event on sockethook ${name} with data`, event.data);
-
-      try {
-        const res = await fn(event.data);
-        if (res) {
-          Object.assign(response, res);
-        }
-      } catch (e) {
-        response.err ??= [];
-        response.err.push(e);
-      }
-
-      if (response.err?.length) {
-        response.err = response.err.map((e) => {
-          if (e instanceof Error) {
-            return {
-              message: e.message,
-            };
-          }
-
-          return e;
-        });
-      }
-
-      debug(`Emitting response on sockethook ${name}`, response);
-      socket.emit("sockethooks:response", response);
-    });
-
-    const _join = () => {
-      debug(`Joining sockethook ${name} with socket ${socket.id} ...`);
-
-      socket.emit("sockethooks:join", [
-        {
-          name,
-          signature: fn.toString(),
-        },
-      ]);
-    };
-
-    if (socket.connected) {
-      _join();
-    }
-
-    socket.on("connect", _join);
-  }
-
-  // controllers
 
   async executeController(
     controller: Parameters<typeof executeController>[1],
@@ -423,65 +291,29 @@ class Client {
     return await executeController(this, controller, opts);
   }
 
-  async infos() {
-    return await this.executeController(controllersMap.infos);
-  }
-
-  async infosProject() {
-    return await this.executeController(controllersMap.infosProject);
-  }
-
-  async registerUser(credentials: { email: string; password: string }) {
-    const { email, password } = credentials;
-
-    return await this.executeController(controllersMap.registerUser, {
-      body: { email, password },
-    });
-  }
+  // helpers
 
   async genAccountToken(accountId: string) {
     return await this.executeController(controllersMap.genAccountToken, {
-      path: {
-        id: accountId,
-      },
+      path: { id: accountId },
     });
   }
 
-  async loginAccount<
-    P extends AuthProviders = AuthProviders.PASSWORD,
+  async login<
+    P extends AuthProviders = AuthProviders.LOCAL,
     M extends AuthMethods = AuthMethods.WINDOW
   >(
-    providerOrData:
-      | {
-          provider?: P;
-          method?: M;
-          credentials?: AuthProviderCredentials<P>;
-          options?: AuthMethodOptions<M>;
-        }
-      | P,
-    methodOrData?:
-      | {
-          method?: M;
-          credentials?: AuthProviderCredentials<P>;
-          options?: AuthMethodOptions<M>;
-        }
-      | M,
-    data?: {
-      credentials?: AuthProviderCredentials<P>;
-      options?: AuthMethodOptions<M>;
-    }
+    providerOrData: LoginData<P, M> | P,
+    methodOrData?: Omit<LoginData<P, M>, "provider"> | M,
+    data?: Omit<LoginData<P, M>, "provider" | "method">,
+    query?: Record<string, string>
   ) {
-    let body: {
-      provider: P;
-      method: M;
-      credentials: AuthProviderCredentials<P>;
-      options: AuthMethodOptions<M>;
-    };
+    let body: LoginData<P, M>;
 
     if (data && typeof data === "object") {
-      body = data as typeof body;
+      body = data;
     } else {
-      body = {} as typeof body;
+      body = {};
     }
 
     if (typeof providerOrData === "string") {
@@ -504,7 +336,8 @@ class Client {
       options.redirect ??= window.location.href;
     }
 
-    const res = await this.executeController(controllersMap.loginAccount, {
+    const res = await this.executeController(controllersMap.login, {
+      query,
       body,
     });
 
@@ -520,15 +353,15 @@ class Client {
     });
   }
 
-  async registerAccount<
-    P extends AuthProviders = AuthProviders.PASSWORD,
+  async register<
+    P extends AuthProviders = AuthProviders.LOCAL,
     M extends AuthMethods = AuthMethods.WINDOW
   >(
     providerOrData:
       | {
           provider?: P;
           method?: M;
-          account?: Omit<InputModelPayload<typeof Account>, "role">;
+          account?: Omit<ModelJSON<typeof Account>, "role">;
           configuration?: AuthProviderConfigurePayload<P>;
           options?: AuthMethodOptions<M>;
         }
@@ -536,13 +369,13 @@ class Client {
     methodOrData?:
       | {
           method?: M;
-          account?: Omit<InputModelPayload<typeof Account>, "role">;
+          account?: Omit<ModelJSON<typeof Account>, "role">;
           configuration?: AuthProviderConfigurePayload<P>;
           options?: AuthMethodOptions<M>;
         }
       | M,
     data?: {
-      account?: Omit<InputModelPayload<typeof Account>, "role">;
+      account?: Omit<ModelJSON<typeof Account>, "role">;
       configuration?: AuthProviderConfigurePayload<P>;
       options?: AuthMethodOptions<M>;
     }
@@ -550,7 +383,7 @@ class Client {
     let body: {
       provider: P;
       method: M;
-      account?: Omit<InputModelPayload<typeof Account>, "role">;
+      account?: Omit<ModelJSON<typeof Account>, "role">;
       configuration?: AuthProviderConfigurePayload<P>;
       options: AuthMethodOptions<M>;
     };
@@ -581,7 +414,7 @@ class Client {
       options.redirect ??= window.location.href;
     }
 
-    const res = await this.executeController(controllersMap.registerAccount, {
+    const res = await this.executeController(controllersMap.register, {
       body,
     });
 
@@ -627,18 +460,6 @@ class Client {
     });
   }
 
-  async loginUser(credentials: { email: string; password: string }) {
-    const { email, password } = credentials;
-
-    const { accessToken, refreshToken } = await executeController(
-      this,
-      controllersMap.loginUser,
-      { body: { email, password } }
-    );
-
-    this.setOptions({ accessToken, refreshToken });
-  }
-
   async refreshToken() {
     if (this.__refreshingTokenPromise) {
       return await this.__refreshingTokenPromise;
@@ -649,9 +470,7 @@ class Client {
       throw new ClientError();
     }
 
-    const controller = this.options.project
-      ? controllersMap.refreshTokenAccount
-      : controllersMap.refreshTokenUser;
+    const controller = controllersMap.refreshToken;
 
     this.__refreshingTokenPromise = new Promise(async (resolve, reject) => {
       try {
@@ -679,60 +498,11 @@ class Client {
     return await this.__refreshingTokenPromise;
   }
 
-  async refreshTokenWithKey() {
-    if (this.__refreshingTokenPromise) {
-      return await this.__refreshingTokenPromise;
-    }
-
-    if (!this.options.genKeyToken) {
-      // TODO: throw a more specific error
-      throw new ClientError();
-    }
-
-    this.__refreshingTokenPromise = new Promise(async (resolve, reject) => {
-      try {
-        const { keyId, identityToken } = this.options.genKeyToken;
-        const accessToken = await this.genKeyToken(keyId, identityToken);
-        this.setOptions({ accessToken });
-
-        resolve();
-      } catch (err) {
-        reject(err);
-      } finally {
-        delete this.__refreshingTokenPromise;
-      }
-    });
-
-    return await this.__refreshingTokenPromise;
-  }
-
-  async ql(models: string[]) {
-    const query = Object.fromEntries(models.map((m) => [m, true]));
-    return await this.executeController(controllersMap.ql, { query });
-  }
-
-  async sync(
-    config: Record<string, Record<string, any>>,
-    opts: { confirm?: boolean; clean?: boolean }
-  ) {
-    return await this.executeController(controllersMap.sync, {
-      query: opts,
-      body: config,
-    });
-  }
-
-  async currentUser() {
-    const User = this.getModel(models.User);
-    const data = await this.executeController(controllersMap.currentUser);
-    // TODO: return mapOrNew user
-    return new User(data);
-  }
-
   async currentAccount() {
-    const Account = this.getModel(models.Account);
+    const model = this.getModel(Account);
     const data = await this.executeController(controllersMap.currentAccount);
     // TODO: return mapOrNew account
-    return new Account(data);
+    return model.hydrate(data);
   }
 
   async genTokenToken(tokenId: string) {
@@ -754,12 +524,8 @@ class Client {
     });
   }
 
-  async statusSockethook(sockethookId: string) {
-    return await this.executeController(controllersMap.statusSockethook, {
-      path: {
-        id: sockethookId,
-      },
-    });
+  async subscriptionsCurrent() {
+    return await this.executeController(controllersMap.subscriptionsCurrent);
   }
 }
 

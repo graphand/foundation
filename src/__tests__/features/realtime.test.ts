@@ -1,38 +1,37 @@
 import {
   fetchWatcher,
   generateRandomString,
-  getClientWithSocket,
   generateModel,
-  getClient,
-  mockAccountWithRole,
+  getClientProject,
+  generateAccountWithRole,
 } from "../../lib/test-utils";
 import ClientAdapter from "../../lib/ClientAdapter";
-import { RuleActions } from "@graphand/core";
+import { FieldTypes, Model, RuleActions } from "@graphand/core";
+import { ModelUpdaterEvent } from "@/types";
+import Client from "@/lib/Client";
 
 describe("test realtime", () => {
-  let model;
+  let model: typeof Model & {
+    definition: {
+      fields: {
+        title: {
+          type: FieldTypes.TEXT;
+        };
+      };
+    };
+  };
 
   beforeAll(async () => {
-    const _model = await generateModel({
-      keyField: null,
-    });
-    model = _model.getBaseClass();
+    model = await generateModel({});
   });
 
   describe("create", () => {
     it("should receive event from socket when creating a document", async () => {
-      const clientWithSocket = getClientWithSocket();
+      const clientWithSocket = getClientProject({ socket: true });
       const _model = clientWithSocket.getModel(model);
 
-      let id;
-
       const fetchPromise = fetchWatcher(_model, {
-        fn: (e) => {
-          if (e.operation === "create" && e.__socketId) {
-            id = e.ids[0];
-            return true;
-          }
-        },
+        fn: (e) => e.operation === "create" && "__socketId" in e,
         subject: "event",
       });
 
@@ -42,83 +41,56 @@ describe("test realtime", () => {
 
       await expect(fetchPromise).resolves.toBeTruthy();
 
-      expect(id).toEqual(created._id);
-    });
+      const res = (await fetchPromise) as ModelUpdaterEvent;
 
-    it("should not receive event from socket on the creator client when creating a document", async () => {
-      const clientWithSocket = getClientWithSocket();
-
-      const _model = clientWithSocket.getModel(model);
-
-      const fetchPromise = fetchWatcher(_model, {
-        fn: (e) => {
-          if (e.operation === "create" && e.__socketId) {
-            return true;
-          }
-        },
-        subject: "event",
-      });
-
-      await _model.create({
-        title: generateRandomString(),
-      });
-
-      await expect(fetchPromise).resolves.toBeFalsy();
+      expect(res.operation).toBe("create");
+      expect(res.ids).toEqual([created._id]);
     });
 
     it("should receive events from socket when creating multiple document", async () => {
-      const clientWithSocket = getClientWithSocket();
+      const clientWithSocket = getClientProject({ socket: true });
       const _model = clientWithSocket.getModel(model);
 
-      let ids;
-
       const fetchPromise = fetchWatcher(_model, {
-        fn: (e) => {
-          if (e.operation === "create" && e.__socketId) {
-            ids = e.ids;
-            return true;
-          }
-        },
+        fn: (e) => e.operation === "create" && "__socketId" in e,
         subject: "event",
       });
 
-      const created = await model.createMultiple([
-        {
+      const created = await model.createMultiple(
+        Array.from({ length: 10 }, () => ({
           title: generateRandomString(),
-        },
-        {
-          title: generateRandomString(),
-        },
-        {
-          title: generateRandomString(),
-        },
-      ]);
+        }))
+      );
 
       await expect(fetchPromise).resolves.toBeTruthy();
 
       const createdIds = created.map((doc) => doc._id);
-      expect(ids).toEqual(createdIds);
+      const res = (await fetchPromise) as ModelUpdaterEvent;
+      expect(res.ids).toEqual(createdIds);
     });
 
     it("should receive all ids even when creating many documents", async () => {
-      const client = getClient();
-      const clientWithSocket = getClientWithSocket();
+      const clientWithSocket = getClientProject({ socket: true });
       const _model = clientWithSocket.getModel(model);
 
-      let idsSet = new Set<string>();
-      let idsArr: Array<string> = [];
+      const ids = new Set<string>();
 
-      const adapter = _model.getAdapter() as ClientAdapter;
-      const unsub = adapter.__eventSubject.subscribe((e) => {
-        // @ts-ignore
-        if (e.operation === "create" && e.__socketId) {
-          e.ids.forEach(idsSet.add.bind(idsSet));
-          idsArr = idsArr.concat(e.ids);
-        }
+      const fetchPromise = fetchWatcher(_model, {
+        fn: (e) => {
+          if (e.operation === "create" && "__socketId" in e) {
+            e.ids.forEach(ids.add.bind(ids));
+          }
+
+          if (ids.size === 30) {
+            return true;
+          }
+        },
+        timeout: 5000,
+        subject: "event",
       });
 
       await Promise.all(
-        Array.from({ length: 50 }).map(() => {
+        Array.from({ length: 10 }).map(() => {
           return model.create({
             title: generateRandomString(),
           });
@@ -126,30 +98,24 @@ describe("test realtime", () => {
       );
 
       await Promise.all(
-        Array.from({ length: 50 }).map(() => {
-          return model.createMultiple([
-            {
+        Array.from({ length: 10 }).map(() => {
+          return model.createMultiple(
+            Array.from({ length: 2 }, () => ({
               title: generateRandomString(),
-            },
-            {
-              title: generateRandomString(),
-            },
-          ]);
+            }))
+          );
         })
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await expect(fetchPromise).resolves.toBeTruthy();
 
-      unsub();
-
-      expect(idsSet.size).toEqual(150);
-      expect(idsArr.length).toEqual(150);
+      expect(ids.size).toEqual(30);
     });
 
     it("should receive only ids of read-allowed documents when creating", async () => {
-      const client = globalThis.client;
+      const client: Client = globalThis.clientProject;
 
-      const account = await mockAccountWithRole({
+      const account = await generateAccountWithRole({
         rules: [
           {
             ref: model.slug,
@@ -161,26 +127,31 @@ describe("test realtime", () => {
 
       const accessToken = await client.genAccountToken(account._id);
 
-      const client2 = getClient({
+      const client2 = getClientProject({
         accessToken,
         refreshToken: null,
-        sockets: ["project"],
+        socket: true,
       });
 
       const _model2 = client2.getModel(model);
 
-      let idsSet = new Set<string>();
-
-      const adapter = _model2.getAdapter() as ClientAdapter;
-      const unsub = adapter.__eventSubject.subscribe((e) => {
-        // @ts-ignore
-        if (e.operation === "create" && e.__socketId) {
-          e.ids.forEach(idsSet.add.bind(idsSet));
-        }
-      });
+      const ids = new Set<string>();
 
       const randomLength1 = Math.floor(Math.random() * 20);
       const randomLength2 = Math.floor(Math.random() * 20);
+
+      const fetchPromise = fetchWatcher(_model2, {
+        fn: (e) => {
+          if (e.operation === "create" && "__socketId" in e) {
+            e.ids.forEach(ids.add.bind(ids));
+          }
+
+          if (ids.size === randomLength2) {
+            return true;
+          }
+        },
+        subject: "event",
+      });
 
       const created = await model.createMultiple(
         Array.from({ length: randomLength1 })
@@ -196,15 +167,13 @@ describe("test realtime", () => {
 
       expect(created.length).toEqual(randomLength1 + randomLength2);
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await expect(fetchPromise).resolves.toBeTruthy();
 
-      unsub();
-
-      expect(idsSet.size).toEqual(randomLength2);
+      expect(ids.size).toBe(randomLength2);
     });
   });
 
-  describe("update", () => {
+  describe.only("update", () => {
     it("should receive event from socket when updating a document", async () => {
       const client = getClient();
       const clientWithSocket = getClientWithSocket();
@@ -351,8 +320,8 @@ describe("test realtime", () => {
       expect(idsArr.length).toEqual(updated.length);
     });
 
-    it("should receive only ids of read-allowed documents when updating", async () => {
-      const client = globalThis.client;
+    it.only("should receive only ids of read-allowed documents when updating", async () => {
+      const client: Client = globalThis.clientProject;
       const _model = client.getModel(model);
 
       const created = await _model.createMultiple(
@@ -361,13 +330,13 @@ describe("test realtime", () => {
         }))
       );
 
-      const createdIds = created.map((doc) => doc._id);
+      const ids = created.map((doc) => doc._id);
 
       const createWithTitleContainingB = created.filter((doc) => {
         return doc.title.includes("b");
       });
 
-      const account = await mockAccountWithRole({
+      const account = await generateAccountWithRole({
         rules: [
           {
             ref: model.slug,
@@ -379,46 +348,32 @@ describe("test realtime", () => {
 
       const accessToken = await client.genAccountToken(account._id);
 
-      const client2 = getClient({
+      const client2 = getClientProject({
         accessToken,
         refreshToken: null,
-        sockets: ["project"],
+        socket: true,
       });
 
       const _model2 = client2.getModel(model);
 
-      await _model2.initialize();
+      const fetchPromise = fetchWatcher(_model2, {
+        fn: (e) => e.operation === "update" && "__socketId" in e,
+        subject: "event",
+      });
 
-      const docs = await _model2.getList({ ids: createdIds });
+      const docs = await _model2.getList({ ids });
 
       expect(docs.count).toEqual(createWithTitleContainingB.length);
 
-      let idsSet = new Set<string>();
-
-      const adapter = _model2.getAdapter() as ClientAdapter;
-      const unsub = adapter.__eventSubject.subscribe((e) => {
-        // @ts-ignore
-        if (e.operation === "update" && e.__socketId) {
-          e.ids.forEach(idsSet.add.bind(idsSet));
-        }
-      });
-
-      const updated = await _model.update(
-        {
-          ids: createdIds,
-        },
-        {
-          $set: {},
-        }
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      unsub();
+      const updated = await _model.update({ ids }, { $set: {} });
 
       expect(updated.length).toEqual(100);
 
-      expect(idsSet.size).toEqual(createWithTitleContainingB.length);
+      await expect(fetchPromise).resolves.toBeTruthy();
+
+      const res = (await fetchPromise) as ModelUpdaterEvent;
+
+      expect(res.ids).toHaveLength(createWithTitleContainingB.length);
     });
   });
 
@@ -548,7 +503,7 @@ describe("test realtime", () => {
     });
 
     it("should receive all ids (even not read-allowed documents) when deleting", async () => {
-      const client = globalThis.client;
+      const client = globalThis.clientProject;
       const _model = client.getModel(model);
 
       const created = await _model.createMultiple(

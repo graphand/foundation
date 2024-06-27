@@ -1,19 +1,32 @@
 import "../modules";
 import Client from "../lib/Client";
+import { Role } from "@graphand/core";
 
-// jest.setTimeout(10000);
+jest.setTimeout(15000);
 // jest.retryTimes(3);
 
-const clientOptions = JSON.parse(process.env.CLIENT_OPTIONS);
+const clientGlobalOptions = JSON.parse(process.env.CLIENT_GLOBAL_OPTIONS);
+const clientProjectOptions = JSON.parse(process.env.CLIENT_PROJECT_OPTIONS);
 
-const client = new Client({
-  ...clientOptions,
-});
+const clientGlobal = new Client(clientGlobalOptions);
+const clientProject = new Client(clientProjectOptions);
 
-client.declareGlobally();
+clientProject.declareGlobally();
 
-globalThis.client = client;
+globalThis.clientGlobal = clientGlobal;
+globalThis.clientProject = clientProject;
 
 afterAll(async () => {
-  client.close();
+  await globalThis.clientProject.getModel(Role).delete({
+    filter: {
+      _admin: { $ne: true },
+    },
+  });
+
+  clientGlobal.close();
+  clientProject.close();
+
+  if (globalThis.clients?.length) {
+    globalThis.clients.forEach((c) => c.close());
+  }
 });

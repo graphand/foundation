@@ -1,17 +1,20 @@
 import {
-  ModelEnvScopes,
   FieldTypes,
   ValidatorsDefinition,
-  Data,
   FieldsDefinition,
   Model,
-  models,
   ModelCrudEvent,
   Rule,
   FieldsRestriction,
   defineFieldsProperties,
+  DataModel,
+  Role,
+  Account,
+  ModelDefinition,
+  ModelJSON,
+  ModelInstance,
 } from "@graphand/core";
-import { ClientOptions } from "../types";
+import { ClientOptions, ModelUpdaterEvent } from "../types";
 import Client from "./Client";
 import ClientAdapter from "./ClientAdapter";
 import fs from "fs";
@@ -34,7 +37,7 @@ export const fetchWatcher = async (
   model: typeof Model,
   opts: {
     _id?: string;
-    fn?: (e: ModelCrudEvent | any) => boolean;
+    fn?: (e: ModelUpdaterEvent) => boolean;
     operation?: "fetch" | "create" | "update" | "delete";
     timeout?: number;
     subject?: "updater" | "event";
@@ -44,24 +47,23 @@ export const fetchWatcher = async (
   let unsub;
   let _timeout;
 
-  let subject: any = adapter.updaterSubject;
+  let subject = adapter.updaterSubject;
   const operation = opts.operation ?? "fetch";
 
   if (opts.subject === "event") {
     subject = adapter.__eventSubject;
   }
 
-  const fn =
-    opts.fn ??
-    ((e) => {
-      return e.operation === operation && e.ids.includes(String(opts._id));
-    });
+  let fn = opts.fn;
+  if (!fn) {
+    fn = (e) => e.operation === operation && e.ids.includes(String(opts._id));
+  }
 
-  const timeout = opts.timeout ?? 500;
+  const timeout = opts.timeout ?? 2000;
 
-  return new Promise((resolve) => {
+  return new Promise<ModelUpdaterEvent | false>((resolve) => {
     unsub = subject.subscribe((e) => {
-      if (fn(e)) resolve(true);
+      if (fn(e)) resolve(e);
     });
 
     _timeout = setTimeout(() => {
@@ -74,137 +76,69 @@ export const fetchWatcher = async (
   });
 };
 
-export const generateModel = async <T extends typeof Model = any>(
-  modelOrSlug?:
-    | string
-    | {
-        slug?: string;
-        fields?: FieldsDefinition;
-        validators?: ValidatorsDefinition;
-        keyField?: string;
-        single?: boolean;
-      },
-  _fields: FieldsDefinition = {
-    title: {
-      type: FieldTypes.TEXT,
-    },
-  },
-  client?: Client
-): Promise<T> => {
-  let slug;
-  let fields;
-  let validators;
-  let keyField;
-  let single;
-
-  if (typeof modelOrSlug === "string") {
-    slug = modelOrSlug;
-  } else if (modelOrSlug) {
-    slug = modelOrSlug.slug;
-    fields = modelOrSlug.fields;
-    validators = modelOrSlug.validators;
-    keyField = modelOrSlug.keyField;
-    single = modelOrSlug.single;
+export const generateModel = async <
+  T extends typeof Model = typeof Model & {
+    definition: {
+      fields: {
+        title: {
+          type: FieldTypes.TEXT;
+        };
+      };
+    };
   }
+>(opts: {
+  slug?: string;
+  definition?: T["definition"];
+  client?: Client;
+}): Promise<T> => {
+  const slug = opts.slug ?? generateRandomString();
+  const client = opts.client ?? globalThis.clientProject;
+  const definition = opts.definition ?? {
+    fields: {
+      title: {
+        type: FieldTypes.TEXT,
+      },
+    },
+    validators: [],
+  };
 
-  slug = slug === undefined ? generateRandomString() : slug;
-  client = client === undefined ? globalThis.client : client;
-  fields = fields === undefined ? _fields : fields;
-  keyField = keyField === undefined ? Object.keys(fields)[0] : keyField;
-
-  const datamodel = await client.getModel(models.DataModel).create({
-    name: slug,
+  const datamodel = await client.getModel(DataModel).create({
+    name: `Model ${slug}`,
     slug,
-    fields,
-    validators,
-    single,
-    keyField,
+    definition,
   });
 
-  return Model.getFromSlug(datamodel.slug) as T;
+  const model = client.getModel(datamodel) as T;
+  await model.initialize();
+  return model;
 };
 
-export const mockAccountWithRole = async ({
-  rules,
-  fieldsRestrictions,
-  client,
-}: {
-  rules?: Array<Rule>;
-  fieldsRestrictions?: Array<FieldsRestriction>;
-  client?: Client;
-}) => {
-  client ??= globalThis.client;
-
-  const role = await client.getModel(models.Role).create({
-    slug: generateRandomString(),
-    rules,
-    fieldsRestrictions,
+export const getClientProject = (assignOpts: Partial<ClientOptions> = {}) => {
+  const clientOptions = JSON.parse(process.env.CLIENT_PROJECT_OPTIONS);
+  const client = new Client({
+    ...clientOptions,
+    ...assignOpts,
   });
 
-  const account = await client.getModel(models.Account).create({
-    email: generateRandomString() + "@test.com",
+  globalThis.clients ??= [];
+  globalThis.clients.push(client);
+
+  return client;
+};
+
+export const generateAccountWithRole = async (
+  payload: ModelJSON<typeof Role>,
+  opts: {
+    client?: Client;
+  } = {}
+): Promise<ModelInstance<typeof Account>> => {
+  const client = opts.client ?? globalThis.clientProject;
+
+  payload.slug ??= generateRandomString();
+  const role = await client.getModel(Role).create(payload);
+  const account = await client.getModel(Account).create({
     role: role._id,
   });
 
   return account;
-};
-
-export const mockModel = ({
-  scope = ModelEnvScopes.ENV,
-  fields = {
-    title: {
-      type: FieldTypes.TEXT,
-      options: {},
-    },
-  },
-  validators = [],
-}: {
-  scope?: ModelEnvScopes;
-  fields?: FieldsDefinition;
-  validators?: ValidatorsDefinition;
-} = {}) => {
-  const uidSlug = generateRandomString();
-
-  class Test extends Data {
-    static slug = uidSlug;
-    static scope = scope;
-    static fields = fields;
-    static validators = validators;
-
-    constructor(doc) {
-      super(doc);
-
-      defineFieldsProperties(this);
-    }
-
-    title;
-  }
-
-  // Test.__datamodel = new DataModel({
-  //   slug: uidSlug,
-  //   fields,
-  //   validators,
-  // });
-
-  return Test;
-};
-
-export const getClient = (assignOpts: Partial<ClientOptions> = {}) => {
-  const clientOptions = JSON.parse(process.env.CLIENT_OPTIONS);
-  return new Client({
-    ...clientOptions,
-    ...assignOpts,
-  });
-};
-
-export const getClientWithSocket = (
-  opts: {
-    accessToken?: ClientOptions["accessToken"];
-    genKeyToken?: ClientOptions["genKeyToken"];
-  } = {}
-) => {
-  return getClient({
-    sockets: ["project"],
-    ...opts,
-  });
 };

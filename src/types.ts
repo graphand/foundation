@@ -1,10 +1,14 @@
 import "@graphand/core/global";
 import type {
-  CoreError,
   CoreErrorDefinition,
   AuthMethods,
   HookPhase,
   ControllerDefinition,
+  ModelInstance,
+  MediaTransformOptions,
+  AuthProviders,
+  AuthProviderCredentials,
+  AuthMethodOptions,
 } from "@graphand/core";
 import Client from "./lib/Client";
 
@@ -13,10 +17,13 @@ declare module "@graphand/core" {
     static realtime: () => void;
     static clearCache: () => void;
     static subscribe: (cb: (event: ModelUpdaterEvent) => void) => () => void;
+    static getClient: () => Client;
     subscribe: (cb: (event: ModelUpdaterEvent) => void) => () => void;
   }
 
-  export class ModelList<T extends Model> extends Array<T> {
+  export class ModelList<T extends typeof Model> extends Array<
+    ModelInstance<T>
+  > {
     subscribe: (
       cb: (event: ModelUpdaterEvent) => void,
       cbLoading?: (loading: boolean) => void
@@ -24,11 +31,11 @@ declare module "@graphand/core" {
   }
 
   export class Media extends Model {
-    getUrl: (opts?: {
-      w?: string | number;
-      h?: string | number;
-      fit?: "cover" | "contain" | "fill" | "inside" | "outside";
-    }) => string;
+    getUrl: (opts?: MediaTransformOptions) => string;
+  }
+
+  export interface TransactionCtx {
+    sendAsFormData?: boolean;
   }
 }
 
@@ -41,21 +48,26 @@ export type ModelUpdaterEvent = {
 
 export type ClientOptions = {
   endpoint?: string;
-  project?: string;
+  scope?: string;
   environment?: string;
   accessToken?: string;
   refreshToken?: string;
-  genKeyToken?: {
-    keyId: string;
-    identityToken: string;
-  };
-  sockets?: Array<SocketScope>;
+  socket?: boolean;
   handleAuthRedirect?: boolean;
   authControllersMap?: AuthControllersMap;
-  hostname?: string;
+  headers?: Record<string, string>;
+  ssl?: boolean;
 };
 
-export type SocketScope = "project" | "global";
+export type LoginData<
+  P extends AuthProviders = AuthProviders.LOCAL,
+  M extends AuthMethods = AuthMethods.WINDOW
+> = {
+  provider?: P;
+  method?: M;
+  credentials?: AuthProviderCredentials<P>;
+  options?: AuthMethodOptions<M>;
+};
 
 export type FetchErrorDefinition = CoreErrorDefinition & {
   type?: string;
@@ -71,10 +83,6 @@ export type AuthControllersMap = Map<
     refreshToken?: string;
   }>
 >;
-
-export type ClientExecutorCtx = {
-  sendAsFormData?: boolean;
-};
 
 export type ClientHook<P extends HookPhase, C extends ControllerDefinition> = {
   phase: P;

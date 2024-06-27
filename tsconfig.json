@@ -16,8 +16,12 @@
     "skipLibCheck": true,
     "preserveConstEnums": true,
     "declarationDir": "dist/types",
-    "typeRoots": ["node_modules/@types", "src/types"]
+    "typeRoots": ["node_modules/@types", "src/types"],
+    "paths": {
+      "@/*": ["src/*"],
+      "@graphand/core": ["../core"]
+    }
   },
   "include": ["src"],
-  "exclude": ["node_modules", "**/node_modules/*"]
+  "exclude": ["node_modules"]
 }

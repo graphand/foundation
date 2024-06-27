@@ -1,7 +1,9 @@
+import Client from "../lib/Client";
+
 export default async () => {
-  const client = globalThis.client;
+  const clientGlobal: Client = globalThis.clientGlobal;
+  const clientProject: Client = globalThis.clientProject;
 
-  await globalThis.project?.delete();
-
-  client.close();
+  await clientGlobal.close();
+  await clientProject.close();
 };

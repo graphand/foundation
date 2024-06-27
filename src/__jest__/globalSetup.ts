@@ -1,38 +1,55 @@
-import Client from "../lib/Client";
-import { models } from "@graphand/core";
-import { generateRandomString } from "../lib/test-utils";
+require("dotenv").config({ path: ".env.test" });
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+import { AuthMethods, AuthProviders } from "@graphand/core";
+import Client from "../lib/Client";
 
 export default async () => {
-  const client = new Client({
-    endpoint: "api.graphand.io.local:1337",
-    sockets: [],
+  const endpoint = process.env.CLIENT_ENDPOINT;
+  const ssl = process.env.CLIENT_SSL === "1";
+
+  const clientGlobal = new Client({
+    endpoint,
+    socket: false,
+    ssl,
+    headers: {
+      "X-Access-Key": process.env.ACCESS_KEY,
+    },
   });
 
-  client.declareGlobally();
+  const email = process.env.AUTH_EMAIL;
+  const password = process.env.AUTH_PASSWORD;
 
-  await client.loginUser({
-    email: "hello@pierrecabriere.fr",
-    password: "test123",
+  await clientGlobal.login({
+    credentials: {
+      email,
+      password,
+    },
   });
 
-  const organization = await models.Organization.get({});
+  const projectId = process.env.PROJECT_ID;
 
-  const project = await models.Project.create({
-    name: generateRandomString(),
-    slug: generateRandomString(),
-    organization: organization?._id,
+  const clientProject = new Client({
+    endpoint,
+    scope: projectId,
+    socket: true,
+    ssl,
+    headers: {
+      "X-Access-Key": process.env.ACCESS_KEY,
+    },
   });
 
-  process.env.CLIENT_OPTIONS = JSON.stringify({
-    ...client.options,
-    project: project._id,
-  });
+  await clientProject.login(
+    AuthProviders.GRAPHAND,
+    AuthMethods.CODE,
+    {},
+    {
+      graphandToken: clientGlobal.options.accessToken,
+    }
+  );
 
-  process.env.ORGANIZATION_ID = organization?._id;
-  process.env.PROJECT_ID = project._id;
+  process.env.CLIENT_GLOBAL_OPTIONS = JSON.stringify(clientGlobal.options);
+  process.env.CLIENT_PROJECT_OPTIONS = JSON.stringify(clientProject.options);
 
-  globalThis.project = project;
-  globalThis.client = client;
+  globalThis.clientGlobal = clientGlobal;
+  globalThis.clientProject = clientProject;
 };

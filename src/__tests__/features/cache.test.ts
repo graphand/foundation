@@ -1,4 +1,4 @@
-import { generateModel, generateRandomString } from "../../lib/test-utils";
+import { generateModel, generateRandomString } from "@/lib/test-utils";
 
 describe("test query caching", () => {
   describe("get", () => {

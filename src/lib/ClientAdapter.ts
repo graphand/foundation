@@ -5,6 +5,8 @@ import {
   Model,
   ModelList,
   ModelCrudEvent,
+  ModelInstance,
+  ModelJSON,
 } from "@graphand/core";
 import Client from "./Client";
 import Subject from "./Subject";
@@ -20,7 +22,7 @@ import ErrorCodes from "../enums/error-codes";
 
 class ClientAdapter extends Adapter {
   static __client: Client;
-  __instancesMap: Map<string, Model>;
+  __instancesMap: Map<string, ModelInstance<typeof Model>>;
   __updaterSubject: Subject<ModelUpdaterEvent>;
   __eventSubject: Subject<ModelCrudEvent>;
   __queriesMap: Map<string, Promise<any>>;
@@ -111,7 +113,7 @@ class ClientAdapter extends Adapter {
       }
 
       resPromise = (async () => {
-        if (this.model.single) {
+        if (this.model.isSingle) {
           if (this.instancesMap.size) {
             return this.instancesMap.values().next()?.value;
           }
@@ -145,11 +147,12 @@ class ClientAdapter extends Adapter {
         }
 
         if (typeof query === "string") {
+          let keyField: string;
           if (this.instancesMap.has(query)) {
             return this.instancesMap.get(query);
-          } else if (this.model.keyField) {
+          } else if ((keyField = this.model.getKeyField())) {
             const arr = Array.from(this.instancesMap.values());
-            const found = arr.find((r) => r[this.model.keyField] === query);
+            const found = arr.find((r) => r[keyField] === query);
             if (found) {
               return found;
             }
@@ -363,12 +366,14 @@ class ClientAdapter extends Adapter {
           }
         );
 
-        this.__eventSubject.next({
+        const event: ModelCrudEvent = {
           operation: "update",
           model: this.model.slug,
           ids: [res._id],
           data: [res],
-        } as ModelCrudEvent);
+        };
+
+        this.__eventSubject.next(event);
 
         return this.mapOrNew(res).mapped;
       } else {
@@ -380,14 +385,16 @@ class ClientAdapter extends Adapter {
           return null;
         }
 
-        this.__eventSubject.next({
+        const event: ModelCrudEvent = {
           operation: "update",
           model: this.model.slug,
           ids: list.map((l) => l._id),
-          data: list,
-        } as ModelCrudEvent);
+          data: list.map((l) => l.toJSON()),
+        };
 
-        return this.mapOrNew(list[0]).mapped;
+        this.__eventSubject.next(event);
+
+        return this.mapOrNew(list[0].toJSON()).mapped;
       }
     },
     updateMultiple: async ([query, update]) => {
@@ -487,7 +494,7 @@ class ClientAdapter extends Adapter {
     return this.__client;
   }
 
-  get client() {
+  get client(): Client {
     const { constructor } = Object.getPrototypeOf(this);
     return constructor.__client;
   }
@@ -507,8 +514,8 @@ class ClientAdapter extends Adapter {
     return this.__queriesMap;
   }
 
-  mapOrNew(payload: any) {
-    let mapped;
+  mapOrNew(payload: ModelJSON<typeof Model>) {
+    let mapped: ModelInstance<typeof Model>;
     let updated = false;
 
     if (!payload || typeof payload !== "object") {
@@ -525,10 +532,10 @@ class ClientAdapter extends Adapter {
         new Date(payload._updatedAt) > new Date(mapped._updatedAt)
       ) {
         updated = true;
-        mapped.__doc = payload;
+        mapped.setData(payload);
       }
     } else {
-      mapped = new this.model(payload);
+      mapped = this.model.hydrate(payload);
       this.instancesMap.set(payload._id, mapped);
       updated = true;
     }
