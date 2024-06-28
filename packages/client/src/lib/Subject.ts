@@ -2,9 +2,9 @@ import { SubjectObserver } from "../types";
 
 class Subject<T> {
   #observers: Array<SubjectObserver<T>> = [];
-  #previousValue: T;
+  #previousValue: T | undefined;
 
-  constructor(initialValue: T) {
+  constructor(initialValue?: T | undefined) {
     this.#previousValue = initialValue;
   }
 
@@ -13,7 +13,7 @@ class Subject<T> {
   }
 
   next(value: T) {
-    [...this.#observers].forEach((o) => o(value, this.#previousValue));
+    [...this.#observers].forEach(o => o(value, this.#previousValue));
     this.#previousValue = value;
   }
 

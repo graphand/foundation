@@ -1,5 +1,7 @@
+require("dotenv").config({ path: ".env.test.local" });
+import { DataModel, FieldTypes, Model, ValidationError, controllersMap } from "@graphand/core";
 import Client from "./Client";
-import Module from "./Module";
+import Module, { symbolModuleInit } from "./Module";
 
 // Test cases
 describe("Client", () => {
@@ -57,5 +59,121 @@ describe("Client", () => {
       [TestModule2, { bar: "456" }],
       //   [TestModule2, { foor: "" }], // TypeScript should detect this error
     ]);
+  });
+
+  it("should ...", async () => {
+    class AccessModule extends Module<{ accessKey: string }> {
+      static moduleName = "AccessModule" as const;
+
+      async [symbolModuleInit]() {
+        this.client.hook("beforeRequest", ({ req }) => {
+          req.headers.set("X-Access-Key", this.conf.accessKey);
+        });
+      }
+    }
+
+    const client = new Client([[AccessModule, { accessKey: "test123" }]]);
+
+    const res = await client.execute(controllersMap.openapi);
+
+    console.log(res);
+  });
+
+  it("should ...", async () => {
+    const project = process.env.PROJECT || null;
+    const accessKey = process.env.ACCESS_KEY;
+    const token = process.env.TOKEN;
+
+    const client = new Client([], {
+      project,
+      headers: {
+        "X-Access-Key": String(accessKey),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    await expect(client.getModel(DataModel).create({})).rejects.toThrow(ValidationError);
+  });
+
+  it.only("should ...", async () => {
+    const project = process.env.PROJECT || null;
+    const accessKey = process.env.ACCESS_KEY;
+    const token = process.env.TOKEN;
+
+    const client = new Client([], {
+      project,
+      headers: {
+        "X-Access-Key": String(accessKey),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const dm = await client.getModel(DataModel).create({
+      slug: "todo2",
+      definition: {
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      },
+    });
+
+    const model = client.getModel(dm) as typeof Model & {
+      definition: {
+        fields: {
+          title: {
+            type: FieldTypes.TEXT;
+          };
+        };
+      };
+    };
+
+    await model.createMultiple([
+      {
+        title: "test1",
+      },
+      {
+        title: "test2",
+      },
+      {
+        title: "test3",
+      },
+    ]);
+
+    const updated = await model.update(
+      {
+        filter: {
+          title: "test1",
+        },
+      },
+      {
+        $set: {
+          title: "test1-updated",
+        },
+      },
+    );
+
+    console.log(updated);
+
+    const list = await model.getList({
+      filter: {
+        title: { $regex: "test" },
+      },
+    });
+
+    console.log(list?.toJSON());
+
+    const ids = list.toArray().map(item => item._id) as string[];
+
+    const deleted = await model.delete({ ids: ids.slice(0, 2) });
+
+    console.log(deleted);
+
+    const count = await model.count();
+
+    console.log(count);
+
+    await dm.delete();
   });
 });

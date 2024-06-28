@@ -7,6 +7,7 @@ module.exports = {
   extends: ["eslint:recommended", "prettier", "turbo"],
   plugins: ["only-warn"],
   env: {
+    es2022: true,
     node: true,
     jest: true,
   },
