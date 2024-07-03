@@ -66,7 +66,7 @@ describe("Client", () => {
       static moduleName = "AccessModule" as const;
 
       async [symbolModuleInit]() {
-        this.client.hook("beforeRequest", ({ req }) => {
+        this.client().hook("beforeRequest", ({ req }) => {
           req.headers.set("X-Access-Key", this.conf.accessKey);
         });
       }
@@ -77,6 +77,66 @@ describe("Client", () => {
     const res = await client.execute(controllersMap.openapi);
 
     console.log(res);
+  });
+
+  it.only("should ...", async () => {
+    class Module1 extends Module<{ foo: string }> {
+      static moduleName = "module1" as const;
+
+      async [symbolModuleInit]() {}
+
+      m1() {
+        return 1;
+      }
+    }
+
+    class Module3 extends Module<{ bar: string }> {
+      static moduleName = "module3" as const;
+
+      async [symbolModuleInit]() {}
+
+      m3() {
+        return 3;
+      }
+    }
+
+    class Module4 extends Module<{ bar: string }> {
+      static moduleName = "module4" as const;
+
+      async [symbolModuleInit]() {}
+
+      m4() {
+        return 4;
+      }
+    }
+
+    class Module2 extends Module<{ bar?: string }> {
+      static moduleName = "module2" as const;
+      defaults = { bar: "123" };
+      dependencies = [Module3, Module4];
+
+      async [symbolModuleInit]() {
+        // console.log(this.client().get("module3").m3());
+        // console.log(this.client().get("module4").m4());
+      }
+
+      m2() {
+        return 2;
+      }
+    }
+
+    const client = new Client([
+      [Module1, { foo: "123" }],
+      [Module2, { bar: "123" }],
+    ]);
+
+    console.log(client.get("module2").conf);
+
+    console.log(client.get("module1").m1());
+    console.log(client.get("module2").m2());
+    console.log(client.get(Module2).m2());
+
+    await client.destroy();
   });
 
   it("should ...", async () => {
@@ -95,7 +155,7 @@ describe("Client", () => {
     await expect(client.getModel(DataModel).create({})).rejects.toThrow(ValidationError);
   });
 
-  it.only("should ...", async () => {
+  it("should ...", async () => {
     const project = process.env.PROJECT || null;
     const accessKey = process.env.ACCESS_KEY;
     const token = process.env.TOKEN;

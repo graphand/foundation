@@ -1,6 +1,6 @@
 import { ClientModules, Hook, HookCallbackArgs, HookPhase, ModuleWithConfig, Transaction } from "./../types";
 import { ClientOptions, ModuleConstructor } from "../types";
-import Module, { symbolModuleInit } from "./Module";
+import Module, { symbolModuleDestroy, symbolModuleInit } from "./Module";
 import { Adapter, ControllerDefinition, CoreError, ErrorCodes, Model } from "@graphand/core";
 import ClientError from "./ClientError";
 import ClientAdapter from "./ClientAdapter";
@@ -37,9 +37,14 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     this.#modulesInitPromises = new Map();
 
     modules.forEach(([moduleClass, conf]) => {
+      const name = moduleClass.moduleName;
+      if (!name) {
+        throw new Error("Module name is required");
+      }
+
       const module = new moduleClass(conf, this);
-      this.#modules.set(moduleClass.moduleName, module);
-      this.#modulesInitPromises.set(moduleClass.moduleName, module[symbolModuleInit]());
+      this.#modules.set(name, module);
+      this.#modulesInitPromises.set(name, module[symbolModuleInit]());
     });
   }
 
@@ -49,9 +54,9 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
   get<N extends T[number]["moduleName"]>(_name: N): InstanceType<Extract<T[number], { moduleName: N }>>;
   get<M extends Module>(_name: string): M;
-  get<M extends typeof Module>(_module: M): InstanceType<M>;
+  get<M extends ModuleConstructor>(_module: M): InstanceType<M>;
   get(module: string | typeof Module): Module | null {
-    const name = String(typeof module === "string" ? module : (module.constructor as any)?.moduleName);
+    const name = String(typeof module === "string" ? module : module.moduleName);
     return this.#modules.get(name) || null;
   }
 
@@ -303,6 +308,12 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     this.#hooks.add(hook);
 
     return this;
+  }
+
+  async destroy() {
+    const modules = Array.from(this.#modules.values());
+
+    await Promise.all(modules.map(module => module[symbolModuleDestroy]()));
   }
 }
 

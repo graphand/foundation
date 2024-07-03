@@ -1,9 +1,14 @@
+import { InferModuleDependencies, ModuleConstructor } from "../types";
 import Client from "./Client";
 
-const symbolModuleInit = Symbol("ModuleInit");
+export const symbolModuleInit = Symbol("ModuleInit");
+export const symbolModuleDestroy = Symbol("ModuleDestroy");
 
-class Module<Conf extends unknown = unknown> {
-  static moduleName: string;
+class Module<Conf extends object = object, Deps extends ModuleConstructor[] = ModuleConstructor[]> {
+  static moduleName: string | undefined = undefined;
+
+  defaults: Conf = {} as Conf;
+  dependencies: Deps | undefined = undefined;
 
   #conf: Conf;
   #client: Client;
@@ -18,15 +23,15 @@ class Module<Conf extends unknown = unknown> {
   }
 
   get conf() {
-    return this.#conf;
+    return { ...this.defaults, ...this.#conf };
   }
 
-  get client() {
-    return this.#client;
+  client<T extends Module>(this: T): Client<InferModuleDependencies<T>> {
+    return this.#client as any;
   }
 
   [symbolModuleInit](): Promise<void> | void {}
+  [symbolModuleDestroy](): Promise<void> | void {}
 }
 
 export default Module;
-export { symbolModuleInit };

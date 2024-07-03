@@ -3,14 +3,16 @@ import Module from "./lib/Module";
 import Client from "./lib/Client";
 
 // Define a base type for classes with constructors
-export type ModuleConstructor<T extends Module = Module> = (new (_conf: any, _client: Client) => T) & {
-  moduleName: string;
+export type ModuleConstructor<T extends Module = Module<any, any[]>> = (new (_conf: any, _client: Client) => T) & {
+  moduleName: string | undefined;
 };
 
-// Define the ModuleWithConfig type
-export type ModuleWithConfig<T extends ModuleConstructor = ModuleConstructor> = [T, ConstructorParameters<T>[0]];
+export type InferModuleDependencies<T extends Module> = T extends Module<any, infer Deps> ? Deps : never;
 
-export type ClientModules<T extends ModuleConstructor[]> = {
+// Define the ModuleWithConfig type
+export type ModuleWithConfig<T extends ModuleConstructor = ModuleConstructor> = [T, ConstructorParameters<T>[0]] | [T];
+
+export type ClientModules<T extends ModuleConstructor[] = []> = {
   [K in keyof T]: ModuleWithConfig<T[K]>;
 };
 
