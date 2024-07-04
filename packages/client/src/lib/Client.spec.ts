@@ -1,7 +1,7 @@
 require("dotenv").config({ path: ".env.test.local" });
 import { DataModel, FieldTypes, Model, ValidationError, controllersMap } from "@graphand/core";
 import Client from "./Client";
-import Module, { symbolModuleInit } from "./Module";
+import Module, { symbolModuleDestroy, symbolModuleInit } from "./Module";
 
 // Test cases
 describe("Client", () => {
@@ -116,8 +116,8 @@ describe("Client", () => {
       dependencies = [Module3, Module4];
 
       async [symbolModuleInit]() {
-        // console.log(this.client().get("module3").m3());
-        // console.log(this.client().get("module4").m4());
+        console.log(this.client().get("module3").m3());
+        console.log(this.client().get("module4").m4());
       }
 
       m2() {
@@ -128,6 +128,7 @@ describe("Client", () => {
     const client = new Client([
       [Module1, { foo: "123" }],
       [Module2, { bar: "123" }],
+      [Module3, { bar: "123" }],
     ]);
 
     console.log(client.get("module2").conf);
@@ -135,6 +136,28 @@ describe("Client", () => {
     console.log(client.get("module1").m1());
     console.log(client.get("module2").m2());
     console.log(client.get(Module2).m2());
+
+    class Module5 extends Module<{}> {
+      static moduleName = "module5" as const;
+      dependencies = [Module3, Module4];
+
+      async [symbolModuleInit]() {
+        console.log(this.client().get("module3").m3());
+        console.log(this.client().get("module4").m4());
+      }
+
+      async [symbolModuleDestroy]() {
+        console.log("Module5 destroyed");
+      }
+
+      m5() {
+        return 5;
+      }
+    }
+
+    const client2 = client.use(Module5);
+
+    console.log(client2.get("module5").m5());
 
     await client.destroy();
   });

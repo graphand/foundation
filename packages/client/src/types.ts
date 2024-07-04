@@ -22,6 +22,7 @@ export type ClientOptions = {
   endpoint?: string;
   ssl?: boolean;
   maxRetries?: number;
+  accessToken?: string;
   headers?: Record<string, string>;
 };
 

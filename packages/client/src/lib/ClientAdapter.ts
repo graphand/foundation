@@ -11,7 +11,7 @@ import {
 import Client from "./Client";
 import Subject from "./Subject";
 import { canUseIds } from "./utils";
-import { ModelUpdaterEvent } from "../types";
+import { ModelUpdaterEvent, SubjectObserver } from "../types";
 import ClientError from "./ClientError";
 
 class ClientAdapter extends Adapter {
@@ -458,6 +458,14 @@ class ClientAdapter extends Adapter {
     }
 
     return { updated, mapped };
+  }
+
+  subscribe(observer: SubjectObserver<ModelUpdaterEvent>) {
+    return this.#updaterSubject.subscribe(observer);
+  }
+
+  dispatch(event: ModelCrudEvent) {
+    this.#eventSubject.next(event);
   }
 }
 

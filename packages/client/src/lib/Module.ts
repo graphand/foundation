@@ -26,6 +26,11 @@ class Module<Conf extends object = object, Deps extends ModuleConstructor[] = Mo
     return { ...this.defaults, ...this.#conf };
   }
 
+  get moduleName(): string | undefined {
+    const c = this.constructor as typeof Module;
+    return c.moduleName;
+  }
+
   client<T extends Module>(this: T): Client<InferModuleDependencies<T>> {
     return this.#client as any;
   }

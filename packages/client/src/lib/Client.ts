@@ -1,9 +1,18 @@
-import { ClientModules, Hook, HookCallbackArgs, HookPhase, ModuleWithConfig, Transaction } from "./../types";
+import {
+  ClientModules,
+  Hook,
+  HookCallbackArgs,
+  HookPhase,
+  ModuleWithConfig,
+  SubjectObserver,
+  Transaction,
+} from "./../types";
 import { ClientOptions, ModuleConstructor } from "../types";
 import Module, { symbolModuleDestroy, symbolModuleInit } from "./Module";
 import { Adapter, ControllerDefinition, CoreError, ErrorCodes, Model } from "@graphand/core";
 import ClientError from "./ClientError";
 import ClientAdapter from "./ClientAdapter";
+import BehaviorSubject from "./BehaviorSubject";
 
 const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   endpoint: "api.graphand.dev",
@@ -11,18 +20,39 @@ const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   maxRetries: 3,
 };
 
+const decodeClientModule = <T extends ModuleConstructor>(
+  module: ModuleWithConfig<T>,
+): {
+  moduleClass: T;
+  conf: ModuleWithConfig<T>[1];
+} => {
+  let moduleClass: T | undefined;
+  let conf: ModuleWithConfig<T>[1];
+
+  if (Array.isArray(module)) {
+    moduleClass = module[0];
+    conf = module[1];
+  }
+
+  if (!moduleClass) {
+    throw new Error("Module class not found");
+  }
+
+  return { moduleClass, conf: conf || {} };
+};
+
 class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
-  #options: ClientOptions;
+  #options: BehaviorSubject<ClientOptions>;
   #modules: Map<string, Module>;
-  #modulesInitPromises: Map<string, Promise<void> | void>;
+  #modulesInitPromises: Map<string, Promise<void> | void> | undefined;
   #hooks: Set<Hook>;
   #adapterClass: typeof ClientAdapter | undefined;
 
   constructor(modules: ClientModules<T>, options?: ClientOptions) {
-    this.#options = options || { project: null };
+    this.#options = new BehaviorSubject(options || { ...DEFAULT_OPTIONS, project: null });
 
     // Checking there are no duplicate module names
-    const moduleNames = modules.map(([moduleClass]) => moduleClass.moduleName);
+    const moduleNames = modules.map(m => decodeClientModule(m).moduleClass.moduleName);
 
     if (moduleNames.some(name => !name)) {
       throw new Error("Module names cannot be empty");
@@ -34,22 +64,26 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     this.#hooks = new Set();
     this.#modules = new Map();
-    this.#modulesInitPromises = new Map();
 
-    modules.forEach(([moduleClass, conf]) => {
-      const name = moduleClass.moduleName;
-      if (!name) {
-        throw new Error("Module name is required");
-      }
+    // Registering modules
+    modules.forEach(m => this.use(...m));
 
-      const module = new moduleClass(conf, this);
-      this.#modules.set(name, module);
-      this.#modulesInitPromises.set(name, module[symbolModuleInit]());
-    });
+    // Resolving dependencies
+    for (const module of this.#modules.values()) {
+      this.resolveDependencies(module);
+    }
+
+    // Initializing modules
+    this.init().catch(() => null);
   }
 
-  get options() {
-    return { ...DEFAULT_OPTIONS, ...this.#options };
+  subscribeOptions(observer: SubjectObserver<ClientOptions>) {
+    return this.#options.subscribe(observer);
+  }
+
+  get options(): ClientOptions {
+    const options = this.#options.getValue();
+    return { ...DEFAULT_OPTIONS, ...options };
   }
 
   get<N extends T[number]["moduleName"]>(_name: N): InstanceType<Extract<T[number], { moduleName: N }>>;
@@ -60,10 +94,9 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return this.#modules.get(name) || null;
   }
 
-  use<U extends ModuleConstructor>(
-    moduleClass: ModuleWithConfig<U>[0],
-    conf: ModuleWithConfig<U>[1],
-  ): Client<[...T, U]> {
+  use<U extends ModuleConstructor>(...m: ModuleWithConfig<U>): Client<[...T, U]> {
+    const { moduleClass, conf } = decodeClientModule(m);
+
     if (!moduleClass.moduleName) {
       throw new Error("Module name is required");
     }
@@ -74,12 +107,50 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     const module = new moduleClass(conf, this);
     this.#modules.set(moduleClass.moduleName, module);
-    this.#modulesInitPromises.set(moduleClass.moduleName, module[symbolModuleInit]());
+
+    // Waiting for the client to have finished registering all modules and dependencies bezfore initializing them
+    // When using client.use() after the client has registered all modules, this.#modulesInitPromises will be defined and
+    // we add the module initialization promise to it
+    if (this.#modulesInitPromises) {
+      if (this.#modulesInitPromises.has(moduleClass.moduleName)) {
+        throw new Error(`Module ${moduleClass.moduleName} is already registered`);
+      }
+
+      this.#modulesInitPromises.set(moduleClass.moduleName, module[symbolModuleInit]());
+    }
 
     return this as unknown as Client<[...T, U]>;
   }
 
+  resolveDependencies(module: Module) {
+    if (!module.dependencies) {
+      return;
+    }
+
+    for (const dependency of module.dependencies) {
+      if (dependency.moduleName && !this.#modules.has(dependency.moduleName)) {
+        this.use(dependency);
+      }
+    }
+  }
+
   init() {
+    if (!this.#modulesInitPromises) {
+      this.#modulesInitPromises = new Map();
+
+      for (const module of this.#modules.values()) {
+        if (!module.moduleName) {
+          throw new Error("Module name is required");
+        }
+
+        if (this.#modulesInitPromises.has(module.moduleName)) {
+          throw new Error(`Module ${module.moduleName} is already registered`);
+        }
+
+        this.#modulesInitPromises.set(module.moduleName, module[symbolModuleInit]());
+      }
+    }
+
     return Promise.all(this.#modulesInitPromises.values());
   }
 
@@ -230,6 +301,15 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     if (this.options.headers) {
       init.headers ??= {};
       Object.assign(init.headers, this.options.headers);
+    }
+
+    if (definition.secured) {
+      if (!this.options.accessToken) {
+        throw new Error("Access token is required");
+      }
+
+      init.headers ??= {};
+      Object.assign(init.headers, { Authorization: `Bearer ${this.options.accessToken}` });
     }
 
     const request = new Request(url, init);
