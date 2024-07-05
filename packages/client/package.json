@@ -33,6 +33,6 @@
     "vite": "^5.3.2"
   },
   "dependencies": {
-    "@graphand/core": "^0.14.10"
+    "@graphand/core": "^0.15.6"
   }
 }

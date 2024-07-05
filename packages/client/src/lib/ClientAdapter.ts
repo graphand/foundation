@@ -14,12 +14,12 @@ import { canUseIds } from "./utils";
 import { ModelUpdaterEvent, SubjectObserver } from "../types";
 import ClientError from "./ClientError";
 
-class ClientAdapter extends Adapter {
+class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   static client: Client;
 
-  #instancesMap: Map<string, ModelInstance<typeof Model>>;
+  #instancesMap: Map<string, ModelInstance<T>>;
   #updaterSubject: Subject<ModelUpdaterEvent>;
-  #eventSubject: Subject<ModelCrudEvent>;
+  #eventSubject: Subject<ModelCrudEvent<"create" | "update" | "delete", T>>;
 
   runValidators = false;
 
@@ -79,7 +79,7 @@ class ClientAdapter extends Adapter {
     }
   }
 
-  fetcher: AdapterFetcher = {
+  fetcher: AdapterFetcher<T> = {
     count: async ([query]) => {
       this.checkClient();
 
@@ -110,7 +110,7 @@ class ClientAdapter extends Adapter {
           },
         });
 
-        const json: ModelJSON<typeof Model> = await res.json();
+        const json: ModelJSON<T> = await res.json();
 
         // await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
 
@@ -147,7 +147,7 @@ class ClientAdapter extends Adapter {
 
         // await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
 
-        const json: ModelJSON<typeof Model> = await res.json();
+        const json: ModelJSON<T> = await res.json();
 
         const { mapped, updated } = this.mapOrNew(json);
 
@@ -178,12 +178,12 @@ class ClientAdapter extends Adapter {
     getList: async ([query], ctx) => {
       this.checkClient();
 
-      let _fromIdsList: Array<ModelInstance<typeof Model>> = [];
+      let _fromIdsList: Array<ModelInstance<T>> = [];
       const _canUseIds = canUseIds(query);
 
       if (_canUseIds) {
         const existingIds = query.ids?.filter(id => this.#instancesMap.has(id)) as Array<string>;
-        _fromIdsList = existingIds.map(id => this.#instancesMap.get(id)) as Array<ModelInstance<typeof Model>>;
+        _fromIdsList = existingIds.map(id => this.#instancesMap.get(id)) as Array<ModelInstance<T>>;
 
         if (_fromIdsList.length === query.ids?.length) {
           return new ModelList(this.model, _fromIdsList);
@@ -201,12 +201,12 @@ class ClientAdapter extends Adapter {
         },
       });
 
-      const json: ReturnType<ModelList<typeof Model>["toJSON"]> = await res.json().then(r => r.data);
+      const json: ReturnType<ModelList<T>["toJSON"]> = await res.json().then(r => r.data);
 
       // await parsePopulated(this.model, res.rows, getPopulatedFromQuery(query));
 
-      const mappedList = json.rows.map(r => this.mapOrNew(r));
-      const mappedRes = mappedList.map(r => r.mapped).filter(Boolean) as Array<ModelInstance<typeof Model>>;
+      const mappedList = json.rows.map(r => this.mapOrNew(r as ModelJSON<T>));
+      const mappedRes = mappedList.map(r => r.mapped).filter(Boolean) as Array<ModelInstance<T>>;
       const updated = mappedList
         .filter(r => r.updated)
         .map(r => r.mapped?._id)
@@ -245,7 +245,7 @@ class ClientAdapter extends Adapter {
         },
       });
 
-      const json: ModelJSON<typeof Model> = await res.json().then(r => r.data);
+      const json: ModelJSON<T> = await res.json().then(r => r.data);
 
       if (json._id) {
         this.#eventSubject.next({
@@ -256,7 +256,7 @@ class ClientAdapter extends Adapter {
         });
       }
 
-      return this.mapOrNew(json).mapped as ModelInstance<typeof Model>;
+      return this.mapOrNew(json).mapped as ModelInstance<T>;
     },
     createMultiple: async ([payload]) => {
       this.checkClient();
@@ -270,7 +270,7 @@ class ClientAdapter extends Adapter {
         },
       });
 
-      const json: Array<ModelJSON<typeof Model>> = await res.json().then(r => r.data);
+      const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
 
       this.#eventSubject.next({
         operation: "create",
@@ -279,7 +279,7 @@ class ClientAdapter extends Adapter {
         data: json,
       });
 
-      return json.map(r => this.mapOrNew(r).mapped).filter(Boolean) as Array<ModelInstance<typeof Model>>;
+      return json.map(r => this.mapOrNew(r).mapped).filter(Boolean) as Array<ModelInstance<T>>;
     },
     updateOne: async ([query, update], ctx) => {
       this.checkClient();
@@ -295,7 +295,7 @@ class ClientAdapter extends Adapter {
           },
         });
 
-        const json: ModelJSON<typeof Model> = await res.json().then(r => r.data);
+        const json: ModelJSON<T> = await res.json().then(r => r.data);
 
         if (json._id) {
           this.#eventSubject.next({
@@ -306,7 +306,7 @@ class ClientAdapter extends Adapter {
           });
         }
 
-        return this.mapOrNew(json).mapped as ModelInstance<typeof Model>;
+        return this.mapOrNew(json).mapped as ModelInstance<T>;
       } else {
         query.pageSize = 1;
 
@@ -316,20 +316,24 @@ class ClientAdapter extends Adapter {
           return null;
         }
 
-        const event: ModelCrudEvent = {
+        const event: ModelCrudEvent<"update", T> = {
           operation: "update",
           model: this.model.slug,
           ids: list.map(l => l._id).filter(Boolean) as Array<string>,
-          data: list.map(l => l.toJSON()),
+          data: list.map(l => l.toJSON() as ModelJSON<T>),
         };
 
         this.#eventSubject.next(event);
 
-        if (!list?.[0]) {
+        const first = list?.[0] as ModelInstance<T>;
+
+        if (!first) {
           return null;
         }
 
-        return this.mapOrNew(list[0].toJSON()).mapped as ModelInstance<typeof Model>;
+        const json = first.toJSON() as ModelJSON<T>;
+
+        return this.mapOrNew(json).mapped as ModelInstance<T>;
       }
     },
     updateMultiple: async ([query, update]) => {
@@ -345,7 +349,7 @@ class ClientAdapter extends Adapter {
         },
       });
 
-      const json: Array<ModelJSON<typeof Model>> = await res.json().then(r => r.data);
+      const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
 
       this.#eventSubject.next({
         operation: "update",
@@ -354,7 +358,7 @@ class ClientAdapter extends Adapter {
         data: json,
       });
 
-      return json.map(r => this.mapOrNew(r).mapped).filter(Boolean) as Array<ModelInstance<typeof Model>>;
+      return json.map(r => this.mapOrNew(r).mapped).filter(Boolean) as Array<ModelInstance<T>>;
     },
     deleteOne: async ([query], ctx) => {
       this.checkClient();
@@ -432,8 +436,8 @@ class ClientAdapter extends Adapter {
     return constructor.client;
   }
 
-  mapOrNew(payload: ModelJSON<typeof Model>) {
-    let mapped: ModelInstance<typeof Model> | undefined;
+  mapOrNew(payload: ModelJSON<T>) {
+    let mapped: ModelInstance<T> | undefined;
     let updated = false;
 
     if (!payload || typeof payload !== "object") {
@@ -464,8 +468,12 @@ class ClientAdapter extends Adapter {
     return this.#updaterSubject.subscribe(observer);
   }
 
-  dispatch(event: ModelCrudEvent) {
+  dispatch(event: ModelCrudEvent<"create" | "update" | "delete", T>) {
     this.#eventSubject.next(event);
+  }
+
+  clearInstances() {
+    this.#instancesMap.clear();
   }
 }
 

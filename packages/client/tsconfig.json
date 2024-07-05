@@ -1,11 +1,26 @@
 {
-  "extends": "@repo/typescript-config/base.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Default",
   "compilerOptions": {
-    "outDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "incremental": false,
+    "isolatedModules": true,
+    "lib": ["es2022", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
+    "moduleDetection": "force",
+    "moduleResolution": "NodeNext",
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
     "paths": {
       "@graphand/core": ["../../../core"]
-    }
+    },
+    "typeRoots": ["node_modules/@types", "src/types", "@graphand/core"]
   },
-  "include": ["src"],
+  "include": ["src", "src/types", "@graphand/core"],
   "exclude": ["node_modules", "dist"]
 }

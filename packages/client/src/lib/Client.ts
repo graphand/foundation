@@ -6,7 +6,7 @@ import {
   ModuleWithConfig,
   SubjectObserver,
   Transaction,
-} from "./../types";
+} from "../types";
 import { ClientOptions, ModuleConstructor } from "../types";
 import Module, { symbolModuleDestroy, symbolModuleInit } from "./Module";
 import { Adapter, ControllerDefinition, CoreError, ErrorCodes, Model } from "@graphand/core";
@@ -244,7 +244,7 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
   }
 
   setAdapterClass(adapterClass: typeof ClientAdapter) {
-    this.#adapterClass = class extends adapterClass {};
+    this.#adapterClass = class extends adapterClass {} as typeof ClientAdapter;
     this.#adapterClass.client = this;
 
     return this;

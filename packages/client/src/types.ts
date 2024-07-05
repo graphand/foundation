@@ -1,6 +1,10 @@
 import { CoreErrorDefinition } from "@graphand/core";
 import Module from "./lib/Module";
 import Client from "./lib/Client";
+import { ModelList } from "@graphand/core";
+import { Model } from "@graphand/core";
+
+export type InferModelFromList<T extends ModelList<typeof Model>> = T extends ModelList<infer M> ? M : typeof Model;
 
 // Define a base type for classes with constructors
 export type ModuleConstructor<T extends Module = Module<any, any[]>> = (new (_conf: any, _client: Client) => T) & {
