@@ -15,10 +15,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "ES2022",
-    "paths": {
-      "@graphand/core": ["../../../core"]
-    }
+    "target": "ES2022"
   },
   "include": ["src", "src/types", "@graphand/core"],
   "exclude": ["node_modules", "dist"]

@@ -3,8 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "paths": {
-      "@graphand/client": ["../main/src"],
-      "@graphand/core": ["../../../core"]
+      "@graphand/client": ["../main/src"]
     }
   },
   "include": ["src"],
