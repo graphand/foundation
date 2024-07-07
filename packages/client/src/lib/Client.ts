@@ -13,32 +13,12 @@ import { Adapter, ControllerDefinition, CoreError, ErrorCodes, Model } from "@gr
 import ClientError from "./ClientError";
 import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
+import { decodeClientModule } from "./utils";
 
 const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   endpoint: "api.graphand.dev",
   ssl: true,
   maxRetries: 3,
-};
-
-const decodeClientModule = <T extends ModuleConstructor>(
-  module: ModuleWithConfig<T>,
-): {
-  moduleClass: T;
-  conf: ModuleWithConfig<T>[1];
-} => {
-  let moduleClass: T | undefined;
-  let conf: ModuleWithConfig<T>[1];
-
-  if (Array.isArray(module)) {
-    moduleClass = module[0];
-    conf = module[1];
-  }
-
-  if (!moduleClass) {
-    throw new Error("Module class not found");
-  }
-
-  return { moduleClass, conf: conf || {} };
 };
 
 class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
@@ -136,19 +116,34 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
   init() {
     if (!this.#modulesInitPromises) {
-      this.#modulesInitPromises = new Map();
+      const promises = new Map();
 
-      for (const module of this.#modules.values()) {
+      const _initModule = async (module: Module) => {
         if (!module.moduleName) {
           throw new Error("Module name is required");
         }
 
-        if (this.#modulesInitPromises.has(module.moduleName)) {
-          throw new Error(`Module ${module.moduleName} is already registered`);
+        if (promises.has(module.moduleName) && promises.get(module.moduleName) !== null) {
+          return;
         }
 
-        this.#modulesInitPromises.set(module.moduleName, module[symbolModuleInit]());
+        promises.set(module.moduleName, null);
+
+        module.dependencies?.forEach(dep => {
+          if (!promises.has(dep.moduleName)) {
+            const m = this.get(dep.moduleName);
+            m && _initModule(m);
+          }
+        });
+
+        promises.set(module.moduleName, module[symbolModuleInit]());
+      };
+
+      for (const module of this.#modules.values()) {
+        _initModule(module);
       }
+
+      this.#modulesInitPromises = promises;
     }
 
     return Promise.all(this.#modulesInitPromises.values());
@@ -269,6 +264,10 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     } = {},
     transaction?: Transaction,
   ): Promise<Response> {
+    if (definition.secured && !this.options.accessToken) {
+      throw new Error("Access token is required");
+    }
+
     await this.init();
 
     transaction ??= {
@@ -303,11 +302,7 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       Object.assign(init.headers, this.options.headers);
     }
 
-    if (definition.secured) {
-      if (!this.options.accessToken) {
-        throw new Error("Access token is required");
-      }
-
+    if (this.options.accessToken) {
       init.headers ??= {};
       Object.assign(init.headers, { Authorization: `Bearer ${this.options.accessToken}` });
     }
@@ -334,6 +329,10 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     try {
       res = await fetch(request);
+
+      if (!res) {
+        throw new Error("Response is null");
+      }
 
       if (!res.ok) {
         const type = res.headers.get("content-type");
@@ -381,13 +380,22 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     const hook: Hook<P> = {
       phase,
       order: options.order ?? 0,
-      handleErrors: options.handleErrors ?? true,
+      handleErrors: options.handleErrors ?? false,
       fn: handler,
     };
 
     this.#hooks.add(hook);
 
     return this;
+  }
+
+  removeHook<P extends HookPhase>(phase: P, handler: Hook<P>["fn"]) {
+    const hook = Array.from(this.#hooks).find(h => h.phase === phase && h.fn === handler);
+    if (!hook) {
+      throw new Error("Hook not found");
+    }
+
+    this.#hooks.delete(hook);
   }
 
   async destroy() {

@@ -86,10 +86,6 @@ ModelList.prototype.subscribe = function <T extends ModelList<typeof Model>>(
       (event.operation === "delete" && this.some(item => event.ids.includes(String(item._id))));
 
     if (shouldUpdate) {
-      if (event.operation === "delete") {
-        // Remove the items from the list
-        this.remove(event.ids);
-      }
       handleModelUpdate(event);
     }
   };
