@@ -4,7 +4,7 @@
   "roots": ["<rootDir>/src"],
   "testMatch": ["**/__tests__/**/*.+(ts|tsx|js)", "**/?(*.)+(spec|test).+(ts|tsx|js)"],
   "moduleNameMapper": {
-    "^@graphand/client$": "<rootDir>/../client/src"
+    "^@graphand/client$": "<rootDir>/../main/src"
   },
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
 }
