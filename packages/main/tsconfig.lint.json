@@ -3,6 +3,6 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "include": ["src", "wallaby.js", "vite.config.ts"],
+  "include": ["src", "wallaby.js", "vite.config.ts", "jest-setup.ts"],
   "exclude": ["node_modules", "dist"]
 }

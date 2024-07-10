@@ -4,6 +4,12 @@ import Client from "./lib/Client";
 import { ModelList } from "@graphand/core";
 import { Model } from "@graphand/core";
 
+declare module "@graphand/core" {
+  export interface TransactionCtx {
+    disableCache?: boolean;
+  }
+}
+
 export type InferModelFromList<T extends ModelList<typeof Model>> = T extends ModelList<infer M> ? M : typeof Model;
 
 // Define a base type for classes with constructors

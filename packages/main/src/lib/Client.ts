@@ -9,11 +9,24 @@ import {
 } from "../types";
 import { ClientOptions, ModuleConstructor } from "../types";
 import Module, { symbolModuleDestroy, symbolModuleInit } from "./Module";
-import { Adapter, ControllerDefinition, CoreError, ErrorCodes, Model } from "@graphand/core";
+import {
+  Adapter,
+  ControllerDefinition,
+  CoreError,
+  ErrorCodes,
+  Field,
+  getFieldsPathsFromPath,
+  Model,
+  TransactionCtx,
+  ValidationError,
+  ValidationFieldError,
+  ValidationValidatorError,
+  Validator,
+} from "@graphand/core";
 import ClientError from "./ClientError";
 import ClientAdapter from "./ClientAdapter";
 import BehaviorSubject from "./BehaviorSubject";
-import { decodeClientModule } from "./utils";
+import { decodeClientModule, parseErrorFromJSON } from "./utils";
 
 const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   endpoint: "api.graphand.dev",
@@ -257,6 +270,7 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
   async execute(
     definition: ControllerDefinition,
     opts: {
+      ctx?: TransactionCtx;
       path?: Record<string, string>;
       query?: Record<string, string>;
       init?: RequestInit;
@@ -337,13 +351,12 @@ class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       if (!res.ok) {
         const type = res.headers.get("content-type");
         if (type?.includes("application/json")) {
-          const json = await res.json().then(r => r.error);
-
-          if (json?.type === "ValidationError") {
-            // TODO: parse the json error
+          const e = await res.json().then(r => r.error);
+          if (e) {
+            throw parseErrorFromJSON(e);
           }
 
-          throw new ClientError(json);
+          throw new ClientError({ message: "Unknown error" });
         }
 
         if (type?.includes("text/plain")) {

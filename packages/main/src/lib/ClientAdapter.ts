@@ -18,7 +18,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   static client: Client;
 
   #instancesMap: Map<string, ModelInstance<T>>;
-  #updaterSubject: Subject<ModelUpdaterEvent>;
+  #cacheSubject: Subject<ModelUpdaterEvent>;
   #eventSubject: Subject<ModelCrudEvent<"create" | "update" | "delete", T>>;
 
   runValidators = false;
@@ -26,28 +26,37 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   constructor(data: any) {
     super(data);
 
-    this.#instancesMap = new Map();
-    this.#updaterSubject = new Subject();
+    this.#instancesMap = new Map(); // The map of cached instances
+
+    // The subject for cache operations (fetch, create, update, delete).
+    // These events are filtered by the cache and are emitted only when the cache is updated.
+    // This subject is used to subscribe to local cache updates.
+    this.#cacheSubject = new Subject();
+
+    // The subject for all model CRUD events (dispatched locally or received from the server via websockets).
+    // These events are not filtered by the cache.
     this.#eventSubject = new Subject();
 
     this.#eventSubject.subscribe(event => {
-      if (!event.data) {
-        return;
-      }
-
       if (event.operation === "create" || event.operation === "update") {
+        if (!event.data) {
+          return;
+        }
+
         const mappedList = event.data.map(r => this.mapOrNew(r));
         const updated = mappedList
           .filter(r => r.updated)
           .map(r => r.mapped?._id)
           .filter(Boolean) as Array<string>;
 
-        if (updated?.length) {
-          this.#updaterSubject.next({
-            ids: updated,
-            operation: event.operation,
-          });
+        if (!updated?.length) {
+          return;
         }
+
+        this.#cacheSubject.next({
+          ids: updated,
+          operation: event.operation,
+        });
       } else if (event.operation === "delete") {
         const updated = event.ids
           .map(_id => {
@@ -60,12 +69,14 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
           })
           .filter(Boolean) as Array<string>;
 
-        if (updated?.length) {
-          this.#updaterSubject.next({
-            ids: updated,
-            operation: event.operation,
-          });
+        if (!updated?.length) {
+          return;
         }
+
+        this.#cacheSubject.next({
+          ids: updated,
+          operation: event.operation,
+        });
       }
     });
   }
@@ -80,10 +91,11 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   }
 
   fetcher: AdapterFetcher<T> = {
-    count: async ([query]) => {
+    count: async ([query], ctx) => {
       this.checkClient();
 
       const res = await this.client.execute(controllersMap.modelCount, {
+        ctx,
         path: {
           model: this.model.slug,
         },
@@ -100,24 +112,25 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
       this.checkClient();
 
       if (this.model.isSingle()) {
-        if (this.#instancesMap.size) {
+        if (this.#instancesMap.size && !ctx?.disableCache) {
           return this.#instancesMap.values().next()?.value;
         }
 
         const res = await this.client.execute(controllersMap.modelRead, {
+          ctx,
           path: {
             model: this.model.slug,
           },
         });
 
-        const json: ModelJSON<T> = await res.json();
+        const json: ModelJSON<T> = await res.json().then(r => r.data);
 
         // await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
 
         const { mapped, updated } = this.mapOrNew(json);
 
         if (updated && mapped?._id) {
-          this.#updaterSubject.next({
+          this.#cacheSubject.next({
             ids: [mapped._id],
             operation: "fetch",
           });
@@ -128,17 +141,20 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
 
       if (typeof query === "string") {
         let keyField: string;
-        if (this.#instancesMap.has(query)) {
-          return this.#instancesMap.get(query);
-        } else if ((keyField = this.model.getKeyField())) {
-          const arr = Array.from(this.#instancesMap.values());
-          const found = arr.find(r => r.get(keyField) === query);
-          if (found) {
-            return found;
+        if (!ctx?.disableCache) {
+          if (this.#instancesMap.has(query)) {
+            return this.#instancesMap.get(query);
+          } else if ((keyField = this.model.getKeyField())) {
+            const arr = Array.from(this.#instancesMap.values());
+            const found = arr.find(r => r.get(keyField) === query);
+            if (found) {
+              return found;
+            }
           }
         }
 
         const res = await this.client.execute(controllersMap.modelRead, {
+          ctx,
           path: {
             id: query,
             model: this.model.slug,
@@ -147,12 +163,12 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
 
         // await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
 
-        const json: ModelJSON<T> = await res.json();
+        const json: ModelJSON<T> = await res.json().then(r => r.data);
 
         const { mapped, updated } = this.mapOrNew(json);
 
         if (updated && mapped?._id) {
-          this.#updaterSubject.next({
+          this.#cacheSubject.next({
             ids: [mapped._id],
             operation: "fetch",
           });
@@ -181,18 +197,19 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
       let _fromIdsList: Array<ModelInstance<T>> = [];
       const _canUseIds = canUseIds(query);
 
-      if (_canUseIds) {
-        const existingIds = query.ids?.filter(id => this.#instancesMap.has(id)) as Array<string>;
-        _fromIdsList = existingIds.map(id => this.#instancesMap.get(id)) as Array<ModelInstance<T>>;
+      if (_canUseIds && !ctx?.disableCache) {
+        const cachedIds = query.ids?.filter(id => this.#instancesMap.has(id)) || [];
+        _fromIdsList = cachedIds.map(id => this.#instancesMap.get(id)) as Array<ModelInstance<T>>;
 
         if (_fromIdsList.length === query.ids?.length) {
           return new ModelList(this.model, _fromIdsList);
         }
 
-        query.ids = query.ids?.filter(id => !existingIds.includes(id)) as Array<string>;
+        query.ids = query.ids?.filter(id => !cachedIds.includes(id)) as Array<string>;
       }
 
       const res = await this.client.execute(controllersMap.modelQuery, {
+        ctx,
         path: {
           model: this.model.slug,
         },
@@ -213,7 +230,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
         .filter(Boolean) as Array<string>;
 
       if (updated?.length) {
-        this.#updaterSubject.next({
+        this.#cacheSubject.next({
           ids: updated,
           operation: "fetch",
         });
@@ -237,6 +254,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
       this.checkClient();
 
       const res = await this.client.execute(controllersMap.modelCreate, {
+        ctx,
         path: {
           model: this.model.slug,
         },
@@ -248,7 +266,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
       const json: ModelJSON<T> = await res.json().then(r => r.data);
 
       if (json._id) {
-        this.#eventSubject.next({
+        this.dispatch({
           operation: "create",
           model: this.model.slug,
           ids: [json._id],
@@ -258,10 +276,11 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
 
       return this.mapOrNew(json).mapped as ModelInstance<T>;
     },
-    createMultiple: async ([payload]) => {
+    createMultiple: async ([payload], ctx) => {
       this.checkClient();
 
       const res = await this.client.execute(controllersMap.modelCreate, {
+        ctx,
         path: {
           model: this.model.slug,
         },
@@ -272,7 +291,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
 
       const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
 
-      this.#eventSubject.next({
+      this.dispatch({
         operation: "create",
         model: this.model.slug,
         ids: json.map(r => r._id) as Array<string>,
@@ -286,6 +305,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
 
       if (typeof query === "string") {
         const res = await this.client.execute(controllersMap.modelUpdate, {
+          ctx,
           path: {
             id: query,
             model: this.model.slug,
@@ -298,7 +318,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
         const json: ModelJSON<T> = await res.json().then(r => r.data);
 
         if (json._id) {
-          this.#eventSubject.next({
+          this.dispatch({
             operation: "update",
             model: this.model.slug,
             ids: [json._id],
@@ -323,7 +343,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
           data: list.map(l => l.toJSON() as ModelJSON<T>),
         };
 
-        this.#eventSubject.next(event);
+        this.dispatch(event);
 
         const first = list?.[0] as ModelInstance<T>;
 
@@ -336,10 +356,11 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
         return this.mapOrNew(json).mapped as ModelInstance<T>;
       }
     },
-    updateMultiple: async ([query, update]) => {
+    updateMultiple: async ([query, update], ctx) => {
       this.checkClient();
 
       const res = await this.client.execute(controllersMap.modelUpdate, {
+        ctx,
         path: {
           id: "",
           model: this.model.slug,
@@ -351,7 +372,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
 
       const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
 
-      this.#eventSubject.next({
+      this.dispatch({
         operation: "update",
         model: this.model.slug,
         ids: json.map(l => l._id) as Array<string>,
@@ -367,6 +388,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
 
       if (typeof query === "string") {
         const res = await this.client.execute(controllersMap.modelDelete, {
+          ctx,
           path: {
             id: query,
             model: this.model.slug,
@@ -393,20 +415,23 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
       }
 
       if (id) {
-        this.#eventSubject.next({
+        this.dispatch({
           operation: "delete",
           model: this.model.slug,
           ids: [id],
           data: null,
         });
+
+        this.instancesMap.delete(id);
       }
 
       return Boolean(id);
     },
-    deleteMultiple: async ([query]) => {
+    deleteMultiple: async ([query], ctx) => {
       this.checkClient();
 
       const res = await this.client.execute(controllersMap.modelDelete, {
+        ctx,
         path: {
           id: "",
           model: this.model.slug,
@@ -416,24 +441,30 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
         },
       });
 
-      const json: Array<string> = await res.json().then(r => r.data);
+      const ids: Array<string> = await res.json().then(r => r.data);
 
-      if (json?.length) {
-        this.#eventSubject.next({
+      if (ids?.length) {
+        this.dispatch({
           operation: "delete",
           model: this.model.slug,
-          ids: json,
+          ids,
           data: null,
         });
+
+        ids.forEach(id => this.instancesMap.delete(id));
       }
 
-      return json;
+      return ids;
     },
   };
 
   get client(): Client {
     const { constructor } = Object.getPrototypeOf(this);
     return constructor.client;
+  }
+
+  get instancesMap() {
+    return this.#instancesMap;
   }
 
   mapOrNew(payload: ModelJSON<T>) {
@@ -450,7 +481,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
 
     if (mapped) {
       const newUpdated = payload._updatedAt && new Date(payload._updatedAt);
-      const oldUpdated = mapped._updatedAt && new Date(mapped._updatedAt);
+      const oldUpdated = mapped._updatedAt;
       if ((newUpdated && !oldUpdated) || (newUpdated && oldUpdated && newUpdated > oldUpdated)) {
         updated = true;
         mapped.setData(payload);
@@ -465,7 +496,7 @@ class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   }
 
   subscribe(observer: SubjectObserver<ModelUpdaterEvent>) {
-    return this.#updaterSubject.subscribe(observer);
+    return this.#cacheSubject.subscribe(observer);
   }
 
   dispatch(event: ModelCrudEvent<"create" | "update" | "delete", T>) {
