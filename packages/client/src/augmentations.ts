@@ -41,18 +41,18 @@ Model.subscribe = function <T extends typeof Model>(
 
 Model.prototype.subscribe = function <T extends ModelInstance>(
   this: T,
-  observer: SubjectObserver<ModelUpdaterEvent>,
+  observer: (_previousData: ReturnType<T["getData"]>, _event: ModelUpdaterEvent) => void,
 ): ReturnType<ClientAdapter<InferModel<T>>["subscribe"]> {
-  const adapter = this.model().getAdapter() as ClientAdapter<InferModel<T>>;
-  const _observer: SubjectObserver<ModelUpdaterEvent> = (event: ModelUpdaterEvent) => {
-    if (!this._id || !event.ids.includes(this._id)) {
+  let previousData = this.getData();
+
+  return this.model().subscribe(event => {
+    if (!this._id || !event.ids.includes(this._id) || !["update", "delete"].includes(event.operation)) {
       return;
     }
 
-    observer(event);
-  };
-
-  return adapter.subscribe(_observer);
+    observer.apply(this, [previousData, event]);
+    previousData = this.getData();
+  });
 };
 
 ModelList.prototype.subscribe = function <T extends ModelList<typeof Model>>(

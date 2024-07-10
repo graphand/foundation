@@ -270,10 +270,7 @@ export type ControllerDefinition = {
   secured: boolean;
 };
 
-export type ModelCrudEvent<
-  T extends "create" | "update" | "delete" = "create" | "update" | "delete",
-  M extends typeof Model = typeof Model,
-> = {
+export type ModelCrudEvent<T extends "create" | "update" | "delete" = any, M extends typeof Model = typeof Model> = {
   operation: T;
   model: M["slug"];
   ids: Array<string>;

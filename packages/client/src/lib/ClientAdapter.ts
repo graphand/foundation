@@ -38,12 +38,27 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     this.#eventSubject = new Subject();
 
     this.#eventSubject.subscribe(event => {
+      if (!event.ids?.length) {
+        return;
+      }
+
+      const updater: ModelUpdaterEvent = {
+        operation: event.operation,
+        ids: event.ids,
+      };
+
       if (event.operation === "create" || event.operation === "update") {
         if (!event.data) {
           return;
         }
 
-        const mappedList = event.data.map(r => this.mapOrNew(r));
+        let data = event.data;
+
+        if (event.operation === "create") {
+          data = data.filter(r => !this.instancesMap.has(r._id));
+        }
+
+        const mappedList = data.map(r => this.mapOrNew(r));
         const updated = mappedList
           .filter(r => r.updated)
           .map(r => r.mapped?._id)
@@ -53,31 +68,14 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
           return;
         }
 
-        this.#cacheSubject.next({
-          ids: updated,
-          operation: event.operation,
-        });
+        updater.ids = updated;
       } else if (event.operation === "delete") {
-        const updated = event.ids
-          .map(_id => {
-            if (!this.#instancesMap.has(_id)) {
-              return false;
-            }
+        event.ids.forEach(id => this.#instancesMap.delete(id));
 
-            this.#instancesMap.delete(_id);
-            return _id;
-          })
-          .filter(Boolean) as Array<string>;
-
-        if (!updated?.length) {
-          return;
-        }
-
-        this.#cacheSubject.next({
-          ids: updated,
-          operation: event.operation,
-        });
+        updater.ids = event.ids;
       }
+
+      this.#cacheSubject.next(updater);
     });
   }
 
@@ -500,6 +498,12 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   dispatch(event: ModelCrudEvent<"create" | "update" | "delete", T>) {
+    if (this.model.slug !== event.model) {
+      throw new ClientError({
+        message: `Invalid model ${event.model} for adapter ${this.model.slug}`,
+      });
+    }
+
     this.#eventSubject.next(event);
   }
 

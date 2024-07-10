@@ -1,6 +1,6 @@
 import { Client } from "./Client";
 import { ClientAdapter } from "./ClientAdapter";
-import { FieldTypes, Model, modelDecorator, ValidationError } from "@graphand/core";
+import { FieldTypes, Model, ModelCrudEvent, modelDecorator, ValidationError } from "@graphand/core";
 
 describe("ClientAdapter", () => {
   @modelDecorator()
@@ -250,6 +250,17 @@ describe("ClientAdapter", () => {
     expect(result).toBeInstanceOf(MockModelSingle);
     expect(result?.get("_id")).toBe("single");
     expect(result?.get("name")).toBe("SingleTest");
+  });
+
+  it("should throw error when dispatching an event for the wrong model", () => {
+    const event: ModelCrudEvent = {
+      operation: "create",
+      model: "otherModel",
+      ids: ["123"],
+      data: [{ _id: "123" }],
+    };
+
+    expect(() => adapter.dispatch(event)).toThrow("Invalid model");
   });
 
   it("should dispatch events on create", async () => {
