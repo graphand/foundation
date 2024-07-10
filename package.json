@@ -3,6 +3,11 @@
   "private": false,
   "homepage": "https://github.com/graphand/monorepo",
   "repository": "graphand/monorepo",
+  "author": {
+    "name": "Graphand",
+    "email": "contact@graphand.com",
+    "url": "https://graphand.com"
+  },
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
