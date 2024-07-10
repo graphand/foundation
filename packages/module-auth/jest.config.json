@@ -3,8 +3,8 @@
   "testEnvironment": "node",
   "roots": ["<rootDir>/src"],
   "testMatch": ["**/__tests__/**/*.+(ts|tsx|js)", "**/?(*.)+(spec|test).+(ts|tsx|js)"],
+  "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
   "moduleNameMapper": {
-    "^@graphand/client$": "<rootDir>/../main/src"
-  },
-  "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+    "^@/(.*)$": "<rootDir>/src/$1"
+  }
 }

@@ -1,7 +1,11 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "baseUrl": ".",
+    "outDir": "dist",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src", "wallaby.js", "vite.config.ts", "jest-setup.ts"],
   "exclude": ["node_modules", "dist"]

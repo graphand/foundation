@@ -118,7 +118,7 @@ class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boo
         adapter.dispatch(event);
       });
 
-      socket.on("upload:event", (event: UploadEvent) => {
+      socket.on("upload:event", (_event: UploadEvent) => {
         console.log("ok");
         // this.__uploadEventsSubject?.next(event);
       });

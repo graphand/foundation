@@ -1,9 +1,10 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "outDir": "dist",
     "paths": {
-      "@graphand/client": ["../main/src"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"],

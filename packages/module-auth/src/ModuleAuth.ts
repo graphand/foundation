@@ -13,7 +13,7 @@ class ModuleAuth extends Module<{}> {
     providerOrData: LoginData<P, M> | P,
     methodOrData?: Omit<LoginData<P, M>, "provider"> | M,
     data?: Omit<LoginData<P, M>, "provider" | "method">,
-    query?: Record<string, string>,
+    _query?: Record<string, string>,
   ) {
     let body: LoginData<P, M>;
 
