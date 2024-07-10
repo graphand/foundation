@@ -8,7 +8,7 @@ export default defineConfig({
     tsconfigPaths(),
     dts({
       insertTypesEntry: true,
-      outDir: "dist/types",
+      outDir: "dist",
     }),
   ],
   build: {
