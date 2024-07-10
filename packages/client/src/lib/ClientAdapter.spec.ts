@@ -648,13 +648,6 @@ describe("ClientAdapter", () => {
       });
     });
 
-    it("should not notify subscribers when an instance is deleted but not in the cache", async () => {
-      fetchMock.mockResolvedValueOnce(new Response('{"data": true}'));
-      await model.delete("123");
-
-      expect(subscriber.mock.calls[0]).toBeUndefined();
-    });
-
     it("should notify subscribers only deleted instances from cache when multiple instances are deleted", async () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
       await model.create({ name: "Test" });

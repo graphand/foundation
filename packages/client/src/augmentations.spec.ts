@@ -3,7 +3,7 @@ import { FieldTypes, Model, ModelCrudEvent, modelDecorator, ModelInstance } from
 import { Client } from "./lib/Client";
 import { ClientAdapter } from "./lib/ClientAdapter";
 
-describe.only("augmentations", () => {
+describe("augmentations", () => {
   @modelDecorator()
   class TestModel extends Model {
     static slug = "testModel";
@@ -112,6 +112,7 @@ describe.only("augmentations", () => {
       const observer = jest.fn();
       model.subscribe(observer);
 
+      adapter.instancesMap.set("123", model.hydrate({ _id: "123" }));
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["123"] };
       adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
 
@@ -489,6 +490,7 @@ describe.only("augmentations", () => {
     it("should call the observer when the instance is deleted", () => {
       const observer = jest.fn();
       instance.subscribe(observer);
+      adapter.instancesMap.set(instance._id, instance);
 
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["test-id"] };
       adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
@@ -567,6 +569,7 @@ describe.only("augmentations", () => {
     it("should handle deleteMultiple events that include the instance", () => {
       const observer = jest.fn();
       instance.subscribe(observer);
+      adapter.instancesMap.set(instance._id, instance);
 
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["test-id", "other-id"] };
       adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
@@ -676,7 +679,7 @@ describe.only("augmentations", () => {
         const body = JSON.stringify({ data: { ...instance.getData(), ...update, _updatedAt: new Date().toJSON() } });
         fetchSpy.mockResolvedValueOnce(new Response(body));
         await instance.update({ $set: update });
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 0));
       }
 
       expect(observer).toHaveBeenCalledTimes(3);

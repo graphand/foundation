@@ -70,9 +70,14 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
         updater.ids = updated;
       } else if (event.operation === "delete") {
-        event.ids.forEach(id => this.#instancesMap.delete(id));
+        const ids = event.ids.filter(id => this.#instancesMap.has(id));
+        ids.forEach(id => this.#instancesMap.delete(id));
 
-        updater.ids = event.ids;
+        updater.ids = ids;
+      }
+
+      if (!updater.ids?.length) {
+        return;
       }
 
       this.#cacheSubject.next(updater);
