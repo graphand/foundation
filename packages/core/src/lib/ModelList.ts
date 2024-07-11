@@ -28,10 +28,10 @@ export class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
   }
 
   /**
-   * Returns the query used to fetch the list (JSONQuery).
+   * Returns the query used to fetch the list (JSONQuery), or the current list ids if no query is provided.
    */
   get query() {
-    return this.#query || {};
+    return this.#query || { ids: this.getIds() };
   }
 
   /**
@@ -60,10 +60,7 @@ export class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
     for (const i of this) {
       const _updatedTime = i._updatedAt?.getTime() ?? i._createdAt?.getTime();
 
-      if (
-        _maxUpdatedTime === undefined ||
-        (_updatedTime !== undefined && _updatedTime > _maxUpdatedTime)
-      ) {
+      if (_maxUpdatedTime === undefined || (_updatedTime !== undefined && _updatedTime > _maxUpdatedTime)) {
         _maxUpdated = i;
         _maxUpdatedTime = _updatedTime;
       }
@@ -80,7 +77,7 @@ export class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
     this.#reloadPromise ??= new Promise<void>(async (resolve, reject) => {
       try {
         const { model, query } = this;
-        const list = (await model.getList(query)) as ModelList<T>;
+        const list = await model.getList(query);
         this.splice(0, this.length, ...list);
         this.#count = list.count;
         resolve();
@@ -127,6 +124,11 @@ export class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
     };
   }
 
+  /**
+   * Removes the items with the given ids from the list.
+   * @param ids - An array of ids to remove from the list.
+   * @returns The current list.
+   */
   remove(ids: Array<string> = []) {
     this.splice(0, this.length, ...this.filter(i => !ids.includes(i._id)));
     return this;

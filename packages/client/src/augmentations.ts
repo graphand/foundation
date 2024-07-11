@@ -3,40 +3,11 @@ import { ClientAdapter } from "./lib/ClientAdapter";
 import { InferModelFromList, ModelUpdaterEvent, SubjectObserver } from "./types";
 import { Client } from "./lib/Client";
 
-declare module "@graphand/core" {
-  export interface Model {
-    subscribe: <T extends ModelInstance>(
-      this: T,
-      _observer: SubjectObserver<ModelUpdaterEvent>,
-    ) => ReturnType<ClientAdapter<InferModel<T>>["subscribe"]>;
-  }
-
-  export namespace Model {
-    export function subscribe<T extends typeof Model>(
-      this: T,
-      _observer: SubjectObserver<ModelUpdaterEvent>,
-    ): ReturnType<ClientAdapter<T>["subscribe"]>;
-
-    export function clearCache<T extends typeof Model>(this: T): T;
-
-    export function getClient<T extends typeof Model>(this: T): Client;
-  }
-
-  export interface ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
-    subscribe: <T extends ModelList<typeof Model>>(
-      this: T,
-      _observer: SubjectObserver<ModelUpdaterEvent>,
-      _onLoadingChange?: (_loading: boolean) => void,
-    ) => ReturnType<ClientAdapter<InferModelFromList<T>>["subscribe"]>;
-  }
-}
-
 Model.subscribe = function <T extends typeof Model>(
   this: T,
   observer: SubjectObserver<ModelUpdaterEvent>,
 ): ReturnType<ClientAdapter<T>["subscribe"]> {
-  const adapter = this.getAdapter() as ClientAdapter<T>;
-  return adapter.subscribe(observer);
+  return (this.getAdapter() as ClientAdapter<T>).subscribe(observer);
 };
 
 Model.prototype.subscribe = function <T extends ModelInstance>(
@@ -46,61 +17,118 @@ Model.prototype.subscribe = function <T extends ModelInstance>(
   let previousData = this.getData();
 
   return this.model().subscribe(event => {
-    if (!this._id || !event.ids.includes(this._id) || !["update", "delete"].includes(event.operation)) {
-      return;
+    if (this._id && event.ids.includes(this._id) && ["update", "delete"].includes(event.operation)) {
+      observer.call(this, previousData, event);
+      previousData = this.getData();
     }
-
-    observer.apply(this, [previousData, event]);
-    previousData = this.getData();
   });
+};
+
+ModelList.prototype.getKey = function <T extends ModelList<typeof Model>>(this: T): string {
+  const map = new Map<string, number>();
+
+  for (const i of this) {
+    const _age = i.__getAge();
+    map.set(i._id, Math.max(_age, map.get(i._id) || 0));
+  }
+
+  return Array.from(map.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(p => p.join(":"))
+    .join(",");
+};
+
+ModelList.prototype.getMostRecent = function <T extends ModelList<typeof Model>>(this: T) {
+  return this.reduce(
+    (mostRecent, current) => {
+      const currentAge = current.__getAge();
+      return !mostRecent || currentAge > mostRecent.__getAge() ? current : mostRecent;
+    },
+    undefined as ModelInstance | undefined,
+  );
 };
 
 ModelList.prototype.subscribe = function <T extends ModelList<typeof Model>>(
   this: T,
   observer: SubjectObserver<ModelUpdaterEvent>,
-  onLoadingChange?: (_loading: boolean) => void,
+  opts?: {
+    onLoadingChange?: (_loading: boolean) => void;
+    onError?: (_error: Error) => void;
+    noReload?: boolean;
+  },
 ): ReturnType<ClientAdapter<InferModelFromList<T>>["subscribe"]> {
-  let lastUpdateMetadata: { id?: string; timestamp?: number } = {};
+  const { onLoadingChange, onError, noReload } = opts ?? {};
+  let state = this.getCurrentState();
 
-  const handleModelUpdate = async (event: ModelUpdaterEvent) => {
+  const handleUpdate = async (event: ModelUpdaterEvent) => {
     onLoadingChange?.(true);
 
     try {
-      await this.reload();
+      if (!noReload) {
+        await this.reload();
+      } else if (event.operation === "delete") {
+        this.remove(event.ids);
+      }
 
-      const lastUpdated = this.lastUpdated;
-      const lastUpdatedTimestamp = (lastUpdated?._updatedAt ?? lastUpdated?._createdAt)?.getTime();
-
-      if (lastUpdated?._id !== lastUpdateMetadata.id || lastUpdatedTimestamp !== lastUpdateMetadata.timestamp) {
-        lastUpdateMetadata = { id: lastUpdated?._id, timestamp: lastUpdatedTimestamp };
+      const newState = this.getCurrentState();
+      if (this.hasStateChanged(state, newState)) {
+        state = newState;
         observer(event);
       }
+    } catch (e) {
+      onError?.(e as Error);
     } finally {
       onLoadingChange?.(false);
     }
   };
 
-  const modelUpdateObserver: SubjectObserver<ModelUpdaterEvent> = (event: ModelUpdaterEvent) => {
-    const shouldUpdate =
+  const shouldUpdate = (event: ModelUpdaterEvent) => {
+    return (
       ["create", "update"].includes(event.operation) ||
-      (event.operation === "delete" && this.some(item => event.ids.includes(String(item._id))));
-
-    if (shouldUpdate) {
-      handleModelUpdate(event);
-    }
+      (event.operation === "delete" && this.some(item => event.ids.includes(String(item._id))))
+    );
   };
 
-  const adapter = this.model.getAdapter() as ClientAdapter<InferModelFromList<T>>;
-  return adapter.subscribe(modelUpdateObserver);
+  return this.model.subscribe(event => {
+    if (shouldUpdate(event)) {
+      handleUpdate(event);
+    }
+  });
+};
+
+Model.prototype.__getAge = function <T extends ModelInstance>(this: T): number {
+  return Math.max(this.__fetchedAt?.getTime() ?? 0, this._updatedAt?.getTime() ?? 0, this._createdAt?.getTime() ?? 0);
 };
 
 Model.clearCache = function <T extends typeof Model>(this: T): T {
-  const adapter = this.getAdapter() as ClientAdapter<T>;
-  adapter.clearInstances();
+  (this.getAdapter() as ClientAdapter<T>).clearInstances();
   return this;
 };
 
 Model.getClient = function <T extends typeof Model>(this: T): Client {
-  const adapter = this.getAdapter() as ClientAdapter<T>;
-  return adapter.client;
+  return (this.getAdapter() as ClientAdapter<T>).client;
+};
+
+// Helper methods for ModelList
+ModelList.prototype.getCurrentState = function <T extends ModelList<typeof Model>>(this: T) {
+  const mostRecent = this.getMostRecent();
+  return {
+    lastId: mostRecent?._id,
+    length: this.length,
+    lastAge: mostRecent?.__getAge(),
+    key: this.getKey(),
+  };
+};
+
+ModelList.prototype.hasStateChanged = function <T extends ModelList<typeof Model>>(
+  this: T,
+  oldState: ReturnType<T["getCurrentState"]>,
+  newState: ReturnType<T["getCurrentState"]>,
+) {
+  return (
+    oldState.lastId !== newState.lastId ||
+    oldState.length !== newState.length ||
+    oldState.lastAge !== newState.lastAge ||
+    oldState.key !== newState.key
+  );
 };

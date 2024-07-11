@@ -1,5 +1,5 @@
 import { ModelUpdaterEvent } from "@/types";
-import { FieldTypes, Model, ModelCrudEvent, modelDecorator, ModelInstance } from "@graphand/core";
+import { FieldTypes, Model, ModelCrudEvent, modelDecorator, ModelInstance, ModelList } from "@graphand/core";
 import { Client } from "./lib/Client";
 import { ClientAdapter } from "./lib/ClientAdapter";
 
@@ -19,11 +19,20 @@ describe("augmentations", () => {
   let client: Client;
   let model: typeof TestModel;
   let adapter: ClientAdapter;
+  const fetchSpy = jest.spyOn(global, "fetch");
 
   beforeEach(() => {
     client = new Client([], { accessToken: "test-token", project: "test-project" });
     model = client.getModel(TestModel);
     adapter = model.getAdapter() as ClientAdapter;
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  afterAll(() => {
+    fetchSpy.mockRestore();
   });
 
   describe("Model.subscribe", () => {
@@ -175,11 +184,14 @@ describe("augmentations", () => {
         { operation: "delete", ids: ["1"] },
       ];
 
-      events.forEach(event => {
+      events.forEach((event, i) => {
         adapter.dispatch({
           ...event,
           model: model.slug,
-          data: event.operation === "delete" ? null : [{ _id: event.ids[0], _updatedAt: JSON.stringify(new Date()) }],
+          data:
+            event.operation === "delete"
+              ? null
+              : [{ _id: event.ids[0], _updatedAt: new Date(Date.now() + i + 1).toJSON() }],
         } as ModelCrudEvent<any, typeof model>);
       });
 
@@ -407,7 +419,6 @@ describe("augmentations", () => {
       const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
       adapter.instancesMap.set("1", instance1);
 
-      const fetchSpy = jest.spyOn(global, "fetch");
       fetchSpy.mockResolvedValue(new Response('{"data": {"_id": "1", "someField": "updated"}}', { status: 200 }));
 
       model.clearCache();
@@ -417,8 +428,6 @@ describe("augmentations", () => {
       expect(fetchSpy).toHaveBeenCalled();
       expect(refetchedInstance?.get("someField")).toBe("updated");
       expect(adapter.instancesMap.size).toBe(1);
-
-      fetchSpy.mockRestore();
     });
   });
 
@@ -634,8 +643,8 @@ describe("augmentations", () => {
     });
 
     it("should pass the previous data and event to the observer", async () => {
-      const spyFetch = jest.spyOn(global, "fetch");
-      spyFetch.mockResolvedValueOnce(new Response('{"data": {"_id": "test-id", "someField": "test123"}}'));
+      const body1 = JSON.stringify({ data: { _id: "test-id", someField: "test123" } });
+      fetchSpy.mockResolvedValueOnce(new Response(body1));
 
       const i = await model.get("test-id");
       expect(i.someField).toBe("test123");
@@ -643,9 +652,10 @@ describe("augmentations", () => {
       const observer = jest.fn();
       i.subscribe(observer);
 
-      spyFetch.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "test-id", "someField": "updated", "_updatedAt": "2023-05-01T10:00:00.000Z"}}'),
-      );
+      const body2 = JSON.stringify({
+        data: { _id: "test-id", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() },
+      });
+      fetchSpy.mockResolvedValueOnce(new Response(body2));
       await i.update({ $set: { someField: "updated" } });
       expect(i.someField).toBe("updated");
 
@@ -654,14 +664,15 @@ describe("augmentations", () => {
         { operation: "update", ids: ["test-id"] },
       );
 
-      spyFetch.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "test-id", "someField": "updated2", "_updatedAt": "2023-05-02T10:00:00.000Z"}}'),
-      );
+      const body3 = JSON.stringify({
+        data: { _id: "test-id", someField: "updated2", _updatedAt: new Date(Date.now() + 20).toJSON() },
+      });
+      fetchSpy.mockResolvedValueOnce(new Response(body3));
       await i.update({ $set: { someField: "updated2" } });
       expect(i.someField).toBe("updated2");
 
       expect(observer).toHaveBeenCalledWith(
-        { _id: "test-id", someField: "updated", _updatedAt: "2023-05-01T10:00:00.000Z" },
+        { _id: "test-id", someField: "updated", _updatedAt: expect.any(String) },
         { operation: "update", ids: ["test-id"] },
       );
     });
@@ -675,11 +686,14 @@ describe("augmentations", () => {
 
       const fetchSpy = jest.spyOn(global, "fetch");
 
+      let i = 0;
       for (const update of updateEvents) {
-        const body = JSON.stringify({ data: { ...instance.getData(), ...update, _updatedAt: new Date().toJSON() } });
+        const body = JSON.stringify({
+          data: { ...instance.getData(), ...update, _updatedAt: new Date(Date.now() + i + 1).toJSON() },
+        });
         fetchSpy.mockResolvedValueOnce(new Response(body));
         await instance.update({ $set: update });
-        await new Promise(resolve => setTimeout(resolve, 0));
+        i++;
       }
 
       expect(observer).toHaveBeenCalledTimes(3);
@@ -695,5 +709,628 @@ describe("augmentations", () => {
     });
   });
 
-  describe("ModelList.prototype.subscribe", () => {});
+  describe("ModelList.prototype.subscribe", () => {
+    let modelList: ModelList<typeof TestModel>;
+
+    afterAll(() => {
+      fetchSpy.mockRestore();
+    });
+
+    beforeEach(() => {
+      const i1 = model.hydrate({
+        _id: "1",
+        someField: "value1",
+        _createdAt: new Date().toJSON(),
+        _updatedAt: new Date().toJSON(),
+      });
+      const i2 = model.hydrate({
+        _id: "2",
+        someField: "value2",
+        _createdAt: new Date().toJSON(),
+        _updatedAt: new Date().toJSON(),
+      });
+      adapter.instancesMap.set("1", i1);
+      adapter.instancesMap.set("2", i2);
+      modelList = new ModelList(model, [i1, i2]);
+    });
+
+    // Test 1: Unsubscribe functionality
+    it("should stop calling the observer after unsubscribing", async () => {
+      const observer = jest.fn();
+      const unsubscribe = modelList.subscribe(observer);
+
+      // This line is needed because the list is reloaded when an element is updated within the list and the server is not accessible in tests
+      // So we need to mock the server response to prevent the list update process from being interrupted
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).toHaveBeenCalledTimes(1);
+
+      unsubscribe();
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["2"],
+        data: [{ _id: "2", someField: "updated", _updatedAt: new Date().toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).toHaveBeenCalledTimes(1);
+    });
+
+    // Test 2: Loading state changes
+    it("should call onLoadingChange with correct loading states", async () => {
+      const observer = jest.fn();
+      const onLoadingChange = jest.fn();
+      modelList.subscribe(observer, { onLoadingChange });
+
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      expect(onLoadingChange).toHaveBeenCalledTimes(2);
+      expect(onLoadingChange).toHaveBeenNthCalledWith(1, true);
+      expect(onLoadingChange).toHaveBeenNthCalledWith(2, false);
+      expect(observer).toHaveBeenCalledTimes(1);
+    });
+
+    // Test 3: Multiple subscriptions
+    it("should handle multiple subscriptions independently", async () => {
+      const observer1 = jest.fn();
+      const observer2 = jest.fn();
+      modelList.subscribe(observer1);
+      modelList.subscribe(observer2);
+
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(observer1).toHaveBeenCalledTimes(1);
+      expect(observer2).toHaveBeenCalledTimes(1);
+    });
+
+    // Test 4: Error handling during reload
+    it("should handle errors during reload and call onLoadingChange", async () => {
+      const observer = jest.fn();
+      const onLoadingChange = jest.fn();
+      const onError = jest.fn();
+      modelList.subscribe(observer, { onLoadingChange, onError });
+
+      fetchSpy.mockRejectedValueOnce(new Error("Reload failed"));
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(onLoadingChange).toHaveBeenCalledTimes(2);
+      expect(onLoadingChange).toHaveBeenNthCalledWith(1, true);
+      expect(onLoadingChange).toHaveBeenNthCalledWith(2, false);
+      expect(observer).not.toHaveBeenCalled();
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(new Error("Reload failed"));
+    });
+
+    // Test 5: No changes in list
+    it("should not call the observer if the list hasn't changed after reload", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer);
+
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["3"], // ID not in the list
+        data: [{ _id: "3", someField: "new", _updatedAt: new Date().toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(observer).not.toHaveBeenCalled();
+    });
+
+    // Test 6: Create operation
+    it("should call the observer when a new item is created and added to the list", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer);
+
+      const updatedList = [
+        ...modelList.toJSON().rows,
+        { _id: "3", someField: "new", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() },
+      ];
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: { rows: updatedList, count: updatedList.length } })),
+      );
+
+      adapter.dispatch({
+        operation: "create",
+        model: model.slug,
+        ids: ["3"],
+        data: [{ _id: "3", someField: "new", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(observer).toHaveBeenCalledWith({ operation: "create", ids: ["3"] });
+    });
+
+    // Test 7: Delete operation
+    it("should call the observer when an item is deleted from the list", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer);
+
+      const updatedList = modelList.toJSON().rows.filter(item => item._id !== "2");
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: { rows: updatedList, count: updatedList.length } })),
+      );
+
+      adapter.dispatch({
+        operation: "delete",
+        model: model.slug,
+        ids: ["2"],
+        data: null,
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(observer).toHaveBeenCalledWith({ operation: "delete", ids: ["2"] });
+    });
+
+    // Test 8: Batch updates
+    it("should handle batch updates correctly", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer);
+
+      const updatedList = modelList.toJSON().rows.map(item => ({
+        ...item,
+        someField: item._id === "1" ? "updated1" : "updated2",
+        _updatedAt: new Date(Date.now() + 10).toJSON(),
+      }));
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: { rows: updatedList, count: updatedList.length } })),
+      );
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1", "2"],
+        data: [
+          { _id: "1", someField: "updated1", _updatedAt: new Date(Date.now() + 10).toJSON() },
+          { _id: "2", someField: "updated2", _updatedAt: new Date(Date.now() + 10).toJSON() },
+        ],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["1", "2"] });
+      expect(observer).toHaveBeenCalledTimes(1);
+    });
+
+    // Test 9: Reordering of list
+    it("should call the observer when the list order changes", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer);
+
+      const reorderedList = modelList.toJSON().rows.slice().reverse();
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: { rows: reorderedList, count: reorderedList.length } })),
+      );
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1", "2"],
+        data: [
+          { _id: "1", someField: "value1", _updatedAt: new Date(Date.now() + 10).toJSON() },
+          { _id: "2", someField: "value2", _updatedAt: new Date(Date.now() + 10).toJSON() },
+        ],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["1", "2"] });
+    });
+
+    // Test 10: Performance with large lists
+    it("should handle large lists efficiently", async () => {
+      const largeList = new ModelList(
+        model,
+        Array.from({ length: 1000 }, (_, i) =>
+          model.hydrate({
+            _id: `${i}`,
+            someField: `value${i}`,
+            _createdAt: new Date().toJSON(),
+            _updatedAt: new Date().toJSON(),
+          }),
+        ),
+      );
+
+      const observer = jest.fn();
+      const onLoadingChange = jest.fn();
+      largeList.subscribe(observer, { onLoadingChange });
+
+      const updatedList = largeList
+        .toJSON()
+        .rows.map(item =>
+          item._id === "500" ? { ...item, someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() } : item,
+        );
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: { rows: updatedList, count: updatedList.length } })),
+      );
+
+      const startTime = performance.now();
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["500"],
+        data: [{ _id: "500", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const endTime = performance.now();
+      const executionTime = endTime - startTime;
+
+      expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["500"] });
+      expect(executionTime).toBeLessThan(100); // Assuming less than 100ms is acceptable
+    });
+
+    // Test 11: Basic subscription with noReload option
+    it("should call the observer when an item in the list is updated with noReload option", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer, { noReload: true });
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["1"] });
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    // Test 12: Subscription should not trigger for items not in the list
+    it("should not call the observer for updates to items not in the list with noReload option", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer, { noReload: true });
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["3"],
+        data: [{ _id: "3", someField: "new", _updatedAt: new Date().toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).not.toHaveBeenCalled();
+    });
+
+    // Test 13: Handling create operations with noReload
+    it("should not call the observer for create operations with noReload option", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer, { noReload: true });
+
+      adapter.dispatch({
+        operation: "create",
+        model: model.slug,
+        ids: ["3"],
+        data: [{ _id: "3", someField: "new", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).not.toHaveBeenCalled();
+    });
+
+    // Test 14: Handling delete operations with noReload
+    it("should call the observer for delete operations of items in the list with noReload option", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer, { noReload: true });
+
+      adapter.dispatch({
+        operation: "delete",
+        model: model.slug,
+        ids: ["1"],
+        data: null,
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).toHaveBeenCalledWith({ operation: "delete", ids: ["1"] });
+    });
+
+    // Test 15: Multiple subscriptions with noReload
+    it("should handle multiple subscriptions independently with noReload option", async () => {
+      const observer1 = jest.fn();
+      const observer2 = jest.fn();
+      modelList.subscribe(observer1, { noReload: true });
+      modelList.subscribe(observer2, { noReload: true });
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer1).toHaveBeenCalledWith({ operation: "update", ids: ["1"] });
+      expect(observer2).toHaveBeenCalledWith({ operation: "update", ids: ["1"] });
+    });
+
+    // Test 16: Unsubscribe functionality with noReload
+    it("should stop calling the observer after unsubscribing with noReload option", async () => {
+      const observer = jest.fn();
+      const unsubscribe = modelList.subscribe(observer, { noReload: true });
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).toHaveBeenCalledTimes(1);
+
+      unsubscribe();
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["2"],
+        data: [{ _id: "2", someField: "updated", _updatedAt: new Date(Date.now() + 20).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).toHaveBeenCalledTimes(1);
+    });
+
+    // Test 17: Subscription behavior without noReload option
+    it("should reload the list when an update occurs without noReload option", async () => {
+      const observer = jest.fn();
+      const reloadSpy = jest.spyOn(modelList, "reload").mockResolvedValue();
+      modelList.subscribe(observer);
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(reloadSpy).toHaveBeenCalled();
+      expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["1"] });
+    });
+
+    // Test 18: onLoadingChange callback
+    it("should call onLoadingChange with correct loading states", async () => {
+      const observer = jest.fn();
+      const onLoadingChange = jest.fn();
+      const reloadSpy = jest.spyOn(modelList, "reload").mockResolvedValue();
+      modelList.subscribe(observer, { onLoadingChange });
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(onLoadingChange).toHaveBeenCalledTimes(2);
+      expect(onLoadingChange).toHaveBeenNthCalledWith(1, true);
+      expect(onLoadingChange).toHaveBeenNthCalledWith(2, false);
+      expect(reloadSpy).toHaveBeenCalled();
+      expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["1"] });
+    });
+
+    // Test 19: onError callback
+    it("should call onError when an error occurs during reload", async () => {
+      const observer = jest.fn();
+      const onError = jest.fn();
+      jest.spyOn(modelList, "reload").mockRejectedValue(new Error("Reload failed"));
+      modelList.subscribe(observer, { onError });
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(onError).toHaveBeenCalledWith(new Error("Reload failed"));
+      expect(observer).not.toHaveBeenCalled();
+    });
+
+    // Test 20: Subscription behavior with batch updates
+    it("should handle batch updates correctly with noReload option", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer, { noReload: true });
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1", "2"],
+        data: [
+          { _id: "1", someField: "updated1", _updatedAt: new Date(Date.now() + 10).toJSON() },
+          { _id: "2", someField: "updated2", _updatedAt: new Date(Date.now() + 20).toJSON() },
+        ],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["1", "2"] });
+      expect(observer).toHaveBeenCalledTimes(1);
+    });
+
+    it("should correctly subscribe to a fetched list", async () => {
+      const body = JSON.stringify({
+        data: {
+          rows: [
+            { _id: "3", someField: "value1", _updatedAt: new Date().toJSON() },
+            { _id: "4", someField: "value2", _updatedAt: new Date().toJSON() },
+          ],
+          count: 2,
+        },
+      });
+
+      fetchSpy.mockResolvedValueOnce(new Response(body)); // First mock for the list first fetch
+
+      const fetchedList = await model.getList();
+      const observer = jest.fn();
+      fetchedList.subscribe(observer);
+
+      fetchSpy.mockResolvedValueOnce(new Response(body)); // Second mock for the list reload
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["3"],
+        data: [{ _id: "3", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["3"] });
+    });
+
+    it("should call the observer when an item in the list is updated", async () => {
+      const fetchSpy = jest.spyOn(global, "fetch");
+      const body = JSON.stringify({ data: modelList.toJSON() });
+      fetchSpy.mockResolvedValueOnce(new Response(body));
+
+      const observer = jest.fn();
+      modelList.subscribe(observer);
+
+      await new Promise(resolve => setTimeout(resolve, 1));
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date().toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["1"] });
+    });
+
+    it("should call the observer once for multiple updates in rapid succession", async () => {
+      const fetchSpy = jest.spyOn(global, "fetch");
+      const body = JSON.stringify({ data: modelList.toJSON() });
+      fetchSpy.mockResolvedValue(new Response(body));
+
+      const observer = jest.fn();
+      modelList.subscribe(observer);
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated1", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      adapter.dispatch({
+        operation: "update",
+        model: model.slug,
+        ids: ["1"],
+        data: [{ _id: "1", someField: "updated2", _updatedAt: new Date(Date.now() + 20).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(observer).toHaveBeenCalledTimes(1);
+    });
+
+    it("should call the observer when an item in the list is updated", async () => {
+      const observer = jest.fn();
+      const onLoadingChange = jest.fn();
+      modelList.subscribe(observer, { onLoadingChange });
+
+      const reloadSpy = jest.spyOn(modelList, "reload").mockResolvedValue();
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const event: ModelUpdaterEvent = { operation: "update", ids: ["1"] };
+      adapter.dispatch({
+        ...event,
+        model: model.slug,
+        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0)); // Wait for async operations
+
+      expect(reloadSpy).toHaveBeenCalled();
+      expect(onLoadingChange).toHaveBeenCalledWith(true);
+      expect(onLoadingChange).toHaveBeenCalledWith(false);
+      expect(observer).toHaveBeenCalledWith(event);
+    });
+
+    it("should call the observer when an item is added or removed from the list", async () => {
+      const observer = jest.fn();
+      modelList.subscribe(observer);
+
+      const reloadSpy = jest.spyOn(modelList, "reload").mockImplementation(async () => {
+        modelList.push(model.hydrate({ _id: "3", someField: "value3" }));
+      });
+
+      const createEvent: ModelUpdaterEvent = { operation: "create", ids: ["3"] };
+      adapter.dispatch({
+        ...createEvent,
+        model: model.slug,
+        data: [{ _id: "3", someField: "value3", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() }],
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0)); // Wait for async operations
+
+      expect(reloadSpy).toHaveBeenCalled();
+      expect(observer).toHaveBeenCalledWith(createEvent);
+
+      reloadSpy.mockImplementation(async () => {
+        modelList.remove(["2"]);
+      });
+
+      const deleteEvent: ModelUpdaterEvent = { operation: "delete", ids: ["2"] };
+      adapter.dispatch({
+        ...deleteEvent,
+        model: model.slug,
+        data: null,
+      } as ModelCrudEvent<any, typeof model>);
+
+      await new Promise(resolve => setTimeout(resolve, 0)); // Wait for async operations
+
+      expect(reloadSpy).toHaveBeenCalled();
+      expect(observer).toHaveBeenCalledWith(deleteEvent);
+    });
+  });
 });

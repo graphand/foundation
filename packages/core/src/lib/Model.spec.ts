@@ -1,4 +1,4 @@
-import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils";
+import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev";
 import { Field } from "@/lib/Field";
 import { Model } from "@/lib/Model";
 import { FieldTypes } from "@/enums/field-types";

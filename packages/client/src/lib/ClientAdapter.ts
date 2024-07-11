@@ -17,74 +17,63 @@ import { ClientError } from "./ClientError";
 export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   static client: Client;
 
-  #instancesMap: Map<string, ModelInstance<T>>;
-  #cacheSubject: Subject<ModelUpdaterEvent>;
-  #eventSubject: Subject<ModelCrudEvent<"create" | "update" | "delete", T>>;
+  #instancesMap: Map<string, ModelInstance<T>> = new Map();
+  #cacheSubject: Subject<ModelUpdaterEvent> = new Subject();
+  #eventSubject: Subject<ModelCrudEvent<"create" | "update" | "delete", T>> = new Subject();
 
   runValidators = false;
 
   constructor(data: any) {
     super(data);
 
-    this.#instancesMap = new Map(); // The map of cached instances
+    this.#setupEventSubscription();
+  }
 
-    // The subject for cache operations (fetch, create, update, delete).
-    // These events are filtered by the cache and are emitted only when the cache is updated.
-    // This subject is used to subscribe to local cache updates.
-    this.#cacheSubject = new Subject();
-
-    // The subject for all model CRUD events (dispatched locally or received from the server via websockets).
-    // These events are not filtered by the cache.
-    this.#eventSubject = new Subject();
-
+  #setupEventSubscription(): void {
     this.#eventSubject.subscribe(event => {
-      if (!event.ids?.length) {
-        return;
+      if (!event.ids?.length) return;
+
+      const updater: ModelUpdaterEvent = { operation: event.operation, ids: event.ids };
+
+      switch (event.operation) {
+        case "create":
+        case "update":
+          this.#handleCreateOrUpdate(event as ModelCrudEvent<"create" | "update", T>, updater);
+          break;
+        case "delete":
+          this.#handleDelete(event as ModelCrudEvent<"delete", T>, updater);
+          break;
       }
 
-      const updater: ModelUpdaterEvent = {
-        operation: event.operation,
-        ids: event.ids,
-      };
-
-      if (event.operation === "create" || event.operation === "update") {
-        if (!event.data) {
-          return;
-        }
-
-        let data = event.data;
-
-        if (event.operation === "create") {
-          data = data.filter(r => !this.instancesMap.has(r._id));
-        }
-
-        const mappedList = data.map(r => this.mapOrNew(r));
-        const updated = mappedList
-          .filter(r => r.updated)
-          .map(r => r.mapped?._id)
-          .filter(Boolean) as Array<string>;
-
-        if (!updated?.length) {
-          return;
-        }
-
-        updater.ids = updated;
-      } else if (event.operation === "delete") {
-        const ids = event.ids.filter(id => this.#instancesMap.has(id));
-        ids.forEach(id => this.#instancesMap.delete(id));
-
-        updater.ids = ids;
+      if (updater.ids?.length) {
+        this.#cacheSubject.next(updater);
       }
-
-      if (!updater.ids?.length) {
-        return;
-      }
-
-      this.#cacheSubject.next(updater);
     });
   }
 
-  checkClient() {
+  #handleCreateOrUpdate(event: ModelCrudEvent<"create" | "update", T>, updater: ModelUpdaterEvent): void {
+    if (!event.data) return;
+
+    const data = event.operation === "create" ? event.data.filter(r => !this.#instancesMap.has(r._id)) : event.data;
+
+    const mappedList = data.map(r => this.#processInstancePayload(r));
+    const updated = mappedList
+      .filter(r => r.updated)
+      .map(r => r.mapped?._id)
+      .filter(Boolean) as Array<string>;
+
+    if (updated.length) {
+      updater.ids = updated;
+    }
+  }
+
+  #handleDelete(event: ModelCrudEvent<"delete", T>, updater: ModelUpdaterEvent): void {
+    const ids = event.ids.filter(id => this.#instancesMap.has(id));
+    ids.forEach(id => this.#instancesMap.delete(id));
+    updater.ids = ids;
+  }
+
+  checkClient(): void {
     if (!this.client) {
       throw new ClientError({
         message:
@@ -93,399 +82,294 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     }
   }
 
-  fetcher: AdapterFetcher<T> = {
-    count: async ([query], ctx) => {
-      this.checkClient();
-
-      const res = await this.client.execute(controllersMap.modelCount, {
-        ctx,
-        path: {
-          model: this.model.slug,
-        },
-        init: {
-          body: JSON.stringify(query),
-        },
-      });
-
-      const json: number = await res.json().then(r => r.data);
-
-      return Number(json);
-    },
-    get: async ([query], ctx) => {
-      this.checkClient();
-
-      if (this.model.isSingle()) {
-        if (this.#instancesMap.size && !ctx?.disableCache) {
-          return this.#instancesMap.values().next()?.value;
-        }
-
-        const res = await this.client.execute(controllersMap.modelRead, {
-          ctx,
-          path: {
-            model: this.model.slug,
-          },
-        });
-
-        const json: ModelJSON<T> = await res.json().then(r => r.data);
-
-        // await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
-
-        const { mapped, updated } = this.mapOrNew(json);
-
-        if (updated && mapped?._id) {
-          this.#cacheSubject.next({
-            ids: [mapped._id],
-            operation: "fetch",
-          });
-        }
-
-        return mapped;
-      }
-
-      if (typeof query === "string") {
-        let keyField: string;
-        if (!ctx?.disableCache) {
-          if (this.#instancesMap.has(query)) {
-            return this.#instancesMap.get(query);
-          } else if ((keyField = this.model.getKeyField())) {
-            const arr = Array.from(this.#instancesMap.values());
-            const found = arr.find(r => r.get(keyField) === query);
-            if (found) {
-              return found;
-            }
-          }
-        }
-
-        const res = await this.client.execute(controllersMap.modelRead, {
-          ctx,
-          path: {
-            id: query,
-            model: this.model.slug,
-          },
-        });
-
-        // await parsePopulated(this.model, [res], getPopulatedFromQuery(query));
-
-        const json: ModelJSON<T> = await res.json().then(r => r.data);
-
-        const { mapped, updated } = this.mapOrNew(json);
-
-        if (updated && mapped?._id) {
-          this.#cacheSubject.next({
-            ids: [mapped._id],
-            operation: "fetch",
-          });
-        }
-
-        return mapped;
-      } else {
-        if (canUseIds(query)) {
-          return this.fetcher.get([String(query.ids?.[0])], ctx);
-        }
-
-        query.pageSize = 1;
-
-        const list = await this.fetcher.getList([query], ctx);
-
-        if (!list?.[0]) {
-          return null;
-        }
-
-        return list[0];
-      }
-    },
-    getList: async ([query], ctx) => {
-      this.checkClient();
-
-      let _fromIdsList: Array<ModelInstance<T>> = [];
-      const _canUseIds = canUseIds(query);
-
-      if (_canUseIds && !ctx?.disableCache) {
-        const cachedIds = query.ids?.filter(id => this.#instancesMap.has(id)) || [];
-        _fromIdsList = cachedIds.map(id => this.#instancesMap.get(id)) as Array<ModelInstance<T>>;
-
-        if (_fromIdsList.length === query.ids?.length) {
-          return new ModelList(this.model, _fromIdsList);
-        }
-
-        query.ids = query.ids?.filter(id => !cachedIds.includes(id)) as Array<string>;
-      }
-
-      const res = await this.client.execute(controllersMap.modelQuery, {
-        ctx,
-        path: {
-          model: this.model.slug,
-        },
-        init: {
-          body: JSON.stringify(query),
-        },
-      });
-
-      const json: ReturnType<ModelList<T>["toJSON"]> = await res.json().then(r => r.data);
-
-      // await parsePopulated(this.model, res.rows, getPopulatedFromQuery(query));
-
-      const mappedList = json.rows.map(r => this.mapOrNew(r as ModelJSON<T>));
-      const mappedRes = mappedList.map(r => r.mapped).filter(Boolean) as Array<ModelInstance<T>>;
-      const updated = mappedList
-        .filter(r => r.updated)
-        .map(r => r.mapped?._id)
-        .filter(Boolean) as Array<string>;
-
-      if (updated?.length) {
-        this.#cacheSubject.next({
-          ids: updated,
-          operation: "fetch",
-        });
-      }
-
-      let count = json.count;
-      let list = mappedRes;
-
-      if (_canUseIds) {
-        count += _fromIdsList.length;
-        list = mappedRes.concat(_fromIdsList).filter(Boolean);
-        const ids = query.ids as Array<string>;
-        list = list.sort((a, b) => {
-          return ids.indexOf(String(a._id)) - ids.indexOf(String(b._id));
-        });
-      }
-
-      return new ModelList(this.model, list, query, count);
-    },
-    createOne: async ([payload], ctx) => {
-      this.checkClient();
-
-      const res = await this.client.execute(controllersMap.modelCreate, {
-        ctx,
-        path: {
-          model: this.model.slug,
-        },
-        init: {
-          body: JSON.stringify(payload),
-        },
-      });
-
-      const json: ModelJSON<T> = await res.json().then(r => r.data);
-
-      if (json._id) {
-        this.dispatch({
-          operation: "create",
-          model: this.model.slug,
-          ids: [json._id],
-          data: [json],
-        });
-      }
-
-      return this.mapOrNew(json).mapped as ModelInstance<T>;
-    },
-    createMultiple: async ([payload], ctx) => {
-      this.checkClient();
-
-      const res = await this.client.execute(controllersMap.modelCreate, {
-        ctx,
-        path: {
-          model: this.model.slug,
-        },
-        init: {
-          body: JSON.stringify(payload),
-        },
-      });
-
-      const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
-
-      this.dispatch({
-        operation: "create",
-        model: this.model.slug,
-        ids: json.map(r => r._id) as Array<string>,
-        data: json,
-      });
-
-      return json.map(r => this.mapOrNew(r).mapped).filter(Boolean) as Array<ModelInstance<T>>;
-    },
-    updateOne: async ([query, update], ctx) => {
-      this.checkClient();
-
-      if (typeof query === "string") {
-        const res = await this.client.execute(controllersMap.modelUpdate, {
-          ctx,
-          path: {
-            id: query,
-            model: this.model.slug,
-          },
-          init: {
-            body: JSON.stringify({ update }),
-          },
-        });
-
-        const json: ModelJSON<T> = await res.json().then(r => r.data);
-
-        if (json._id) {
-          this.dispatch({
-            operation: "update",
-            model: this.model.slug,
-            ids: [json._id],
-            data: [json],
-          });
-        }
-
-        return this.mapOrNew(json).mapped as ModelInstance<T>;
-      } else {
-        query.pageSize = 1;
-
-        const list = await this.fetcher.updateMultiple([query, update], ctx);
-
-        if (!list) {
-          return null;
-        }
-
-        const event: ModelCrudEvent<"update", T> = {
-          operation: "update",
-          model: this.model.slug,
-          ids: list.map(l => l._id).filter(Boolean) as Array<string>,
-          data: list.map(l => l.toJSON() as ModelJSON<T>),
-        };
-
-        this.dispatch(event);
-
-        const first = list?.[0] as ModelInstance<T>;
-
-        if (!first) {
-          return null;
-        }
-
-        const json = first.toJSON() as ModelJSON<T>;
-
-        return this.mapOrNew(json).mapped as ModelInstance<T>;
-      }
-    },
-    updateMultiple: async ([query, update], ctx) => {
-      this.checkClient();
-
-      const res = await this.client.execute(controllersMap.modelUpdate, {
-        ctx,
-        path: {
-          id: "",
-          model: this.model.slug,
-        },
-        init: {
-          body: JSON.stringify({ ...query, update }),
-        },
-      });
-
-      const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
-
-      this.dispatch({
-        operation: "update",
-        model: this.model.slug,
-        ids: json.map(l => l._id) as Array<string>,
-        data: json,
-      });
-
-      return json.map(r => this.mapOrNew(r).mapped).filter(Boolean) as Array<ModelInstance<T>>;
-    },
-    deleteOne: async ([query], ctx) => {
-      this.checkClient();
-
-      let id: string;
-
-      if (typeof query === "string") {
-        const res = await this.client.execute(controllersMap.modelDelete, {
-          ctx,
-          path: {
-            id: query,
-            model: this.model.slug,
-          },
-        });
-
-        const json: boolean = await res.json().then(r => r.data);
-
-        if (!json) {
-          return false;
-        }
-
-        id = query;
-      } else {
-        query.pageSize = 1;
-
-        const ids = await this.fetcher.deleteMultiple([query], ctx);
-
-        if (!ids?.length) {
-          return false;
-        }
-
-        id = String(ids[0]);
-      }
-
-      if (id) {
-        this.dispatch({
-          operation: "delete",
-          model: this.model.slug,
-          ids: [id],
-          data: null,
-        });
-
-        this.instancesMap.delete(id);
-      }
-
-      return Boolean(id);
-    },
-    deleteMultiple: async ([query], ctx) => {
-      this.checkClient();
-
-      const res = await this.client.execute(controllersMap.modelDelete, {
-        ctx,
-        path: {
-          id: "",
-          model: this.model.slug,
-        },
-        init: {
-          body: JSON.stringify(query),
-        },
-      });
-
-      const ids: Array<string> = await res.json().then(r => r.data);
-
-      if (ids?.length) {
-        this.dispatch({
-          operation: "delete",
-          model: this.model.slug,
-          ids,
-          data: null,
-        });
-
-        ids.forEach(id => this.instancesMap.delete(id));
-      }
-
-      return ids;
-    },
-  };
-
   get client(): Client {
-    const { constructor } = Object.getPrototypeOf(this);
-    return constructor.client;
+    return (this.constructor as typeof ClientAdapter).client;
   }
 
-  get instancesMap() {
+  get instancesMap(): Map<string, ModelInstance<T>> {
     return this.#instancesMap;
   }
 
-  mapOrNew(payload: ModelJSON<T>) {
-    let mapped: ModelInstance<T> | undefined;
-    let updated = false;
+  fetcher: AdapterFetcher<T> = {
+    count: async ([query], ctx) => {
+      this.checkClient();
+      const res = await this.client.execute(controllersMap.modelCount, {
+        ctx,
+        path: { model: this.model.slug },
+        init: { body: JSON.stringify(query) },
+      });
+      return Number(await res.json().then(r => r.data));
+    },
 
+    get: async ([query], ctx) => {
+      this.checkClient();
+      if (this.model.isSingle()) {
+        return this.#getSingle(ctx);
+      }
+      return typeof query === "string" ? this.#getById(query, ctx) : this.#getByQuery(query, ctx);
+    },
+
+    getList: async ([query], ctx) => {
+      this.checkClient();
+      return this.#getListInternal(query, ctx);
+    },
+
+    createOne: async ([payload], ctx) => {
+      this.checkClient();
+      const json = await this.#createOneInternal(payload, ctx);
+      return this.#processInstancePayload(json).mapped as ModelInstance<T>;
+    },
+
+    createMultiple: async ([payload], ctx) => {
+      this.checkClient();
+      const json = await this.#createMultipleInternal(payload, ctx);
+      return json.map(r => this.#processInstancePayload(r).mapped).filter(Boolean) as Array<ModelInstance<T>>;
+    },
+
+    updateOne: async ([query, update], ctx) => {
+      this.checkClient();
+      return typeof query === "string" ? this.#updateById(query, update, ctx) : this.#updateByQuery(query, update, ctx);
+    },
+
+    updateMultiple: async ([query, update], ctx) => {
+      this.checkClient();
+      const json = await this.#updateMultipleInternal(query, update, ctx);
+      return json.map(r => this.#processInstancePayload(r).mapped).filter(Boolean) as Array<ModelInstance<T>>;
+    },
+
+    deleteOne: async ([query], ctx) => {
+      this.checkClient();
+      return typeof query === "string" ? this.#deleteById(query, ctx) : this.#deleteByQuery(query, ctx);
+    },
+
+    deleteMultiple: async ([query], ctx) => {
+      this.checkClient();
+      return this.#deleteMultipleInternal(query, ctx);
+    },
+  };
+
+  async #getSingle(ctx: any): Promise<ModelInstance<T> | null> {
+    if (this.#instancesMap.size && !ctx?.disableCache) {
+      return this.#instancesMap.values().next().value;
+    }
+    const res = await this.client.execute(controllersMap.modelRead, {
+      ctx,
+      path: { model: this.model.slug },
+    });
+    const json: ModelJSON<T> = await res.json().then(r => r.data);
+    return this.#processAndCacheInstance(json);
+  }
+
+  async #getById(id: string, ctx: any): Promise<ModelInstance<T> | null> {
+    if (!ctx?.disableCache) {
+      const cachedInstance = this.#getCachedInstance(id);
+      if (cachedInstance) return cachedInstance;
+    }
+    const res = await this.client.execute(controllersMap.modelRead, {
+      ctx,
+      path: { id, model: this.model.slug },
+    });
+    const json: ModelJSON<T> = await res.json().then(r => r.data);
+    return this.#processAndCacheInstance(json);
+  }
+
+  async #getByQuery(query: any, ctx: any): Promise<ModelInstance<T> | null> {
+    if (canUseIds(query)) {
+      return this.#getById(String(query.ids?.[0]), ctx);
+    }
+    query.pageSize = 1;
+    const list = await this.#getListInternal(query, ctx);
+    return list?.[0] || null;
+  }
+
+  async #getListInternal(query: any, ctx: any): Promise<ModelList<T>> {
+    let fromIdsList: Array<ModelInstance<T>> = [];
+    const canUseIdsForQuery = canUseIds(query);
+
+    if (canUseIdsForQuery && !ctx?.disableCache) {
+      fromIdsList = this.#getFromCacheByIds(query.ids);
+      if (fromIdsList.length === query.ids?.length) {
+        return new ModelList(this.model, fromIdsList);
+      }
+      query.ids = query.ids?.filter((id: string) => !this.#instancesMap.has(id));
+    }
+
+    const res = await this.client.execute(controllersMap.modelQuery, {
+      ctx,
+      path: { model: this.model.slug },
+      init: { body: JSON.stringify(query) },
+    });
+
+    const json: ReturnType<ModelList<T>["toJSON"]> = await res.json().then(r => r.data);
+    const mappedList = json.rows.map(r => this.#processInstancePayload(r as ModelJSON<T>));
+    const mappedRes = mappedList.map(r => r.mapped).filter(Boolean) as Array<ModelInstance<T>>;
+
+    this.#updateCacheFromList(mappedList);
+
+    let count = json.count;
+    let list = mappedRes;
+
+    if (canUseIdsForQuery) {
+      list = this.#combineAndSortResults(fromIdsList, mappedRes, query.ids);
+      count += fromIdsList.length;
+    }
+
+    return new ModelList(this.model, list, query, count);
+  }
+
+  async #createOneInternal(payload: any, ctx: any): Promise<ModelJSON<T>> {
+    const res = await this.client.execute(controllersMap.modelCreate, {
+      ctx,
+      path: { model: this.model.slug },
+      init: { body: JSON.stringify(payload) },
+    });
+
+    const json: ModelJSON<T> = await res.json().then(r => r.data);
+    this.#dispatchCreateEvent([json]);
+    return json;
+  }
+
+  async #createMultipleInternal(payload: any, ctx: any): Promise<Array<ModelJSON<T>>> {
+    const res = await this.client.execute(controllersMap.modelCreate, {
+      ctx,
+      path: { model: this.model.slug },
+      init: { body: JSON.stringify(payload) },
+    });
+
+    const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
+    this.#dispatchCreateEvent(json);
+    return json;
+  }
+
+  async #updateById(id: string, update: any, ctx: any): Promise<ModelInstance<T> | null> {
+    const res = await this.client.execute(controllersMap.modelUpdate, {
+      ctx,
+      path: { id, model: this.model.slug },
+      init: { body: JSON.stringify({ update }) },
+    });
+
+    const json: ModelJSON<T> = await res.json().then(r => r.data);
+    this.#dispatchUpdateEvent([json]);
+    return this.#processInstancePayload(json).mapped as ModelInstance<T>;
+  }
+
+  async #updateByQuery(query: any, update: any, ctx: any): Promise<ModelInstance<T> | null> {
+    query.pageSize = 1;
+    const list = await this.#updateMultipleInternal(query, update, ctx);
+    if (!list?.length) return null;
+    return this.#processInstancePayload(list[0]).mapped as ModelInstance<T>;
+  }
+
+  async #updateMultipleInternal(query: any, update: any, ctx: any): Promise<Array<ModelJSON<T>>> {
+    const res = await this.client.execute(controllersMap.modelUpdate, {
+      ctx,
+      path: { id: "", model: this.model.slug },
+      init: { body: JSON.stringify({ ...query, update }) },
+    });
+
+    const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
+    this.#dispatchUpdateEvent(json);
+    return json;
+  }
+
+  async #deleteById(id: string, ctx: any): Promise<boolean> {
+    const res = await this.client.execute(controllersMap.modelDelete, {
+      ctx,
+      path: { id, model: this.model.slug },
+    });
+
+    const success: boolean = await res.json().then(r => r.data);
+    if (success) {
+      this.#dispatchDeleteEvent([id]);
+    }
+    return success;
+  }
+
+  async #deleteByQuery(query: any, ctx: any): Promise<boolean> {
+    query.pageSize = 1;
+    const ids = await this.#deleteMultipleInternal(query, ctx);
+    return ids.length > 0;
+  }
+
+  async #deleteMultipleInternal(query: any, ctx: any): Promise<Array<string>> {
+    const res = await this.client.execute(controllersMap.modelDelete, {
+      ctx,
+      path: { id: "", model: this.model.slug },
+      init: { body: JSON.stringify(query) },
+    });
+
+    const ids: Array<string> = await res.json().then(r => r.data);
+    if (ids?.length) {
+      this.#dispatchDeleteEvent(ids);
+    }
+    return ids;
+  }
+
+  #getFromCacheByIds(ids: string[]): Array<ModelInstance<T>> {
+    return ids.filter(id => this.#instancesMap.has(id)).map(id => this.#instancesMap.get(id)!);
+  }
+
+  #updateCacheFromList(mappedList: Array<{ updated: boolean; mapped?: ModelInstance<T> }>): void {
+    const updated = mappedList
+      .filter(r => r.updated)
+      .map(r => r.mapped?._id)
+      .filter(Boolean) as Array<string>;
+
+    if (updated.length) {
+      this.#cacheSubject.next({
+        ids: updated,
+        operation: "fetch",
+      });
+    }
+  }
+
+  #combineAndSortResults(
+    fromCache: ModelInstance<T>[],
+    fromApi: ModelInstance<T>[],
+    ids: string[],
+  ): ModelInstance<T>[] {
+    const combined = [...fromApi, ...fromCache];
+    return combined.sort((a, b) => ids.indexOf(String(a._id)) - ids.indexOf(String(b._id)));
+  }
+
+  #dispatchCreateEvent(data: ModelJSON<T>[]): void {
+    this.dispatch({
+      operation: "create",
+      model: this.model.slug,
+      ids: data.map(item => item._id) as string[],
+      data,
+    });
+  }
+
+  #dispatchUpdateEvent(data: ModelJSON<T>[]): void {
+    this.dispatch({
+      operation: "update",
+      model: this.model.slug,
+      ids: data.map(item => item._id) as string[],
+      data,
+    });
+  }
+
+  #dispatchDeleteEvent(ids: string[]): void {
+    this.dispatch({
+      operation: "delete",
+      model: this.model.slug,
+      ids,
+      data: null,
+    });
+  }
+
+  #processInstancePayload(payload: ModelJSON<T>): { updated: boolean; mapped?: ModelInstance<T> } {
     if (!payload || typeof payload !== "object") {
       throw new Error("Invalid payload");
     }
 
-    if (payload._id) {
-      mapped = this.#instancesMap.get(payload._id);
-    }
+    let mapped = payload._id ? this.#instancesMap.get(payload._id) : undefined;
+    let updated = false;
 
     if (mapped) {
-      const newUpdated = payload._updatedAt && new Date(payload._updatedAt);
-      const oldUpdated = mapped._updatedAt;
-      if ((newUpdated && !oldUpdated) || (newUpdated && oldUpdated && newUpdated > oldUpdated)) {
+      const newAge = Math.max(new Date(payload._createdAt ?? 0).getTime(), new Date(payload._updatedAt ?? 0).getTime());
+      if (newAge > mapped.__getAge()) {
         updated = true;
         mapped.setData(payload);
       }
@@ -495,14 +379,18 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       updated = true;
     }
 
+    if (updated) {
+      mapped!.__fetchedAt = new Date();
+    }
+
     return { updated, mapped };
   }
 
-  subscribe(observer: SubjectObserver<ModelUpdaterEvent>) {
+  subscribe(observer: SubjectObserver<ModelUpdaterEvent>): () => void {
     return this.#cacheSubject.subscribe(observer);
   }
 
-  dispatch(event: ModelCrudEvent<"create" | "update" | "delete", T>) {
+  dispatch(event: ModelCrudEvent<"create" | "update" | "delete", T>): void {
     if (this.model.slug !== event.model) {
       throw new ClientError({
         message: `Invalid model ${event.model} for adapter ${this.model.slug}`,
@@ -512,7 +400,31 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     this.#eventSubject.next(event);
   }
 
-  clearInstances() {
+  clearInstances(): void {
     this.#instancesMap.clear();
+  }
+
+  #getCachedInstance(id: string): ModelInstance<T> | undefined {
+    if (this.#instancesMap.has(id)) {
+      return this.#instancesMap.get(id);
+    }
+
+    const keyField = this.model.getKeyField();
+    if (keyField) {
+      return Array.from(this.#instancesMap.values()).find(instance => instance.get(keyField) === id);
+    }
+
+    return undefined;
+  }
+
+  #processAndCacheInstance(json: ModelJSON<T>): ModelInstance<T> | null {
+    const { mapped, updated } = this.#processInstancePayload(json);
+    if (updated && mapped?._id) {
+      this.#cacheSubject.next({
+        ids: [mapped._id],
+        operation: "fetch",
+      });
+    }
+    return mapped || null;
   }
 }

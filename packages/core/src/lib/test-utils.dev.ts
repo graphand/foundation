@@ -20,8 +20,8 @@ export const mockAdapter = ({
   privateCache,
 }: {
   name?: string;
-  fieldsMap?: typeof Adapter["fieldsMap"];
-  validatorsMap?: typeof Adapter["validatorsMap"];
+  fieldsMap?: (typeof Adapter)["fieldsMap"];
+  validatorsMap?: (typeof Adapter)["validatorsMap"];
   privateCache?: Set<ModelInstance<typeof Model>>;
 } = {}) => {
   class MockAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
@@ -77,10 +77,7 @@ export const mockAdapter = ({
         if (query?.ids) {
           const arr = Array.from(this.thisCache);
           return Promise.resolve(
-            new ModelList(
-              this.model,
-              query.ids.map(id => arr.find(r => r._id === id)).filter(Boolean),
-            ),
+            new ModelList(this.model, query.ids.map(id => arr.find(r => r._id === id)).filter(Boolean)),
           );
         }
 
@@ -118,8 +115,7 @@ export const mockAdapter = ({
             const filterEntries = Object.entries(query.filter);
             found = cache.find(r =>
               filterEntries.every(
-                ([key, value]) =>
-                  r.getData()[key as unknown as keyof ModelData<typeof Model>] === value,
+                ([key, value]) => r.getData()[key as unknown as keyof ModelData<typeof Model>] === value,
               ),
             );
           }

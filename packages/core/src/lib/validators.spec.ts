@@ -1,4 +1,4 @@
-import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils";
+import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev";
 import { ValidatorTypes } from "@/enums/validator-types";
 import { ValidationError } from "@/lib/ValidationError";
 import { faker } from "@faker-js/faker";
@@ -203,10 +203,7 @@ describe("test validators", () => {
         const i = await model.create({ title });
 
         const _model = model as typeof Model;
-        const res = await _model.update(
-          { filter: { _id: i._id } },
-          { $set: { title: updateTitle } },
-        );
+        const res = await _model.update({ filter: { _id: i._id } }, { $set: { title: updateTitle } });
 
         expect(res).toBeInstanceOf(Array);
         expect(res.every(i => i instanceof _model)).toBeTruthy();
@@ -307,9 +304,7 @@ describe("test validators", () => {
   });
 
   describe("regex validator", () => {
-    const _mockModelWithRegexValidator = async (
-      options: Partial<ValidatorOptions<ValidatorTypes.REGEX>> = {},
-    ) => {
+    const _mockModelWithRegexValidator = async (options: Partial<ValidatorOptions<ValidatorTypes.REGEX>> = {}) => {
       const model = mockModel({
         fields: {
           title: {
@@ -475,9 +470,9 @@ describe("test validators", () => {
     });
 
     it("create multiple with duplicated keyField should throw error", async () => {
-      await expect(
-        model.createMultiple([{ title: "test" }, { title: "test" }]),
-      ).rejects.toBeInstanceOf(ValidationError);
+      await expect(model.createMultiple([{ title: "test" }, { title: "test" }])).rejects.toBeInstanceOf(
+        ValidationError,
+      );
     });
   });
 
@@ -666,9 +661,7 @@ describe("test validators", () => {
   });
 
   describe("length validator", () => {
-    const _mockModelWithRegexValidator = async (
-      options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {},
-    ) => {
+    const _mockModelWithRegexValidator = async (options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {}) => {
       const model = mockModel({
         fields: {
           title: {
@@ -808,9 +801,7 @@ describe("test validators", () => {
       it("valid length should not throw error", async () => {
         await expect(model.create({ title: "ab" })).resolves.toBeInstanceOf(model);
 
-        await expect(model.create({ title: faker.lorem.paragraph() })).resolves.toBeInstanceOf(
-          model,
-        );
+        await expect(model.create({ title: faker.lorem.paragraph() })).resolves.toBeInstanceOf(model);
       });
     });
 
@@ -856,9 +847,7 @@ describe("test validators", () => {
         // @ts-expect-error test
         await expect(model.create({ title: 123456 })).rejects.toThrow(ValidationError);
 
-        await expect(model.create({ title: faker.lorem.paragraph() })).rejects.toThrow(
-          ValidationError,
-        );
+        await expect(model.create({ title: faker.lorem.paragraph() })).rejects.toThrow(ValidationError);
       });
 
       it("valid length should not throw error", async () => {
@@ -874,9 +863,7 @@ describe("test validators", () => {
     });
 
     describe("on array", () => {
-      const _mockModelWithArrayField = async (
-        options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {},
-      ) => {
+      const _mockModelWithArrayField = async (options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {}) => {
         const model = mockModel({
           fields: {
             arr: {
@@ -915,9 +902,7 @@ describe("test validators", () => {
 
         await expect(model.create({ arr: ["test", "test"] })).resolves.toBeInstanceOf(model);
 
-        await expect(model.create({ arr: ["test", "test", "test"] })).resolves.toBeInstanceOf(
-          model,
-        );
+        await expect(model.create({ arr: ["test", "test", "test"] })).resolves.toBeInstanceOf(model);
       });
 
       it("create with undefined should not throw error", async () => {
@@ -949,9 +934,7 @@ describe("test validators", () => {
       it("create with invalid length should throw error", async () => {
         const model = await _mockModelWithArrayField({ max: 2 });
 
-        await expect(model.create({ arr: ["test", "test", "test"] })).rejects.toThrow(
-          ValidationError,
-        );
+        await expect(model.create({ arr: ["test", "test", "test"] })).rejects.toThrow(ValidationError);
 
         await expect(model.create({ arr: ["test", "test"] })).resolves.toBeInstanceOf(model);
       });
@@ -1060,9 +1043,7 @@ describe("test validators", () => {
   });
 
   describe("boundaries validator", () => {
-    const _mockModelWithRegexValidator = async (
-      options: Partial<ValidatorOptions<ValidatorTypes.BOUNDARIES>> = {},
-    ) => {
+    const _mockModelWithRegexValidator = async (options: Partial<ValidatorOptions<ValidatorTypes.BOUNDARIES>> = {}) => {
       const model = mockModel({
         fields: {
           title: {
@@ -1406,9 +1387,7 @@ describe("test validators", () => {
       it("invalid length should throw error", async () => {
         await expect(model.create({ arr: [] })).rejects.toBeInstanceOf(ValidationError);
         await expect(model.create({ arr: ["1"] })).rejects.toBeInstanceOf(ValidationError);
-        await expect(model.create({ arr: ["1", "2", "3", "4"] })).rejects.toBeInstanceOf(
-          ValidationError,
-        );
+        await expect(model.create({ arr: ["1", "2", "3", "4"] })).rejects.toBeInstanceOf(ValidationError);
       });
 
       it("valid length should not throw error", async () => {

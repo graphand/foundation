@@ -1,5 +1,5 @@
 import { ObjectId } from "bson";
-import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils";
+import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils.dev";
 import { FieldTypes } from "@/enums/field-types";
 import { faker } from "@faker-js/faker";
 import { Field } from "@/lib/Field";
@@ -2235,9 +2235,7 @@ describe("test fields", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      await expect(
-        model.create({ identity: "account:507f191e810c19729de860ea" }),
-      ).resolves.toBeInstanceOf(model);
+      await expect(model.create({ identity: "account:507f191e810c19729de860ea" })).resolves.toBeInstanceOf(model);
     });
   });
 
@@ -2535,12 +2533,7 @@ describe("test fields", () => {
       await model.initialize();
 
       const i = model.hydrate({
-        arrJson: [
-          { title: 1, test: "1" },
-          { title: 2, test: "2" },
-          "invalid",
-          { title: 3, test: "3" },
-        ],
+        arrJson: [{ title: 1, test: "1" }, { title: 2, test: "2" }, "invalid", { title: 3, test: "3" }],
       } as object);
 
       expect(i.get("arrJson.[0].title")).toEqual("1");
@@ -2975,9 +2968,7 @@ describe("test fields", () => {
         const date2 = new Date("2023-06-02");
 
         // @ts-expect-error dates are not json serialized
-        await expect(model.validate([{ arr: [date1, date2, date1] }])).rejects.toThrow(
-          ValidationError,
-        );
+        await expect(model.validate([{ arr: [date1, date2, date1] }])).rejects.toThrow(ValidationError);
       });
 
       it("should detect duplicates values with mixed types", async () => {
@@ -2998,9 +2989,7 @@ describe("test fields", () => {
         await model.initialize();
 
         // @ts-expect-error dates are not json serialized
-        await expect(model.validate([{ arr: ["test", 123, true, "test"] }])).rejects.toThrow(
-          ValidationError,
-        );
+        await expect(model.validate([{ arr: ["test", 123, true, "test"] }])).rejects.toThrow(ValidationError);
       });
     });
 
@@ -3028,9 +3017,7 @@ describe("test fields", () => {
 
         await model.initialize();
 
-        await expect(
-          model.validate([{ arr: [{ title: "test" }, { title: "test" }] }]),
-        ).resolves.toBeTruthy();
+        await expect(model.validate([{ arr: [{ title: "test" }, { title: "test" }] }])).resolves.toBeTruthy();
         // @ts-expect-error test
         await expect(model.validate([{ arr: true }])).rejects.toThrow(ValidationError);
         // @ts-expect-error test

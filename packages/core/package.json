@@ -44,6 +44,7 @@
     "dist",
     "README.md",
     "!**/*.spec.d.ts",
+    "!**/*.dev.d.ts",
     "!**/*.map"
   ]
 }

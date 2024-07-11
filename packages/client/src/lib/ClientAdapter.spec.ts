@@ -94,9 +94,10 @@ describe("ClientAdapter", () => {
   it("should update a single model correctly", async () => {
     fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "NewTest"}}'));
     const i = await model.get("123");
-    fetchMock.mockResolvedValueOnce(
-      new Response('{"data": {"_id": "123", "name": "UpdatedTest", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
-    );
+    const body = JSON.stringify({
+      data: { _id: "123", name: "UpdatedTest", _updatedAt: new Date(Date.now() + 10).toJSON() },
+    });
+    fetchMock.mockResolvedValueOnce(new Response(body));
     await i.update({ $set: { name: "UpdatedTest" } });
     expect(i.get("name")).toBe("UpdatedTest");
   });
@@ -104,11 +105,13 @@ describe("ClientAdapter", () => {
   it("should update multiple models correctly", async () => {
     fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "NewTest"}}'));
     const i = await model.get("123");
-    fetchMock.mockResolvedValueOnce(
-      new Response(
-        '{"data": [{"_id": "123", "name": "Updated1", "_updatedAt": "2022-01-01T00:00:00.000Z"}, {"_id": "456", "name": "Updated2", "_updatedAt": "2022-01-01T00:00:00.000Z"}]}',
-      ),
-    );
+    const body = JSON.stringify({
+      data: [
+        { _id: "123", name: "Updated1", _updatedAt: new Date(Date.now() + 10).toJSON() },
+        { _id: "456", name: "Updated2", _updatedAt: new Date(Date.now() + 10).toJSON() },
+      ],
+    });
+    fetchMock.mockResolvedValueOnce(new Response(body));
     const result = await model.update({ ids: ["123", "456"] }, { $set: { name: "Updated" } });
     expect(result).toHaveLength(2);
     expect(result[0]).toBeInstanceOf(MockModel);
@@ -226,12 +229,14 @@ describe("ClientAdapter", () => {
   });
 
   it("should update local cache when fetching a model", async () => {
-    fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+    const body = JSON.stringify({ data: { _id: "123", name: "Test", _updatedAt: new Date().toJSON() } });
+    fetchMock.mockResolvedValueOnce(new Response(body));
     const result = await model.get("123");
     expect(result?.get("name")).toBe("Test");
-    fetchMock.mockResolvedValueOnce(
-      new Response('{"data": {"_id": "123", "name": "UpdatedTest", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
-    );
+    const body2 = JSON.stringify({
+      data: { _id: "123", name: "UpdatedTest", _updatedAt: new Date(Date.now() + 10).toJSON() },
+    });
+    fetchMock.mockResolvedValueOnce(new Response(body2));
     await model.get("123", { disableCache: true });
     expect(result?.get("name")).toBe("UpdatedTest");
   });
@@ -326,24 +331,28 @@ describe("ClientAdapter", () => {
     });
 
     it("should not update cache if new instance has older _updatedAt", async () => {
+      const oldDate = new Date();
+      const newDate = new Date(oldDate.getTime() + 10000);
       fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "Test", "_updatedAt": "2022-01-02T00:00:00.000Z"}}'),
+        new Response(`{"data": {"_id": "123", "name": "Test", "_updatedAt": "${newDate.toJSON()}"}}`),
       );
       await model.get("123");
       fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "OldTest", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
+        new Response(`{"data": {"_id": "123", "name": "OldTest", "_updatedAt": "${oldDate.toJSON()}"}}`),
       );
       await model.get("123", { disableCache: true });
       expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test");
     });
 
     it("should update cache if new instance has newer _updatedAt", async () => {
+      const oldDate = new Date();
+      const newDate = new Date(oldDate.getTime() + 10000);
       fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "Test", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
+        new Response(`{"data": {"_id": "123", "name": "Test", "_updatedAt": "${oldDate.toJSON()}"}}`),
       );
       await model.get("123");
       fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "NewTest", "_updatedAt": "2022-01-02T00:00:00.000Z"}}'),
+        new Response(`{"data": {"_id": "123", "name": "NewTest", "_updatedAt": "${newDate.toJSON()}"}}`),
       );
       await model.get("123", { disableCache: true });
       expect(adapter.instancesMap.get("123")?.get("name")).toBe("NewTest");
@@ -368,11 +377,14 @@ describe("ClientAdapter", () => {
     });
 
     it("should update cache on update", async () => {
-      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      const body1 = JSON.stringify({ data: { _id: "123", name: "Test", _updatedAt: new Date().toJSON() } });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.get("123");
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "UpdatedTest", "_updatedAt": "2022-01-02T00:00:00.000Z"}}'),
-      );
+      await new Promise(resolve => setTimeout(resolve, 1));
+      const body2 = JSON.stringify({
+        data: { _id: "123", name: "UpdatedTest", _updatedAt: new Date(Date.now() + 10).toJSON() },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.update("123", { $set: { name: "UpdatedTest" } });
       expect(adapter.instancesMap.get("123")?.get("name")).toBe("UpdatedTest");
     });
@@ -386,21 +398,40 @@ describe("ClientAdapter", () => {
     });
 
     it("should not update cache if _updatedAt is missing in new data", async () => {
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "Test", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
-      );
+      const body1 = JSON.stringify({ data: { _id: "123", name: "Test", _updatedAt: new Date().toJSON() } });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.get("123");
-      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "NewTest"}}'));
+      const body2 = JSON.stringify({ data: { _id: "123", name: "NewTest" } });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.get("123", { disableCache: true });
       expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test");
     });
 
+    it("should use __fetchedAt to determine if cache is outdated", async () => {
+      const body1 = JSON.stringify({ data: { _id: "123", name: "Test" } });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
+      const i = await model.get("123");
+      expect(i.__fetchedAt?.getTime()).toEqual(i.__getAge());
+      const body2 = JSON.stringify({ data: { _id: "123", name: "NewTest", _updatedAt: i.__fetchedAt } });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
+      await model.get("123", { disableCache: true });
+      expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test");
+      const body3 = JSON.stringify({
+        data: { _id: "123", name: "NewTest", _updatedAt: new Date(i.__fetchedAt.getTime() + 10) },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body3));
+      await model.get("123", { disableCache: true });
+      expect(adapter.instancesMap.get("123")?.get("name")).toBe("NewTest");
+    });
+
     it("should update cache if existing instance doesn't have _updatedAt", async () => {
-      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      const body1 = JSON.stringify({ data: { _id: "123", name: "Test", _updatedAt: new Date().toJSON() } });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.get("123");
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "NewTest", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
-      );
+      const body2 = JSON.stringify({
+        data: { _id: "123", name: "NewTest", _updatedAt: new Date(Date.now() + 10).toJSON() },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.get("123", { disableCache: true });
       expect(adapter.instancesMap.get("123")?.get("name")).toBe("NewTest");
     });
@@ -431,28 +462,41 @@ describe("ClientAdapter", () => {
     });
 
     it("should update only newer instances in getList", async () => {
-      fetchMock.mockResolvedValueOnce(
-        new Response(
-          '{"data": {"rows": [{"_id": "123", "name": "Test1", "_updatedAt": "2022-01-01T00:00:00.000Z"}, {"_id": "456", "name": "Test2", "_updatedAt": "2022-01-01T00:00:00.000Z"}], "count": 2}}',
-        ),
-      );
+      const originalDate = new Date();
+      const body1 = JSON.stringify({
+        data: {
+          rows: [
+            { _id: "123", name: "Test1", _updatedAt: originalDate.toJSON() },
+            { _id: "456", name: "Test2", _updatedAt: originalDate.toJSON() },
+          ],
+          count: 2,
+        },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.getList();
-      fetchMock.mockResolvedValueOnce(
-        new Response(
-          '{"data": {"rows": [{"_id": "123", "name": "NewTest1", "_updatedAt": "2022-01-02T00:00:00.000Z"}, {"_id": "456", "name": "NewTest2", "_updatedAt": "2021-12-31T00:00:00.000Z"}], "count": 2}}',
-        ),
-      );
+      const body2 = JSON.stringify({
+        data: {
+          rows: [
+            { _id: "123", name: "NewTest1", _updatedAt: new Date(originalDate.getTime() + 10).toJSON() },
+            { _id: "456", name: "NewTest2", _updatedAt: new Date(Date.now() - 1).toJSON() },
+          ],
+          count: 2,
+        },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.getList({}, { disableCache: true });
       expect(adapter.instancesMap.get("123")?.get("name")).toBe("NewTest1");
       expect(adapter.instancesMap.get("456")?.get("name")).toBe("Test2");
     });
 
     it("should handle undefined _updatedAt in cache update", async () => {
-      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      const body1 = JSON.stringify({ data: { _id: "123", name: "Test", _updatedAt: new Date().toJSON() } });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.get("123");
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "NewTest", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
-      );
+      const body2 = JSON.stringify({
+        data: { _id: "123", name: "NewTest", _updatedAt: new Date(Date.now() + 10).toJSON() },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.get("123", { disableCache: true });
       expect(adapter.instancesMap.get("123")?.get("name")).toBe("NewTest");
     });
@@ -473,32 +517,32 @@ describe("ClientAdapter", () => {
       const promise1 = model.get("123");
       const promise2 = model.get("123", { disableCache: true });
 
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "Test1", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
-      );
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "Test2", "_updatedAt": "2022-01-02T00:00:00.000Z"}}'),
-      );
-
+      const body1 = JSON.stringify({ data: { _id: "123", name: "Test1", _updatedAt: new Date().toJSON() } });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
+      const body2 = JSON.stringify({
+        data: { _id: "123", name: "Test2", _updatedAt: new Date(Date.now() + 10).toJSON() },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await Promise.all([promise1, promise2]);
 
       expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test2");
     });
 
     it("should maintain cache consistency across multiple operations", async () => {
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "Test", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
-      );
+      const body1 = JSON.stringify({ data: { _id: "123", name: "Test", _updatedAt: new Date().toJSON() } });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.get("123");
 
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "UpdatedTest", "_updatedAt": "2022-01-02T00:00:00.000Z"}}'),
-      );
+      const body2 = JSON.stringify({
+        data: { _id: "123", name: "UpdatedTest", _updatedAt: new Date(Date.now() + 10).toJSON() },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.update("123", { $set: { name: "UpdatedTest" } });
 
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "OldTest", "_updatedAt": "2021-12-31T00:00:00.000Z"}}'),
-      );
+      const body3 = JSON.stringify({
+        data: { _id: "123", name: "OldTest", _updatedAt: new Date(Date.now() - 1).toJSON() },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body3));
       await model.get("123", { disableCache: true });
 
       expect(adapter.instancesMap.get("123")?.get("name")).toBe("UpdatedTest");
@@ -671,19 +715,31 @@ describe("ClientAdapter", () => {
     });
 
     it("should notify subscribers only for updated instances in getList", async () => {
-      fetchMock.mockResolvedValueOnce(
-        new Response(
-          '{"data": {"rows": [{"_id": "123", "name": "Test1", "_updatedAt": "2022-01-01T00:00:00.000Z"}, {"_id": "456", "name": "Test2", "_updatedAt": "2022-01-01T00:00:00.000Z"}], "count": 2}}',
-        ),
-      );
+      const originalDate = new Date();
+      const body1 = JSON.stringify({
+        data: {
+          rows: [
+            { _id: "123", name: "Test1", _updatedAt: originalDate.toJSON() },
+            { _id: "456", name: "Test2", _updatedAt: originalDate.toJSON() },
+          ],
+          count: 2,
+        },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.getList();
       subscriber.mockClear();
 
-      fetchMock.mockResolvedValueOnce(
-        new Response(
-          '{"data": {"rows": [{"_id": "123", "name": "UpdatedTest1", "_updatedAt": "2022-01-02T00:00:00.000Z"}, {"_id": "456", "name": "Test2", "_updatedAt": "2022-01-01T00:00:00.000Z"}], "count": 2}}',
-        ),
-      );
+      const body2 = JSON.stringify({
+        data: {
+          rows: [
+            { _id: "123", name: "UpdatedTest1", _updatedAt: new Date(originalDate.getTime() + 10).toJSON() },
+            { _id: "456", name: "Test2", _updatedAt: originalDate.toJSON() },
+          ],
+          count: 2,
+        },
+      });
+
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.getList({}, { disableCache: true });
 
       expect(subscriber.mock.calls[0][0]).toEqual({
@@ -693,12 +749,14 @@ describe("ClientAdapter", () => {
     });
 
     it("should notify subscribers for all operations in sequence", async () => {
-      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      const body1 = JSON.stringify({ data: { _id: "123", name: "Test", _updatedAt: new Date().toJSON() } });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.create({ name: "Test" });
 
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "UpdatedTest", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
-      );
+      const body2 = JSON.stringify({
+        data: { _id: "123", name: "UpdatedTest", _updatedAt: new Date(Date.now() + 10).toJSON() },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.update("123", { $set: { name: "UpdatedTest" } });
 
       fetchMock.mockResolvedValueOnce(new Response('{"data": true}'));
@@ -732,14 +790,16 @@ describe("ClientAdapter", () => {
     });
 
     it("should notify subscribers when updating an instance with newer _updatedAt", async () => {
+      const oldDate = new Date();
+      const newDate = new Date(oldDate.getTime() + 10000);
       fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "Test", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
+        new Response(`{"data": {"_id": "123", "name": "Test", "_updatedAt": "${oldDate.toJSON()}"}}`),
       );
       await model.get("123");
       subscriber.mockClear();
 
       fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "UpdatedTest", "_updatedAt": "2022-01-02T00:00:00.000Z"}}'),
+        new Response(`{"data": {"_id": "123", "name": "UpdatedTest", "_updatedAt": "${newDate.toJSON()}"}}`),
       );
       await model.get("123", { disableCache: true });
 
@@ -791,34 +851,45 @@ describe("ClientAdapter", () => {
     });
 
     it("should notify subscribers when a fetched instance has a newer _updatedAt", async () => {
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "Test", "_updatedAt": "2022-01-01T00:00:00.000Z"}}'),
-      );
+      const body1 = JSON.stringify({ data: { _id: "123", name: "Test", _updatedAt: new Date().toJSON() } });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.get("123");
       subscriber.mockClear();
 
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "UpdatedTest", "_updatedAt": "2022-01-02T00:00:00.000Z"}}'),
-      );
+      const body2 = JSON.stringify({
+        data: { _id: "123", name: "UpdatedTest", _updatedAt: new Date(Date.now() + 10).toJSON() },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.get("123", { disableCache: true });
       expect(subscriber.mock.calls.length).toBe(1);
       expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "fetch" });
     });
 
     it("should notify subscribers only for updated instances in getList", async () => {
-      fetchMock.mockResolvedValueOnce(
-        new Response(
-          '{"data": {"rows": [{"_id": "123", "name": "Test1", "_updatedAt": "2022-01-01T00:00:00.000Z"}, {"_id": "456", "name": "Test2", "_updatedAt": "2022-01-01T00:00:00.000Z"}], "count": 2}}',
-        ),
-      );
+      const originalDate = new Date();
+      const body1 = JSON.stringify({
+        data: {
+          rows: [
+            { _id: "123", name: "Test1", _updatedAt: originalDate.toJSON() },
+            { _id: "456", name: "Test2", _updatedAt: originalDate.toJSON() },
+          ],
+          count: 2,
+        },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.getList();
       subscriber.mockClear();
 
-      fetchMock.mockResolvedValueOnce(
-        new Response(
-          '{"data": {"rows": [{"_id": "123", "name": "UpdatedTest1", "_updatedAt": "2022-01-02T00:00:00.000Z"}, {"_id": "456", "name": "Test2", "_updatedAt": "2022-01-01T00:00:00.000Z"}], "count": 2}}',
-        ),
-      );
+      const body2 = JSON.stringify({
+        data: {
+          rows: [
+            { _id: "123", name: "UpdatedTest1", _updatedAt: new Date(Date.now() + 10).toJSON() },
+            { _id: "456", name: "Test2", _updatedAt: originalDate.toJSON() },
+          ],
+          count: 2,
+        },
+      });
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.getList({}, { disableCache: true });
       expect(subscriber.mock.calls.length).toBe(1);
       expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "fetch" });
@@ -834,13 +905,16 @@ describe("ClientAdapter", () => {
     });
 
     it("should notify subscribers when an instance is updated with new data", async () => {
-      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      const body1 = JSON.stringify({ data: { _id: "123", name: "Test", _updatedAt: new Date().toJSON() } });
+      fetchMock.mockResolvedValueOnce(new Response(body1));
       await model.create({ name: "Test" });
       subscriber.mockClear();
 
-      fetchMock.mockResolvedValueOnce(
-        new Response('{"data": {"_id": "123", "name": "UpdatedTest", "_updatedAt": "2022-01-02T00:00:00.000Z"}}'),
-      );
+      const body2 = JSON.stringify({
+        data: { _id: "123", name: "UpdatedTest", _updatedAt: new Date(Date.now() + 10).toJSON() },
+      });
+
+      fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.update("123", { $set: { name: "UpdatedTest" } });
       expect(subscriber.mock.calls.length).toBe(1);
       expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "update" });

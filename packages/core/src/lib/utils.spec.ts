@@ -2,7 +2,7 @@ import { crossModelTree, getFieldsPathsFromPath } from "@/lib/utils";
 import { Model } from "@/lib/Model";
 import { FieldTypes } from "@/enums/field-types";
 import { ModelDefinition } from "@/types";
-import { mockAdapter } from "@/lib/test-utils";
+import { mockAdapter } from "@/lib/test-utils.dev";
 
 describe("test utils", () => {
   describe("crossModelTree", () => {
@@ -378,8 +378,7 @@ describe("test utils", () => {
       // @ts-expect-error test
       model.definition.fields.field1.options.items.options.fields.field3.options.__label = "field3";
       // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.fields.field3.options.items.options.__label =
-        "field3bis";
+      model.definition.fields.field1.options.items.options.fields.field3.options.items.options.__label = "field3bis";
       // @ts-expect-error test
       model.definition.fields.field1.options.items.options.fields.field3.options.items.options.fields.field4.options.__label =
         "field4";

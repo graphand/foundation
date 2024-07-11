@@ -1,5 +1,5 @@
 import { ModelList } from "@/lib/ModelList";
-import { mockModel } from "@/lib/test-utils";
+import { mockModel } from "@/lib/test-utils.dev";
 
 describe("test ModelList", () => {
   let model: ReturnType<typeof mockModel>;

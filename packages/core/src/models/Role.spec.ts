@@ -1,6 +1,6 @@
 import { Role } from "@/models/Role";
 import { RuleActions } from "@/enums/rule-actions";
-import { generateRandomString, mockAdapter } from "@/lib/test-utils";
+import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev";
 
 describe("Role Model", () => {
   const adapter = mockAdapter();

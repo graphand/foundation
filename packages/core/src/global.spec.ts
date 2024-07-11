@@ -1,7 +1,7 @@
 import { ValidatorTypes } from "@/enums/validator-types";
 import { FieldTypes } from "@/enums/field-types";
 import { ValidationError } from "@/lib/ValidationError";
-import { generateRandomString, mockAdapter } from "@/lib/test-utils";
+import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev";
 import { DataModel } from "@/models/DataModel";
 import { Environment } from "@/models/Environment";
 import { Media } from "@/models/Media";
@@ -74,9 +74,9 @@ describe("Global tests", () => {
 
     const model = DataModel.extend({ adapterClass: adapter });
 
-    await expect(
-      model.validate([{ slug, definition: { validators: "toto" } } as object]),
-    ).rejects.toThrow(ValidationError);
+    await expect(model.validate([{ slug, definition: { validators: "toto" } } as object])).rejects.toThrow(
+      ValidationError,
+    );
 
     await expect(
       model.validate([
@@ -879,13 +879,9 @@ describe("Global tests", () => {
 
     const registeredModels = Array.from(Adapter._modelsRegistry.values());
 
-    const extensibleModels = registeredModels
-      .filter(model => model.extensible)
-      .map(model => model.slug);
+    const extensibleModels = registeredModels.filter(model => model.extensible).map(model => model.slug);
 
-    const nonExtensible = registeredModels
-      .filter(model => !model.extensible)
-      .map(model => model.slug);
+    const nonExtensible = registeredModels.filter(model => !model.extensible).map(model => model.slug);
 
     for (const slug of extensibleModels) {
       await expect(DM.validate([{ slug }])).resolves.toBeTruthy();

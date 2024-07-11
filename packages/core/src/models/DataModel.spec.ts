@@ -1,4 +1,4 @@
-import { generateRandomString, mockAdapter } from "@/lib/test-utils";
+import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev";
 import { DataModel } from "./DataModel";
 import { ValidationError } from "@/lib/ValidationError";
 
