@@ -36,6 +36,7 @@ declare module "@graphand/core" {
         onLoadingChange?: (_loading: boolean) => void;
         onError?: (_error: Error) => void;
         noReload?: boolean;
+        noAutoRemove?: boolean;
       },
     ) => ReturnType<ClientAdapter<InferModelFromList<T>>["subscribe"]>;
     getKey: () => string;

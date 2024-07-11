@@ -55,9 +55,10 @@ ModelList.prototype.subscribe = function <T extends ModelList<typeof Model>>(
     onLoadingChange?: (_loading: boolean) => void;
     onError?: (_error: Error) => void;
     noReload?: boolean;
+    noAutoRemove?: boolean;
   },
 ): ReturnType<ClientAdapter<InferModelFromList<T>>["subscribe"]> {
-  const { onLoadingChange, onError, noReload } = opts ?? {};
+  const { onLoadingChange, onError, noReload, noAutoRemove } = opts ?? {};
   let state = this.getCurrentState();
 
   const handleUpdate = async (event: ModelUpdaterEvent) => {
@@ -66,7 +67,7 @@ ModelList.prototype.subscribe = function <T extends ModelList<typeof Model>>(
     try {
       if (!noReload) {
         await this.reload();
-      } else if (event.operation === "delete") {
+      } else if (event.operation === "delete" && !noAutoRemove) {
         this.remove(event.ids);
       }
 
