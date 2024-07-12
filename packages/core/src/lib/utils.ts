@@ -15,7 +15,6 @@ import {
   SerializerCtx,
   TransactionCtx,
   FieldsDefinition,
-  JSONTypeObject,
 } from "@/types";
 import { FieldTypes } from "@/enums/field-types";
 import { Field } from "@/lib/Field";
