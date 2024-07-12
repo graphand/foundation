@@ -202,11 +202,10 @@ describe("augmentations", () => {
     });
 
     it("should handle subscription immediately after model creation", () => {
-      const NewModel = modelDecorator()(
-        class extends Model {
-          static slug = "newModel";
-        },
-      );
+      @modelDecorator()
+      class NewModel extends Model {
+        static slug = "newModel";
+      }
       const newModel = client.getModel(NewModel);
       const newAdapter = newModel.getAdapter() as ClientAdapter;
 
@@ -813,10 +812,14 @@ describe("augmentations", () => {
 
     // Test 4: Error handling during reload
     it("should handle errors during reload and call onLoadingChange", async () => {
+      const body = JSON.stringify({ data: modelList.toJSON() });
+      fetchSpy.mockResolvedValueOnce(new Response(body));
+      const _modelList = await model.getList();
+
       const observer = jest.fn();
       const onLoadingChange = jest.fn();
       const onError = jest.fn();
-      modelList.subscribe(observer, { onLoadingChange, onError });
+      _modelList.subscribe(observer, { onLoadingChange, onError });
 
       fetchSpy.mockRejectedValueOnce(new Error("Reload failed"));
 
@@ -858,8 +861,12 @@ describe("augmentations", () => {
 
     // Test 6: Create operation
     it("should call the observer when a new item is created and added to the list", async () => {
+      const body = JSON.stringify({ data: modelList.toJSON() });
+      fetchSpy.mockResolvedValueOnce(new Response(body));
+      const _modelList = await model.getList();
+
       const observer = jest.fn();
-      modelList.subscribe(observer);
+      _modelList.subscribe(observer);
 
       const updatedList = [
         ...modelList.toJSON().rows,
@@ -1055,7 +1062,7 @@ describe("augmentations", () => {
     // Test 14: Handling delete operations with noReload
     it("should call the observer for delete operations of items in the list with noReload option", async () => {
       const observer = jest.fn();
-      modelList.subscribe(observer, { noReload: true });
+      modelList.subscribe(observer, { noReload: true, autoRemove: true });
 
       adapter.dispatch({
         operation: "delete",
@@ -1331,6 +1338,117 @@ describe("augmentations", () => {
 
       expect(reloadSpy).toHaveBeenCalled();
       expect(observer).toHaveBeenCalledWith(deleteEvent);
+    });
+  });
+
+  describe("PromiseModel.prototype.cached", () => {
+    it("should return null if the instance is not in cache", () => {
+      const promise = model.get("non-existent-id");
+      expect(promise.cached).toBeNull();
+    });
+
+    it("should return the cached instance if available", async () => {
+      const instance = model.hydrate({ _id: "cached-id", someField: "value" });
+      adapter.instancesMap.set("cached-id", instance);
+      const promise = model.get("cached-id");
+      expect(promise.cached).toBe(instance);
+    });
+
+    it("should return null for a query that doesn't use IDs", () => {
+      const promise = model.get({ filter: { someField: "value" } });
+      expect(promise.cached).toBeNull();
+    });
+
+    it("should work with single models", async () => {
+      @modelDecorator()
+      class SingleModel extends Model {
+        static slug = "singleModel";
+        static definition = {
+          ...TestModel.definition,
+          single: true,
+        };
+      }
+      const singleModel = client.getModel(SingleModel);
+      const singleAdapter = singleModel.getAdapter() as ClientAdapter;
+      const instance = singleModel.hydrate({ _id: "single-id" });
+      singleAdapter.instancesMap.set("single-id", instance);
+      const promise = singleModel.get();
+      expect(promise.cached).toBe(instance);
+    });
+  });
+
+  describe("PromiseModelList.prototype.cached", () => {
+    it("should return null if no query is provided", () => {
+      const promise = model.getList();
+      expect(promise.cached).toBeNull();
+    });
+
+    it("should return null if the query doesn't use IDs", () => {
+      const promise = model.getList({ filter: { someField: "value" } });
+      expect(promise.cached).toBeNull();
+    });
+
+    it("should return null if not all instances are in cache", () => {
+      const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
+      adapter.instancesMap.set("id1", instance1);
+      const promise = model.getList({ ids: ["id1", "id2"] });
+      expect(promise.cached).toBeNull();
+    });
+
+    it("should return a ModelList with cached instances if all are available", () => {
+      const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
+      const instance2 = model.hydrate({ _id: "id2", someField: "value2" });
+      adapter.instancesMap.set("id1", instance1);
+      adapter.instancesMap.set("id2", instance2);
+      const promise = model.getList({ ids: ["id1", "id2"] });
+      const cached = promise.cached;
+      expect(cached).toBeInstanceOf(ModelList);
+      expect(cached?.length).toBe(2);
+      expect(cached?.[0]).toBe(instance1);
+      expect(cached?.[1]).toBe(instance2);
+    });
+  });
+
+  describe("PromiseModelList.prototype.cachedPartial", () => {
+    it("should return null if the query doesn't use IDs", () => {
+      const promise = model.getList({ filter: { someField: "value" } });
+      expect(promise.cachedPartial).toBeNull();
+    });
+
+    it("should return a ModelList with available cached instances", () => {
+      const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
+      const instance2 = model.hydrate({ _id: "id2", someField: "value2" });
+      adapter.instancesMap.set("id1", instance1);
+      adapter.instancesMap.set("id2", instance2);
+      const promise = model.getList({ ids: ["id1", "id2", "id3"] });
+      const cachedPartial = promise.cachedPartial;
+      expect(cachedPartial).toBeInstanceOf(ModelList);
+      expect(cachedPartial?.length).toBe(2);
+      expect(cachedPartial?.[0]).toBe(instance1);
+      expect(cachedPartial?.[1]).toBe(instance2);
+    });
+
+    it("should return an empty ModelList if no instances are cached", () => {
+      const promise = model.getList({ ids: ["id1", "id2"] });
+      const cachedPartial = promise.cachedPartial;
+      expect(cachedPartial).toBeInstanceOf(ModelList);
+      expect(cachedPartial?.length).toBe(0);
+    });
+
+    it("should maintain the order of IDs from the original query", () => {
+      const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
+      const instance2 = model.hydrate({ _id: "id2", someField: "value2" });
+      const instance3 = model.hydrate({ _id: "id3", someField: "value3" });
+      adapter.instancesMap.set("id1", instance1);
+      adapter.instancesMap.set("id2", instance2);
+      adapter.instancesMap.set("id3", instance3);
+      const promise = model.getList({ ids: ["id3", "id1", "id4", "id2"] });
+      const cachedPartial = promise.cachedPartial;
+      expect(cachedPartial).toBeInstanceOf(ModelList);
+      expect(cachedPartial?.length).toBe(3);
+      expect(cachedPartial?.[0]).toBe(instance3);
+      expect(cachedPartial?.[1]).toBe(instance1);
+      expect(cachedPartial?.[2]).toBe(instance2);
     });
   });
 });

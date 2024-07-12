@@ -1,6 +1,15 @@
+import { ObjectId } from "bson";
 import { Client } from "./Client";
 import { ClientAdapter } from "./ClientAdapter";
-import { FieldTypes, Model, ModelCrudEvent, modelDecorator, ValidationError } from "@graphand/core";
+import {
+  FieldTypes,
+  Model,
+  ModelCrudEvent,
+  modelDecorator,
+  ModelDefinition,
+  PromiseModel,
+  ValidationError,
+} from "@graphand/core";
 
 describe("ClientAdapter", () => {
   @modelDecorator()
@@ -957,6 +966,75 @@ describe("ClientAdapter", () => {
       expect(secondSubscriber.mock.calls.length).toBe(1);
       expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "create" });
       expect(secondSubscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "create" });
+    });
+  });
+
+  describe("Populated data", () => {
+    @modelDecorator()
+    class RelatedModel extends Model {
+      static slug = "relatedModel";
+      static definition = {
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      } satisfies ModelDefinition;
+    }
+
+    @modelDecorator()
+    class MockModelWithRelation extends Model {
+      static slug = "mockModelWithRelation";
+      static definition = {
+        fields: {
+          name: {
+            type: FieldTypes.TEXT,
+          },
+          related: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: RelatedModel.slug,
+            },
+            _tsModel: undefined as typeof RelatedModel,
+          },
+        },
+      } satisfies ModelDefinition;
+    }
+
+    let modelRelated: typeof RelatedModel;
+    let modelWithRelation: typeof MockModelWithRelation;
+    let adapterRelated: ClientAdapter;
+    let adapterWithRelation: ClientAdapter;
+
+    beforeEach(() => {
+      modelRelated = client.getModel(RelatedModel);
+      modelWithRelation = client.getModel(MockModelWithRelation);
+      adapterRelated = modelRelated.getAdapter() as ClientAdapter;
+      adapterWithRelation = modelWithRelation.getAdapter() as ClientAdapter;
+    });
+
+    it("should process and cache populated data", async () => {
+      const relatedId = new ObjectId().toString();
+      const populatedData = {
+        _id: "123",
+        name: "Test",
+        related: {
+          _id: relatedId,
+          title: "Related Title",
+        },
+      };
+
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: populatedData })));
+
+      const result = await modelWithRelation.get("123");
+
+      expect(result).toBeInstanceOf(MockModelWithRelation);
+      expect(result.get("name")).toBe("Test");
+      expect(result.getData().related).toBe(relatedId);
+      expect(adapterWithRelation.instancesMap.get(relatedId)).toBeUndefined();
+      expect(adapterRelated.instancesMap.get(relatedId)).toBeInstanceOf(RelatedModel);
+      expect(result.get("related")).toBeInstanceOf(PromiseModel);
+      expect(result.get("related").cached).toBeInstanceOf(RelatedModel);
     });
   });
 });

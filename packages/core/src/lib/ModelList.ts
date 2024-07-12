@@ -16,7 +16,7 @@ export class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
     super(...list);
 
     this.#model = model;
-    this.#query = query;
+    this.#query = Object.freeze(query);
     this.#count = count;
   }
 

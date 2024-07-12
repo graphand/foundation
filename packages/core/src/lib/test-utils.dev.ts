@@ -90,11 +90,11 @@ export const mockAdapter = ({
         return Promise.resolve(i);
       }),
       createMultiple: jest.fn(([payload]) => {
-        const created = payload.map(p => this.model.hydrate(p));
-        created.forEach(i => {
-          i._id ??= String(new ObjectId());
-          this.thisCache.add(i as ModelInstance<T>);
+        const created = payload.map(p => {
+          p._id ??= String(new ObjectId());
+          return this.model.hydrate(p);
         });
+        created.forEach(i => this.thisCache.add(i as ModelInstance<T>));
         return Promise.resolve(created);
       }),
       updateOne: jest.fn(([query, update]) => {
@@ -125,15 +125,19 @@ export const mockAdapter = ({
           return Promise.resolve(null);
         }
 
+        const data = { ...found.getData() };
+
         if (update.$set) {
-          Object.assign(found.getData(), update.$set);
+          Object.assign(data, update.$set);
         }
 
         if (update.$unset) {
           Object.keys(update.$unset).forEach(key => {
-            delete found.getData()[key as unknown as keyof ModelData<typeof Model>];
+            delete data[key as unknown as keyof ModelData<typeof Model>];
           });
         }
+
+        found.setData(data);
 
         return Promise.resolve(found);
       }),
@@ -144,17 +148,21 @@ export const mockAdapter = ({
 
         const list = Array.from(this.thisCache);
 
-        if (update.$set) {
-          list.forEach(i => Object.assign(i.getData(), update.$set));
-        }
+        list.forEach(i => {
+          const data = { ...i.getData() };
 
-        if (update.$unset) {
-          list.forEach(i => {
+          if (update.$set) {
+            Object.assign(data, update.$set);
+          }
+
+          if (update.$unset) {
             Object.keys(update.$unset).forEach(key => {
-              delete i.getData()[key as unknown as keyof ModelData<typeof Model>];
+              delete data[key as unknown as keyof ModelData<typeof Model>];
             });
-          });
-        }
+          }
+
+          i.setData(data);
+        });
 
         return Promise.resolve(list);
       }),

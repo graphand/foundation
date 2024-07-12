@@ -7,6 +7,8 @@ import {
   ModelCrudEvent,
   ModelInstance,
   ModelJSON,
+  FieldTypes,
+  FieldOptionsMap,
 } from "@graphand/core";
 import { Client } from "./Client";
 import { Subject } from "./Subject";
@@ -56,7 +58,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
     const data = event.operation === "create" ? event.data.filter(r => !this.#instancesMap.has(r._id)) : event.data;
 
-    const mappedList = data.map(r => this.#processInstancePayload(r));
+    const mappedList = data.map(r => this.processInstancePayload(r));
     const updated = mappedList
       .filter(r => r.updated)
       .map(r => r.mapped?._id)
@@ -93,57 +95,68 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   fetcher: AdapterFetcher<T> = {
     count: async ([query], ctx) => {
       this.checkClient();
+
       const res = await this.client.execute(controllersMap.modelCount, {
         ctx,
         path: { model: this.model.slug },
         init: { body: JSON.stringify(query) },
       });
+
       return Number(await res.json().then(r => r.data));
     },
 
     get: async ([query], ctx) => {
       this.checkClient();
+
       if (this.model.isSingle()) {
         return this.#getSingle(ctx);
       }
+
       return typeof query === "string" ? this.#getById(query, ctx) : this.#getByQuery(query, ctx);
     },
 
     getList: async ([query], ctx) => {
       this.checkClient();
+
       return this.#getListInternal(query, ctx);
     },
 
     createOne: async ([payload], ctx) => {
       this.checkClient();
+
       const json = await this.#createOneInternal(payload, ctx);
-      return this.#processInstancePayload(json).mapped as ModelInstance<T>;
+      return this.processInstancePayload(json).mapped as ModelInstance<T>;
     },
 
     createMultiple: async ([payload], ctx) => {
       this.checkClient();
+
       const json = await this.#createMultipleInternal(payload, ctx);
-      return json.map(r => this.#processInstancePayload(r).mapped).filter(Boolean) as Array<ModelInstance<T>>;
+      return json.map(r => this.processInstancePayload(r).mapped).filter(Boolean) as Array<ModelInstance<T>>;
     },
 
     updateOne: async ([query, update], ctx) => {
       this.checkClient();
+
       return typeof query === "string" ? this.#updateById(query, update, ctx) : this.#updateByQuery(query, update, ctx);
     },
 
     updateMultiple: async ([query, update], ctx) => {
       this.checkClient();
+
       const json = await this.#updateMultipleInternal(query, update, ctx);
-      return json.map(r => this.#processInstancePayload(r).mapped).filter(Boolean) as Array<ModelInstance<T>>;
+      return json.map(r => this.processInstancePayload(r).mapped).filter(Boolean) as Array<ModelInstance<T>>;
     },
 
     deleteOne: async ([query], ctx) => {
       this.checkClient();
+
       return typeof query === "string" ? this.#deleteById(query, ctx) : this.#deleteByQuery(query, ctx);
     },
 
     deleteMultiple: async ([query], ctx) => {
       this.checkClient();
+
       return this.#deleteMultipleInternal(query, ctx);
     },
   };
@@ -201,7 +214,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     });
 
     const json: ReturnType<ModelList<T>["toJSON"]> = await res.json().then(r => r.data);
-    const mappedList = json.rows.map(r => this.#processInstancePayload(r as ModelJSON<T>));
+    const mappedList = json.rows.map(r => this.processInstancePayload(r as ModelJSON<T>));
     const mappedRes = mappedList.map(r => r.mapped).filter(Boolean) as Array<ModelInstance<T>>;
 
     this.#updateCacheFromList(mappedList);
@@ -250,14 +263,14 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
     const json: ModelJSON<T> = await res.json().then(r => r.data);
     this.#dispatchUpdateEvent([json]);
-    return this.#processInstancePayload(json).mapped as ModelInstance<T>;
+    return this.processInstancePayload(json).mapped as ModelInstance<T>;
   }
 
   async #updateByQuery(query: any, update: any, ctx: any): Promise<ModelInstance<T> | null> {
     query.pageSize = 1;
     const list = await this.#updateMultipleInternal(query, update, ctx);
     if (!list?.length) return null;
-    return this.#processInstancePayload(list[0]).mapped as ModelInstance<T>;
+    return this.processInstancePayload(list[0]).mapped as ModelInstance<T>;
   }
 
   async #updateMultipleInternal(query: any, update: any, ctx: any): Promise<Array<ModelJSON<T>>> {
@@ -359,7 +372,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     });
   }
 
-  #processInstancePayload(payload: ModelJSON<T>): { updated: boolean; mapped?: ModelInstance<T> } {
+  processInstancePayload(payload: ModelJSON<T>): { updated: boolean; mapped?: ModelInstance<T> } {
     if (!payload || typeof payload !== "object") {
       throw new Error("Invalid payload");
     }
@@ -371,10 +384,11 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       const newAge = Math.max(new Date(payload._createdAt ?? 0).getTime(), new Date(payload._updatedAt ?? 0).getTime());
       if (newAge > mapped.__getAge()) {
         updated = true;
-        mapped.setData(payload);
+        this.#updateInstanceWithPopulatedData(mapped, payload);
       }
     } else if (payload._id) {
-      mapped = this.model.hydrate(payload);
+      const processedPayload = this.#processPopulatedData(payload);
+      mapped = this.model.hydrate(processedPayload);
       this.#instancesMap.set(payload._id, mapped);
       updated = true;
     }
@@ -384,6 +398,43 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     }
 
     return { updated, mapped };
+  }
+
+  #updateInstanceWithPopulatedData(instance: ModelInstance<T>, payload: ModelJSON<T>): void {
+    const processedPayload = this.#processPopulatedData(payload);
+    instance.setData(processedPayload);
+  }
+
+  #processPopulatedData(payload: ModelJSON<T>): ModelJSON<T> {
+    const fieldsMap = this.model.fieldsMap;
+    const processedPayload: ModelJSON<T> = { ...payload };
+
+    for (const [fieldName, field] of fieldsMap) {
+      if (field.type !== FieldTypes.RELATION) {
+        continue;
+      }
+
+      const value = payload[fieldName as keyof ModelJSON<T>];
+
+      if (!value || typeof value !== "object") {
+        continue;
+      }
+
+      const options = field.options as FieldOptionsMap[FieldTypes.RELATION];
+      const relatedModel = this.client.getModel(options.ref);
+
+      const adapter = relatedModel.getAdapter() as ClientAdapter;
+      const { mapped } = adapter.processInstancePayload(value as ModelJSON<typeof relatedModel>);
+
+      if (!mapped) {
+        throw new Error("Related instance not found");
+      }
+
+      // @ts-expect-error
+      processedPayload[fieldName] = mapped._id;
+    }
+
+    return processedPayload;
   }
 
   subscribe(observer: SubjectObserver<ModelUpdaterEvent>): () => void {
@@ -418,13 +469,15 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   #processAndCacheInstance(json: ModelJSON<T>): ModelInstance<T> | null {
-    const { mapped, updated } = this.#processInstancePayload(json);
+    const { mapped, updated } = this.processInstancePayload(json);
+
     if (updated && mapped?._id) {
       this.#cacheSubject.next({
         ids: [mapped._id],
         operation: "fetch",
       });
     }
+
     return mapped || null;
   }
 }

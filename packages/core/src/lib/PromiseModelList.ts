@@ -23,7 +23,7 @@ export class PromiseModelList<T extends typeof Model> extends Thenable<ModelList
   }
 
   get query() {
-    return this.#query;
+    return this.#query ?? {};
   }
 
   getIds(): Array<string> {

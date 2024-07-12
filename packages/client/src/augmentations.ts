@@ -1,7 +1,8 @@
-import { InferModel, Model, ModelInstance, ModelList } from "@graphand/core";
+import { InferModel, Model, ModelInstance, ModelList, PromiseModel, PromiseModelList } from "@graphand/core";
 import { ClientAdapter } from "./lib/ClientAdapter";
 import { InferModelFromList, ModelUpdaterEvent, SubjectObserver } from "./types";
 import { Client } from "./lib/Client";
+import { canUseIds } from "./lib/utils";
 
 Model.subscribe = function <T extends typeof Model>(
   this: T,
@@ -55,10 +56,12 @@ ModelList.prototype.subscribe = function <T extends ModelList<typeof Model>>(
     onLoadingChange?: (_loading: boolean) => void;
     onError?: (_error: Error) => void;
     noReload?: boolean;
-    noAutoRemove?: boolean;
+    autoRemove?: boolean;
+    reload?: () => Promise<void>;
   },
 ): ReturnType<ClientAdapter<InferModelFromList<T>>["subscribe"]> {
-  const { onLoadingChange, onError, noReload, noAutoRemove } = opts ?? {};
+  const { onLoadingChange, onError, noReload, autoRemove } = opts ?? {};
+  let { reload } = opts ?? {};
   let state = this.getCurrentState();
 
   const handleUpdate = async (event: ModelUpdaterEvent) => {
@@ -66,8 +69,9 @@ ModelList.prototype.subscribe = function <T extends ModelList<typeof Model>>(
 
     try {
       if (!noReload) {
-        await this.reload();
-      } else if (event.operation === "delete" && !noAutoRemove) {
+        reload ??= async () => this.reload();
+        await reload();
+      } else if (event.operation === "delete" && autoRemove) {
         this.remove(event.ids);
       }
 
@@ -133,3 +137,75 @@ ModelList.prototype.hasStateChanged = function <T extends ModelList<typeof Model
     oldState.key !== newState.key
   );
 };
+
+/**
+ * Allow to access the cached instance of a model from a PromiseModel
+ * Add ability to get a cached instance in a synchronous way
+ * @example
+ * const promise = model.get("id"); // promise is a PromiseModel
+ * const instance = model.get("id").cached; // instance is a Model instance (or null if not found in cache)
+ */
+Object.defineProperty(PromiseModel.prototype, "cached", {
+  get() {
+    const adapter = this.model.getAdapter() as ClientAdapter;
+
+    if (this.model.isSingle()) {
+      if (adapter.instancesMap.size) {
+        return adapter.instancesMap.values().next().value;
+      }
+
+      return null;
+    }
+
+    if (typeof this.query === "string") {
+      if (adapter.instancesMap.has(this.query)) {
+        return adapter.instancesMap.get(this.query);
+      }
+
+      return null;
+    }
+
+    return null;
+  },
+});
+
+/**
+ * Allow to access the cached instances of a model from a PromiseModelList
+ * Add ability to get a cached instances in a synchronous way
+ * @example
+ * const promise = model.getList(); // promise is a PromiseModelList
+ * const instances = model.getList().cached; // instances is a ModelList (or null if not found in cache)
+ */
+Object.defineProperty(PromiseModelList.prototype, "cached", {
+  get() {
+    const list = this as PromiseModelList<typeof Model>;
+    const adapter = list.model.getAdapter() as ClientAdapter;
+
+    if (canUseIds(list.query)) {
+      const ids = list.getIds();
+      const cachedInstances = ids.map(id => adapter.instancesMap.get(id)).filter(Boolean) as ModelInstance[];
+
+      if (cachedInstances.length === ids.length) {
+        return new ModelList(this.model, cachedInstances, list.query);
+      }
+    }
+
+    return null;
+  },
+});
+
+Object.defineProperty(PromiseModelList.prototype, "cachedPartial", {
+  get() {
+    const list = this as PromiseModelList<typeof Model>;
+    const adapter = list.model.getAdapter() as ClientAdapter;
+
+    if (canUseIds(list.query)) {
+      const ids = list.getIds();
+      const cachedInstances = ids.map(id => adapter.instancesMap.get(id)).filter(Boolean) as ModelInstance[];
+
+      return new ModelList(this.model, cachedInstances, list.query);
+    }
+
+    return null;
+  },
+});

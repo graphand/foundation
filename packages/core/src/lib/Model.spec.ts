@@ -933,274 +933,6 @@ describe("Test Model", () => {
     });
   });
 
-  describe("Model setter", () => {
-    it("should set simple field value", async () => {
-      const adapter = mockAdapter();
-      const model = mockModel({
-        fields: {
-          test: {
-            type: FieldTypes.TEXT,
-          },
-        },
-      }).extend({ adapterClass: adapter });
-
-      const created = await model.create({});
-
-      expect(created.get("test")).toBe(undefined);
-      created.set("test", "test");
-      expect(created.get("test")).toEqual("test");
-    });
-
-    it("should serialize value", async () => {
-      const adapter = mockAdapter();
-      const model = mockModel({
-        fields: {
-          test: {
-            type: FieldTypes.TEXT,
-          },
-        },
-      }).extend({ adapterClass: adapter });
-
-      const created = await model.create({});
-
-      created.set("test", 123);
-      expect(created.getData().test).toEqual("123");
-    });
-
-    it("should set nested json field", async () => {
-      const model = mockModel({
-        fields: {
-          obj: {
-            type: FieldTypes.NESTED,
-            options: {
-              fields: {
-                nested: {
-                  type: FieldTypes.TEXT,
-                },
-              },
-            },
-          },
-        },
-      }).extend({ adapterClass: mockAdapter() });
-
-      const created = await model.create({ obj: { nested: "toto" } });
-
-      expect(created.get("obj.nested")).toBe("toto");
-      created.set("obj.nested", "test");
-      expect(created.get("obj.nested")).toEqual("test");
-    });
-
-    it("should set nested json field even if not exists", async () => {
-      const model = mockModel({
-        fields: {
-          obj: {
-            type: FieldTypes.NESTED,
-            options: {
-              fields: {
-                nested: {
-                  type: FieldTypes.TEXT,
-                },
-              },
-            },
-          },
-        },
-      }).extend({ adapterClass: mockAdapter() });
-
-      const created = await model.create({});
-
-      expect(created.get("obj.nested")).toBe(undefined);
-      created.set("obj.nested", "test");
-      expect(created.get("obj.nested")).toEqual("test");
-    });
-
-    it("should set value as array", async () => {
-      const adapter = mockAdapter();
-      const model = mockModel({
-        fields: {
-          arr: {
-            type: FieldTypes.ARRAY,
-            options: {
-              items: {
-                type: FieldTypes.TEXT,
-              },
-            },
-          },
-        },
-      }).extend({ adapterClass: adapter });
-
-      const created = await model.create({});
-
-      expect(created.get("arr")).toEqual(undefined);
-      created.set("arr", ["test1", "test2"]);
-      expect(created.get("arr")).toEqual(["test1", "test2"]);
-    });
-
-    it("should set value in array", async () => {
-      const adapter = mockAdapter();
-      const model = class extends Model {
-        static slug = generateRandomString();
-        static definition = {
-          fields: {
-            arr: {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.TEXT,
-                },
-              },
-            },
-          },
-        };
-      }.extend({ adapterClass: adapter });
-
-      const created = await model.create({ arr: ["test1"] });
-
-      expect(created.get("arr")).toEqual(["test1"]);
-      created.set("arr.[]", "test2");
-      expect(created.get("arr")).toEqual(["test2"]);
-    });
-
-    it("should set value in array of json", async () => {
-      const adapter = mockAdapter();
-      const model = mockModel({
-        fields: {
-          arr: {
-            type: FieldTypes.ARRAY,
-            options: {
-              items: {
-                type: FieldTypes.NESTED,
-                options: {
-                  fields: {
-                    nested: {
-                      type: FieldTypes.TEXT,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }).extend({ adapterClass: adapter });
-
-      const created = await model.create({
-        arr: [
-          {
-            nested: "test1",
-          },
-          {
-            nested: "test2",
-          },
-        ],
-      });
-
-      expect(created.get("arr.nested")).toEqual(["test1", "test2"]);
-      created.set("arr.nested", "test3");
-      expect(created.get("arr")).toEqual([
-        {
-          nested: "test3",
-        },
-        {
-          nested: "test3",
-        },
-      ]);
-      expect(created.get("arr.nested")).toEqual(["test3", "test3"]);
-    });
-
-    it("should return the setted value", async () => {
-      const adapter = mockAdapter();
-      const model = mockModel({
-        fields: {
-          arr: {
-            type: FieldTypes.ARRAY,
-            options: {
-              items: {
-                type: FieldTypes.NESTED,
-                options: {
-                  fields: {
-                    nested: {
-                      type: FieldTypes.TEXT,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }).extend({ adapterClass: adapter });
-
-      const created = await model.create({
-        arr: [
-          {
-            nested: "test1",
-          },
-          {
-            nested: "test2",
-          },
-        ],
-      });
-
-      expect(
-        created.set("arr", [
-          {
-            nested: "test3a",
-          },
-          {
-            nested: "test3a",
-          },
-        ]),
-      ).toEqual([
-        {
-          nested: "test3a",
-        },
-        {
-          nested: "test3a",
-        },
-      ]);
-      expect(
-        created.set("arr.[]", {
-          nested: "test3b",
-        }),
-      ).toEqual([
-        {
-          nested: "test3b",
-        },
-        {
-          nested: "test3b",
-        },
-      ]);
-      expect(created.set("arr.nested", "test3")).toEqual(["test3", "test3"]);
-    });
-
-    it("should throw error if field doesn't exist", async () => {
-      const adapter = mockAdapter();
-      const model = mockModel({
-        fields: {
-          arr: {
-            type: FieldTypes.ARRAY,
-            options: {
-              items: {
-                type: FieldTypes.NESTED,
-                options: {
-                  fields: {
-                    nested: {
-                      type: FieldTypes.TEXT,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }).extend({ adapterClass: adapter });
-
-      const created = await model.create({});
-
-      expect(() => created.set("arr.undefined", "")).toThrow();
-      expect(() => created.set("arr.[].undefined", "")).toThrow();
-      expect(() => created.set("undefined.arr", "")).toThrow();
-    });
-  });
-
   describe("Model getter and setter should be consistant", () => {
     const adapter = mockAdapter();
     const model = mockModel({
@@ -1282,8 +1014,10 @@ describe("Test Model", () => {
       create ??= { [field]: value };
       const created = await model.create(create);
       const v = created.get(field);
-      const r = created.set(field, v);
-      expect(r).toEqual(value);
+
+      const data = { ...created.getData() } as any;
+      data[field] = v;
+      created.setData(data);
 
       const v2 = created.get(field, format);
       if (primitive) {
@@ -1359,11 +1093,6 @@ describe("Test Model", () => {
         });
 
         expect(created.get("complex.nestedArr.nested")).toEqual(["test1", "test2"]);
-
-        const r = created.set("complex.nestedArr.nested", "test3");
-
-        expect(r).toEqual(created.get("complex.nestedArr.nested"));
-        expect(r).toEqual(["test3", "test3"]);
       });
     });
 
@@ -2624,8 +2353,6 @@ describe("Test Model", () => {
       ]);
 
       const i1 = await Model.getClass(slug1, adapter).create({});
-
-      i1._id = new ObjectId().toString();
 
       const i2 = await Model.getClass<
         typeof Model & {

@@ -1,8 +1,8 @@
 {
-  "name": "monorepo",
+  "name": "foundation",
   "private": false,
-  "homepage": "https://github.com/graphand/monorepo",
-  "repository": "graphand/monorepo",
+  "homepage": "https://github.com/graphand/foundation",
+  "repository": "graphand/foundation",
   "author": {
     "name": "Graphand",
     "email": "contact@graphand.com",

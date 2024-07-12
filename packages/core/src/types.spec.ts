@@ -392,8 +392,8 @@ describe("test types", () => {
   });
 
   it("should ...", () => {
-    class CustomModel extends Model {
-      static slug = "custom" as const;
+    class RelatedModel extends Model {
+      static slug = "related" as const;
       static definition = {
         fields: {
           field: {
@@ -403,27 +403,27 @@ describe("test types", () => {
       } satisfies ModelDefinition;
     }
 
-    const i = (
-      Model as typeof Model & {
-        definition: {
-          fields: {
-            field1: {
-              type: FieldTypes.TEXT;
-            };
-            field2: {
-              type: FieldTypes.NUMBER;
-            };
-            rel: {
-              type: FieldTypes.RELATION;
-              options: {
-                ref: "custom";
-              };
-              _tsModel: typeof CustomModel;
-            };
-          };
-        };
-      }
-    ).hydrate();
+    class CustomModel extends Model {
+      static slug = "custom" as const;
+      static definition = {
+        fields: {
+          field1: {
+            type: FieldTypes.TEXT,
+          },
+          field2: {
+            type: FieldTypes.NUMBER,
+          },
+          rel: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: RelatedModel.slug,
+            },
+          },
+        },
+      } satisfies ModelDefinition;
+    }
+
+    const i = CustomModel.hydrate();
 
     simulateTypeCheck<PromiseModel<typeof CustomModel>>(i.rel);
   });

@@ -4,6 +4,7 @@ import { Model } from "@/lib/Model";
 import { getValidationValues, isObjectId } from "@/lib/utils";
 import { PromiseModel } from "@/lib/PromiseModel";
 import { FieldSerializerInput } from "@/types";
+import { CoreError } from "../CoreError";
 
 export class FieldRelation extends Field<FieldTypes.RELATION> {
   validate: Field<FieldTypes.RELATION>["validate"] = async ({ list }) => {
@@ -46,7 +47,9 @@ export class FieldRelation extends Field<FieldTypes.RELATION> {
     const id = this._sString(input);
 
     if (!isObjectId(id)) {
-      return null;
+      throw new CoreError({
+        message: `Invalid id ${input.value} for relation ${this.path}`,
+      });
     }
 
     const { from, ctx } = input;

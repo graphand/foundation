@@ -32,7 +32,6 @@ import {
   getFieldsPathsFromPath,
   getRecursiveHooksFromModel,
   _getter,
-  _setter,
   validateModel,
   assignDatamodel,
   getModelInitPromise,
@@ -78,7 +77,7 @@ export class Model {
     _updatedBy: { type: FieldTypes.IDENTITY },
   };
 
-  __data: ModelData; // The document
+  #data: ModelData; // The document
 
   constructor(data: ModelData = {}) {
     if (!data || typeof data !== "object") {
@@ -87,12 +86,7 @@ export class Model {
       });
     }
 
-    this.__data = data;
-
-    Object.defineProperty(this, "__data", {
-      enumerable: false,
-      configurable: false,
-    });
+    this.#data = Object.freeze(data);
   }
 
   /**
@@ -144,8 +138,8 @@ export class Model {
   /**
    * Returns the current instance doc (raw data)
    */
-  getData<T extends ModelInstance>(this: T) {
-    return this.__data as ModelData<InferModel<T>>;
+  getData<T extends ModelInstance>(this: T): Readonly<ModelData<InferModel<T>>> {
+    return this.#data as Readonly<ModelData<InferModel<T>>>;
   }
 
   getKey<T extends ModelInstance<typeof Model>>(this: T, format?: SerializerFormat): string {
@@ -170,19 +164,21 @@ export class Model {
    * @param data
    */
   setData(data: ModelData) {
-    this.__data = data;
+    this.#data = Object.freeze(data);
   }
 
   /**
    * Clone the current model instance.
+   * The cloned instance shares the same data with the original instance.
+   * This method is useful when you want to break the reference to the original instance.
    * @example
    * const account = await models.Account.get();
    * const clonedAccount = account.clone();
    * console.log(account === clonedAccount); // false
+   * console.log(account._email === clonedAccount._email); // true
    */
   clone<T extends ModelInstance>(this: T): T {
-    const clonedData = JSON.parse(JSON.stringify(this.__data));
-    return this.model().hydrate(clonedData) as T;
+    return this.model().hydrate(this.#data) as T;
   }
 
   /**
@@ -346,14 +342,10 @@ export class Model {
             const i = this as unknown as ModelInstance;
             return i.get(slug);
           },
-          set(v) {
-            if (v === undefined) {
-              console.warn("cannot set undefined value with = operator. Please use .set method instead");
-              return;
-            }
-
-            const i = this as unknown as ModelInstance;
-            return i.set(slug, v);
+          set() {
+            throw new CoreError({
+              message: `This object is immutable. Please use .update method instead`,
+            });
           },
         };
       }
@@ -501,7 +493,7 @@ export class Model {
       }
     }
 
-    const doc = (this.__data || {}) as ReturnType<T["getData"]>;
+    const doc = (this.#data || {}) as ReturnType<T["getData"]>;
 
     if (!fieldsPaths?.length) {
       if (model.freeMode) {
@@ -530,48 +522,6 @@ export class Model {
 
       throw e;
     }
-  }
-
-  /**
-   * Set value for a specific field. Model.set("field", "value") is an equivalent to `model.field = value`
-   * @param path - The path to the field
-   * @param value - The value to set
-   * @example
-   * model.set("field", "value");
-   * console.log(model.get("field")); // value
-   */
-  set<T extends ModelInstance>(this: T, path: string, value: unknown): any {
-    const _path = path as string;
-    let fieldsPaths;
-    const _throw = () => {
-      throw new CoreError({
-        message: `Field ${_path} is not found in model ${this.model().slug}`,
-      });
-    };
-
-    if (_path.includes(".")) {
-      const pathArr = _path.split(".");
-      fieldsPaths = getFieldsPathsFromPath(this.model(), [...pathArr]);
-
-      if (fieldsPaths.includes(null)) {
-        _throw();
-      }
-    } else {
-      fieldsPaths = [
-        {
-          key: _path,
-          field: this.model().fieldsMap.get(_path),
-        },
-      ];
-    }
-
-    return _setter({
-      assignTo: this.__data,
-      value,
-      fieldsPaths,
-      _throw,
-      from: this,
-    });
   }
 
   /**

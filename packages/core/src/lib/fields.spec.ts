@@ -2294,7 +2294,7 @@ describe("test fields", () => {
 
       const i = model.hydrate({ rel: "invalid" });
 
-      expect(i.rel).toBe(null);
+      expect(() => i.rel).toThrow("Invalid id");
     });
 
     it("should return string in JSON format", async () => {

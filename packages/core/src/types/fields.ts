@@ -128,7 +128,6 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes> = Fie
       : Array<unknown>;
   };
   validation: {};
-  // nextField: {};
 }
 
 export type InferFieldType<D extends FieldDefinition, F extends SerializerFormat> = "_ts" extends keyof D

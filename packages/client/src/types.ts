@@ -36,13 +36,23 @@ declare module "@graphand/core" {
         onLoadingChange?: (_loading: boolean) => void;
         onError?: (_error: Error) => void;
         noReload?: boolean;
-        noAutoRemove?: boolean;
+        autoRemove?: boolean;
+        reload?: () => Promise<void>;
       },
     ) => ReturnType<ClientAdapter<InferModelFromList<T>>["subscribe"]>;
     getKey: () => string;
     getMostRecent: () => ModelInstance<T> | undefined;
     getCurrentState: () => ModelListState;
     hasStateChanged: (_oldState: ModelListState, _newState: ModelListState) => boolean;
+  }
+
+  export interface PromiseModel<T extends typeof Model> {
+    cached: ModelInstance<T> | null;
+  }
+
+  export interface PromiseModelList<T extends typeof Model> {
+    cached: ModelList<T> | null;
+    cachedPartial: ModelList<T> | null;
   }
 }
 

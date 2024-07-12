@@ -1,1 +1,1 @@
-# @graphand/client
+# 🚀 Graphand foundation monorepo
