@@ -73,4 +73,5 @@ export {
   getValidatorFromDefinition,
   validateModel,
   getValidationValues,
+  getNestedFieldsArrayForModel,
 } from "@/lib/utils";

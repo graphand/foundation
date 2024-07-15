@@ -294,10 +294,14 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     const init: RequestInit = opts.init ?? {};
 
-    const order = ["put", "post", "patch", "delete", "get", "options"] as Array<(typeof definition)["methods"][number]>;
-    const method = order.filter(m => definition.methods.includes(m)).at(0) || "get";
+    if (!init.method) {
+      const order = ["put", "post", "patch", "delete", "get", "options"] as Array<
+        (typeof definition)["methods"][number]
+      >;
+      const method = order.filter(m => definition.methods.includes(m)).at(0) || "get";
 
-    init.method ??= method.toUpperCase();
+      init.method = method.toUpperCase();
+    }
 
     if (this.options.headers) {
       init.headers ??= {};

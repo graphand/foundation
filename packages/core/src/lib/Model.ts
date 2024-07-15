@@ -493,12 +493,11 @@ export class Model {
       }
     }
 
-    const doc = (this.#data || {}) as ReturnType<T["getData"]>;
+    value ??= this.getData() ?? {};
 
     if (!fieldsPaths?.length) {
       if (model.freeMode) {
-        // @ts-expect-error Accept any path
-        return doc[path];
+        return value[path] as any;
       }
 
       return undefined;
@@ -507,14 +506,7 @@ export class Model {
     const noFieldSymbol = Symbol("noField");
 
     try {
-      return _getter({
-        value: value ?? doc,
-        fieldsPaths,
-        format,
-        ctx,
-        noFieldSymbol,
-        from: this,
-      }) as any;
+      return _getter({ value, fieldsPaths, format, ctx, noFieldSymbol, from: this }) as any;
     } catch (e) {
       if (e === noFieldSymbol) {
         return undefined;

@@ -7,7 +7,9 @@ import {
   ModelCrudEvent,
   modelDecorator,
   ModelDefinition,
+  ModelList,
   PromiseModel,
+  PromiseModelList,
   ValidationError,
 } from "@graphand/core";
 
@@ -971,12 +973,31 @@ describe("ClientAdapter", () => {
 
   describe("Populated data", () => {
     @modelDecorator()
+    class OtherRelatedModel extends Model {
+      static slug = "otherRelatedModel";
+      static definition = {
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      } satisfies ModelDefinition;
+    }
+
+    @modelDecorator()
     class RelatedModel extends Model {
       static slug = "relatedModel";
       static definition = {
         fields: {
           title: {
             type: FieldTypes.TEXT,
+          },
+          other: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: OtherRelatedModel.slug,
+            },
+            _tsModel: undefined as typeof OtherRelatedModel,
           },
         },
       } satisfies ModelDefinition;
@@ -997,23 +1018,112 @@ describe("ClientAdapter", () => {
             },
             _tsModel: undefined as typeof RelatedModel,
           },
+          multiRelated: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: RelatedModel.slug,
+                },
+              },
+              distinct: true,
+            },
+          },
+          nested: {
+            type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                related: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: RelatedModel.slug,
+                  },
+                  _tsModel: undefined as typeof RelatedModel,
+                },
+                multiRelated: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.RELATION,
+                      options: {
+                        ref: RelatedModel.slug,
+                      },
+                      _tsModel: undefined as typeof RelatedModel,
+                    },
+                    distinct: true,
+                  },
+                },
+                circular: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: RelatedModel.slug,
+                  },
+                  _tsModel: undefined as typeof RelatedModel,
+                },
+              },
+            },
+          },
+          nestedArr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.NESTED,
+                options: {
+                  fields: {
+                    related: {
+                      type: FieldTypes.RELATION,
+                      options: {
+                        ref: RelatedModel.slug,
+                      },
+                      _tsModel: undefined as typeof RelatedModel,
+                    },
+                    multiRelated: {
+                      type: FieldTypes.ARRAY,
+                      options: {
+                        items: {
+                          type: FieldTypes.RELATION,
+                          options: {
+                            ref: RelatedModel.slug,
+                          },
+                          _tsModel: undefined as typeof RelatedModel,
+                        },
+                        distinct: true,
+                      },
+                    },
+                    circular: {
+                      type: FieldTypes.RELATION,
+                      options: {
+                        ref: RelatedModel.slug,
+                      },
+                      _tsModel: undefined as typeof RelatedModel,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       } satisfies ModelDefinition;
     }
 
     let modelRelated: typeof RelatedModel;
+    let modelOtherRelated: typeof OtherRelatedModel;
     let modelWithRelation: typeof MockModelWithRelation;
     let adapterRelated: ClientAdapter;
+    let adapterOtherRelated: ClientAdapter;
     let adapterWithRelation: ClientAdapter;
 
     beforeEach(() => {
       modelRelated = client.getModel(RelatedModel);
+      modelOtherRelated = client.getModel(OtherRelatedModel);
       modelWithRelation = client.getModel(MockModelWithRelation);
       adapterRelated = modelRelated.getAdapter() as ClientAdapter;
+      adapterOtherRelated = modelOtherRelated.getAdapter() as ClientAdapter;
       adapterWithRelation = modelWithRelation.getAdapter() as ClientAdapter;
     });
 
-    it("should process and cache populated data", async () => {
+    it("should process and cache populated data for a single relation", async () => {
       const relatedId = new ObjectId().toString();
       const populatedData = {
         _id: "123",
@@ -1033,8 +1143,253 @@ describe("ClientAdapter", () => {
       expect(result.getData().related).toBe(relatedId);
       expect(adapterWithRelation.instancesMap.get(relatedId)).toBeUndefined();
       expect(adapterRelated.instancesMap.get(relatedId)).toBeInstanceOf(RelatedModel);
-      expect(result.get("related")).toBeInstanceOf(PromiseModel);
-      expect(result.get("related").cached).toBeInstanceOf(RelatedModel);
+      expect(result.related).toBeInstanceOf(PromiseModel);
+      expect(result.related.cached).toBeInstanceOf(RelatedModel);
+    });
+
+    it("should process and cache populated data for multiple relations", async () => {
+      const relatedId1 = new ObjectId().toString();
+      const relatedId2 = new ObjectId().toString();
+      const populatedData = {
+        _id: "123",
+        name: "Test",
+        multiRelated: [
+          { _id: relatedId1, title: "Related Title 1" },
+          { _id: relatedId2, title: "Related Title 2" },
+        ],
+      };
+
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: populatedData })));
+
+      const result = await modelWithRelation.get("123");
+
+      expect(result).toBeInstanceOf(MockModelWithRelation);
+      expect(result.get("name")).toBe("Test");
+      expect(result.getData().multiRelated).toEqual([relatedId1, relatedId2]);
+      expect(adapterRelated.instancesMap.get(relatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.instancesMap.get(relatedId2)).toBeInstanceOf(RelatedModel);
+      expect(result.multiRelated).toBeInstanceOf(PromiseModelList);
+      expect(result.multiRelated.cached).toBeInstanceOf(ModelList);
+      expect(result.multiRelated.cached.length).toBe(2);
+      expect(result.multiRelated.cached[0]).toBeInstanceOf(RelatedModel);
+      expect(result.multiRelated.cached[1]).toBeInstanceOf(RelatedModel);
+    });
+
+    it("should handle nested populated data with single relation", async () => {
+      const nestedRelatedId = new ObjectId().toString();
+      const populatedData = {
+        _id: "123",
+        name: "Test",
+        nested: {
+          related: {
+            _id: nestedRelatedId,
+            title: "Nested Related Title",
+          },
+        },
+      };
+
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: populatedData })));
+
+      const result = await modelWithRelation.get("123");
+
+      expect(result).toBeInstanceOf(MockModelWithRelation);
+      expect(result.get("name")).toBe("Test");
+      expect(result.getData().nested.related).toBe(nestedRelatedId);
+      expect(adapterRelated.instancesMap.get(nestedRelatedId)).toBeInstanceOf(RelatedModel);
+      expect(result.nested.related).toBeInstanceOf(PromiseModel);
+      expect(result.nested.related.cached).toBeInstanceOf(RelatedModel);
+    });
+
+    it("should handle nested populated data with multiple relations", async () => {
+      const nestedRelatedId1 = new ObjectId().toString();
+      const nestedRelatedId2 = new ObjectId().toString();
+      const populatedData = {
+        _id: "123",
+        name: "Test",
+        nested: {
+          multiRelated: [
+            { _id: nestedRelatedId1, title: "Nested Related Title 1" },
+            { _id: nestedRelatedId2, title: "Nested Related Title 2" },
+          ],
+        },
+      };
+
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: populatedData })));
+
+      const result = await modelWithRelation.get("123");
+
+      expect(result).toBeInstanceOf(MockModelWithRelation);
+      expect(result.get("name")).toBe("Test");
+      expect(result.getData().nested.multiRelated).toEqual([nestedRelatedId1, nestedRelatedId2]);
+      expect(adapterRelated.instancesMap.get(nestedRelatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.instancesMap.get(nestedRelatedId2)).toBeInstanceOf(RelatedModel);
+      expect(result.nested.multiRelated).toBeInstanceOf(PromiseModelList);
+      expect(result.nested.multiRelated.cached).toBeInstanceOf(ModelList);
+      expect(result.nested.multiRelated.cached.length).toBe(2);
+    });
+
+    it("should handle nested array populated data with single relations", async () => {
+      const nestedArrRelatedId1 = new ObjectId().toString();
+      const nestedArrRelatedId2 = new ObjectId().toString();
+      const populatedData = {
+        _id: "123",
+        name: "Test",
+        nestedArr: [
+          { related: { _id: nestedArrRelatedId1, title: "Nested Array Related Title 1" } },
+          { related: { _id: nestedArrRelatedId2, title: "Nested Array Related Title 2" } },
+        ],
+      };
+
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: populatedData })));
+
+      const result = await modelWithRelation.get("123");
+
+      expect(result).toBeInstanceOf(MockModelWithRelation);
+      expect(result.get("name")).toBe("Test");
+      expect(result.getData().nestedArr[0].related).toBe(nestedArrRelatedId1);
+      expect(result.getData().nestedArr[1].related).toBe(nestedArrRelatedId2);
+      expect(adapterRelated.instancesMap.get(nestedArrRelatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.instancesMap.get(nestedArrRelatedId2)).toBeInstanceOf(RelatedModel);
+      expect(result.nestedArr[0].related).toBeInstanceOf(PromiseModel);
+      expect(result.nestedArr[0].related.cached).toBeInstanceOf(RelatedModel);
+      expect(result.nestedArr[1].related).toBeInstanceOf(PromiseModel);
+      expect(result.nestedArr[1].related.cached).toBeInstanceOf(RelatedModel);
+    });
+
+    it("should handle mixed populated and unpopulated data", async () => {
+      const relatedId1 = new ObjectId().toString();
+      const relatedId2 = new ObjectId().toString();
+      const populatedData = {
+        _id: "123",
+        name: "Test",
+        related: { _id: relatedId1, title: "Populated Related" },
+        multiRelated: [
+          { _id: relatedId2, title: "Populated Multi Related" },
+          relatedId1, // Already an ID, should remain unchanged
+        ],
+      };
+
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: populatedData })));
+
+      const result = await modelWithRelation.get("123");
+
+      expect(result.getData().related).toBe(relatedId1);
+      expect(result.getData().multiRelated).toEqual([relatedId2, relatedId1]);
+      expect(adapterRelated.instancesMap.get(relatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.instancesMap.get(relatedId2)).toBeInstanceOf(RelatedModel);
+    });
+
+    it("should process deeply nested populated data", async () => {
+      const relatedId1 = new ObjectId().toString();
+      const relatedId2 = new ObjectId().toString();
+      const populatedData = {
+        _id: "123",
+        name: "Test",
+        nested: {
+          related: { _id: relatedId1, title: "Nested Related" },
+          multiRelated: [{ _id: relatedId2, title: "Nested Multi Related" }],
+          circular: { _id: relatedId1, title: "Circular Reference" },
+        },
+        nestedArr: [
+          {
+            related: { _id: relatedId2, title: "Nested Array Related" },
+            multiRelated: [{ _id: relatedId1, title: "Nested Array Multi Related" }],
+          },
+        ],
+      };
+
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: populatedData })));
+
+      const result = await modelWithRelation.get("123");
+
+      expect(result.getData().nested.related).toBe(relatedId1);
+      expect(result.getData().nested.multiRelated).toEqual([relatedId2]);
+      expect(result.getData().nested.circular).toBe(relatedId1);
+      expect(result.getData().nestedArr[0].related).toBe(relatedId2);
+      expect(result.getData().nestedArr[0].multiRelated).toEqual([relatedId1]);
+    });
+
+    it("should handle multiple levels of nested populated data", async () => {
+      const relatedId1 = new ObjectId().toString();
+      const relatedId2 = new ObjectId().toString();
+      const populatedData = {
+        _id: "123",
+        name: "Test",
+        nested: {
+          related: {
+            _id: relatedId1,
+            title: "Nested Related",
+            other: {
+              _id: relatedId2,
+              title: "Nested Related 2",
+            },
+          },
+        },
+      };
+
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: populatedData })));
+
+      const result = await modelWithRelation.get("123");
+
+      expect(result.getData().nested.related).toBe(relatedId1);
+
+      expect(adapterRelated.instancesMap.get(relatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterOtherRelated.instancesMap.get(relatedId2)).toBeInstanceOf(OtherRelatedModel);
+
+      expect(result.nested.related).toBeInstanceOf(PromiseModel);
+      expect(result.nested.related.cached).toBeInstanceOf(RelatedModel);
+      expect(result.nested.related.cached._id).toBe(relatedId1);
+
+      expect(result.nested.related.cached.other).toBeInstanceOf(PromiseModel);
+      expect(result.nested.related.cached.other.cached).toBeInstanceOf(OtherRelatedModel);
+      expect(result.nested.related.cached.other.cached._id).toBe(relatedId2);
+    });
+
+    it("should handle multiple levels of nested populated data for multiple relations", async () => {
+      const relatedId1 = new ObjectId().toString();
+      const relatedId2 = new ObjectId().toString();
+      const populatedData = {
+        _id: "123",
+        name: "Test",
+        related: { _id: relatedId1, title: "Root Related" },
+        multiRelated: [
+          { _id: relatedId2, title: "Root Multi Related 1" },
+          relatedId1, // Already an ID
+        ],
+        nested: {
+          related: {
+            _id: relatedId1,
+            title: "Nested Related",
+            other: {
+              _id: relatedId2,
+              title: "Nested Related 2",
+            },
+          },
+          multiRelated: [{ _id: relatedId1, title: "Nested Multi Related" }],
+        },
+      };
+
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: populatedData })));
+
+      const result = await modelWithRelation.get("123");
+
+      expect(result.getData().related).toBe(relatedId1);
+      expect(result.getData().multiRelated).toEqual([relatedId2, relatedId1]);
+
+      expect(adapterRelated.instancesMap.get(relatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.instancesMap.get(relatedId2)).toBeInstanceOf(RelatedModel);
+
+      expect(result.related).toBeInstanceOf(PromiseModel);
+      expect(result.related.cached).toBeInstanceOf(RelatedModel);
+      expect(result.related.cached._id).toBe(relatedId1);
+
+      expect(result.multiRelated).toBeInstanceOf(PromiseModelList);
+      expect(result.multiRelated.cached).toBeInstanceOf(ModelList);
+      expect(result.multiRelated.cached.length).toBe(2);
+      expect(result.multiRelated.cached[0]).toBeInstanceOf(RelatedModel);
+      expect(result.multiRelated.cached[1]).toBeInstanceOf(RelatedModel);
+      expect(result.multiRelated.cached[0]._id).toBe(relatedId2);
+      expect(result.multiRelated.cached[1]._id).toBe(relatedId1);
     });
   });
 });
