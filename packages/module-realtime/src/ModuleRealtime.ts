@@ -68,7 +68,7 @@ class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boo
       },
     });
 
-    console.log(`Connecting socket on ${url} ...`);
+    // console.log(`Connecting socket on ${url} ...`);
 
     let rejectTimeout: NodeJS.Timeout | undefined;
 
@@ -80,7 +80,7 @@ class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boo
       }, this.conf.connectTimeout);
 
       socket.on("connect", () => {
-        console.log(`Socket connected`);
+        // console.log(`Socket connected`);
 
         resolve();
 
@@ -96,17 +96,17 @@ class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boo
       });
 
       socket.on("connect_error", e => {
-        console.log(`Socket error : ${e}`);
+        // console.log(`Socket error : ${e}`);
 
         reject(e);
       });
 
-      socket.on("info", info => {
-        console.log(`Socket info : ${info?.message}`);
+      socket.on("info", _info => {
+        // console.log(`Socket info : ${info?.message}`);
       });
 
       socket.on("disconnect", () => {
-        console.log(`Socket disconnected`);
+        // console.log(`Socket disconnected`);
       });
 
       socket.on("realtime:event", (event: ModelCrudEvent) => {
@@ -119,7 +119,6 @@ class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boo
       });
 
       socket.on("upload:event", (_event: UploadEvent) => {
-        console.log("ok");
         // this.__uploadEventsSubject?.next(event);
       });
     }).finally(() => {
