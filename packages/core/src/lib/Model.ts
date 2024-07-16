@@ -282,19 +282,13 @@ export class Model {
    * @returns
    */
   static async reloadModel(opts?: { datamodel?: ModelInstance<typeof DataModel>; ctx?: TransactionCtx }) {
-    let datamodel = opts?.datamodel;
+    let { datamodel, ctx } = opts ?? {};
     const adapter = this.getAdapter();
 
-    if (!datamodel) {
-      datamodel = await Model.getClass<typeof DataModel>("datamodels", adapter.base).get(
-        {
-          filter: {
-            slug: this.slug,
-          },
-        },
-        opts?.ctx,
-      );
-    }
+    datamodel ??= await Model.getClass<typeof DataModel>("datamodels", adapter.base).get(
+      { filter: { slug: this.slug } },
+      ctx,
+    );
 
     assignDatamodel(this, datamodel);
 

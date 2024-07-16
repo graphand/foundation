@@ -14,6 +14,7 @@ import {
   Field,
   JSONQuery,
   TransactionCtx,
+  FieldsDefinition,
 } from "@graphand/core";
 import { Client } from "./Client";
 import { Subject } from "./Subject";
@@ -175,6 +176,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       path: { model: this.model.slug },
     });
     const json: ModelJSON<T> = await res.json().then(r => r.data);
+    await this.#initPopulatedModels(json);
     return this.#processAndCacheInstance(json);
   }
 
@@ -188,6 +190,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       path: { id, model: this.model.slug },
     });
     const json: ModelJSON<T> = await res.json().then(r => r.data);
+    await this.#initPopulatedModels(json);
     return this.#processAndCacheInstance(json);
   }
 
@@ -219,6 +222,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     });
 
     const json: ReturnType<ModelList<T>["toJSON"]> = await res.json().then(r => r.data);
+    await this.#initPopulatedModels(json.rows as Array<ModelJSON<T>>);
     const instanceList = json.rows.map(r => this.processInstancePayload(r as ModelJSON<T>));
     const instanceRes = instanceList.map(r => r.instance).filter(Boolean) as Array<ModelInstance<T>>;
 
@@ -228,7 +232,8 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     let list = instanceRes;
 
     if (canUseIdsForQuery) {
-      list = this.#combineAndSortResults(fromIdsList, instanceRes, query.ids);
+      const combined = [...fromIdsList, ...instanceRes];
+      list = combined.sort((a, b) => query.ids.indexOf(String(a._id)) - query.ids.indexOf(String(b._id)));
       count += fromIdsList.length;
     }
 
@@ -341,15 +346,6 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     }
   }
 
-  #combineAndSortResults(
-    fromCache: ModelInstance<T>[],
-    fromApi: ModelInstance<T>[],
-    ids: string[],
-  ): ModelInstance<T>[] {
-    const combined = [...fromApi, ...fromCache];
-    return combined.sort((a, b) => ids.indexOf(String(a._id)) - ids.indexOf(String(b._id)));
-  }
-
   #dispatchCreateEvent(data: ModelJSON<T>[]): void {
     this.dispatch({
       operation: "create",
@@ -385,15 +381,16 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     let instance = payload._id ? this.#instancesMap.get(payload._id) : undefined;
     let updated = false;
 
+    payload = this.#processPopulatedData(payload);
+
     if (instance) {
       const newAge = Math.max(new Date(payload._createdAt ?? 0).getTime(), new Date(payload._updatedAt ?? 0).getTime());
       if (newAge > instance.__getAge()) {
+        instance.setData(payload);
         updated = true;
-        this.#updateInstanceWithPopulatedData(instance, payload);
       }
     } else if (payload._id) {
-      const processedPayload = this.#processPopulatedData(payload);
-      instance = this.model.hydrate(processedPayload);
+      instance = this.model.hydrate(payload);
       this.#instancesMap.set(payload._id, instance);
       updated = true;
     }
@@ -405,9 +402,64 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return { updated, instance };
   }
 
-  #updateInstanceWithPopulatedData(instance: ModelInstance<T>, payload: ModelJSON<T>): void {
-    const processedPayload = this.#processPopulatedData(payload);
-    instance.setData(processedPayload);
+  async #initPopulatedModels(payload: ModelJSON<T> | Array<ModelJSON<T>>): Promise<void> {
+    const modelsToInitialize: Set<typeof Model> = new Set();
+
+    const collectModels = (obj: any, model: typeof Model) => {
+      const fields = getNestedFieldsArrayForModel(model);
+
+      for (const field of fields) {
+        const fieldsPaths = getFieldsPathsFromPath(model, field.path).filter(Boolean);
+        let current = obj;
+
+        for (const { field: currentField, key } of fieldsPaths) {
+          if (current?.[key] === undefined) break;
+
+          if (currentField.type === FieldTypes.ARRAY) {
+            const arrayOptions = currentField.options as FieldOptionsMap[FieldTypes.ARRAY];
+            if (Array.isArray(current[key])) {
+              if (arrayOptions?.items?.type === FieldTypes.RELATION) {
+                const refModel = this.client.getModel((arrayOptions.items.options as any).ref);
+                modelsToInitialize.add(refModel);
+                current[key].forEach((item: any) => {
+                  if (typeof item === "object" && item !== null) {
+                    collectModels(item, refModel);
+                  }
+                });
+              } else if (arrayOptions?.items?.type === FieldTypes.NESTED) {
+                current[key].forEach((item: any) => {
+                  collectModels(item, model);
+                });
+              }
+            }
+            break;
+          } else if (currentField.type === FieldTypes.RELATION) {
+            if (typeof current[key] === "object" && current[key] !== null) {
+              const refModel = this.client.getModel((currentField.options as any).ref);
+              modelsToInitialize.add(refModel);
+              collectModels(current[key], refModel);
+            }
+            break;
+          } else if (currentField.type === FieldTypes.NESTED) {
+            if (typeof current[key] === "object" && current[key] !== null) {
+              collectModels(current[key], model);
+            }
+            break;
+          }
+
+          current = current[key];
+        }
+      }
+    };
+
+    if (Array.isArray(payload)) {
+      payload.forEach(p => collectModels(p, this.model));
+    } else {
+      collectModels(payload, this.model);
+    }
+
+    // Initialize all collected models
+    await Promise.all(Array.from(modelsToInitialize).map(m => m.initialize()));
   }
 
   #processPopulatedData(payload: ModelJSON<T>): ModelJSON<T> {
@@ -426,12 +478,17 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
         if (currentField.type === FieldTypes.ARRAY) {
           const arrayOptions = currentField.options as FieldOptionsMap[FieldTypes.ARRAY];
-          if (arrayOptions?.items?.type === FieldTypes.RELATION && Array.isArray(current[key])) {
-            const refModel = this.client.getModel((arrayOptions.items.options as any).ref);
-            const adapter = refModel.getAdapter() as ClientAdapter;
-            current[key] = current[key].map((item: any) =>
-              typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance._id : item,
-            );
+          if (Array.isArray(current[key])) {
+            if (arrayOptions?.items?.type === FieldTypes.RELATION) {
+              const refModel = this.client.getModel((arrayOptions.items.options as any).ref);
+              const adapter = refModel.getAdapter() as ClientAdapter;
+              current[key] = current[key].map((item: any) =>
+                typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance._id : item,
+              );
+            } else if (arrayOptions?.items?.type === FieldTypes.NESTED) {
+              const nestedOptions = arrayOptions.items.options as FieldOptionsMap[FieldTypes.NESTED];
+              current[key] = current[key].map((item: any) => this.#processNestedObject(item, nestedOptions?.fields));
+            }
           }
           break;
         } else if (currentField.type === FieldTypes.RELATION) {
@@ -439,6 +496,12 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
             const refModel = this.client.getModel((currentField.options as any).ref);
             const adapter = refModel.getAdapter() as ClientAdapter;
             current[key] = adapter.processInstancePayload(current[key]).instance._id;
+          }
+          break;
+        } else if (currentField.type === FieldTypes.NESTED) {
+          const nestedOptions = currentField.options as FieldOptionsMap[FieldTypes.NESTED];
+          if (typeof current[key] === "object" && current[key] !== null) {
+            current[key] = this.#processNestedObject(current[key], nestedOptions?.fields);
           }
           break;
         }
@@ -458,7 +521,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         return obj.map(processObject);
       }
 
-      const processedObj = { ...obj };
+      const processedObj = obj;
       for (const field of relationFields) {
         processRelationField(processedObj, field);
       }
@@ -471,6 +534,43 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     };
 
     return processObject(payload);
+  }
+
+  #processNestedObject(obj: any, fields?: FieldsDefinition): any {
+    if (!fields) return obj;
+
+    const processedObj = obj;
+    for (const [key, field] of Object.entries(fields)) {
+      if (field.type === FieldTypes.RELATION) {
+        if (typeof processedObj[key] === "object" && processedObj[key] !== null) {
+          const refModel = this.client.getModel((field.options as any).ref);
+          const adapter = refModel.getAdapter() as ClientAdapter;
+          processedObj[key] = adapter.processInstancePayload(processedObj[key]).instance._id;
+        }
+      } else if (field.type === FieldTypes.ARRAY) {
+        const arrayOptions = field.options as FieldOptionsMap[FieldTypes.ARRAY];
+        if (Array.isArray(processedObj[key])) {
+          if (arrayOptions?.items?.type === FieldTypes.RELATION) {
+            const refModel = this.client.getModel((arrayOptions.items.options as any).ref);
+            const adapter = refModel.getAdapter() as ClientAdapter;
+            processedObj[key] = processedObj[key].map((item: any) =>
+              typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance._id : item,
+            );
+          } else if (arrayOptions?.items?.type === FieldTypes.NESTED) {
+            const nestedOptions = arrayOptions.items.options as FieldOptionsMap[FieldTypes.NESTED];
+            processedObj[key] = processedObj[key].map((item: any) =>
+              this.#processNestedObject(item, nestedOptions?.fields),
+            );
+          }
+        }
+      } else if (field.type === FieldTypes.NESTED) {
+        if (typeof processedObj[key] === "object" && processedObj[key] !== null) {
+          const nestedOptions = field.options as FieldOptionsMap[FieldTypes.NESTED];
+          processedObj[key] = this.#processNestedObject(processedObj[key], nestedOptions?.fields);
+        }
+      }
+    }
+    return processedObj;
   }
 
   subscribe(observer: SubjectObserver<ModelUpdaterEvent>): () => void {

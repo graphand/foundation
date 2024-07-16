@@ -1,12 +1,15 @@
+import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
 import { Client } from "./Client";
 import { ClientAdapter } from "./ClientAdapter";
 import {
+  DataModel,
   FieldTypes,
   Model,
   ModelCrudEvent,
   modelDecorator,
   ModelDefinition,
+  ModelInstance,
   ModelList,
   PromiseModel,
   PromiseModelList,
@@ -1390,6 +1393,361 @@ describe("ClientAdapter", () => {
       expect(result.multiRelated.cached[1]).toBeInstanceOf(RelatedModel);
       expect(result.multiRelated.cached[0]._id).toBe(relatedId2);
       expect(result.multiRelated.cached[1]._id).toBe(relatedId1);
+    });
+
+    it("should correctly handle and cache deeply nested relations across multiple dynamic models", async () => {
+      const dmOtherRelated = client.getModel(DataModel).hydrate({
+        _id: new ObjectId().toString(),
+        slug: faker.lorem.word() + "-3",
+        definition: {
+          keyField: "title",
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        },
+      });
+      const dmRelated = client.getModel(DataModel).hydrate({
+        _id: new ObjectId().toString(),
+        slug: faker.lorem.word() + "-2",
+        definition: {
+          keyField: "title",
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+            },
+            otherRelated: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: dmOtherRelated.slug,
+              },
+            },
+          },
+        },
+      });
+      const dm = client.getModel(DataModel).hydrate({
+        _id: new ObjectId().toString(),
+        slug: faker.lorem.word() + "-1",
+        definition: {
+          keyField: "title",
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+            },
+            related: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: dmRelated.slug,
+              },
+            },
+          },
+        },
+      });
+
+      fetchMock.mockImplementation(async (args: any) => {
+        // Mock datamodels
+        if (args.url.includes("datamodels/query")) {
+          const body = await args.json();
+          const slug = body.filter.slug;
+          const found = [dmRelated, dm].find(d => d.slug === slug);
+          return new Response(JSON.stringify({ data: { rows: [found.toJSON()], count: 1 } }));
+        }
+
+        return new Response(
+          JSON.stringify({
+            data: {
+              _id: id1,
+              title: faker.lorem.word(),
+              related: {
+                _id: id2,
+                title: faker.lorem.word(),
+                otherRelated: {
+                  _id: id3,
+                  title: faker.lorem.word(),
+                },
+              },
+            },
+          }),
+        );
+      });
+
+      const id1 = new ObjectId().toString();
+      const id2 = new ObjectId().toString();
+      const id3 = new ObjectId().toString();
+
+      await client.getModel(dm.slug).get(id1);
+
+      const adapter1 = client.getModel(dm.slug).getAdapter() as ClientAdapter;
+      const adapter2 = client.getModel(dmRelated.slug).getAdapter() as ClientAdapter;
+      const adapter3 = client.getModel(dmOtherRelated.slug).getAdapter() as ClientAdapter;
+
+      expect(adapter1.instancesMap.has(id1)).toBeTruthy();
+      expect(adapter2.instancesMap.has(id2)).toBeTruthy();
+      expect(adapter3.instancesMap.has(id3)).toBeTruthy();
+    });
+
+    it("should handle circular references in dynamic models", async () => {
+      const slug = faker.lorem.word() + "-circular";
+
+      const id1 = new ObjectId().toString();
+      const id2 = new ObjectId().toString();
+
+      fetchMock.mockImplementation(async (args: any) => {
+        if (args.url.includes("datamodels/query")) {
+          return new Response(
+            JSON.stringify({
+              data: {
+                rows: [
+                  {
+                    _id: new ObjectId().toString(),
+                    slug,
+                    definition: {
+                      keyField: "title",
+                      fields: {
+                        title: { type: FieldTypes.TEXT },
+                        selfRef: {
+                          type: FieldTypes.RELATION,
+                          options: { ref: slug },
+                        },
+                      },
+                    },
+                  },
+                ],
+                count: 1,
+              },
+            }),
+          );
+        }
+
+        return new Response(
+          JSON.stringify({
+            data: {
+              _id: id1,
+              title: faker.lorem.word(),
+              selfRef: {
+                _id: id2,
+                title: faker.lorem.word(),
+                selfRef: id1, // Circular reference
+              },
+            },
+          }),
+        );
+      });
+
+      const model = client.getModel<
+        typeof Model & {
+          definition: {
+            fields: {
+              title: { type: FieldTypes.TEXT };
+              selfRef: {
+                type: FieldTypes.RELATION;
+              };
+            };
+          };
+        }
+      >(slug);
+      await model.get(id1);
+      const adapter = model.getAdapter() as ClientAdapter;
+
+      expect(adapter.instancesMap.has(id1)).toBeTruthy();
+      expect(adapter.instancesMap.has(id2)).toBeTruthy();
+
+      const instance1 = model.get(id1).cached;
+      const instance2 = model.get(id2).cached;
+
+      expect(instance1?.selfRef.cached).toBe(instance2);
+      expect(instance2?.selfRef.cached).toBe(instance1);
+    });
+
+    it("should correctly populate nested arrays with relations", async () => {
+      const slug = faker.lorem.word() + "-nested";
+      const dmNested = client.getModel(DataModel).hydrate({
+        _id: new ObjectId().toString(),
+        slug,
+        definition: {
+          keyField: "title",
+          fields: {
+            title: { type: FieldTypes.TEXT },
+            items: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      name: { type: FieldTypes.TEXT },
+                      subItem: {
+                        type: FieldTypes.RELATION,
+                        options: { ref: slug },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const id1 = new ObjectId().toString();
+      const id2 = new ObjectId().toString();
+      const id3 = new ObjectId().toString();
+
+      fetchMock.mockImplementation(async (args: any) => {
+        if (args.url.includes("datamodels/query")) {
+          return new Response(JSON.stringify({ data: { rows: [dmNested.toJSON()], count: 1 } }));
+        }
+
+        return new Response(
+          JSON.stringify({
+            data: {
+              _id: id1,
+              title: faker.lorem.word(),
+              items: [
+                {
+                  name: faker.lorem.word(),
+                  subItem: {
+                    _id: id2,
+                    title: faker.lorem.word(),
+                  },
+                },
+                {
+                  name: faker.lorem.word(),
+                  subItem: {
+                    _id: id3,
+                    title: faker.lorem.word(),
+                  },
+                },
+              ],
+            },
+          }),
+        );
+      });
+
+      await client.getModel(dmNested.slug).get(id1);
+      const adapter = client.getModel(dmNested.slug).getAdapter() as ClientAdapter;
+
+      expect(adapter.instancesMap.has(id1)).toBeTruthy();
+      expect(adapter.instancesMap.has(id2)).toBeTruthy();
+      expect(adapter.instancesMap.has(id3)).toBeTruthy();
+      const instance = adapter.instancesMap.get(id1) as ModelInstance<
+        typeof Model & {
+          definition: {
+            fields: {
+              items: {
+                type: FieldTypes.ARRAY;
+                options: {
+                  items: { type: FieldTypes.NESTED; options: { fields: { subItem: { type: FieldTypes.RELATION } } } };
+                };
+              };
+            };
+          };
+        }
+      >;
+      expect(instance?.items[0].subItem.cached).toBe(adapter.instancesMap.get(id2));
+      expect(instance?.items[1].subItem.cached).toBe(adapter.instancesMap.get(id3));
+    });
+
+    it("should update cache when deeply nested relations are modified", async () => {
+      const dmDeep2 = client.getModel(DataModel).hydrate({
+        _id: new ObjectId().toString(),
+        slug: faker.lorem.word() + "-deep-2",
+        definition: {
+          keyField: "title",
+          fields: {
+            title: { type: FieldTypes.TEXT },
+          },
+        },
+      });
+
+      const dmDeep1 = client.getModel(DataModel).hydrate({
+        _id: new ObjectId().toString(),
+        slug: faker.lorem.word() + "-deep-1",
+        definition: {
+          keyField: "title",
+          fields: {
+            title: { type: FieldTypes.TEXT },
+            level2: {
+              type: FieldTypes.RELATION,
+              options: { ref: dmDeep2.slug },
+            },
+          },
+        },
+      });
+
+      const dmDeep = client.getModel(DataModel).hydrate({
+        _id: new ObjectId().toString(),
+        slug: faker.lorem.word() + "-deep",
+        definition: {
+          keyField: "title",
+          fields: {
+            title: { type: FieldTypes.TEXT },
+            level1: {
+              type: FieldTypes.RELATION,
+              options: { ref: dmDeep1.slug },
+            },
+          },
+        },
+      });
+
+      const id1 = new ObjectId().toString();
+      const id2 = new ObjectId().toString();
+      const id3 = new ObjectId().toString();
+      const id4 = new ObjectId().toString();
+
+      let updateCount = 0;
+      fetchMock.mockImplementation(async (args: any) => {
+        if (args.url.includes("datamodels/query")) {
+          const body = await args.json();
+          const slug = body.filter.slug;
+          const found = [dmDeep, dmDeep1, dmDeep2].find(d => d.slug === slug);
+          return new Response(JSON.stringify({ data: { rows: [found?.toJSON()], count: 1 } }));
+        }
+
+        updateCount++;
+
+        return new Response(
+          JSON.stringify({
+            data: {
+              _id: id1,
+              title: faker.lorem.word(),
+              _updatedAt: new Date(Date.now() + updateCount).toJSON(),
+              level1: {
+                _id: id2,
+                title: faker.lorem.word(),
+                _updatedAt: new Date(Date.now() + updateCount).toJSON(),
+                level2: {
+                  _id: updateCount === 1 ? id3 : id4,
+                  title: faker.lorem.word(),
+                  _updatedAt: new Date(Date.now() + updateCount).toJSON(),
+                },
+              },
+            },
+          }),
+        );
+      });
+
+      await client.getModel(dmDeep.slug).get(id1);
+      const adapter = client.getModel(dmDeep.slug).getAdapter() as ClientAdapter;
+      const adapter1 = client.getModel(dmDeep1.slug).getAdapter() as ClientAdapter;
+      const adapter2 = client.getModel(dmDeep2.slug).getAdapter() as ClientAdapter;
+
+      expect(adapter.instancesMap.has(id1)).toBeTruthy();
+      expect(adapter1.instancesMap.has(id2)).toBeTruthy();
+      expect(adapter2.instancesMap.has(id3)).toBeTruthy();
+
+      // Update the deeply nested relation
+      await client.getModel(dmDeep.slug).get(id1, { disableCache: true });
+
+      expect(updateCount).toBe(2);
+
+      expect(adapter.instancesMap.has(id1)).toBeTruthy();
+      expect(adapter1.instancesMap.has(id2)).toBeTruthy();
+      expect(adapter2.instancesMap.has(id4)).toBeTruthy();
+
+      const instance = adapter.instancesMap.get(id1) as any;
+      expect(instance?.level1.cached?.level2.cached?._id).toBe(id4);
     });
   });
 });

@@ -53,7 +53,7 @@ export class Adapter<T extends typeof Model = typeof Model> {
   fetcher: AdapterFetcher<T>; // The adapter configuration = how the adapter should process
   model: T; // The model of the current adapter instance
 
-  cacheFieldsMap: Map<string, Field<FieldTypes>>; // Cache the fields of the current model
+  #cacheFieldsMap: Map<string, Field<FieldTypes>>; // Cache the fields of the current model
 
   constructor(model: T) {
     this.model = model;
@@ -127,6 +127,15 @@ export class Adapter<T extends typeof Model = typeof Model> {
 
   static clearModels() {
     this.getModelsRegistry().clear();
+  }
+
+  get cacheFieldsMap() {
+    this.#cacheFieldsMap ??= new Map();
+    return this.#cacheFieldsMap;
+  }
+
+  resetFieldsCache() {
+    this.#cacheFieldsMap = new Map();
   }
 
   /**

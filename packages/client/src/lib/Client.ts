@@ -160,7 +160,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return `${scheme}://${project}.${endpoint}`;
   }
 
-  getUrl(definition: ControllerDefinition, opts: { path?: Record<string, string>; query?: Record<string, string> }) {
+  #buildUrl(definition: ControllerDefinition, opts: { path?: Record<string, string>; query?: Record<string, string> }) {
     let path: string = definition.path;
 
     if (opts.path) {
@@ -247,7 +247,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
   }
 
   declareGlobally() {
-    // @ts-expect-error - __GLOBAL_ADAPTER__ is used by @graphand/core
+    // @ts-expect-error - __GLOBAL_ADAPTER__ is used by @graphand/core to get the global adapter if no adapter is found on a model
     globalThis.__GLOBAL_ADAPTER__ = this.getAdapterClass();
   }
 
@@ -290,7 +290,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     const { path, query } = opts;
 
-    const url = this.getUrl(definition, { path, query });
+    const url = this.#buildUrl(definition, { path, query });
 
     const init: RequestInit = opts.init ?? {};
 

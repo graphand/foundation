@@ -391,23 +391,19 @@ export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTy
     return null;
   }
 
-  // const cacheKey = path;
+  const cacheKey = path;
 
-  // if (adapter) {
-  //   adapter.cacheFieldsMap ??= new Map();
-  //   if (adapter?.cacheFieldsMap?.has(cacheKey)) {
-  //     return adapter.cacheFieldsMap.get(cacheKey) as Field<T>;
-  //   }
-  // }
+  if (adapter?.cacheFieldsMap?.has(cacheKey)) {
+    return adapter.cacheFieldsMap.get(cacheKey) as Field<T>;
+  }
 
   const FieldClass = getFieldClass(def.type, adapter) as typeof Field<T>;
 
   const field = new FieldClass(def, path);
 
-  // if (adapter) {
-  //   adapter.cacheFieldsMap ??= new Map();
-  //   adapter.cacheFieldsMap.set(cacheKey, field);
-  // }
+  if (adapter) {
+    adapter.cacheFieldsMap.set(cacheKey, field);
+  }
 
   return field;
 };
@@ -981,6 +977,8 @@ export const assignDatamodel = async <T extends typeof Model>(model: T, datamode
   };
 
   model.__memo = {};
+
+  model.getAdapter(false)?.resetFieldsCache();
 };
 
 export const getModelInitPromise = (
