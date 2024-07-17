@@ -10,6 +10,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      PROJECT: ${{ secrets.PROJECT }}
+      ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+      ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
     steps:
       - uses: actions/checkout@v2
 
