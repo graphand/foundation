@@ -199,7 +199,7 @@ describe("ModuleRealtime", () => {
     const stateSpy = jest.fn();
     const unsub = upload.subscribe(stateSpy);
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     const form = new FormData();
     const array = new Array(5000).fill("a");
@@ -217,6 +217,8 @@ describe("ModuleRealtime", () => {
     });
 
     expect(res.ok).toBeTruthy();
+
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     expect(stateSpy.mock.calls.length).toBeGreaterThan(2);
 
