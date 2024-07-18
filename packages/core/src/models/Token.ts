@@ -5,6 +5,8 @@ import { Role } from "@/models/Role";
 import { ValidatorTypes } from "@/enums/validator-types";
 import { ModelDefinition } from "@/types";
 
+// TODO: rename Token class as TokenGenerator, TokenDefinition
+
 @modelDecorator()
 export class Token extends Model {
   static __name = "Token";

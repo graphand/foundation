@@ -17,7 +17,7 @@ import { BehaviorSubject } from "./BehaviorSubject";
 import { decodeClientModule, parseErrorFromJSON } from "./utils";
 
 const DEFAULT_OPTIONS: Partial<ClientOptions> = {
-  endpoint: "api.graphand.dev",
+  endpoint: "api.graphand.cloud",
   ssl: true,
   maxRetries: 3,
 };
