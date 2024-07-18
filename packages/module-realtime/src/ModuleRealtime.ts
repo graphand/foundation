@@ -1,18 +1,36 @@
-import { Module, symbolModuleInit, symbolModuleDestroy, ClientAdapter } from "@graphand/client";
-import { ModelCrudEvent, UploadEvent } from "@graphand/core";
+import { Module, symbolModuleInit, symbolModuleDestroy, ClientAdapter, BehaviorSubject } from "@graphand/client";
+import { Model, ModelCrudEvent } from "@graphand/core";
 import { io, Socket } from "socket.io-client";
+import RealtimeUpload from "./lib/RealtimeUpload";
 
-class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boolean }> {
+type ModuleRealtimeOptions = {
+  connectTimeout?: number;
+  subscribeModels?: Array<string>;
+  autoSubscribe?: boolean;
+  autoConnect?: boolean;
+};
+
+class ModuleRealtime extends Module<ModuleRealtimeOptions> {
   static moduleName = "realtime" as const;
-  defaults = { connectTimeout: 5000, autoConnect: true };
+  defaults: Partial<ModuleRealtimeOptions> = { connectTimeout: 5000, autoConnect: true };
 
-  #socket: Socket | undefined;
+  #uploadsMap = new Map<string, RealtimeUpload>();
+  #subscribedModelsSubject = new BehaviorSubject<Array<string>>([]);
+  #unsubscribeModels: (() => void) | undefined;
+  #socketSubject = new BehaviorSubject<Socket | undefined>(undefined);
   #connectPromise: Promise<void> | undefined;
-  #unsubscribe: (() => void) | undefined;
+  #unsubscribeOptions: (() => void) | undefined;
 
   async [symbolModuleInit]() {
+    this.#unsubscribeModels = this.#subscribedModelsSubject.subscribe(models => {
+      const socket = this.getSocket(false);
+      if (socket?.connected) {
+        socket.emit("subscribeModels", models.join(","));
+      }
+    });
+
     if (this.conf.autoConnect) {
-      this.#unsubscribe = this.client().subscribeOptions((options, previousOptions) => {
+      this.#unsubscribeOptions = this.client().subscribeOptions((options, previousOptions) => {
         // First time initialization
         if (!previousOptions && !options.accessToken) {
           console.warn("Access token is required to connect to the socket");
@@ -27,18 +45,47 @@ class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boo
         }
       });
     }
+
+    if (this.conf.subscribeModels?.length) {
+      this.subscribeModels(this.conf.subscribeModels);
+    }
+
+    if (this.conf.autoSubscribe) {
+      const _module = this;
+      const client = this.client();
+      const adapterClass = client.getAdapterClass();
+      const registerModel = adapterClass.registerModel;
+      adapterClass.registerModel = function <T extends typeof Model>(
+        this: T,
+        ...args: Parameters<typeof registerModel>
+      ) {
+        const [model] = args;
+        if (model?.exposed && model?.slug) {
+          _module.subscribeModels([model.slug]);
+        }
+        registerModel.apply(this, args);
+      };
+    }
   }
 
   [symbolModuleDestroy]() {
     this.close();
   }
 
-  getSocket(): Socket {
-    if (!this.#socket) {
+  get socketSubject() {
+    return this.#socketSubject;
+  }
+
+  getSubscribedModels(): Array<string> {
+    return Array.from(new Set(this.#subscribedModelsSubject.getValue()));
+  }
+
+  getSocket(autoConnect: boolean = true): Socket {
+    if (autoConnect && !this.#socketSubject.getValue()) {
       this.connect();
     }
 
-    return this.#socket as Socket;
+    return this.#socketSubject.getValue();
   }
 
   connect(force: boolean = false) {
@@ -52,9 +99,7 @@ class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boo
       return this.#connectPromise;
     }
 
-    if (this.#socket) {
-      this.#socket.close();
-    }
+    this.getSocket(false)?.close();
 
     const scheme = client.options.ssl ? "wss" : "ws";
     const url = client.getBaseUrl(scheme);
@@ -68,11 +113,24 @@ class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boo
       },
     });
 
-    // console.log(`Connecting socket on ${url} ...`);
+    socket.on("realtime:event", (event: ModelCrudEvent) => {
+      // The server is not supposed to send events for models that are not subscribed
+      // Just an extra check to make sure
+      if (!this.#subscribedModelsSubject.getValue().includes(event.model)) {
+        return;
+      }
+
+      const model = client.getModel(event.model);
+      const adapter = model.getAdapter() as ClientAdapter;
+
+      Object.assign(event, { __socketId: socket.id });
+
+      adapter.dispatch(event);
+    });
 
     let rejectTimeout: NodeJS.Timeout | undefined;
 
-    this.#socket = socket;
+    this.#socketSubject.next(socket);
     this.#connectPromise = new Promise<void>((resolve, reject) => {
       rejectTimeout = setTimeout(() => {
         reject(new Error("Connection timeout"));
@@ -80,46 +138,13 @@ class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boo
       }, this.conf.connectTimeout);
 
       socket.on("connect", () => {
-        // console.log(`Socket connected`);
+        this.#subscribedModelsSubject.trigger();
 
         resolve();
-
-        // const adapter = client.getAdapterClass();
-        // if (adapter?._modelsRegistry?.size) {
-        //   useRealtimeOnSocket(socket, Array.from(adapter._modelsRegistry.keys()));
-        // }
-
-        // const sendingFormKeys = this.__sendingFormKeysSubject.getValue();
-        // if (sendingFormKeys.size) {
-        //   useUploadsOnSocket(socket, Array.from(sendingFormKeys));
-        // }
       });
 
       socket.on("connect_error", e => {
-        // console.log(`Socket error : ${e}`);
-
         reject(e);
-      });
-
-      socket.on("info", _info => {
-        // console.log(`Socket info : ${info?.message}`);
-      });
-
-      socket.on("disconnect", () => {
-        // console.log(`Socket disconnected`);
-      });
-
-      socket.on("realtime:event", (event: ModelCrudEvent) => {
-        const model = client.getModel(event.model);
-        const adapter = model.getAdapter() as ClientAdapter;
-
-        Object.assign(event, { __socketId: socket.id });
-
-        adapter.dispatch(event);
-      });
-
-      socket.on("upload:event", (_event: UploadEvent) => {
-        // this.__uploadEventsSubject?.next(event);
       });
     }).finally(() => {
       if (rejectTimeout) {
@@ -130,13 +155,33 @@ class ModuleRealtime extends Module<{ connectTimeout?: number; autoConnect?: boo
     return this.#connectPromise;
   }
 
+  getUpload(_id: string): RealtimeUpload {
+    let upload = this.#uploadsMap.get(_id);
+
+    if (!upload) {
+      upload = new RealtimeUpload(this, _id);
+      this.#uploadsMap.set(_id, upload);
+    }
+
+    this.getSocket();
+
+    return upload;
+  }
+
+  subscribeModels(models: Array<string>) {
+    const subscribedModels = this.#subscribedModelsSubject.getValue();
+    const nextValue = Array.from(new Set([...subscribedModels, ...models]));
+    this.#subscribedModelsSubject.next(nextValue);
+  }
+
   disconnect() {
     this.#connectPromise = undefined;
-    this.#socket?.close();
+    this.getSocket(false)?.close();
   }
 
   close() {
-    this.#unsubscribe?.();
+    this.#unsubscribeModels?.();
+    this.#unsubscribeOptions?.();
     this.disconnect();
   }
 }
