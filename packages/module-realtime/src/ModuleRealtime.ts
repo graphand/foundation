@@ -20,6 +20,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
   #socketSubject = new BehaviorSubject<Socket | undefined>(undefined);
   #connectPromise: Promise<void> | undefined;
   #unsubscribeOptions: (() => void) | undefined;
+  #connectTimeout: NodeJS.Timeout | undefined;
 
   async [symbolModuleInit]() {
     this.#unsubscribeModels = this.#subscribedModelsSubject.subscribe(models => {
@@ -33,7 +34,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
       this.#unsubscribeOptions = this.client().subscribeOptions((options, previousOptions) => {
         // First time initialization
         if (!previousOptions && !options.accessToken) {
-          console.warn("Access token is required to connect to the socket");
+          return;
         }
 
         if (options.accessToken !== previousOptions?.accessToken) {
@@ -128,18 +129,15 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
       adapter.dispatch(event);
     });
 
-    let rejectTimeout: NodeJS.Timeout | undefined;
-
     this.#socketSubject.next(socket);
     this.#connectPromise = new Promise<void>((resolve, reject) => {
-      rejectTimeout = setTimeout(() => {
+      this.#connectTimeout = setTimeout(() => {
         reject(new Error("Connection timeout"));
         this.disconnect();
       }, this.conf.connectTimeout);
 
       socket.on("connect", () => {
         this.#subscribedModelsSubject.trigger();
-
         resolve();
       });
 
@@ -147,9 +145,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
         reject(e);
       });
     }).finally(() => {
-      if (rejectTimeout) {
-        clearTimeout(rejectTimeout);
-      }
+      this.#connectTimeout && clearTimeout(this.#connectTimeout);
     });
 
     return this.#connectPromise;
@@ -175,8 +171,9 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
   }
 
   disconnect() {
-    this.#connectPromise = undefined;
     this.getSocket(false)?.close();
+    this.#connectTimeout && clearTimeout(this.#connectTimeout);
+    this.#connectPromise = undefined;
   }
 
   close() {
