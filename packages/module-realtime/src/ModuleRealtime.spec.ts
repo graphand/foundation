@@ -18,8 +18,6 @@ describe("ModuleRealtime", () => {
         "X-Access-Key": process.env.ACCESS_KEY,
       },
     });
-
-    console.log(client.options);
   });
 
   afterEach(() => {
