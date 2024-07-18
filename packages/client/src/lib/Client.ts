@@ -23,6 +23,7 @@ const DEFAULT_OPTIONS: Partial<ClientOptions> = {
 };
 
 export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
+  #clientModules: ClientModules<T>;
   #options: BehaviorSubject<ClientOptions>;
   #modules: Map<string, Module>;
   #modulesInitPromises: Map<string, Promise<void> | void> | undefined;
@@ -30,6 +31,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
   #adapterClass: typeof ClientAdapter | undefined;
 
   constructor(modules: ClientModules<T>, options?: ClientOptions) {
+    this.#clientModules = modules;
     this.#options = new BehaviorSubject(options || { ...DEFAULT_OPTIONS, project: null });
 
     // Checking there are no duplicate module names
@@ -407,5 +409,9 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     const modules = Array.from(this.#modules.values());
 
     await Promise.all(modules.map(module => module[symbolModuleDestroy]()));
+  }
+
+  clone(options: Partial<ClientOptions> = {}) {
+    return new Client(this.#clientModules, { ...this.options, ...options });
   }
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["ACCESS_TOKEN", "PROJECT", "ACCESS_KEY"],
+  "globalEnv": ["ACCESS_TOKEN", "PROJECT", "ACCESS_KEY", "ENDPOINT", "SSL"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

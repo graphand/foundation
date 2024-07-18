@@ -17,6 +17,10 @@ export class Subject<T> {
     this.#previousValue = value;
   }
 
+  trigger() {
+    this.next(this.#previousValue);
+  }
+
   subscribe(observer: SubjectObserver<T>): () => void {
     if (!this.#observers.includes(observer)) {
       this.#observers.push(observer);
