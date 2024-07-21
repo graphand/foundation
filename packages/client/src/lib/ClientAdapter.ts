@@ -177,7 +177,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     });
     const json: ModelJSON<T> = await res.json().then(r => r.data);
     await this.#initPopulatedModels(json);
-    return this.#processAndCacheInstance(json);
+    return this.processAndCacheInstance(json);
   }
 
   async #getById(id: string, ctx: TransactionCtx): Promise<ModelInstance<T> | null> {
@@ -191,7 +191,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     });
     const json: ModelJSON<T> = await res.json().then(r => r.data);
     await this.#initPopulatedModels(json);
-    return this.#processAndCacheInstance(json);
+    return this.processAndCacheInstance(json);
   }
 
   async #getByQuery(query: JSONQuery, ctx: TransactionCtx): Promise<ModelInstance<T> | null> {
@@ -604,7 +604,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return undefined;
   }
 
-  #processAndCacheInstance(json: ModelJSON<T>): ModelInstance<T> | null {
+  processAndCacheInstance(json: ModelJSON<T>): ModelInstance<T> | null {
     const { instance, updated } = this.processInstancePayload(json);
 
     if (updated && instance?._id) {

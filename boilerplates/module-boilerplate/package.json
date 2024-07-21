@@ -1,5 +1,5 @@
 {
-  "name": "@graphand/.boilerplate",
+  "name": "@graphand/module-boilerplate",
   "version": "0.0.0",
   "private": false,
   "exports": {

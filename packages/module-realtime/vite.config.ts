@@ -18,7 +18,7 @@ export default defineConfig({
       fileName: format => `index.${format}.js`,
     },
     rollupOptions: {
-      external: [],
+      external: ["@graphand/core", "@graphand/client"],
       output: {
         globals: {},
       },

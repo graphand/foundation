@@ -86,7 +86,7 @@ export class Model {
       });
     }
 
-    this.#data = Object.freeze(data);
+    this.#data = data;
   }
 
   /**
@@ -164,7 +164,7 @@ export class Model {
    * @param data
    */
   setData(data: ModelData) {
-    this.#data = Object.freeze(data);
+    this.#data = data;
   }
 
   /**

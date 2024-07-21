@@ -1,4 +1,4 @@
-import { InferModel, Model, ModelInstance, ModelList, PromiseModel, PromiseModelList } from "@graphand/core";
+import { InferModel, Model, ModelInstance, ModelJSON, ModelList, PromiseModel, PromiseModelList } from "@graphand/core";
 import { ClientAdapter } from "./lib/ClientAdapter";
 import { InferModelFromList, ModelUpdaterEvent, SubjectObserver } from "./types";
 import { Client } from "./lib/Client";
@@ -8,7 +8,8 @@ Model.subscribe = function <T extends typeof Model>(
   this: T,
   observer: SubjectObserver<ModelUpdaterEvent>,
 ): ReturnType<ClientAdapter<T>["subscribe"]> {
-  return (this.getAdapter() as ClientAdapter<T>).subscribe(observer);
+  const adapter = this.getAdapter() as ClientAdapter<T>;
+  return adapter.subscribe(observer);
 };
 
 Model.prototype.subscribe = function <T extends ModelInstance>(
@@ -23,6 +24,11 @@ Model.prototype.subscribe = function <T extends ModelInstance>(
       previousData = this.getData();
     }
   });
+};
+
+Model.hydrateAndCache = function <T extends typeof Model>(this: T, json?: ModelJSON<T>): ModelInstance<T> {
+  const adapter = this.getAdapter() as ClientAdapter<T>;
+  return adapter.processAndCacheInstance(json);
 };
 
 ModelList.prototype.getKey = function <T extends ModelList<typeof Model>>(this: T): string {
@@ -106,12 +112,14 @@ Model.prototype.__getAge = function <T extends ModelInstance>(this: T): number {
 };
 
 Model.clearCache = function <T extends typeof Model>(this: T): T {
-  (this.getAdapter() as ClientAdapter<T>).clearInstances();
+  const adapter = this.getAdapter() as ClientAdapter<T>;
+  adapter.clearInstances();
   return this;
 };
 
 Model.getClient = function <T extends typeof Model>(this: T): Client {
-  return (this.getAdapter() as ClientAdapter<T>).client;
+  const adapter = this.getAdapter() as ClientAdapter<T>;
+  return adapter.client;
 };
 
 // Helper methods for ModelList

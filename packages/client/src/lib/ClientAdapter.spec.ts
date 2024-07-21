@@ -2,6 +2,7 @@ import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
 import { Client } from "./Client";
 import { ClientAdapter } from "./ClientAdapter";
+import { ClientModules, ClientOptions, ModuleConstructor } from "../types";
 import {
   DataModel,
   FieldTypes,
@@ -15,6 +16,20 @@ import {
   PromiseModelList,
   ValidationError,
 } from "@graphand/core";
+
+export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]>(
+  modules: ClientModules<T> = [] as ClientModules<T>,
+  options: Partial<ClientOptions> = {},
+): Client<T> => {
+  options ??= {};
+  options.endpoint ??= process.env.ENDPOINT;
+  options.ssl ??= process.env.SSL !== "0";
+  options.accessToken ??= process.env.ACCESS_TOKEN;
+  options.project ??= process.env.PROJECT;
+  options.headers ??= {};
+  options.headers["X-Access-Key"] ??= process.env.ACCESS_KEY;
+  return new Client(modules, options as ClientOptions);
+};
 
 describe("ClientAdapter", () => {
   @modelDecorator()
@@ -1398,7 +1413,7 @@ describe("ClientAdapter", () => {
     it("should correctly handle and cache deeply nested relations across multiple dynamic models", async () => {
       const dmOtherRelated = client.getModel(DataModel).hydrate({
         _id: new ObjectId().toString(),
-        slug: faker.lorem.word() + "-3",
+        slug: faker.random.alphaNumeric(10) + "-3",
         definition: {
           keyField: "title",
           fields: {
@@ -1410,7 +1425,7 @@ describe("ClientAdapter", () => {
       });
       const dmRelated = client.getModel(DataModel).hydrate({
         _id: new ObjectId().toString(),
-        slug: faker.lorem.word() + "-2",
+        slug: faker.random.alphaNumeric(10) + "-2",
         definition: {
           keyField: "title",
           fields: {
@@ -1428,7 +1443,7 @@ describe("ClientAdapter", () => {
       });
       const dm = client.getModel(DataModel).hydrate({
         _id: new ObjectId().toString(),
-        slug: faker.lorem.word() + "-1",
+        slug: faker.random.alphaNumeric(10) + "-1",
         definition: {
           keyField: "title",
           fields: {
@@ -1458,13 +1473,13 @@ describe("ClientAdapter", () => {
           JSON.stringify({
             data: {
               _id: id1,
-              title: faker.lorem.word(),
+              title: faker.random.alphaNumeric(10),
               related: {
                 _id: id2,
-                title: faker.lorem.word(),
+                title: faker.random.alphaNumeric(10),
                 otherRelated: {
                   _id: id3,
-                  title: faker.lorem.word(),
+                  title: faker.random.alphaNumeric(10),
                 },
               },
             },
@@ -1488,7 +1503,7 @@ describe("ClientAdapter", () => {
     });
 
     it("should handle circular references in dynamic models", async () => {
-      const slug = faker.lorem.word() + "-circular";
+      const slug = faker.random.alphaNumeric(10) + "-circular";
 
       const id1 = new ObjectId().toString();
       const id2 = new ObjectId().toString();
@@ -1524,10 +1539,10 @@ describe("ClientAdapter", () => {
           JSON.stringify({
             data: {
               _id: id1,
-              title: faker.lorem.word(),
+              title: faker.random.alphaNumeric(10),
               selfRef: {
                 _id: id2,
-                title: faker.lorem.word(),
+                title: faker.random.alphaNumeric(10),
                 selfRef: id1, // Circular reference
               },
             },
@@ -1561,7 +1576,7 @@ describe("ClientAdapter", () => {
     });
 
     it("should correctly populate nested arrays with relations", async () => {
-      const slug = faker.lorem.word() + "-nested";
+      const slug = faker.random.alphaNumeric(10) + "-nested";
       const dmNested = client.getModel(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug,
@@ -1603,20 +1618,20 @@ describe("ClientAdapter", () => {
           JSON.stringify({
             data: {
               _id: id1,
-              title: faker.lorem.word(),
+              title: faker.random.alphaNumeric(10),
               items: [
                 {
-                  name: faker.lorem.word(),
+                  name: faker.random.alphaNumeric(10),
                   subItem: {
                     _id: id2,
-                    title: faker.lorem.word(),
+                    title: faker.random.alphaNumeric(10),
                   },
                 },
                 {
-                  name: faker.lorem.word(),
+                  name: faker.random.alphaNumeric(10),
                   subItem: {
                     _id: id3,
-                    title: faker.lorem.word(),
+                    title: faker.random.alphaNumeric(10),
                   },
                 },
               ],
@@ -1652,7 +1667,7 @@ describe("ClientAdapter", () => {
     it("should update cache when deeply nested relations are modified", async () => {
       const dmDeep2 = client.getModel(DataModel).hydrate({
         _id: new ObjectId().toString(),
-        slug: faker.lorem.word() + "-deep-2",
+        slug: faker.random.alphaNumeric(10) + "-deep-2",
         definition: {
           keyField: "title",
           fields: {
@@ -1663,7 +1678,7 @@ describe("ClientAdapter", () => {
 
       const dmDeep1 = client.getModel(DataModel).hydrate({
         _id: new ObjectId().toString(),
-        slug: faker.lorem.word() + "-deep-1",
+        slug: faker.random.alphaNumeric(10) + "-deep-1",
         definition: {
           keyField: "title",
           fields: {
@@ -1678,7 +1693,7 @@ describe("ClientAdapter", () => {
 
       const dmDeep = client.getModel(DataModel).hydrate({
         _id: new ObjectId().toString(),
-        slug: faker.lorem.word() + "-deep",
+        slug: faker.random.alphaNumeric(10) + "-deep",
         definition: {
           keyField: "title",
           fields: {
@@ -1711,15 +1726,15 @@ describe("ClientAdapter", () => {
           JSON.stringify({
             data: {
               _id: id1,
-              title: faker.lorem.word(),
+              title: faker.random.alphaNumeric(10),
               _updatedAt: new Date(Date.now() + updateCount).toJSON(),
               level1: {
                 _id: id2,
-                title: faker.lorem.word(),
+                title: faker.random.alphaNumeric(10),
                 _updatedAt: new Date(Date.now() + updateCount).toJSON(),
                 level2: {
                   _id: updateCount === 1 ? id3 : id4,
-                  title: faker.lorem.word(),
+                  title: faker.random.alphaNumeric(10),
                   _updatedAt: new Date(Date.now() + updateCount).toJSON(),
                 },
               },
@@ -1748,6 +1763,110 @@ describe("ClientAdapter", () => {
 
       const instance = adapter.instancesMap.get(id1) as any;
       expect(instance?.level1.cached?.level2.cached?._id).toBe(id4);
+    });
+  });
+
+  describe("On server", () => {
+    let _client: Client;
+    let model: typeof Model & {
+      definition: {
+        fields: {
+          title: {
+            type: FieldTypes.TEXT;
+          };
+        };
+      };
+    };
+
+    beforeEach(() => {
+      _client = createClient([]);
+    });
+
+    beforeAll(async () => {
+      _client = createClient([]);
+      const datamodel = await _client.getModel(DataModel).create({
+        slug: faker.random.alphaNumeric(10),
+        definition: {
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        },
+      });
+      model = _client.getModel(datamodel);
+    });
+
+    afterAll(() => {
+      _client.destroy();
+    });
+
+    it("should createOne", async () => {
+      const title = faker.random.alphaNumeric(10);
+      const created = await model.create({ title });
+      expect(created).toBeInstanceOf(model);
+      expect(created.get("_id")).toBeDefined();
+      expect(created.get("title")).toBe(title);
+    });
+
+    it("should createMultiple", async () => {
+      const title1 = faker.random.alphaNumeric(10);
+      const title2 = faker.random.alphaNumeric(10);
+      const created = await model.createMultiple([{ title: title1 }, { title: title2 }]);
+      expect(Array.isArray(created)).toBeTruthy();
+      expect(created.length).toBe(2);
+      expect(created[0].get("_id")).toBeDefined();
+      expect(created[0].get("title")).toBe(title1);
+      expect(created[1].get("_id")).toBeDefined();
+      expect(created[1].get("title")).toBe(title2);
+    });
+
+    it("should updateOne", async () => {
+      const i = await model.create({ title: faker.random.alphaNumeric(10) });
+
+      const newTitle = faker.random.alphaNumeric(10);
+      await i.update({ $set: { title: newTitle } });
+
+      expect(i.get("title")).toBe(newTitle);
+    });
+
+    it("should updateMultiple", async () => {
+      const i1 = await model.create({ title: faker.random.alphaNumeric(10) });
+      const i2 = await model.create({ title: faker.random.alphaNumeric(10) });
+
+      const newTitle = faker.random.alphaNumeric(10);
+      await model.update({ ids: [i1._id, i2._id] }, { $set: { title: newTitle } });
+
+      expect(i1.get("title")).toBe(newTitle);
+      expect(i2.get("title")).toBe(newTitle);
+
+      await expect(model.get(i1._id, { disableCache: true })).resolves.toHaveProperty("title", newTitle);
+      await expect(model.get(i2._id, { disableCache: true })).resolves.toHaveProperty("title", newTitle);
+    });
+
+    it("should deleteOne", async () => {
+      const i = await model.create({ title: faker.random.alphaNumeric(10) });
+      await i.delete();
+      await expect(model.get(i._id)).rejects.toThrow("not found");
+    });
+
+    it("should deleteMultiple", async () => {
+      const i1 = await model.create({ title: faker.random.alphaNumeric(10) });
+      const i2 = await model.create({ title: faker.random.alphaNumeric(10) });
+      await model.delete({ ids: [i1._id, i2._id] });
+      await expect(model.get(i1._id)).rejects.toThrow("not found");
+      await expect(model.get(i2._id)).rejects.toThrow("not found");
+    });
+
+    it("should count", async () => {
+      const created = await model.createMultiple([
+        { title: faker.random.alphaNumeric(10) },
+        { title: faker.random.alphaNumeric(10) },
+      ]);
+      const filter = { title: { $in: [created[0].get("title"), created[1].get("title")] } };
+      expect(await model.count({ filter })).toBe(2);
+      await model.delete({ ids: [created[0]._id, created[1]._id] });
+      expect(await model.count({ filter })).toBe(0);
     });
   });
 });

@@ -1,8 +1,6 @@
-import { CoreErrorDefinition, InferModel, ModelInstance } from "@graphand/core";
+import { CoreErrorDefinition, InferModel, ModelInstance, ModelJSON, ModelList, Model } from "@graphand/core";
 import { Module } from "./lib/Module";
 import { Client } from "./lib/Client";
-import { ModelList } from "@graphand/core";
-import { Model } from "@graphand/core";
 import { ClientAdapter } from "./lib/ClientAdapter";
 
 declare module "@graphand/core" {
@@ -26,6 +24,7 @@ declare module "@graphand/core" {
     ): ReturnType<ClientAdapter<T>["subscribe"]>;
     export function clearCache<T extends typeof Model>(this: T): T;
     export function getClient<T extends typeof Model>(this: T): Client;
+    export function hydrateAndCache<T extends typeof Model>(this: T, _json?: ModelJSON<T>): ModelInstance<T>;
   }
 
   export interface ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
@@ -86,6 +85,10 @@ export type SubjectObserver<T> = (_value: T, _previousValue?: T) => void;
 
 export type ClientErrorDefinition = CoreErrorDefinition & {
   data?: Record<string, any>;
+};
+
+export type FetchErrorDefinition = CoreErrorDefinition & {
+  res?: Response;
 };
 
 export type HookPhase = "beforeRequest" | "afterRequest";

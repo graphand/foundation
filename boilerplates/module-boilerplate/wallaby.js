@@ -3,7 +3,7 @@
 module.exports = function () {
   return {
     autoDetect: true,
-    name: "@graphand/module-auth",
+    name: "@graphand/.boilerplate",
     testFramework: {
       configFile: "./jest.config.json",
     },

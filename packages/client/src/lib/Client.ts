@@ -11,10 +11,10 @@ import {
 } from "@/types";
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module";
 import { Adapter, ControllerDefinition, CoreError, ErrorCodes, Model, TransactionCtx } from "@graphand/core";
-import { ClientError } from "./ClientError";
 import { ClientAdapter } from "./ClientAdapter";
 import { BehaviorSubject } from "./BehaviorSubject";
 import { decodeClientModule, parseErrorFromJSON } from "./utils";
+import { FetchError } from "./FetchError";
 
 const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   endpoint: "api.graphand.cloud",
@@ -62,6 +62,10 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
   subscribeOptions(observer: SubjectObserver<ClientOptions>) {
     return this.#options.subscribe(observer);
+  }
+
+  setOptions(options: Partial<ClientOptions>) {
+    this.#options.next({ ...this.#options.getValue(), ...options });
   }
 
   get options(): ClientOptions {
@@ -310,7 +314,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       Object.assign(init.headers, this.options.headers);
     }
 
-    if (this.options.accessToken) {
+    if (this.options.accessToken && (!init.headers || !("Authorization" in init.headers))) {
       init.headers ??= {};
       Object.assign(init.headers, { Authorization: `Bearer ${this.options.accessToken}` });
     }
@@ -347,18 +351,18 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
         if (type?.includes("application/json")) {
           const e = await res.json().then(r => r.error);
           if (e) {
-            throw parseErrorFromJSON(e);
+            throw parseErrorFromJSON(e, res);
           }
 
-          throw new ClientError({ message: "Unknown error" });
+          throw new FetchError({ message: "Unknown error", res });
         }
 
         if (type?.includes("text/plain")) {
           const data = await res.text();
-          throw new ClientError({ message: data });
+          throw new FetchError({ message: data, res });
         }
 
-        throw new ClientError({ message: "Unknown error" });
+        throw new FetchError({ message: "Unknown error", res });
       }
     } catch (e) {
       payloadBefore.err ??= [];

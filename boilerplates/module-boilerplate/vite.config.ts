@@ -14,11 +14,11 @@ export default defineConfig({
   build: {
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
-      name: "@graphand/.boilerplate",
+      name: "@graphand/module-boilerplate",
       fileName: format => `index.${format}.js`,
     },
     rollupOptions: {
-      external: [],
+      external: ["@graphand/core", "@graphand/client"],
       output: {
         globals: {},
       },

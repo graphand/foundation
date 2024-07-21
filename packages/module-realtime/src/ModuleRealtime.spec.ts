@@ -1,23 +1,29 @@
 import { ObjectId } from "bson";
-import { Client, ClientAdapter } from "@graphand/client";
+import { Client, ClientAdapter, ClientModules, ClientOptions, ModuleConstructor } from "@graphand/client";
 import ModuleRealtime from "./ModuleRealtime";
 import { Socket } from "socket.io-client";
 import { controllersMap, DataModel, FieldTypes, Model, ModelCrudEvent } from "@graphand/core";
 import RealtimeUpload from "./lib/RealtimeUpload";
 
+export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]>(
+  modules: ClientModules<T> = [] as ClientModules<T>,
+  options: Partial<ClientOptions> = {},
+): Client<T> => {
+  options ??= {};
+  options.endpoint ??= process.env.ENDPOINT;
+  options.ssl ??= process.env.SSL !== "0";
+  options.accessToken ??= process.env.ACCESS_TOKEN;
+  options.project ??= process.env.PROJECT;
+  options.headers ??= {};
+  options.headers["X-Access-Key"] ??= process.env.ACCESS_KEY;
+  return new Client(modules, options as ClientOptions);
+};
+
 describe("ModuleRealtime", () => {
   let client: Client<[typeof ModuleRealtime]>;
 
   beforeEach(() => {
-    client = new Client([[ModuleRealtime]], {
-      endpoint: process.env.ENDPOINT,
-      ssl: process.env.SSL !== "0",
-      accessToken: process.env.ACCESS_TOKEN,
-      project: process.env.PROJECT,
-      headers: {
-        "X-Access-Key": process.env.ACCESS_KEY,
-      },
-    });
+    client = createClient([[ModuleRealtime]]);
   });
 
   afterEach(() => {

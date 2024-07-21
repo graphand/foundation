@@ -66,11 +66,6 @@ export const controllersMap = {
     methods: ["get"],
     secured: false,
   },
-  refreshToken: {
-    path: "/auth/refresh",
-    methods: ["post"],
-    secured: false,
-  },
   genTokenToken: {
     path: "/tokens/:id/gen",
     methods: ["post"],
@@ -85,6 +80,11 @@ export const controllersMap = {
     path: "/keys/gen-key-pair",
     methods: ["post"],
     secured: true,
+  },
+  refreshToken: {
+    path: "/auth/refresh",
+    methods: ["post"],
+    secured: false,
   },
   register: {
     path: "/auth/register",

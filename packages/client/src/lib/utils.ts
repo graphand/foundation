@@ -48,7 +48,7 @@ export const decodeClientModule = <T extends ModuleConstructor>(
   return { moduleClass, conf: conf || {} };
 };
 
-export const parseErrorFromJSON = (json: any) => {
+export const parseErrorFromJSON = (json: any, res?: Response) => {
   if (json?.type === "ValidationError") {
     const fields = json.reason?.fields?.map((f: any) => {
       const field = new Field(
@@ -83,5 +83,5 @@ export const parseErrorFromJSON = (json: any) => {
     });
   }
 
-  throw new ClientError(json);
+  throw new ClientError({ ...json, res });
 };

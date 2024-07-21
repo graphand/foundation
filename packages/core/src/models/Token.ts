@@ -17,7 +17,7 @@ export class Token extends Model {
       name: { type: FieldTypes.TEXT },
       expiresAt: { type: FieldTypes.DATE },
       neverExpires: { type: FieldTypes.BOOLEAN, options: { default: false } }, // If true, the token never expires
-      lifetime: { type: FieldTypes.NUMBER }, // By default, the token lifetime is the accessTokenLifetime in system settings
+      lifetime: { type: FieldTypes.NUMBER }, // By default, the token lifetime is the accessTokenLifetime in system settings. In seconds
       maxGen: { type: FieldTypes.NUMBER },
       role: {
         type: FieldTypes.RELATION,
