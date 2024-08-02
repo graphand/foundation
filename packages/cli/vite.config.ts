@@ -10,7 +10,9 @@ export default defineConfig({
       name: "chmod-plugin",
       apply: "build",
       writeBundle() {
-        fs.chmodSync("/opt/homebrew/bin/graphand", "755");
+        if (fs.existsSync("/opt/homebrew/bin/graphand")) {
+          fs.chmodSync("/opt/homebrew/bin/graphand", "755");
+        }
       },
     },
   ],
