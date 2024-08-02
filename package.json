@@ -26,6 +26,7 @@
   "workspaces": [
     "configs/.eslint-config",
     "configs/.typescript-config",
+    "packages/cli",
     "packages/client",
     "packages/core",
     "packages/module-auth",
