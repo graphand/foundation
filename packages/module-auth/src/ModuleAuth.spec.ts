@@ -1,7 +1,17 @@
 import { faker } from "@faker-js/faker";
 import { Client, ClientModules, ClientOptions, ModuleConstructor } from "@graphand/client";
 import ModuleAuth from "./ModuleAuth";
-import { Account, AuthMethods, AuthProviders, controllersMap, ModelJSON, Role, Token } from "@graphand/core";
+import {
+  Account,
+  AuthMethods,
+  AuthProviders,
+  controllerConfigureAuth,
+  controllerCurrentAccount,
+  controllerGenTokenToken,
+  ModelJSON,
+  Role,
+  Token,
+} from "@graphand/core";
 import { AuthStorage } from "./types";
 
 export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]>(
@@ -172,8 +182,8 @@ describe("ModuleAuth", () => {
 
     await client.get("auth").register({ configuration: { email, password } });
 
-    await client.execute(controllersMap.configureAuth, {
-      init: { body: JSON.stringify({ provider: "graphand", configuration: { graphandToken } }) },
+    await client.execute(controllerConfigureAuth, {
+      data: { provider: AuthProviders.GRAPHAND, configuration: { graphandToken } },
     });
 
     let redirectHandler: Promise<void>;
@@ -264,8 +274,8 @@ describe("ModuleAuth", () => {
     const token = await client
       .getModel(Token)
       .create({ name: faker.random.alphaNumeric(10), role: role._id, lifetime: 0.3 });
-    const res = await client.execute(controllersMap.genTokenToken, {
-      path: { id: token._id },
+    const res = await client.execute(controllerGenTokenToken, {
+      params: { id: token._id },
     });
 
     const accessToken = await res.json().then(r => r.data);
@@ -287,7 +297,7 @@ describe("ModuleAuth", () => {
 
     const spyRefreshToken = jest.spyOn(client.get("auth"), "refreshToken");
 
-    const resAccount = await client.execute(controllersMap.currentAccount);
+    const resAccount = await client.execute(controllerCurrentAccount);
 
     expect(spyRefreshToken).toHaveBeenCalled();
 

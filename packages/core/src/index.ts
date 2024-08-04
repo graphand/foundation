@@ -2,6 +2,8 @@ import "@/modules/validators";
 import "@/modules/register-models";
 
 export * from "@/types";
+export * from "@/lib/controllers";
+
 export { modelDecorator } from "@/lib/modelDecorator";
 export { Adapter } from "@/lib/Adapter";
 export { CoreError } from "@/lib/CoreError";
@@ -60,8 +62,8 @@ export { MergeRequestTypes } from "@/enums/merge-request-types";
 export { Patterns } from "@/enums/patterns";
 export { RuleActions } from "@/enums/rule-actions";
 export { ValidatorTypes } from "@/enums/validator-types";
-export { controllersMap } from "@/lib/controllersMap";
 export {
+  isObjectId,
   crossFields,
   defineFieldsProperties,
   getArrayItemsFieldsMap,

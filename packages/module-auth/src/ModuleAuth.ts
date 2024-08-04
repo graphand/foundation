@@ -4,11 +4,16 @@ import {
   AuthMethodOptions,
   AuthMethods,
   AuthProviders,
-  controllersMap,
+  controllerLogin,
+  controllerRegister,
   ErrorCodes,
   ModelJSON,
+  LoginData,
+  RegisterData,
+  controllerRefreshToken,
+  controllerCodeAuth,
 } from "@graphand/core";
-import { AuthStorage, LoginData, RegisterData } from "./types";
+import { AuthStorage } from "./types";
 
 class MemoryStorage implements AuthStorage {
   private store: Record<string, string> = {};
@@ -128,8 +133,8 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       options.redirect ??= window.location.href;
     }
 
-    const res = await this.client().execute(controllersMap.login, {
-      init: { body: JSON.stringify(data) },
+    const res = await this.client().execute(controllerLogin, {
+      data,
     });
 
     const json = await res.json();
@@ -170,8 +175,8 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       options.redirect ??= window.location.href;
     }
 
-    const res = await this.client().execute(controllersMap.register, {
-      init: { body: JSON.stringify(data) },
+    const res = await this.client().execute(controllerRegister, {
+      data,
     });
 
     const json = await res.json();
@@ -190,8 +195,8 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       throw new Error("No access token available");
     }
 
-    const res = await this.client().execute(controllersMap.refreshToken, {
-      init: { body: JSON.stringify({ accessToken, refreshToken }) },
+    const res = await this.client().execute(controllerRefreshToken, {
+      data: { accessToken, refreshToken },
     });
 
     const json = await res.json();
@@ -237,7 +242,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
   }
 
   async handleCode(code: string) {
-    const res = await this.client().execute(controllersMap.codeAuth, { query: { code } });
+    const res = await this.client().execute(controllerCodeAuth, { query: { code } });
 
     const json = await res.json();
 

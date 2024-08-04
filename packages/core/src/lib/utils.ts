@@ -470,6 +470,11 @@ export const getDefaultValidatorOptions = <T extends ValidatorTypes>(type: T): V
   }
 };
 
+/**
+ * The function `isObjectId` checks if the input is a valid id.
+ * @param input - The `input` parameter is a string or number that represents an id.
+ * @returns The function `isObjectId` returns a boolean value indicating whether the input is a valid id.
+ */
 export const isObjectId = (input: unknown) => /^[a-f\d]{24}$/i.test(String(input));
 
 /**

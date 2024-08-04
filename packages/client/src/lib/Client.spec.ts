@@ -307,7 +307,7 @@ describe("Client", () => {
 
     it("should handle path parameters correctly", async () => {
       mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
-      await client.execute({ path: "/test/:id", methods: ["get"], secured: false }, { path: { id: "123" } });
+      await client.execute({ path: "/test/:id", methods: ["get"], secured: false }, { params: { id: "123" } });
       expect(mockFetch).toHaveBeenCalledWith(
         expect.objectContaining({
           url: expect.stringContaining("/test/123"),

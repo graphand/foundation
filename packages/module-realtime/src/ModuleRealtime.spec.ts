@@ -2,7 +2,7 @@ import { ObjectId } from "bson";
 import { Client, ClientAdapter, ClientModules, ClientOptions, ModuleConstructor } from "@graphand/client";
 import ModuleRealtime from "./ModuleRealtime";
 import { Socket } from "socket.io-client";
-import { controllersMap, DataModel, FieldTypes, Model, ModelCrudEvent } from "@graphand/core";
+import { controllerModelCreate, DataModel, FieldTypes, Model, ModelCrudEvent } from "@graphand/core";
 import RealtimeUpload from "./lib/RealtimeUpload";
 
 export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]>(
@@ -212,8 +212,8 @@ describe("ModuleRealtime", () => {
     const file = new File(array, "test.txt", { type: "text/plain" });
     form.append("file", file);
 
-    const res = await client.execute(controllersMap.modelCreate, {
-      path: { model: "medias" },
+    const res = await client.execute(controllerModelCreate, {
+      params: { model: "medias" },
       init: {
         body: form,
         headers: {

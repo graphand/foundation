@@ -10,7 +10,16 @@ import {
   ModuleConstructor,
 } from "@/types";
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module";
-import { Adapter, ControllerDefinition, CoreError, ErrorCodes, Model, TransactionCtx } from "@graphand/core";
+import {
+  Adapter,
+  Controller,
+  ControllerInput,
+  CoreError,
+  ErrorCodes,
+  InferControllerInput,
+  Model,
+  TransactionCtx,
+} from "@graphand/core";
 import { ClientAdapter } from "./ClientAdapter";
 import { BehaviorSubject } from "./BehaviorSubject";
 import { decodeClientModule, parseErrorFromJSON } from "./utils";
@@ -166,12 +175,12 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return `${scheme}://${project}.${endpoint}`;
   }
 
-  #buildUrl(definition: ControllerDefinition, opts: { path?: Record<string, string>; query?: Record<string, string> }) {
-    let path: string = definition.path;
+  #buildUrl(controller: Controller, opts: { params?: Record<string, string>; query?: Record<string, string> }) {
+    let path: string = controller.path;
 
-    if (opts.path) {
-      path = definition.path.replace(/:(\w+)(\?)?/g, (match, p1) => {
-        return opts.path?.[p1] ? encodeURIComponent(String(opts.path[p1])) : "";
+    if (opts.params) {
+      path = controller.path.replace(/:(\w+)(\?)?/g, (_, p1) => {
+        return opts.params?.[p1] ? encodeURIComponent(String(opts.params[p1])) : "";
       });
     }
 
@@ -261,18 +270,19 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return Model.getClass(input, this.getAdapterClass(adapterClass));
   };
 
-  async execute(
-    definition: ControllerDefinition,
+  async execute<C extends Controller<ControllerInput> = Controller<unknown>>(
+    controller: C,
     opts: {
+      params?: InferControllerInput<C>["params"];
+      query?: InferControllerInput<C>["query"];
+      data?: InferControllerInput<C>["data"];
       ctx?: TransactionCtx;
-      path?: Record<string, string>;
-      query?: Record<string, string>;
       init?: RequestInit;
       maxRetries?: number;
     } = {},
     transaction?: Transaction,
   ): Promise<Response> {
-    if (definition.secured && !this.options.accessToken) {
+    if (controller.secured && !this.options.accessToken) {
       throw new Error("Access token is required");
     }
 
@@ -294,17 +304,18 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       });
     }
 
-    const { path, query } = opts;
+    const url = this.#buildUrl(controller, {
+      params: opts.params as Record<string, string>,
+      query: opts.query as Record<string, string>,
+    });
 
-    const url = this.#buildUrl(definition, { path, query });
-
-    const init: RequestInit = opts.init ?? {};
+    const init: RequestInit = Object.assign({}, opts.init);
 
     if (!init.method) {
       const order = ["put", "post", "patch", "delete", "get", "options"] as Array<
-        (typeof definition)["methods"][number]
+        (typeof controller)["methods"][number]
       >;
-      const method = order.filter(m => definition.methods.includes(m)).at(0) || "get";
+      const method = order.filter(m => controller.methods.includes(m)).at(0) || "get";
 
       init.method = method.toUpperCase();
     }
@@ -317,6 +328,15 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     if (this.options.accessToken && (!init.headers || !("Authorization" in init.headers))) {
       init.headers ??= {};
       Object.assign(init.headers, { Authorization: `Bearer ${this.options.accessToken}` });
+    }
+
+    if (this.options.environment && (!init.headers || !("Content-Environment" in init.headers))) {
+      init.headers ??= {};
+      Object.assign(init.headers, { "Content-Environment": this.options.environment });
+    }
+
+    if (opts.data) {
+      init.body ??= JSON.stringify(opts.data);
     }
 
     const request = new Request(url, init);
@@ -333,7 +353,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     if (payloadBefore.err?.length) {
       if (transaction.retryToken && payloadBefore.err?.includes(transaction.retryToken)) {
-        return await this.execute(definition, opts, transaction);
+        return await this.execute(controller, opts, transaction);
       }
 
       throw payloadBefore.err.at(-1);
@@ -378,7 +398,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     if (payloadAfter.err?.length) {
       if (transaction.retryToken && payloadAfter.err.includes(transaction.retryToken)) {
-        return await this.execute(definition, opts, transaction);
+        return await this.execute(controller, opts, transaction);
       }
 
       throw payloadAfter.err.at(-1);

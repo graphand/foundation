@@ -83,7 +83,7 @@ export type Sort =
   | {
       [key: string]: SortDirection;
     }
-  | Map<string, SortDirection>
+  | Record<string, SortDirection>
   | [string, SortDirection][]
   | [string, SortDirection];
 
@@ -99,17 +99,17 @@ export type PopulatePath = string | PopulateOption;
 
 export type Populate = PopulatePath | PopulatePath[];
 
-export type JSONQuery = {
-  filter?: Filter;
-  sort?: Sort;
-  count?: boolean;
-  ids?: string[];
-  limit?: number;
-  skip?: number;
-  page?: number;
-  pageSize?: number;
-  populate?: Populate;
-};
+export type JSONQuery = Partial<{
+  filter: Filter;
+  sort: Sort;
+  count: boolean;
+  ids: string[];
+  limit: number;
+  skip: number;
+  page: number;
+  pageSize: number;
+  populate: Populate;
+}>;
 
 export type UpdateObject = {
   $currentDate?: JSONTypeObject;
@@ -264,10 +264,39 @@ export type ValidationValidatorErrorDefinition = {
   value?: string;
 };
 
-export type ControllerDefinition = {
+export type ControllerInput = {
+  params?: JSONTypeObject;
+  query?: JSONTypeObject;
+  data?: unknown;
+};
+
+export type Controller<I extends ControllerInput = ControllerInput> = {
   path: string;
   methods: Array<"get" | "post" | "put" | "delete" | "patch" | "options">;
   secured: boolean;
+  input?: I;
+};
+
+export type InferControllerInput<C extends Controller<ControllerInput>> = C["input"] extends never ? never : C["input"];
+
+export type LoginData<P extends AuthProviders = AuthProviders, M extends AuthMethods = AuthMethods> = {
+  provider?: P;
+  method?: M;
+  credentials?: AuthProviderCredentials<P>;
+  options?: AuthMethodOptions<M>;
+};
+
+export type RegisterData<P extends AuthProviders = AuthProviders, M extends AuthMethods = AuthMethods> = {
+  provider?: P;
+  method?: M;
+  account?: Omit<ModelJSON<typeof Account>, "role">;
+  configuration?: AuthProviderConfigurePayload<P>;
+  options?: AuthMethodOptions<M>;
+};
+
+export type ConfigureData<P extends AuthProviders = AuthProviders> = {
+  provider: P;
+  configuration: AuthProviderConfigurePayload<P>;
 };
 
 export type ModelCrudEvent<T extends "create" | "update" | "delete" = any, M extends typeof Model = typeof Model> = {

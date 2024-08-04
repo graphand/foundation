@@ -1,7 +1,6 @@
 import {
   Adapter,
   AdapterFetcher,
-  controllersMap,
   Model,
   ModelList,
   ModelCrudEvent,
@@ -15,6 +14,12 @@ import {
   JSONQuery,
   TransactionCtx,
   FieldsDefinition,
+  controllerModelCount,
+  controllerModelRead,
+  controllerModelQuery,
+  controllerModelCreate,
+  controllerModelUpdate,
+  controllerModelDelete,
 } from "@graphand/core";
 import { Client } from "./Client";
 import { Subject } from "./Subject";
@@ -102,9 +107,9 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     count: async ([query], ctx) => {
       this.checkClient();
 
-      const res = await this.client.execute(controllersMap.modelCount, {
+      const res = await this.client.execute(controllerModelCount, {
         ctx,
-        path: { model: this.model.slug },
+        params: { model: this.model.slug },
         init: { body: JSON.stringify(query) },
       });
 
@@ -171,9 +176,9 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     if (this.#instancesMap.size && !ctx?.disableCache) {
       return this.#instancesMap.values().next().value;
     }
-    const res = await this.client.execute(controllersMap.modelRead, {
+    const res = await this.client.execute(controllerModelRead, {
       ctx,
-      path: { model: this.model.slug },
+      params: { model: this.model.slug },
     });
     const json: ModelJSON<T> = await res.json().then(r => r.data);
     await this.#initPopulatedModels(json);
@@ -185,9 +190,9 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       const cachedInstance = this.#getCachedInstance(id);
       if (cachedInstance) return cachedInstance;
     }
-    const res = await this.client.execute(controllersMap.modelRead, {
+    const res = await this.client.execute(controllerModelRead, {
       ctx,
-      path: { id, model: this.model.slug },
+      params: { id, model: this.model.slug },
     });
     const json: ModelJSON<T> = await res.json().then(r => r.data);
     await this.#initPopulatedModels(json);
@@ -215,10 +220,10 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       query.ids = query.ids?.filter((id: string) => !this.#instancesMap.has(id));
     }
 
-    const res = await this.client.execute(controllersMap.modelQuery, {
+    const res = await this.client.execute(controllerModelQuery, {
       ctx,
-      path: { model: this.model.slug },
-      init: { body: JSON.stringify(query) },
+      params: { model: this.model.slug },
+      data: query,
     });
 
     const json: ReturnType<ModelList<T>["toJSON"]> = await res.json().then(r => r.data);
@@ -241,10 +246,10 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   async #createOneInternal(payload: any, ctx: TransactionCtx): Promise<ModelJSON<T>> {
-    const res = await this.client.execute(controllersMap.modelCreate, {
+    const res = await this.client.execute(controllerModelCreate, {
       ctx,
-      path: { model: this.model.slug },
-      init: { body: JSON.stringify(payload) },
+      params: { model: this.model.slug },
+      data: payload,
     });
 
     const json: ModelJSON<T> = await res.json().then(r => r.data);
@@ -253,10 +258,10 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   async #createMultipleInternal(payload: any, ctx: TransactionCtx): Promise<Array<ModelJSON<T>>> {
-    const res = await this.client.execute(controllersMap.modelCreate, {
+    const res = await this.client.execute(controllerModelCreate, {
       ctx,
-      path: { model: this.model.slug },
-      init: { body: JSON.stringify(payload) },
+      params: { model: this.model.slug },
+      data: payload,
     });
 
     const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
@@ -265,10 +270,10 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   async #updateById(id: string, update: any, ctx: TransactionCtx): Promise<ModelInstance<T> | null> {
-    const res = await this.client.execute(controllersMap.modelUpdate, {
+    const res = await this.client.execute(controllerModelUpdate, {
       ctx,
-      path: { id, model: this.model.slug },
-      init: { body: JSON.stringify({ update }) },
+      params: { id, model: this.model.slug },
+      data: { update },
     });
 
     const json: ModelJSON<T> = await res.json().then(r => r.data);
@@ -276,18 +281,18 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return this.processInstancePayload(json).instance as ModelInstance<T>;
   }
 
-  async #updateByQuery(query: any, update: any, ctx: TransactionCtx): Promise<ModelInstance<T> | null> {
+  async #updateByQuery(query: JSONQuery, update: any, ctx: TransactionCtx): Promise<ModelInstance<T> | null> {
     query.pageSize = 1;
     const list = await this.#updateMultipleInternal(query, update, ctx);
     if (!list?.length) return null;
     return this.processInstancePayload(list[0]).instance as ModelInstance<T>;
   }
 
-  async #updateMultipleInternal(query: any, update: any, ctx: TransactionCtx): Promise<Array<ModelJSON<T>>> {
-    const res = await this.client.execute(controllersMap.modelUpdate, {
+  async #updateMultipleInternal(query: JSONQuery, update: any, ctx: TransactionCtx): Promise<Array<ModelJSON<T>>> {
+    const res = await this.client.execute(controllerModelUpdate, {
       ctx,
-      path: { id: "", model: this.model.slug },
-      init: { body: JSON.stringify({ ...query, update }) },
+      params: { id: "", model: this.model.slug },
+      data: { ...query, update },
     });
 
     const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
@@ -296,9 +301,9 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   async #deleteById(id: string, ctx: TransactionCtx): Promise<boolean> {
-    const res = await this.client.execute(controllersMap.modelDelete, {
+    const res = await this.client.execute(controllerModelDelete, {
       ctx,
-      path: { id, model: this.model.slug },
+      params: { id, model: this.model.slug },
     });
 
     const success: boolean = await res.json().then(r => r.data);
@@ -308,16 +313,16 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return success;
   }
 
-  async #deleteByQuery(query: any, ctx: TransactionCtx): Promise<boolean> {
+  async #deleteByQuery(query: JSONQuery, ctx: TransactionCtx): Promise<boolean> {
     query.pageSize = 1;
     const ids = await this.#deleteMultipleInternal(query, ctx);
     return ids.length > 0;
   }
 
-  async #deleteMultipleInternal(query: any, ctx: TransactionCtx): Promise<Array<string>> {
-    const res = await this.client.execute(controllersMap.modelDelete, {
+  async #deleteMultipleInternal(query: JSONQuery, ctx: TransactionCtx): Promise<Array<string>> {
+    const res = await this.client.execute(controllerModelDelete, {
       ctx,
-      path: { id: "", model: this.model.slug },
+      params: { id: "", model: this.model.slug },
       init: { body: JSON.stringify(query) },
     });
 

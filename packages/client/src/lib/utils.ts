@@ -8,6 +8,7 @@ import {
 } from "@graphand/core";
 import { ModuleConstructor, ModuleWithConfig } from "@/types";
 import { ClientError } from "./ClientError";
+import { FetchError } from "./FetchError";
 
 export const canUseIds = (query: JSONQuery): boolean => {
   if (
@@ -83,5 +84,9 @@ export const parseErrorFromJSON = (json: any, res?: Response) => {
     });
   }
 
-  throw new ClientError({ ...json, res });
+  if (res) {
+    throw new FetchError({ ...json, res });
+  }
+
+  throw new ClientError(json);
 };
