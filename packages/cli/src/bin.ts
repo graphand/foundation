@@ -7,7 +7,6 @@ import { version } from "../package.json";
 import {
   AuthMethods,
   AuthProviders,
-  Controller,
   controllerCurrentAccount,
   controllerEntry,
   controllerModelCount,
@@ -306,7 +305,7 @@ program
 
     const client = await getClient();
 
-    const _handleRes: (res: Response) => Promise<void> = async res => {
+    const _handleRes = async (res: Response) => {
       const endAt = Date.now();
       const duration = endAt - startAt;
 
@@ -324,7 +323,7 @@ program
     };
 
     try {
-      const res = await client.execute(controller, {
+      const r = await client.execute(controller, {
         params: options.params ? (qs.parse(options.params) as Record<string, string>) : undefined,
         query: options.query ? (qs.parse(options.query) as Record<string, string>) : undefined,
         init: {
@@ -332,7 +331,7 @@ program
         },
       });
 
-      await _handleRes(res);
+      await _handleRes(r);
     } catch (e) {
       if (e instanceof FetchError) {
         await _handleRes(e.res);

@@ -27,12 +27,10 @@
     "@inquirer/prompts": "^5.3.6",
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
-    "@types/configstore": "^6.0.2",
     "@types/eslint": "^8.56.5",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.14.14",
     "@types/qs": "^6.9.15",
-    "cli-spinners": "^3.1.0",
     "dotenv": "^16.4.5",
     "esbuild": "^0.23.0",
     "eslint": "^8.57.0",
@@ -46,7 +44,6 @@
     "@graphand/client": "*",
     "@graphand/client-module-auth": "^0.0.0",
     "conf": "^13.0.1",
-    "configstore": "^7.0.0",
     "open": "^10.1.0",
     "qs": "^6.13.0"
   }
