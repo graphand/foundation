@@ -7,4 +7,5 @@ export interface SerializerCtx {
   defaults?: boolean;
   outputFormat?: string;
   transactionCtx?: TransactionCtx;
+  hasNext?: boolean;
 }

@@ -16,6 +16,9 @@ import {
   controllerModelRead,
   controllerModelUpdate,
   isObjectId,
+  JSONQuery,
+  ModelInstance,
+  ModelList,
 } from "@graphand/core";
 import { UserConfig } from "./types";
 import fs from "node:fs";
@@ -24,6 +27,7 @@ import { getClient, loadConfig, loadConfigFile, rmConfigFile } from "@/utils";
 import ora from "ora";
 import qs from "qs";
 import { FetchError } from "@graphand/client";
+import Table from "cli-table3";
 
 const controllers = {
   modelCount: controllerModelCount,
@@ -342,6 +346,154 @@ program
       console.log(JSON.stringify(e, null, 2));
       return;
     }
+  });
+
+program
+  .command("get")
+  .alias("query")
+  .alias("list")
+  .description("Get a model")
+  .arguments("<modelName> [key]")
+  .option("-q --query <query>", "URL encoded JSONQuery object")
+  .option("-f --fields <fields>", "Fields to display (comma separated)")
+  .option("-o --output <output>", "Output format (json, table)")
+  .action(async (modelName, key, options) => {
+    const client = await getClient();
+    const model = client.getModel(String(modelName));
+    let list: ModelList<typeof model>;
+
+    await model.initialize();
+
+    const spinner = ora(`Fetching ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"}...`).start();
+
+    try {
+      if (key) {
+        const res = await model.get(key);
+        if (res) {
+          list = new ModelList(model, [res]);
+        }
+      } else {
+        const query: JSONQuery = options.query ? qs.parse(options.query) : {};
+        query.limit = Number(query.limit) || undefined;
+        query.pageSize = Number(query.pageSize) || undefined;
+        list = await model.getList(query);
+      }
+
+      spinner.succeed(
+        `Fetched ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"}: ${list.length} result${
+          list.length > 1 ? "s" : ""
+        } found of ${list.count} total`,
+      );
+    } catch (e) {
+      spinner.fail(`Failed to fetch ${chalk.cyan(model.slug)}: ${(e as Error).message}`);
+      return;
+    }
+
+    if (!list?.length) {
+      return;
+    }
+
+    let fields: Array<string> = options.fields?.split(",");
+
+    if (!fields?.length) {
+      fields = Array.from(new Set(["_id", model.getKeyField(), ...model.fieldsKeys.slice(0, 2)]));
+    }
+
+    const output = options.output ?? "table";
+
+    if (output === "json") {
+      if (options.fields) {
+        console.log(chalk.yellow("Fields option is not supported with json output"));
+      }
+
+      console.log("");
+      console.log(JSON.stringify(list.toJSON(), null, 2));
+      return;
+    }
+
+    if (output === "table") {
+      const table = new Table({
+        chars: {
+          top: "",
+          "top-mid": "",
+          "top-left": "",
+          "top-right": "",
+          bottom: "",
+          "bottom-mid": "",
+          "bottom-left": "",
+          "bottom-right": "",
+          left: "",
+          "left-mid": "",
+          mid: "",
+          "mid-mid": "",
+          right: "",
+          "right-mid": "",
+          middle: " ",
+        },
+        style: { "padding-left": 0, "padding-right": 0 },
+        head: fields,
+      });
+
+      list.forEach(i => {
+        const row: Array<string> = [];
+        fields?.forEach(field => {
+          row.push(String(i.get(field, "json")));
+        });
+        table.push(row);
+      });
+
+      console.log("");
+      console.table(table.toString());
+      return;
+    }
+
+    console.log(chalk.red(`Invalid output format ${output}`));
+  });
+
+program
+  .command("describe")
+  .alias("read")
+  .description("Get a model")
+  .arguments("<modelName> [key]")
+  .option("-q --query <query>", "URL encoded JSONQuery object")
+  .action(async (modelName, key, options) => {
+    const client = await getClient();
+    const model = client.getModel(String(modelName));
+    let instance: ModelInstance<typeof model>;
+
+    await model.initialize();
+
+    const spinner = ora(`Fetching ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"}...`).start();
+
+    try {
+      if (key) {
+        instance = await model.get(key);
+      } else {
+        const query: JSONQuery = options.query ? qs.parse(options.query) : {};
+        query.limit = Number(query.limit) || undefined;
+        query.pageSize = Number(query.pageSize) || undefined;
+        instance = await model.get(query);
+      }
+
+      spinner.succeed(`Fetched ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"} successfully`);
+    } catch (e) {
+      spinner.fail(`Failed to fetch ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"}`);
+      console.log(JSON.stringify(e, null, 2));
+      return;
+    }
+
+    if (!instance) {
+      return;
+    }
+
+    let fields: Array<string> = options.fields?.split(",");
+
+    if (!fields?.length) {
+      fields = Array.from(new Set(["_id", model.getKeyField()]));
+    }
+
+    console.log("");
+    console.log(JSON.stringify(instance.toJSON(), null, 2));
   });
 
 program.parse(process.argv);

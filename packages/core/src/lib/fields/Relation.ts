@@ -36,7 +36,7 @@ export class FieldRelation extends Field<FieldTypes.RELATION> {
       id = String(value);
     }
 
-    if (!isObjectId(id) && !["validation", "nextField"].includes(format)) {
+    if (!isObjectId(id) && !["validation"].includes(format)) {
       return undefined;
     }
 

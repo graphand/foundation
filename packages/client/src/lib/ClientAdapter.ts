@@ -26,9 +26,14 @@ import { Subject } from "./Subject";
 import { canUseIds } from "./utils";
 import { ModelUpdaterEvent, SubjectObserver } from "@/types";
 import { ClientError } from "./ClientError";
+import FieldRelation from "./fields/Relation";
 
 export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   static client: Client;
+
+  static fieldsMap = {
+    [FieldTypes.RELATION]: FieldRelation,
+  };
 
   #instancesMap: Map<string, ModelInstance<T>> = new Map();
   #cacheSubject: Subject<ModelUpdaterEvent> = new Subject();

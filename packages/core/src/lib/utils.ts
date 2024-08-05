@@ -102,6 +102,15 @@ export const getFieldsPathsFromPath = (model: typeof Model, pathArr: Array<strin
       }
     }
 
+    if (prevField?.type === FieldTypes.RELATION) {
+      const options = prevField.options as FieldOptions<FieldTypes.RELATION>;
+      const refModel = Model.getClass(options.ref, adapter.base);
+      const restPaths = paths.slice(i);
+      const nextFields = getFieldsPathsFromPath(refModel, restPaths);
+      result.push(...nextFields);
+      continue;
+    }
+
     result.push(null);
   }
 
@@ -519,7 +528,6 @@ const _pathReplace = (field: Field, p: FieldsPathItem, fp: string) => {
 export const _getter = (opts: {
   value?: unknown;
   fieldsPaths: Array<{ key: string; field: Field }>;
-  lastField?: Field;
   noFieldSymbol: symbol;
   format: SerializerFormat;
   ctx: SerializerCtx;
@@ -604,12 +612,14 @@ export const _getter = (opts: {
       return n;
     }
 
+    ctx.hasNext = !!restPaths?.length;
+
     value = field.serialize(n, format, from, ctx);
   }
 
-  if (value === undefined || value === null) {
-    return value;
-  }
+  // if (value === undefined || value === null) {
+  //   return value;
+  // }
 
   return value;
 };
