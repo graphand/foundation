@@ -1,6 +1,11 @@
 import {
   Field,
   JSONQuery,
+  Model,
+  ModelInstance,
+  ModelList,
+  PromiseModel,
+  PromiseModelList,
   ValidationError,
   ValidationFieldError,
   ValidationValidatorError,
@@ -9,6 +14,7 @@ import {
 import { ModuleConstructor, ModuleWithConfig } from "@/types";
 import { ClientError } from "./ClientError";
 import { FetchError } from "./FetchError";
+import { ClientAdapter } from "./ClientAdapter";
 
 export const canUseIds = (query: JSONQuery): boolean => {
   if (
@@ -89,4 +95,57 @@ export const parseErrorFromJSON = (json: any, res?: Response) => {
   }
 
   throw new ClientError(json);
+};
+
+export const getCachedModel = (promise: PromiseModel<typeof Model>) => {
+  const adapter = promise.model.getAdapter() as ClientAdapter;
+
+  if (promise.model.isSingle()) {
+    if (adapter.instancesMap.size) {
+      return adapter.instancesMap.values().next().value;
+    }
+
+    return null;
+  }
+
+  const _query = promise.query;
+  if (typeof _query === "string") {
+    if (adapter.instancesMap.has(_query)) {
+      return adapter.instancesMap.get(_query);
+    }
+
+    return null;
+  }
+
+  return null;
+};
+
+export const getCachedModelList = (promise: PromiseModelList<typeof Model>) => {
+  const adapter = promise.model.getAdapter() as ClientAdapter;
+
+  const _query = promise.query;
+  if (canUseIds(_query)) {
+    const ids = promise.getIds();
+    const cachedInstances = ids.map(id => adapter.instancesMap.get(id)).filter(Boolean) as ModelInstance[];
+
+    if (cachedInstances.length === ids.length) {
+      return new ModelList(promise.model, cachedInstances, _query);
+    }
+  }
+
+  return null;
+};
+
+export const getCachedPartialModelList = (promise: PromiseModelList<typeof Model>) => {
+  const adapter = promise.model.getAdapter() as ClientAdapter;
+
+  const _query = promise.query;
+  if (canUseIds(_query)) {
+    const ids = promise.getIds();
+    const cachedInstances = ids.map(id => adapter.instancesMap.get(id)).filter(Boolean) as ModelInstance[];
+
+    return new ModelList(promise.model, cachedInstances, _query);
+  }
+
+  return null;
 };

@@ -13,9 +13,10 @@ import {
 } from "@/types";
 
 export class Field<T extends FieldTypes = FieldTypes> {
+  static readonly defaultSymbol: unique symbol = Symbol("defaultSerializer");
+
   #definition: FieldDefinition<T>; // The field definition
   #path: string; // The path of the field in the model
-  static readonly defaultSymbol: unique symbol = Symbol("defaultSerializer");
 
   serializerMap: Partial<{
     [S in SerializerFormat]: (_input: FieldSerializerInput<S>) => InferFieldType<FieldDefinition<T>, S>;

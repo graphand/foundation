@@ -15,10 +15,16 @@ import {
   controllerModelQuery,
   controllerModelRead,
   controllerModelUpdate,
+  FieldTypes,
+  getFieldsPathsFromPath,
+  getRelationModelsFromPath,
   isObjectId,
   JSONQuery,
   ModelInstance,
+  ModelJSON,
   ModelList,
+  Populate,
+  PopulateOption,
 } from "@graphand/core";
 import { UserConfig } from "./types";
 import fs from "node:fs";
@@ -364,6 +370,36 @@ program
 
     await model.initialize();
 
+    let fields: Array<string> = options.fields?.split(",");
+
+    if (!fields?.length) {
+      fields = Array.from(new Set(["_id", model.getKeyField(), ...model.fieldsKeys.slice(0, 2)]));
+    }
+
+    const populate: Populate = [];
+
+    for (const field of fields) {
+      if (field.includes(".")) {
+        const models = await getRelationModelsFromPath(model, field);
+        await Promise.all(models.map(m => m.initialize()));
+        const paths = getFieldsPathsFromPath(model, field);
+        const pop: Partial<PopulateOption> = {};
+        let cursor = pop;
+        for (const p of paths) {
+          if (p?.field?.type === FieldTypes.RELATION) {
+            cursor.path = p.field.path;
+            const subpop: Partial<PopulateOption> = {};
+            cursor.populate = subpop as PopulateOption;
+            cursor = subpop;
+          }
+        }
+
+        if (Object.keys(pop).length) {
+          populate.push(pop as PopulateOption);
+        }
+      }
+    }
+
     const spinner = ora(`Fetching ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"}...`).start();
 
     try {
@@ -376,6 +412,7 @@ program
         const query: JSONQuery = options.query ? qs.parse(options.query) : {};
         query.limit = Number(query.limit) || undefined;
         query.pageSize = Number(query.pageSize) || undefined;
+        query.populate ??= populate;
         list = await model.getList(query);
       }
 
@@ -391,12 +428,6 @@ program
 
     if (!list?.length) {
       return;
-    }
-
-    let fields: Array<string> = options.fields?.split(",");
-
-    if (!fields?.length) {
-      fields = Array.from(new Set(["_id", model.getKeyField(), ...model.fieldsKeys.slice(0, 2)]));
     }
 
     const output = options.output ?? "table";
@@ -491,6 +522,88 @@ program
     if (!fields?.length) {
       fields = Array.from(new Set(["_id", model.getKeyField()]));
     }
+
+    console.log("");
+    console.log(JSON.stringify(instance.toJSON(), null, 2));
+  });
+
+program
+  .command("delete")
+  .description("Delete an instance")
+  .arguments("<modelName> [key]")
+  .action(async (modelName, key) => {
+    const client = await getClient();
+    const model = client.getModel(String(modelName));
+    let instance: ModelInstance<typeof model>;
+
+    await model.initialize();
+
+    if (key) {
+      instance = await model.get(key);
+    } else {
+      instance = await model.get();
+    }
+
+    if (!instance) {
+      console.log(chalk.red(`Instance not found`));
+      return;
+    }
+
+    const spinner = ora(`Deleting ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"}...`).start();
+
+    await instance.delete();
+
+    spinner.succeed(`Deleted ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"}`);
+  });
+
+program
+  .command("create")
+  .description("Create a new instance")
+  .arguments("<modelName>")
+  .action(async modelName => {
+    const client = await getClient();
+    const model = client.getModel(String(modelName));
+    const data: ModelJSON<typeof model> = {};
+
+    await model.initialize();
+
+    for (const field of model.fieldsMap.values()) {
+      if (field.path.startsWith("_")) {
+        continue;
+      }
+
+      if (
+        [
+          FieldTypes.TEXT,
+          FieldTypes.NUMBER,
+          FieldTypes.ID,
+          FieldTypes.IDENTITY,
+          FieldTypes.RELATION,
+          FieldTypes.NESTED,
+          FieldTypes.ARRAY,
+        ].includes(field.type)
+      ) {
+        let value: any = await input({
+          message: chalk.yellow(field.path),
+        });
+
+        if (field.type === FieldTypes.NUMBER) {
+          value = Number(value);
+        }
+
+        if (field.type === FieldTypes.NESTED) {
+          value = value ? JSON.parse(value) : undefined;
+        }
+
+        data[field.path as keyof ModelJSON<typeof model>] = value;
+      }
+    }
+
+    const spinner = ora(`Creating ${chalk.cyan(model.slug)}...`).start();
+
+    const instance = await model.create(data);
+
+    spinner.succeed(`Created ${chalk.cyan(model.slug)} successfully`);
 
     console.log("");
     console.log(JSON.stringify(instance.toJSON(), null, 2));

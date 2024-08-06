@@ -2542,7 +2542,7 @@ describe("test fields", () => {
       expect(i.get("arrJson.[1].title")).toEqual("2");
       expect(i.get("arrJson.[1].test")).toBe(undefined);
 
-      expect(i.get("arrJson.[2].title")).toBe(null);
+      expect(i.get("arrJson.[2].title")).toBe(undefined);
       expect(i.get("arrJson.[2].test")).toBe(undefined);
 
       expect(i.get("arrJson.[3].title")).toEqual("3");

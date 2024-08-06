@@ -27,7 +27,7 @@ export default defineConfig({
         index: path.resolve(__dirname, "src/index.ts"),
         bin: path.resolve(__dirname, "src/bin.ts"),
       },
-      name: "@graphand/client",
+      name: "@graphand/cli",
       formats: ["cjs", "es"],
       fileName: (format, entryName) => `${entryName}.${format}.js`,
     },

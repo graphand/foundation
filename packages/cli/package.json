@@ -19,6 +19,7 @@
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "build": "vite build",
+    "build:watch": "vite build --watch",
     "dev": "vite build --watch",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "jest"

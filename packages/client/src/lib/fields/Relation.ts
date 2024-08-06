@@ -5,16 +5,16 @@ import {
   FieldSerializerInput,
   PromiseModel,
   Model,
-  PromiseModelList,
 } from "@graphand/core";
+import { getCachedModel } from "../utils";
 
 class FieldRelation extends CoreFieldRelation {
   decodePopulate = (fn: any) => {
     return (input: FieldSerializerInput) => {
       let res;
       if (input.ctx?.hasNext) {
-        const promise = this._sObject(input) as PromiseModel<typeof Model> | PromiseModelList<typeof Model>;
-        res = promise?.cached;
+        const promise = this._sObject(input) as PromiseModel<typeof Model>;
+        res = promise ? getCachedModel(promise) : undefined;
       }
 
       return res ?? fn(input);
@@ -22,7 +22,7 @@ class FieldRelation extends CoreFieldRelation {
   };
 
   serializerMap: Field<FieldTypes.RELATION>["serializerMap"] = {
-    object: this._sObject,
+    object: this.decodePopulate(this._sObject),
     validation: ({ value }) => value,
     [Field.defaultSymbol]: this.decodePopulate(this._sString),
   };

@@ -1,8 +1,8 @@
 import { InferModel, Model, ModelInstance, ModelJSON, ModelList, PromiseModel, PromiseModelList } from "@graphand/core";
-import { ClientAdapter } from "./lib/ClientAdapter";
-import { InferModelFromList, ModelUpdaterEvent, SubjectObserver } from "./types";
-import { Client } from "./lib/Client";
-import { canUseIds } from "./lib/utils";
+import { getCachedModel, getCachedModelList, getCachedPartialModelList } from "./lib/utils";
+import type { ClientAdapter } from "./lib/ClientAdapter";
+import type { InferModelFromList, ModelUpdaterEvent, SubjectObserver } from "./types";
+import type { Client } from "./lib/Client";
 
 Model.subscribe = function <T extends typeof Model>(
   this: T,
@@ -155,25 +155,7 @@ ModelList.prototype.hasStateChanged = function <T extends ModelList<typeof Model
  */
 Object.defineProperty(PromiseModel.prototype, "cached", {
   get() {
-    const adapter = this.model.getAdapter() as ClientAdapter;
-
-    if (this.model.isSingle()) {
-      if (adapter.instancesMap.size) {
-        return adapter.instancesMap.values().next().value;
-      }
-
-      return null;
-    }
-
-    if (typeof this.query === "string") {
-      if (adapter.instancesMap.has(this.query)) {
-        return adapter.instancesMap.get(this.query);
-      }
-
-      return null;
-    }
-
-    return null;
+    return getCachedModel(this);
   },
 });
 
@@ -186,34 +168,12 @@ Object.defineProperty(PromiseModel.prototype, "cached", {
  */
 Object.defineProperty(PromiseModelList.prototype, "cached", {
   get() {
-    const list = this as PromiseModelList<typeof Model>;
-    const adapter = list.model.getAdapter() as ClientAdapter;
-
-    if (canUseIds(list.query)) {
-      const ids = list.getIds();
-      const cachedInstances = ids.map(id => adapter.instancesMap.get(id)).filter(Boolean) as ModelInstance[];
-
-      if (cachedInstances.length === ids.length) {
-        return new ModelList(this.model, cachedInstances, list.query);
-      }
-    }
-
-    return null;
+    return getCachedModelList(this);
   },
 });
 
 Object.defineProperty(PromiseModelList.prototype, "cachedPartial", {
   get() {
-    const list = this as PromiseModelList<typeof Model>;
-    const adapter = list.model.getAdapter() as ClientAdapter;
-
-    if (canUseIds(list.query)) {
-      const ids = list.getIds();
-      const cachedInstances = ids.map(id => adapter.instancesMap.get(id)).filter(Boolean) as ModelInstance[];
-
-      return new ModelList(this.model, cachedInstances, list.query);
-    }
-
-    return null;
+    return getCachedPartialModelList(this);
   },
 });

@@ -1,6 +1,6 @@
 {
   "name": "@graphand/core",
-  "version": "0.15.13",
+  "version": "0.15.14",
   "private": false,
   "exports": {
     "./package.json": "./package.json",
@@ -16,6 +16,7 @@
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "build": "vite build",
+    "build:watch": "vite build --watch",
     "dev": "vite",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "jest"

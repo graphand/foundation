@@ -41,6 +41,61 @@ export const crossModelTree = (_model: typeof Model, cb: (_model: typeof Model) 
   cb(Model);
 };
 
+export const getRelationModelsFromPath = async (
+  model: typeof Model,
+  pathArr: Array<string> | string,
+): Promise<Array<typeof Model>> => {
+  const paths = Array.isArray(pathArr) ? pathArr : pathArr.split(".");
+  const relationModels: Array<typeof Model> = [];
+  let currentModel = model;
+
+  for (let i = 0; i < paths.length; i++) {
+    const key = paths[i];
+    await currentModel.initialize();
+    const field = currentModel.fieldsMap?.get(key);
+
+    if (!field) {
+      break;
+    }
+
+    if (field.type === FieldTypes.RELATION) {
+      const options = field.options as FieldOptions<FieldTypes.RELATION>;
+      const refModel = Model.getClass(options.ref, currentModel.getAdapter(false).base);
+      relationModels.push(refModel);
+      currentModel = refModel;
+    } else if (field.type === FieldTypes.ARRAY) {
+      const options = field.options as FieldOptions<FieldTypes.ARRAY>;
+      if (typeof options.items === "object" && options.items.type === FieldTypes.NESTED) {
+        const nestedOptions = options.items.options as FieldOptions<FieldTypes.NESTED>;
+        i++;
+        if (i < paths.length) {
+          const nestedField = nestedOptions.fields[paths[i]];
+          if (nestedField && nestedField.type === FieldTypes.RELATION) {
+            const relationOptions = nestedField.options as FieldOptions<FieldTypes.RELATION>;
+            const refModel = Model.getClass(relationOptions.ref, currentModel.getAdapter(false).base);
+            relationModels.push(refModel);
+            currentModel = refModel;
+          }
+        }
+      }
+    } else if (field.type === FieldTypes.NESTED) {
+      const options = field.options as FieldOptions<FieldTypes.NESTED>;
+      i++;
+      if (i < paths.length) {
+        const nestedField = options.fields[paths[i]];
+        if (nestedField && nestedField.type === FieldTypes.RELATION) {
+          const relationOptions = nestedField.options as FieldOptions<FieldTypes.RELATION>;
+          const refModel = Model.getClass(relationOptions.ref, currentModel.getAdapter(false).base);
+          relationModels.push(refModel);
+          currentModel = refModel;
+        }
+      }
+    }
+  }
+
+  return relationModels;
+};
+
 /**
  * The function `getFieldsPathsFromPath` takes a model and a path array or string as input and returns
  * an array of the decomposed fields path.
@@ -57,6 +112,10 @@ export const getFieldsPathsFromPath = (model: typeof Model, pathArr: Array<strin
   const adapter = model.getAdapter(false);
 
   const result: Array<FieldsPathItem> = firstField ? [{ key: firstFieldKey, field: firstField }] : [null];
+
+  if (paths.length === 1) {
+    return result;
+  }
 
   for (let i = 1; i < paths.length; i++) {
     const key = paths[i];
@@ -108,7 +167,7 @@ export const getFieldsPathsFromPath = (model: typeof Model, pathArr: Array<strin
       const restPaths = paths.slice(i);
       const nextFields = getFieldsPathsFromPath(refModel, restPaths);
       result.push(...nextFields);
-      continue;
+      break;
     }
 
     result.push(null);
@@ -587,7 +646,7 @@ export const _getter = (opts: {
     }
 
     if (!value || typeof value !== "object") {
-      break;
+      return undefined;
     }
 
     let n: unknown;
@@ -616,10 +675,6 @@ export const _getter = (opts: {
 
     value = field.serialize(n, format, from, ctx);
   }
-
-  // if (value === undefined || value === null) {
-  //   return value;
-  // }
 
   return value;
 };

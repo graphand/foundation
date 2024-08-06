@@ -1,5 +1,16 @@
+import { ObjectId } from "bson";
 import { ModelUpdaterEvent } from "@/types";
-import { FieldTypes, Model, ModelCrudEvent, modelDecorator, ModelInstance, ModelList } from "@graphand/core";
+import {
+  FieldTypes,
+  Model,
+  ModelCrudEvent,
+  modelDecorator,
+  ModelDefinition,
+  ModelInstance,
+  ModelList,
+  PromiseModel,
+  PromiseModelList,
+} from "@graphand/core";
 import { Client } from "./lib/Client";
 import { ClientAdapter } from "./lib/ClientAdapter";
 
@@ -1374,6 +1385,81 @@ describe("augmentations", () => {
       singleAdapter.instancesMap.set("single-id", instance);
       const promise = singleModel.get();
       expect(promise.cached).toBe(instance);
+    });
+
+    it("Model.prototype.get should pass the cached instance to the next field with a relation field", async () => {
+      @modelDecorator()
+      class RelModel extends Model {
+        static slug = "model";
+        static definition = {
+          ...TestModel.definition,
+          fields: {
+            ...TestModel.definition.fields,
+            rel: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: TestModel.slug,
+              },
+              _tsModel: undefined as typeof TestModel,
+            },
+          },
+        } satisfies ModelDefinition;
+      }
+
+      const instance = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value" });
+      const relModel = client.getModel(RelModel);
+      const relInstance = relModel.hydrateAndCache({ _id: new ObjectId().toString(), rel: instance._id });
+      const rel = relInstance.get("rel") as PromiseModel<typeof TestModel>;
+      expect(rel).toBeInstanceOf(PromiseModel);
+      expect(rel.cached).toBe(instance);
+      expect(relInstance.get("rel.someField")).toBe("value");
+      // @ts-expect-error test - someField is undefined on a PromiseModel instance
+      expect(relInstance.rel.someField).toBeUndefined();
+      expect(relInstance.rel.cached.someField).toBe("value");
+    });
+
+    it("Model.prototype.get should pass the cached instance to the next field with a relation array field", async () => {
+      @modelDecorator()
+      class RelModel extends Model {
+        static slug = "model";
+        static definition = {
+          ...TestModel.definition,
+          fields: {
+            ...TestModel.definition.fields,
+            relArr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: TestModel.slug,
+                  },
+                  _tsModel: undefined as typeof TestModel,
+                },
+              },
+            },
+          },
+        } satisfies ModelDefinition;
+      }
+
+      const instance1 = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value1" });
+      const instance2 = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value2" });
+
+      const relModel = client.getModel(RelModel);
+      const relInstance = relModel.hydrateAndCache({
+        _id: new ObjectId().toString(),
+        relArr: [instance1._id, instance2._id],
+      });
+      const rel = relInstance.get("relArr") as PromiseModelList<typeof TestModel>;
+      expect(rel).toBeInstanceOf(PromiseModelList);
+      expect(rel.cached).toBeInstanceOf(ModelList);
+      expect(rel.cached.length).toBe(2);
+      expect(rel.cached[0]).toBe(instance1);
+      expect(rel.cached[1]).toBe(instance2);
+      expect(relInstance.get("relArr.[0].someField")).toBe("value1");
+      expect(relInstance.get("relArr.[1].someField")).toBe("value2");
+      expect(relInstance.get("relArr.[2].someField")).toBe(undefined);
+      expect(relInstance.get("relArr.[].someField")).toEqual(["value1", "value2"]);
     });
   });
 

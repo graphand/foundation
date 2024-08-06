@@ -2,7 +2,7 @@ import { crossModelTree, getFieldsPathsFromPath } from "@/lib/utils";
 import { Model } from "@/lib/Model";
 import { FieldTypes } from "@/enums/field-types";
 import { ModelDefinition } from "@/types";
-import { mockAdapter } from "@/lib/test-utils.dev";
+import { mockAdapter, mockModel } from "@/lib/test-utils.dev";
 
 describe("test utils", () => {
   describe("crossModelTree", () => {
@@ -479,6 +479,80 @@ describe("test utils", () => {
       expect(fPath8[4].field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath8[4].field).toHaveProperty("options.__label", "field4");
       expect(fPath8[5]).toBe(null);
+    });
+
+    it("should decode nested relation field", async () => {
+      const adapter = mockAdapter();
+      const model1 = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      }).extend({ adapterClass: adapter });
+
+      const model2 = mockModel({
+        fields: {
+          rel: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: model1.slug,
+            },
+          },
+          arrRel: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: model1.slug,
+                },
+              },
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+
+      const model3 = mockModel({
+        fields: {
+          nested: {
+            type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                rel: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: model2.slug,
+                  },
+                },
+                multiRel: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.RELATION,
+                      options: {
+                        ref: model2.slug,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+
+      const fPath = getFieldsPathsFromPath(model3, "nested.rel.rel.title");
+      expect(fPath).toBeInstanceOf(Array);
+      expect(fPath.length).toEqual(4);
+      expect(fPath[0].field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath[0].field).toHaveProperty("path", "nested");
+      expect(fPath[1].field).toHaveProperty("type", FieldTypes.RELATION);
+      expect(fPath[1].field).toHaveProperty("path", "nested.rel");
+      expect(fPath[2].field).toHaveProperty("type", FieldTypes.RELATION);
+      expect(fPath[2].field).toHaveProperty("path", "rel");
+      expect(fPath[3].field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath[3].field).toHaveProperty("path", "title");
     });
   });
 });

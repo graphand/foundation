@@ -1,3 +1,4 @@
+import "../augmentations";
 import {
   Adapter,
   AdapterFetcher,
@@ -27,12 +28,14 @@ import { canUseIds } from "./utils";
 import { ModelUpdaterEvent, SubjectObserver } from "@/types";
 import { ClientError } from "./ClientError";
 import FieldRelation from "./fields/Relation";
+import FieldArray from "./fields/Array";
 
 export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   static client: Client;
 
   static fieldsMap = {
     [FieldTypes.RELATION]: FieldRelation,
+    [FieldTypes.ARRAY]: FieldArray,
   };
 
   #instancesMap: Map<string, ModelInstance<T>> = new Map();
@@ -406,7 +409,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     }
 
     if (updated) {
-      instance!.__fetchedAt = new Date();
+      instance.__fetchedAt = new Date();
     }
 
     return { updated, instance };
