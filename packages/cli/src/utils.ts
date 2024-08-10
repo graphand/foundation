@@ -5,7 +5,7 @@ import fs from "node:fs";
 import Conf from "conf";
 import { fileURLToPath } from "node:url";
 import { transformSync } from "esbuild";
-import { Client } from "@graphand/client";
+import { Client, Module, symbolModuleInit, symbolModuleDestroy, FetchError } from "@graphand/client";
 import { ModuleAuth } from "@graphand/client-module-auth";
 import open from "open";
 
@@ -33,8 +33,8 @@ export const rmConfigFile = () => {
   }
 };
 
-export const loadConf = (): Conf => {
-  return new Conf({ projectName: "@graphand/cli" });
+export const loadConf = (project: string): Conf => {
+  return new Conf({ projectName: `@graphand/cli:${project}` });
 };
 
 export const loadConfig = async (): Promise<UserConfig> => {
@@ -42,6 +42,8 @@ export const loadConfig = async (): Promise<UserConfig> => {
   if (!configPath) {
     throw new Error("Configuration file not found");
   }
+
+  let config: UserConfig;
 
   try {
     const configContent = await fs.promises.readFile(configPath, "utf8");
@@ -60,13 +62,10 @@ export const loadConfig = async (): Promise<UserConfig> => {
 
     try {
       const importedConfig = await import(tempFilePath);
-      await fs.promises.unlink(tempFilePath);
 
       if (importedConfig.default) {
-        return importedConfig.default as UserConfig;
+        config = importedConfig.default as UserConfig;
       }
-
-      throw new Error("No valid configuration found in file");
     } finally {
       // Ensure temp file is deleted even if an error occurs
       fs.promises.unlink(tempFilePath).catch(() => {});
@@ -75,11 +74,51 @@ export const loadConfig = async (): Promise<UserConfig> => {
     console.error("Error loading configuration:", error);
     throw new Error("Failed to load configuration file");
   }
+
+  if (!config) {
+    throw new Error("No valid configuration found in file");
+  }
+
+  if (!config.client?.project) {
+    throw new Error("No project found in configuration (client.project is undefined)");
+  }
+
+  return config;
 };
 
-export const getClient = async () => {
+class ModuleCli extends Module {
+  static moduleName = "cli" as const;
+  defaults = {};
+
+  async [symbolModuleInit]() {
+    const client = this.client() as unknown as Awaited<ReturnType<typeof getClient>>;
+
+    client.hook(
+      "afterRequest",
+      async ({ err }) => {
+        const unauthorized = err?.find(e => (e as FetchError).res?.status === 401) as FetchError;
+        if (unauthorized) {
+          throw new Error(
+            `Unauthorized action: ${unauthorized.message}.\n` +
+              chalk.yellow(`Please login with \`graphand login\` or \`graphand register\` first`),
+          );
+        }
+      },
+      { handleErrors: true },
+    );
+  }
+
+  async [symbolModuleDestroy]() {}
+}
+
+export const getClient = async (): Promise<Client<[typeof ModuleAuth, typeof ModuleCli]>> => {
+  const globalClient = Client.getGlobal();
+  if (globalClient) {
+    return globalClient;
+  }
+
   const config = await loadConfig();
-  const conf = loadConf();
+  const conf = loadConf(config.client.project);
   return new Client(
     [
       [
@@ -87,7 +126,7 @@ export const getClient = async () => {
         {
           storage: {
             setItem: (key, value) => conf.set(key, value),
-            getItem: key => String(conf.get(key)),
+            getItem: key => conf.get(key) as string,
             removeItem: key => conf.delete(key),
           },
           handleRedirect: url => {
@@ -96,6 +135,7 @@ export const getClient = async () => {
           },
         },
       ],
+      [ModuleCli],
     ],
     config.client,
   );

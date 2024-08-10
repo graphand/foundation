@@ -264,6 +264,13 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
   declareGlobally() {
     // @ts-expect-error - __GLOBAL_ADAPTER__ is used by @graphand/core to get the global adapter if no adapter is found on a model
     globalThis.__GLOBAL_ADAPTER__ = this.getAdapterClass();
+    // @ts-expect-error - __GLOBAL_CLIENT__
+    globalThis.__GLOBAL_CLIENT__ = this;
+  }
+
+  static getGlobal() {
+    // @ts-expect-error - __GLOBAL_CLIENT__
+    return globalThis.__GLOBAL_CLIENT__ as Client;
   }
 
   getModel: (typeof Model)["getClass"] = (input, adapterClass) => {
