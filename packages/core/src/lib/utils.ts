@@ -41,59 +41,47 @@ export const crossModelTree = (_model: typeof Model, cb: (_model: typeof Model) 
   cb(Model);
 };
 
+/**
+ * The function `getRelationModelsFromPath` takes a model and a path as input and returns an array of relation models found in
+ * the path.
+ * @param model - The `model` parameter is the type of the model for which you want to retrieve the relation models in the path.
+ * @param { Array<string> | string } pathArr - The `pathArr` parameter is either an array of strings or a
+ * string. It represents the path to a specific field in the model.
+ * @returns { Promise<Array<typeof Model>> } The function `getRelationModelsFromPath` returns an array of `typeof Model` objects
+ * representing the relation models found in the path.
+ */
 export const getRelationModelsFromPath = async (
   model: typeof Model,
   pathArr: Array<string> | string,
 ): Promise<Array<typeof Model>> => {
-  const paths = Array.isArray(pathArr) ? pathArr : pathArr.split(".");
-  const relationModels: Array<typeof Model> = [];
-  let currentModel = model;
+  await model.initialize();
+  pathArr = Array.isArray(pathArr) ? pathArr : pathArr.split(".");
+  const fields = getFieldsPathsFromPath(model, pathArr);
+  const relationModels: Set<string> = new Set();
 
-  for (let i = 0; i < paths.length; i++) {
-    const key = paths[i];
-    await currentModel.initialize();
-    const field = currentModel.fieldsMap?.get(key);
+  for (let i = 0; i < fields.length; i++) {
+    const field = fields[i];
 
     if (!field) {
       break;
     }
 
-    if (field.type === FieldTypes.RELATION) {
-      const options = field.options as FieldOptions<FieldTypes.RELATION>;
-      const refModel = Model.getClass(options.ref, currentModel.getAdapter(false).base);
-      relationModels.push(refModel);
-      currentModel = refModel;
-    } else if (field.type === FieldTypes.ARRAY) {
-      const options = field.options as FieldOptions<FieldTypes.ARRAY>;
-      if (typeof options.items === "object" && options.items.type === FieldTypes.NESTED) {
-        const nestedOptions = options.items.options as FieldOptions<FieldTypes.NESTED>;
-        i++;
-        if (i < paths.length) {
-          const nestedField = nestedOptions.fields[paths[i]];
-          if (nestedField && nestedField.type === FieldTypes.RELATION) {
-            const relationOptions = nestedField.options as FieldOptions<FieldTypes.RELATION>;
-            const refModel = Model.getClass(relationOptions.ref, currentModel.getAdapter(false).base);
-            relationModels.push(refModel);
-            currentModel = refModel;
-          }
-        }
-      }
-    } else if (field.type === FieldTypes.NESTED) {
-      const options = field.options as FieldOptions<FieldTypes.NESTED>;
-      i++;
-      if (i < paths.length) {
-        const nestedField = options.fields[paths[i]];
-        if (nestedField && nestedField.type === FieldTypes.RELATION) {
-          const relationOptions = nestedField.options as FieldOptions<FieldTypes.RELATION>;
-          const refModel = Model.getClass(relationOptions.ref, currentModel.getAdapter(false).base);
-          relationModels.push(refModel);
-          currentModel = refModel;
-        }
+    const isLast = i === fields.length - 1;
+    if (field.field.type === FieldTypes.RELATION) {
+      const options = field.field.options as FieldOptions<FieldTypes.RELATION>;
+      const refModel = Model.getClass(options.ref, model.getAdapter(false).base);
+      relationModels.add(refModel.slug);
+
+      if (!isLast) {
+        await refModel.initialize();
+        const rest = pathArr.slice(i + 1);
+        const models = await getRelationModelsFromPath(refModel, rest);
+        models.forEach(m => relationModels.add(m.slug));
       }
     }
   }
 
-  return relationModels;
+  return Array.from(relationModels).map(slug => Model.getClass(slug, model.getAdapter(false).base));
 };
 
 /**
@@ -102,7 +90,7 @@ export const getRelationModelsFromPath = async (
  * @param model - The `model` parameter is the type of the model that contains the fields. It is of
  * type `typeof Model`.
  * @param {Array<string> | string} pathArr - The `pathArr` parameter is either an array of strings or a
- * string. It represents the path to a specific field in a model.
+ * string. It represents the path to a specific field in the model.
  * @returns The function `getFieldsPathsFromPath` returns an array of `FieldsPathItem` objects.
  */
 export const getFieldsPathsFromPath = (model: typeof Model, pathArr: Array<string> | string): Array<FieldsPathItem> => {
@@ -153,8 +141,29 @@ export const getFieldsPathsFromPath = (model: typeof Model, pathArr: Array<strin
 
     if (prevField?.type === FieldTypes.NESTED) {
       const options = prevField.options as FieldOptions<FieldTypes.NESTED>;
-      const nextFieldDef = options.fields?.[key] || options.defaultField;
+      let nextFieldDef = options.fields?.[key] || options.defaultField;
+      if (nextFieldDef === undefined && !options.strict) {
+        nextFieldDef = {
+          type: FieldTypes.DEFAULT,
+        };
+      }
+
       const nextField = getFieldFromDefinition(nextFieldDef, adapter, `${pathStr}.${key}`);
+      if (nextField) {
+        result.push({ key, field: nextField });
+        continue;
+      }
+    }
+
+    if (prevField?.type === FieldTypes.DEFAULT) {
+      const nextField = getFieldFromDefinition(
+        {
+          type: FieldTypes.DEFAULT,
+        },
+        adapter,
+        `${pathStr}.${key}`,
+      );
+
       if (nextField) {
         result.push({ key, field: nextField });
         continue;
@@ -400,15 +409,16 @@ export const createValidatorsArray = (model: typeof Model): Array<Validator> => 
  * @returns The function `getFieldClass` returns the value of the variable `FieldClass`.
  */
 export const getFieldClass = <T extends FieldTypes>(type: T, adapter?: Adapter): typeof Field<T> => {
-  let FieldClass: typeof Field<T> = adapter?.base?.fieldsMap?.[type];
+  let FieldClass: typeof Field<T>;
 
-  if (!FieldClass) {
-    FieldClass = Adapter.fieldsMap[type];
-  }
-
-  if (!FieldClass) {
+  if (type === FieldTypes.DEFAULT) {
     FieldClass = Field;
+  } else {
+    FieldClass = adapter?.base?.fieldsMap[type];
   }
+
+  FieldClass ??= Adapter.fieldsMap[type];
+  FieldClass ??= Field;
 
   return FieldClass;
 };

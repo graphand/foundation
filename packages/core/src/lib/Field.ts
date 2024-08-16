@@ -61,7 +61,7 @@ export class Field<T extends FieldTypes = FieldTypes> {
 
     if (!s) {
       console.warn(`No serializer found for format ${format} on field ${this.path}`);
-      return undefined;
+      return value;
     }
 
     const serializer = s as (_input: FieldSerializerInput<S>) => InferFieldType<FieldDefinition<T>, S>;

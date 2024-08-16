@@ -132,11 +132,7 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
           return value;
         }
 
-        targetField = getFieldFromDefinition(
-          this.options.defaultField,
-          adapter,
-          [this.path, prop].join("."),
-        );
+        targetField = getFieldFromDefinition(this.options.defaultField, adapter, [this.path, prop].join("."));
       }
 
       if (!targetField) {

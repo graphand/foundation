@@ -1,8 +1,9 @@
-import { crossModelTree, getFieldsPathsFromPath } from "@/lib/utils";
+import { crossModelTree, getFieldsPathsFromPath, getRelationModelsFromPath } from "@/lib/utils";
 import { Model } from "@/lib/Model";
 import { FieldTypes } from "@/enums/field-types";
 import { ModelDefinition } from "@/types";
 import { mockAdapter, mockModel } from "@/lib/test-utils.dev";
+import { faker } from "@faker-js/faker";
 
 describe("test utils", () => {
   describe("crossModelTree", () => {
@@ -272,7 +273,7 @@ describe("test utils", () => {
       expect(fPath2[2].field).toHaveProperty("options.__label", "field2");
     });
 
-    it("should return null field for invalid path", () => {
+    it("should return null field for invalid path if strict", () => {
       const model = class extends Model {
         static definition: ModelDefinition = {
           fields: {
@@ -282,6 +283,7 @@ describe("test utils", () => {
                 items: {
                   type: FieldTypes.NESTED,
                   options: {
+                    strict: true,
                     fields: {
                       field2: {
                         type: FieldTypes.TEXT,
@@ -327,6 +329,49 @@ describe("test utils", () => {
       expect(fPath4.length).toEqual(2);
       expect(fPath4[0]).toBe(null);
       expect(fPath4[1]).toBe(null);
+    });
+
+    it("should return nested field for invalid path if not strict (allow to get nested keys for non-strict nested fields)", () => {
+      const model = class extends Model {
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      field2: {
+                        type: FieldTypes.TEXT,
+                        options: {},
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        };
+      };
+
+      // @ts-expect-error test
+      model.definition.fields.field1.options.__label = "field1";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.fields.field2.options.__label = "field2";
+
+      const fPath = getFieldsPathsFromPath(model, "field1.[].field3.field4");
+
+      expect(fPath).toBeInstanceOf(Array);
+      expect(fPath.length).toEqual(4);
+      expect(fPath[2]).toHaveProperty("key", "field3");
+      expect(fPath[2].field).toHaveProperty("type", FieldTypes.DEFAULT);
+      expect(fPath[2].field).toHaveProperty("path", "field1.[].field3");
+      expect(fPath[3]).toHaveProperty("key", "field4");
+      expect(fPath[3].field).toHaveProperty("type", FieldTypes.DEFAULT);
+      expect(fPath[3].field).toHaveProperty("path", "field1.[].field3.field4");
     });
 
     it("should decode complex schema fields", () => {
@@ -553,6 +598,237 @@ describe("test utils", () => {
       expect(fPath[2].field).toHaveProperty("path", "rel");
       expect(fPath[3].field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath[3].field).toHaveProperty("path", "title");
+    });
+  });
+
+  describe("getRelationModelsFromPath", () => {
+    const adapter = mockAdapter();
+
+    it("should return empty array if no relations found", async () => {
+      const model = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+      }.extend({ adapterClass: adapter });
+
+      const models = await getRelationModelsFromPath(model, "field1");
+
+      expect(models).toBeInstanceOf(Array);
+      expect(models.length).toBe(0);
+    });
+
+    it("should work with single relation field", async () => {
+      const model1 = faker.random.alphaNumeric(10);
+
+      const model = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: model1,
+              },
+            },
+          },
+        };
+      }.extend({ adapterClass: adapter });
+
+      const models = await getRelationModelsFromPath(model, "field1");
+
+      expect(models).toBeInstanceOf(Array);
+      expect(models.length).toBe(1);
+      expect(models[0].slug).toBe(model1);
+    });
+
+    it("should work with chained relation fields", async () => {
+      const model2 = faker.random.alphaNumeric(10);
+
+      const model1 = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: model2,
+              },
+            },
+          },
+        };
+      }.extend({ adapterClass: adapter });
+
+      const model = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: model1.slug,
+              },
+            },
+          },
+        };
+      }.extend({ adapterClass: adapter });
+
+      const models = await getRelationModelsFromPath(model, "field1.field1");
+
+      expect(models).toBeInstanceOf(Array);
+      expect(models.length).toBe(2);
+      expect(models[0].slug).toBe(model1.slug);
+      expect(models[1].slug).toBe(model2);
+    });
+
+    it("should work with nested relation fields", async () => {
+      const model1 = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+      }.extend({ adapterClass: adapter });
+
+      const model = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+        static definition: ModelDefinition = {
+          fields: {
+            nested: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  rel: {
+                    type: FieldTypes.RELATION,
+                    options: {
+                      ref: model1.slug,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        };
+      }.extend({ adapterClass: adapter });
+
+      const models = await getRelationModelsFromPath(model, "nested.rel");
+
+      expect(models).toBeInstanceOf(Array);
+      expect(models.length).toBe(1);
+      expect(models[0].slug).toBe(model1.slug);
+    });
+
+    it("should work with nested field in nested array and chained relation fields", async () => {
+      const model2 = faker.random.alphaNumeric(10);
+
+      const model1 = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+        static definition: ModelDefinition = {
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      rel: {
+                        type: FieldTypes.RELATION,
+                        options: {
+                          ref: model2,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        };
+      }.extend({ adapterClass: adapter });
+
+      const model = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+        static definition: ModelDefinition = {
+          fields: {
+            nested: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  arr: {
+                    type: FieldTypes.ARRAY,
+                    options: {
+                      items: {
+                        type: FieldTypes.NESTED,
+                        options: {
+                          fields: {
+                            rel: {
+                              type: FieldTypes.RELATION,
+                              options: {
+                                ref: model1.slug,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        };
+      }.extend({ adapterClass: adapter });
+
+      const models = await getRelationModelsFromPath(model, "nested.arr.[].rel.arr.[].rel");
+      expect(models).toBeInstanceOf(Array);
+      expect(models.length).toBe(2);
+      expect(models[0].slug).toBe(model1.slug);
+      expect(models[1].slug).toBe(model2);
+    });
+
+    it("should return empty array if no relations found in nested field", async () => {
+      const model = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+        static definition: ModelDefinition = {
+          fields: {
+            nested: {
+              type: FieldTypes.NESTED,
+            },
+          },
+        };
+      }.extend({ adapterClass: adapter });
+
+      const models = await getRelationModelsFromPath(model, "nested.unknown.field");
+
+      expect(models).toBeInstanceOf(Array);
+      expect(models.length).toBe(0);
+    });
+
+    it("should work with nested array in chained relation field", async () => {
+      const model1 = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+        static definition: ModelDefinition = {
+          fields: {
+            nested: {
+              type: FieldTypes.NESTED,
+            },
+          },
+        };
+      }.extend({ adapterClass: adapter });
+
+      const model = class extends Model {
+        static slug = faker.random.alphaNumeric(10);
+        static definition: ModelDefinition = {
+          fields: {
+            rel: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: model1.slug,
+              },
+            },
+          },
+        };
+      }.extend({ adapterClass: adapter });
+
+      const models = await getRelationModelsFromPath(model, "rel.nested.unknown.field");
+
+      expect(models).toBeInstanceOf(Array);
+      expect(models.length).toBe(1);
+      expect(models[0].slug).toBe(model1.slug);
     });
   });
 });

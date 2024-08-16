@@ -2435,6 +2435,36 @@ describe("test fields", () => {
       });
     });
 
+    it("should fallback to default field if field not found and strict is false", async () => {
+      const model = mockModel({
+        fields: {
+          obj: {
+            type: FieldTypes.NESTED,
+            options: {
+              strict: false, // Default value
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const i = model.hydrate({
+        obj: {
+          nested1: {
+            nested2: {
+              foo: "bar",
+            },
+          },
+        },
+      });
+
+      // @ts-expect-error test
+      expect(i.obj.nested1.nested2.foo).toBe("bar");
+      expect(i.get("obj.nested1.nested2.foo")).toBe("bar");
+      expect(i.get("obj.nested1.nested2")).toEqual({ foo: "bar" });
+      expect(i.get("obj.nested1.nested2.foo.bar")).toBe(undefined);
+    });
+
     it("should return array of ids for relation array with format json", async () => {
       const model = mockModel({
         fields: {

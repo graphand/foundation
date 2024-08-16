@@ -1,4 +1,5 @@
 export enum FieldTypes {
+  DEFAULT = "default",
   ID = "id",
   ARRAY = "array",
   TEXT = "text",

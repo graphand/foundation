@@ -43,6 +43,8 @@ import type { DataModel } from "@/models/DataModel";
 import { ModelList } from "./ModelList";
 import { FieldTypes } from "@/enums/field-types";
 
+const noFieldSymbol = Symbol("noField");
+
 export class Model {
   static extensible: boolean = false; // Whether the model can be extended with a DataModel with its slug
   static connectable: boolean = false; // Whether the model is able to be used as a connector source
@@ -496,8 +498,6 @@ export class Model {
 
       return undefined;
     }
-
-    const noFieldSymbol = Symbol("noField");
 
     try {
       return _getter({ value, fieldsPaths, format, ctx, noFieldSymbol, from: this }) as any;
