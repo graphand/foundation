@@ -32,6 +32,7 @@ class MemoryStorage implements AuthStorage {
 }
 
 type ModuleAuthOptions = {
+  autoRefreshToken?: boolean;
   storage?: AuthStorage;
   handleRedirect?: (_url: string) => void;
   handleResult?: {
@@ -54,7 +55,7 @@ type AuthResult =
 
 class ModuleAuth extends Module<ModuleAuthOptions> {
   static moduleName = "auth" as const;
-  defaults = { storage: new MemoryStorage() };
+  defaults = { storage: new MemoryStorage(), autoRefreshToken: true };
 
   get storage() {
     return this.conf.storage;
@@ -63,16 +64,18 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
   async [symbolModuleInit]() {
     const client = this.client();
 
-    client.hook(
-      "afterRequest",
-      async ({ err, transaction }) => {
-        if (err?.some(e => (e as FetchError).code === ErrorCodes.TOKEN_EXPIRED)) {
-          await this.refreshToken();
-          throw transaction.retryToken;
-        }
-      },
-      { handleErrors: true },
-    );
+    if (this.conf.autoRefreshToken) {
+      client.hook(
+        "afterRequest",
+        async ({ err, transaction }) => {
+          if (err?.some(e => (e as FetchError).code === ErrorCodes.TOKEN_EXPIRED)) {
+            await this.refreshToken();
+            throw transaction.retryToken;
+          }
+        },
+        { handleErrors: true },
+      );
+    }
 
     if (this.conf.handleResult) {
       const { url, onSuccess, onError } = this.conf.handleResult;
