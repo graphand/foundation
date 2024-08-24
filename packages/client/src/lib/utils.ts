@@ -101,8 +101,8 @@ export const getCachedModel = (promise: PromiseModel<typeof Model>) => {
   const adapter = promise.model.getAdapter() as ClientAdapter;
 
   if (promise.model.isSingle()) {
-    if (adapter.instancesMap.size) {
-      return adapter.instancesMap.values().next().value;
+    if (adapter.store.size) {
+      return adapter.store.values().next().value;
     }
 
     return null;
@@ -110,8 +110,8 @@ export const getCachedModel = (promise: PromiseModel<typeof Model>) => {
 
   const _query = promise.query;
   if (typeof _query === "string") {
-    if (adapter.instancesMap.has(_query)) {
-      return adapter.instancesMap.get(_query);
+    if (adapter.store.has(_query)) {
+      return adapter.store.get(_query);
     }
 
     return null;
@@ -126,7 +126,7 @@ export const getCachedModelList = (promise: PromiseModelList<typeof Model>) => {
   const _query = promise.query;
   if (canUseIds(_query)) {
     const ids = promise.getIds();
-    const cachedInstances = ids.map(id => adapter.instancesMap.get(id)).filter(Boolean) as ModelInstance[];
+    const cachedInstances = ids.map(id => adapter.store.get(id)).filter(Boolean) as ModelInstance[];
 
     if (cachedInstances.length === ids.length) {
       return new ModelList(promise.model, cachedInstances, _query);
@@ -142,7 +142,7 @@ export const getCachedPartialModelList = (promise: PromiseModelList<typeof Model
   const _query = promise.query;
   if (canUseIds(_query)) {
     const ids = promise.getIds();
-    const cachedInstances = ids.map(id => adapter.instancesMap.get(id)).filter(Boolean) as ModelInstance[];
+    const cachedInstances = ids.map(id => adapter.store.get(id)).filter(Boolean) as ModelInstance[];
 
     return new ModelList(promise.model, cachedInstances, _query);
   }

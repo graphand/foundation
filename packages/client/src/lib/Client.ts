@@ -11,13 +11,17 @@ import {
 } from "@/types";
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module";
 import {
+  Account,
   Adapter,
   Controller,
+  controllerCurrentAccount,
   ControllerInput,
   CoreError,
   ErrorCodes,
+  IdentityTypes,
   InferControllerInput,
   Model,
+  ModelInstance,
   TransactionCtx,
 } from "@graphand/core";
 import { ClientAdapter } from "./ClientAdapter";
@@ -277,6 +281,31 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return Model.getClass(input, this.getAdapterClass(adapterClass));
   };
 
+  async me(useClaimToken = true): Promise<ModelInstance<typeof Account> | null> {
+    if (!this.options.accessToken) {
+      return null;
+    }
+
+    if (useClaimToken) {
+      try {
+        const parts = this.options.accessToken.split(".");
+        const payload = JSON.parse(atob(parts[1]));
+
+        if (payload.type === IdentityTypes.ACCOUNT && payload.id) {
+          return this.getModel(Account).get(payload.id);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    const res = await this.execute(controllerCurrentAccount);
+
+    const { data } = await res.json();
+
+    return this.getModel(Account).hydrateAndCache(data);
+  }
+
   async execute<C extends Controller<ControllerInput> = Controller<unknown>>(
     controller: C,
     opts: {
@@ -376,9 +405,9 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       if (!res.ok) {
         const type = res.headers.get("content-type");
         if (type?.includes("application/json")) {
-          const e = await res.json().then(r => r.error);
-          if (e) {
-            throw parseErrorFromJSON(e, res);
+          const { error } = await res.json();
+          if (error) {
+            throw parseErrorFromJSON(error, res);
           }
 
           throw new FetchError({ message: "Unknown error", res });

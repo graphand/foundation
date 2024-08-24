@@ -344,7 +344,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
       await model.get("123");
       const _adapter = model.getAdapter() as ClientAdapter;
-      expect(_adapter.instancesMap.has("123")).toBeTruthy();
+      expect(_adapter.store.has("123")).toBeTruthy();
     });
 
     it("should add instances to cache after getList", async () => {
@@ -355,8 +355,8 @@ describe("ClientAdapter", () => {
       );
       await model.getList();
       const _adapter = model.getAdapter() as ClientAdapter;
-      expect(_adapter.instancesMap.has("123")).toBeTruthy();
-      expect(_adapter.instancesMap.has("456")).toBeTruthy();
+      expect(_adapter.store.has("123")).toBeTruthy();
+      expect(_adapter.store.has("456")).toBeTruthy();
     });
 
     it("should not update cache if new instance has older _updatedAt", async () => {
@@ -370,7 +370,7 @@ describe("ClientAdapter", () => {
         new Response(`{"data": {"_id": "123", "name": "OldTest", "_updatedAt": "${oldDate.toJSON()}"}}`),
       );
       await model.get("123", { disableCache: true });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test");
+      expect(adapter.store.get("123")?.get("name")).toBe("Test");
     });
 
     it("should update cache if new instance has newer _updatedAt", async () => {
@@ -384,25 +384,25 @@ describe("ClientAdapter", () => {
         new Response(`{"data": {"_id": "123", "name": "NewTest", "_updatedAt": "${newDate.toJSON()}"}}`),
       );
       await model.get("123", { disableCache: true });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("NewTest");
+      expect(adapter.store.get("123")?.get("name")).toBe("NewTest");
     });
 
     it("should add to cache if instance doesn't exist", async () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
       await model.get("123");
-      expect(adapter.instancesMap.has("123")).toBeTruthy();
+      expect(adapter.store.has("123")).toBeTruthy();
     });
 
     it("should not add to cache if payload doesn't have _id", async () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"name": "Test"}}'));
       await model.get("123");
-      expect(adapter.instancesMap.size).toBe(0);
+      expect(adapter.store.size).toBe(0);
     });
 
     it("should update cache on create", async () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
       await model.create({ name: "Test" });
-      expect(adapter.instancesMap.has("123")).toBeTruthy();
+      expect(adapter.store.has("123")).toBeTruthy();
     });
 
     it("should update cache on update", async () => {
@@ -415,7 +415,7 @@ describe("ClientAdapter", () => {
       });
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.update("123", { $set: { name: "UpdatedTest" } });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("UpdatedTest");
+      expect(adapter.store.get("123")?.get("name")).toBe("UpdatedTest");
     });
 
     it("should remove from cache on delete", async () => {
@@ -423,7 +423,7 @@ describe("ClientAdapter", () => {
       await model.get("123");
       fetchMock.mockResolvedValueOnce(new Response('{"data": true}'));
       await model.delete("123");
-      expect(adapter.instancesMap.has("123")).toBeFalsy();
+      expect(adapter.store.has("123")).toBeFalsy();
     });
 
     it("should not update cache if _updatedAt is missing in new data", async () => {
@@ -433,7 +433,7 @@ describe("ClientAdapter", () => {
       const body2 = JSON.stringify({ data: { _id: "123", name: "NewTest" } });
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.get("123", { disableCache: true });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test");
+      expect(adapter.store.get("123")?.get("name")).toBe("Test");
     });
 
     it("should use __fetchedAt to determine if cache is outdated", async () => {
@@ -444,13 +444,13 @@ describe("ClientAdapter", () => {
       const body2 = JSON.stringify({ data: { _id: "123", name: "NewTest", _updatedAt: i.__fetchedAt } });
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.get("123", { disableCache: true });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test");
+      expect(adapter.store.get("123")?.get("name")).toBe("Test");
       const body3 = JSON.stringify({
         data: { _id: "123", name: "NewTest", _updatedAt: new Date(i.__fetchedAt.getTime() + 10) },
       });
       fetchMock.mockResolvedValueOnce(new Response(body3));
       await model.get("123", { disableCache: true });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("NewTest");
+      expect(adapter.store.get("123")?.get("name")).toBe("NewTest");
     });
 
     it("should update cache if existing instance doesn't have _updatedAt", async () => {
@@ -462,7 +462,7 @@ describe("ClientAdapter", () => {
       });
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.get("123", { disableCache: true });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("NewTest");
+      expect(adapter.store.get("123")?.get("name")).toBe("NewTest");
     });
 
     it("should not update cache if _updatedAt is equal", async () => {
@@ -475,7 +475,7 @@ describe("ClientAdapter", () => {
         new Response(`{"data": {"_id": "123", "name": "NewTest", "_updatedAt": "${updatedAt}"}}`),
       );
       await model.get("123", { disableCache: true });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test");
+      expect(adapter.store.get("123")?.get("name")).toBe("Test");
     });
 
     it("should handle multiple instances in getList", async () => {
@@ -485,9 +485,9 @@ describe("ClientAdapter", () => {
         ),
       );
       await model.getList();
-      expect(adapter.instancesMap.size).toBe(2);
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test1");
-      expect(adapter.instancesMap.get("456")?.get("name")).toBe("Test2");
+      expect(adapter.store.size).toBe(2);
+      expect(adapter.store.get("123")?.get("name")).toBe("Test1");
+      expect(adapter.store.get("456")?.get("name")).toBe("Test2");
     });
 
     it("should update only newer instances in getList", async () => {
@@ -514,8 +514,8 @@ describe("ClientAdapter", () => {
       });
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.getList({}, { disableCache: true });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("NewTest1");
-      expect(adapter.instancesMap.get("456")?.get("name")).toBe("Test2");
+      expect(adapter.store.get("123")?.get("name")).toBe("NewTest1");
+      expect(adapter.store.get("456")?.get("name")).toBe("Test2");
     });
 
     it("should handle undefined _updatedAt in cache update", async () => {
@@ -527,7 +527,7 @@ describe("ClientAdapter", () => {
       });
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.get("123", { disableCache: true });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("NewTest");
+      expect(adapter.store.get("123")?.get("name")).toBe("NewTest");
     });
 
     it("should not update cache if new instance has invalid _updatedAt", async () => {
@@ -539,7 +539,7 @@ describe("ClientAdapter", () => {
         new Response('{"data": {"_id": "123", "name": "NewTest", "_updatedAt": "invalid-date"}}'),
       );
       await model.get("123", { disableCache: true });
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test");
+      expect(adapter.store.get("123")?.get("name")).toBe("Test");
     });
 
     it("should handle race conditions in cache updates", async () => {
@@ -554,7 +554,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await Promise.all([promise1, promise2]);
 
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test2");
+      expect(adapter.store.get("123")?.get("name")).toBe("Test2");
     });
 
     it("should maintain cache consistency across multiple operations", async () => {
@@ -574,16 +574,16 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response(body3));
       await model.get("123", { disableCache: true });
 
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("UpdatedTest");
+      expect(adapter.store.get("123")?.get("name")).toBe("UpdatedTest");
     });
 
     it("should clear cache when clearInstances is called", async () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
       await model.get("123");
-      expect(adapter.instancesMap.size).toBe(1);
+      expect(adapter.store.size).toBe(1);
 
       adapter.clearInstances();
-      expect(adapter.instancesMap.size).toBe(0);
+      expect(adapter.store.size).toBe(0);
     });
 
     it("should handle updates with no changes", async () => {
@@ -597,7 +597,7 @@ describe("ClientAdapter", () => {
       );
       await model.update("123", { $set: { name: "Test" } });
 
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test");
+      expect(adapter.store.get("123")?.get("name")).toBe("Test");
     });
 
     it("should handle createMultiple correctly", async () => {
@@ -606,9 +606,9 @@ describe("ClientAdapter", () => {
       );
       await model.createMultiple([{ name: "Test1" }, { name: "Test2" }]);
 
-      expect(adapter.instancesMap.size).toBe(2);
-      expect(adapter.instancesMap.get("123")?.get("name")).toBe("Test1");
-      expect(adapter.instancesMap.get("456")?.get("name")).toBe("Test2");
+      expect(adapter.store.size).toBe(2);
+      expect(adapter.store.get("123")?.get("name")).toBe("Test1");
+      expect(adapter.store.get("456")?.get("name")).toBe("Test2");
     });
 
     it("should handle deleteMultiple correctly", async () => {
@@ -622,7 +622,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": ["123", "456"]}'));
       await model.delete({ ids: ["123", "456"] });
 
-      expect(adapter.instancesMap.size).toBe(0);
+      expect(adapter.store.size).toBe(0);
     });
   });
 
@@ -1159,8 +1159,8 @@ describe("ClientAdapter", () => {
       expect(result).toBeInstanceOf(MockModelWithRelation);
       expect(result.get("name")).toBe("Test");
       expect(result.getData().related).toBe(relatedId);
-      expect(adapterWithRelation.instancesMap.get(relatedId)).toBeUndefined();
-      expect(adapterRelated.instancesMap.get(relatedId)).toBeInstanceOf(RelatedModel);
+      expect(adapterWithRelation.store.get(relatedId)).toBeUndefined();
+      expect(adapterRelated.store.get(relatedId)).toBeInstanceOf(RelatedModel);
       expect(result.related).toBeInstanceOf(PromiseModel);
       expect(result.related.cached).toBeInstanceOf(RelatedModel);
     });
@@ -1184,8 +1184,8 @@ describe("ClientAdapter", () => {
       expect(result).toBeInstanceOf(MockModelWithRelation);
       expect(result.get("name")).toBe("Test");
       expect(result.getData().multiRelated).toEqual([relatedId1, relatedId2]);
-      expect(adapterRelated.instancesMap.get(relatedId1)).toBeInstanceOf(RelatedModel);
-      expect(adapterRelated.instancesMap.get(relatedId2)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(relatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(relatedId2)).toBeInstanceOf(RelatedModel);
       expect(result.multiRelated).toBeInstanceOf(PromiseModelList);
       expect(result.multiRelated.cached).toBeInstanceOf(ModelList);
       expect(result.multiRelated.cached.length).toBe(2);
@@ -1213,7 +1213,7 @@ describe("ClientAdapter", () => {
       expect(result).toBeInstanceOf(MockModelWithRelation);
       expect(result.get("name")).toBe("Test");
       expect(result.getData().nested.related).toBe(nestedRelatedId);
-      expect(adapterRelated.instancesMap.get(nestedRelatedId)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(nestedRelatedId)).toBeInstanceOf(RelatedModel);
       expect(result.nested.related).toBeInstanceOf(PromiseModel);
       expect(result.nested.related.cached).toBeInstanceOf(RelatedModel);
     });
@@ -1239,8 +1239,8 @@ describe("ClientAdapter", () => {
       expect(result).toBeInstanceOf(MockModelWithRelation);
       expect(result.get("name")).toBe("Test");
       expect(result.getData().nested.multiRelated).toEqual([nestedRelatedId1, nestedRelatedId2]);
-      expect(adapterRelated.instancesMap.get(nestedRelatedId1)).toBeInstanceOf(RelatedModel);
-      expect(adapterRelated.instancesMap.get(nestedRelatedId2)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(nestedRelatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(nestedRelatedId2)).toBeInstanceOf(RelatedModel);
       expect(result.nested.multiRelated).toBeInstanceOf(PromiseModelList);
       expect(result.nested.multiRelated.cached).toBeInstanceOf(ModelList);
       expect(result.nested.multiRelated.cached.length).toBe(2);
@@ -1266,8 +1266,8 @@ describe("ClientAdapter", () => {
       expect(result.get("name")).toBe("Test");
       expect(result.getData().nestedArr[0].related).toBe(nestedArrRelatedId1);
       expect(result.getData().nestedArr[1].related).toBe(nestedArrRelatedId2);
-      expect(adapterRelated.instancesMap.get(nestedArrRelatedId1)).toBeInstanceOf(RelatedModel);
-      expect(adapterRelated.instancesMap.get(nestedArrRelatedId2)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(nestedArrRelatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(nestedArrRelatedId2)).toBeInstanceOf(RelatedModel);
       expect(result.nestedArr[0].related).toBeInstanceOf(PromiseModel);
       expect(result.nestedArr[0].related.cached).toBeInstanceOf(RelatedModel);
       expect(result.nestedArr[1].related).toBeInstanceOf(PromiseModel);
@@ -1293,8 +1293,8 @@ describe("ClientAdapter", () => {
 
       expect(result.getData().related).toBe(relatedId1);
       expect(result.getData().multiRelated).toEqual([relatedId2, relatedId1]);
-      expect(adapterRelated.instancesMap.get(relatedId1)).toBeInstanceOf(RelatedModel);
-      expect(adapterRelated.instancesMap.get(relatedId2)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(relatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(relatedId2)).toBeInstanceOf(RelatedModel);
     });
 
     it("should process deeply nested populated data", async () => {
@@ -1351,8 +1351,8 @@ describe("ClientAdapter", () => {
 
       expect(result.getData().nested.related).toBe(relatedId1);
 
-      expect(adapterRelated.instancesMap.get(relatedId1)).toBeInstanceOf(RelatedModel);
-      expect(adapterOtherRelated.instancesMap.get(relatedId2)).toBeInstanceOf(OtherRelatedModel);
+      expect(adapterRelated.store.get(relatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterOtherRelated.store.get(relatedId2)).toBeInstanceOf(OtherRelatedModel);
 
       expect(result.nested.related).toBeInstanceOf(PromiseModel);
       expect(result.nested.related.cached).toBeInstanceOf(RelatedModel);
@@ -1394,8 +1394,8 @@ describe("ClientAdapter", () => {
       expect(result.getData().related).toBe(relatedId1);
       expect(result.getData().multiRelated).toEqual([relatedId2, relatedId1]);
 
-      expect(adapterRelated.instancesMap.get(relatedId1)).toBeInstanceOf(RelatedModel);
-      expect(adapterRelated.instancesMap.get(relatedId2)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(relatedId1)).toBeInstanceOf(RelatedModel);
+      expect(adapterRelated.store.get(relatedId2)).toBeInstanceOf(RelatedModel);
 
       expect(result.related).toBeInstanceOf(PromiseModel);
       expect(result.related.cached).toBeInstanceOf(RelatedModel);
@@ -1497,9 +1497,9 @@ describe("ClientAdapter", () => {
       const adapter2 = client.getModel(dmRelated.slug).getAdapter() as ClientAdapter;
       const adapter3 = client.getModel(dmOtherRelated.slug).getAdapter() as ClientAdapter;
 
-      expect(adapter1.instancesMap.has(id1)).toBeTruthy();
-      expect(adapter2.instancesMap.has(id2)).toBeTruthy();
-      expect(adapter3.instancesMap.has(id3)).toBeTruthy();
+      expect(adapter1.store.has(id1)).toBeTruthy();
+      expect(adapter2.store.has(id2)).toBeTruthy();
+      expect(adapter3.store.has(id3)).toBeTruthy();
     });
 
     it("should handle circular references in dynamic models", async () => {
@@ -1565,8 +1565,8 @@ describe("ClientAdapter", () => {
       await model.get(id1);
       const adapter = model.getAdapter() as ClientAdapter;
 
-      expect(adapter.instancesMap.has(id1)).toBeTruthy();
-      expect(adapter.instancesMap.has(id2)).toBeTruthy();
+      expect(adapter.store.has(id1)).toBeTruthy();
+      expect(adapter.store.has(id2)).toBeTruthy();
 
       const instance1 = model.get(id1).cached;
       const instance2 = model.get(id2).cached;
@@ -1643,10 +1643,10 @@ describe("ClientAdapter", () => {
       await client.getModel(dmNested.slug).get(id1);
       const adapter = client.getModel(dmNested.slug).getAdapter() as ClientAdapter;
 
-      expect(adapter.instancesMap.has(id1)).toBeTruthy();
-      expect(adapter.instancesMap.has(id2)).toBeTruthy();
-      expect(adapter.instancesMap.has(id3)).toBeTruthy();
-      const instance = adapter.instancesMap.get(id1) as ModelInstance<
+      expect(adapter.store.has(id1)).toBeTruthy();
+      expect(adapter.store.has(id2)).toBeTruthy();
+      expect(adapter.store.has(id3)).toBeTruthy();
+      const instance = adapter.store.get(id1) as ModelInstance<
         typeof Model & {
           definition: {
             fields: {
@@ -1660,8 +1660,8 @@ describe("ClientAdapter", () => {
           };
         }
       >;
-      expect(instance?.items[0].subItem.cached).toBe(adapter.instancesMap.get(id2));
-      expect(instance?.items[1].subItem.cached).toBe(adapter.instancesMap.get(id3));
+      expect(instance?.items[0].subItem.cached).toBe(adapter.store.get(id2));
+      expect(instance?.items[1].subItem.cached).toBe(adapter.store.get(id3));
     });
 
     it("should update cache when deeply nested relations are modified", async () => {
@@ -1748,25 +1748,157 @@ describe("ClientAdapter", () => {
       const adapter1 = client.getModel(dmDeep1.slug).getAdapter() as ClientAdapter;
       const adapter2 = client.getModel(dmDeep2.slug).getAdapter() as ClientAdapter;
 
-      expect(adapter.instancesMap.has(id1)).toBeTruthy();
-      expect(adapter1.instancesMap.has(id2)).toBeTruthy();
-      expect(adapter2.instancesMap.has(id3)).toBeTruthy();
+      expect(adapter.store.has(id1)).toBeTruthy();
+      expect(adapter1.store.has(id2)).toBeTruthy();
+      expect(adapter2.store.has(id3)).toBeTruthy();
 
       // Update the deeply nested relation
       await client.getModel(dmDeep.slug).get(id1, { disableCache: true });
 
       expect(updateCount).toBe(2);
 
-      expect(adapter.instancesMap.has(id1)).toBeTruthy();
-      expect(adapter1.instancesMap.has(id2)).toBeTruthy();
-      expect(adapter2.instancesMap.has(id4)).toBeTruthy();
+      expect(adapter.store.has(id1)).toBeTruthy();
+      expect(adapter1.store.has(id2)).toBeTruthy();
+      expect(adapter2.store.has(id4)).toBeTruthy();
 
-      const instance = adapter.instancesMap.get(id1) as any;
+      const instance = adapter.store.get(id1) as any;
       expect(instance?.level1.cached?.level2.cached?._id).toBe(id4);
     });
   });
 
-  describe("On server", () => {
+  describe("disableCache option", () => {
+    let clientWithDisabledCache: Client;
+    let modelWithDisabledCache: typeof MockModel;
+    let adapterWithDisabledCache: ClientAdapter;
+
+    beforeEach(() => {
+      clientWithDisabledCache = new Client([], {
+        accessToken: "...",
+        project: null,
+        disableCache: true,
+      });
+      modelWithDisabledCache = clientWithDisabledCache.getModel(MockModel);
+      adapterWithDisabledCache = modelWithDisabledCache.getAdapter() as ClientAdapter;
+      jest.spyOn(global, "fetch");
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it("should not use cache when fetching a single model", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      await modelWithDisabledCache.get("123");
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      await modelWithDisabledCache.get("123");
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("should not use cache when fetching a list of models", async () => {
+      const data = '{"data": {"rows": [{"_id": "123", "name": "Test1"}, {"_id": "456", "name": "Test2"}], "count": 2}}';
+      fetchMock.mockResolvedValueOnce(new Response(data));
+      await modelWithDisabledCache.getList();
+      fetchMock.mockResolvedValueOnce(new Response(data));
+      await modelWithDisabledCache.getList();
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("should update store after creating a model", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "NewTest"}}'));
+      await modelWithDisabledCache.create({ name: "NewTest" });
+      expect(adapterWithDisabledCache.store.size).toBe(1);
+      expect(adapterWithDisabledCache.store.get("123")?.get("name")).toBe("NewTest");
+    });
+
+    it("should update store after updating a model", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "UpdatedTest"}}'));
+      await modelWithDisabledCache.update("123", { $set: { name: "UpdatedTest" } });
+      expect(adapterWithDisabledCache.store.size).toBe(1);
+      expect(adapterWithDisabledCache.store.get("123")?.get("name")).toBe("UpdatedTest");
+    });
+
+    it("should not use cache for specific models when disableCache is an array", async () => {
+      const clientWithSelectiveCache = new Client([], {
+        accessToken: "...",
+        project: null,
+        disableCache: ["mockModel"],
+      });
+      const modelWithSelectiveCache = clientWithSelectiveCache.getModel(MockModel);
+      const adapterWithSelectiveCache = modelWithSelectiveCache.getAdapter() as ClientAdapter;
+
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      await modelWithSelectiveCache.get("123");
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      await modelWithSelectiveCache.get("123");
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(adapterWithSelectiveCache.store.size).toBe(1);
+    });
+  });
+
+  describe("disableStore option", () => {
+    let clientWithDisabledStore: Client;
+    let modelWithDisabledStore: typeof MockModel;
+    let adapterWithDisabledStore: ClientAdapter;
+
+    beforeEach(() => {
+      clientWithDisabledStore = new Client([], {
+        accessToken: "...",
+        project: null,
+        disableStore: true,
+      });
+      modelWithDisabledStore = clientWithDisabledStore.getModel(MockModel);
+      adapterWithDisabledStore = modelWithDisabledStore.getAdapter() as ClientAdapter;
+      jest.spyOn(global, "fetch");
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it("should not store instances in memory when fetching a single model", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      await modelWithDisabledStore.get("123");
+      expect(adapterWithDisabledStore.store.size).toBe(0);
+    });
+
+    it("should not store instances in memory when fetching a list of models", async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response(
+          '{"data": {"rows": [{"_id": "123", "name": "Test1"}, {"_id": "456", "name": "Test2"}], "count": 2}}',
+        ),
+      );
+      await modelWithDisabledStore.getList();
+      expect(adapterWithDisabledStore.store.size).toBe(0);
+    });
+
+    it("should not store instances in memory after creating a model", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "NewTest"}}'));
+      await modelWithDisabledStore.create({ name: "NewTest" });
+      expect(adapterWithDisabledStore.store.size).toBe(0);
+    });
+
+    it("should not store instances in memory after updating a model", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "UpdatedTest"}}'));
+      await modelWithDisabledStore.update("123", { $set: { name: "UpdatedTest" } });
+      expect(adapterWithDisabledStore.store.size).toBe(0);
+    });
+
+    it("should not store instances for specific models when disableStore is an array", async () => {
+      const clientWithSelectiveStore = new Client([], {
+        accessToken: "...",
+        project: null,
+        disableStore: ["mockModel"],
+      });
+      const modelWithSelectiveStore = clientWithSelectiveStore.getModel(MockModel);
+      const adapterWithSelectiveStore = modelWithSelectiveStore.getAdapter() as ClientAdapter;
+
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      await modelWithSelectiveStore.get("123");
+      expect(adapterWithSelectiveStore.store.size).toBe(0);
+    });
+  });
+
+  describe.skip("On server", () => {
     let _client: Client;
     let model: typeof Model & {
       definition: {

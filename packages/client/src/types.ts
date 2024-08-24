@@ -80,6 +80,8 @@ export type ClientOptions = {
   environment?: string;
   accessToken?: string;
   headers?: Record<string, string>;
+  disableCache?: boolean | Array<string>;
+  disableStore?: boolean | Array<string>;
 };
 
 export type SubjectObserver<T> = (_value: T, _previousValue?: T) => void;

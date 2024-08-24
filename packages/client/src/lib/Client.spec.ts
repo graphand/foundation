@@ -1,7 +1,10 @@
-import { Model } from "@graphand/core";
+import { faker } from "@faker-js/faker";
+import { ObjectId } from "bson";
+import { Account, IdentityTypes, Model, ModelInstance } from "@graphand/core";
 import { Client } from "./Client";
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module";
 import { ClientAdapter } from "./ClientAdapter";
+import jsonwebtoken from "jsonwebtoken";
 
 describe("Client", () => {
   let client: Client;
@@ -786,6 +789,52 @@ describe("Client", () => {
     it("should throw an error when trying to remove a non-existent hook", () => {
       const hookFn = jest.fn();
       expect(() => client.removeHook("beforeRequest", hookFn)).toThrow("Hook not found");
+    });
+  });
+
+  describe("Me", () => {
+    let _client: Client;
+    let account: ModelInstance<typeof Account>;
+
+    beforeEach(async () => {
+      _client = client.clone({
+        accessToken: "test-token",
+      });
+      mockFetch.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: { rows: [{ _id: new ObjectId().toString(), slug: "accounts", definition: {} }], count: 1 },
+          }),
+        ),
+      );
+      await _client.getModel(Account).initialize();
+      account = await _client
+        .getModel(Account)
+        .hydrateAndCache({ _id: new ObjectId().toString(), _email: faker.internet.email() });
+    });
+
+    it("should return null if no access token is provided", async () => {
+      _client.setOptions({ accessToken: null });
+      const res = await _client.me();
+      expect(res).toBeNull();
+    });
+
+    it("should return the current account from the access token claim", async () => {
+      const identity = { type: IdentityTypes.ACCOUNT, id: account._id };
+      const token = jsonwebtoken.sign(identity, "test");
+      _client.setOptions({ accessToken: token });
+      const res = await _client.me();
+      expect(res).toBeInstanceOf(Account);
+      expect(res?.get("_id")).toBe(account._id);
+      expect(res?.get("_email")).toBe(account._email);
+    });
+
+    it("should return the account from the current account controller", async () => {
+      mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ data: account.toJSON() })));
+      const res = await _client.me(false);
+      expect(res).toBeInstanceOf(Account);
+      expect(res?.get("_id")).toBe(account._id);
+      expect(res?.get("_email")).toBe(account._email);
     });
   });
 });

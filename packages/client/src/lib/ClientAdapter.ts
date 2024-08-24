@@ -38,7 +38,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     [FieldTypes.ARRAY]: FieldArray,
   };
 
-  #instancesMap: Map<string, ModelInstance<T>> = new Map();
+  #store: Map<string, ModelInstance<T>> = new Map();
   #cacheSubject: Subject<ModelUpdaterEvent> = new Subject();
   #eventSubject: Subject<ModelCrudEvent<"create" | "update" | "delete", T>> = new Subject();
 
@@ -75,7 +75,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   #handleCreateOrUpdate(event: ModelCrudEvent<"create" | "update", T>, updater: ModelUpdaterEvent): void {
     if (!event.data) return;
 
-    const data = event.operation === "create" ? event.data.filter(r => !this.#instancesMap.has(r._id)) : event.data;
+    const data = event.operation === "create" ? event.data.filter(r => !this.#store.has(r._id)) : event.data;
 
     const instanceList = data.map(r => this.processInstancePayload(r));
     const updated = instanceList
@@ -89,8 +89,8 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   #handleDelete(event: ModelCrudEvent<"delete", T>, updater: ModelUpdaterEvent): void {
-    const ids = event.ids.filter(id => this.#instancesMap.has(id));
-    ids.forEach(id => this.#instancesMap.delete(id));
+    const ids = event.ids.filter(id => this.#store.has(id));
+    ids.forEach(id => this.#store.delete(id));
     updater.ids = ids;
   }
 
@@ -107,8 +107,8 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return (this.constructor as typeof ClientAdapter).client;
   }
 
-  get instancesMap(): Map<string, ModelInstance<T>> {
-    return this.#instancesMap;
+  get store(): Map<string, ModelInstance<T>> {
+    return this.#store;
   }
 
   fetcher: AdapterFetcher<T> = {
@@ -181,9 +181,11 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   };
 
   async #getSingle(ctx: TransactionCtx): Promise<ModelInstance<T> | null> {
-    if (this.#instancesMap.size && !ctx?.disableCache) {
-      return this.#instancesMap.values().next().value;
+    const cachedInstance = this.getCachedInstance(null, ctx);
+    if (cachedInstance) {
+      return cachedInstance;
     }
+
     const res = await this.client.execute(controllerModelRead, {
       ctx,
       params: { model: this.model.slug },
@@ -194,10 +196,11 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   async #getById(id: string, ctx: TransactionCtx): Promise<ModelInstance<T> | null> {
-    if (!ctx?.disableCache) {
-      const cachedInstance = this.#getCachedInstance(id);
-      if (cachedInstance) return cachedInstance;
+    const cachedInstance = this.getCachedInstance(id, ctx);
+    if (cachedInstance) {
+      return cachedInstance;
     }
+
     const res = await this.client.execute(controllerModelRead, {
       ctx,
       params: { id, model: this.model.slug },
@@ -211,6 +214,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     if (canUseIds(query)) {
       return this.#getById(String(query.ids?.[0]), ctx);
     }
+
     query.pageSize = 1;
     const list = await this.#getListInternal(query, ctx);
     return list?.[0] || null;
@@ -220,12 +224,12 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     let fromIdsList: Array<ModelInstance<T>> = [];
     const canUseIdsForQuery = canUseIds(query);
 
-    if (canUseIdsForQuery && !ctx?.disableCache) {
-      fromIdsList = this.#getFromCacheByIds(query.ids);
+    if (canUseIdsForQuery) {
+      fromIdsList = this.getCachedList(query.ids, ctx);
       if (fromIdsList.length === query.ids?.length) {
         return new ModelList(this.model, fromIdsList);
       }
-      query.ids = query.ids?.filter((id: string) => !this.#instancesMap.has(id));
+      query.ids = query.ids?.filter((id: string) => !this.#store.has(id));
     }
 
     const res = await this.client.execute(controllerModelQuery, {
@@ -341,8 +345,49 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return ids;
   }
 
-  #getFromCacheByIds(ids: string[]): Array<ModelInstance<T>> {
-    return ids.filter(id => this.#instancesMap.has(id)).map(id => this.#instancesMap.get(id)!);
+  #isCacheEnabled(ctx: TransactionCtx): boolean {
+    if (ctx.disableCache) {
+      return false;
+    }
+
+    if (Array.isArray(this.client.options.disableCache) && this.client.options.disableCache.includes(this.model.slug)) {
+      return false;
+    }
+
+    if (this.client.options.disableCache === true) {
+      return false;
+    }
+
+    return true;
+  }
+
+  getCachedList(ids: string[], ctx: TransactionCtx): Array<ModelInstance<T>> | null {
+    if (!this.#isCacheEnabled(ctx)) {
+      return null;
+    }
+
+    return ids.map(id => this.getCachedInstance(id, ctx)).filter(Boolean) as Array<ModelInstance<T>>;
+  }
+
+  getCachedInstance(id: string | null, ctx: TransactionCtx): ModelInstance<T> | undefined {
+    if (!this.#isCacheEnabled(ctx)) {
+      return null;
+    }
+
+    if (!id) {
+      return this.#store.values().next().value;
+    }
+
+    if (this.#store.has(id)) {
+      return this.#store.get(id);
+    }
+
+    const keyField = this.model.getKeyField();
+    if (keyField) {
+      return Array.from(this.#store.values()).find(instance => instance.get(keyField) === id);
+    }
+
+    return undefined;
   }
 
   #updateCacheFromList(instanceList: Array<{ updated: boolean; instance?: ModelInstance<T> }>): void {
@@ -386,12 +431,29 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     });
   }
 
+  #isStoreEnabled(): boolean {
+    if (Array.isArray(this.client.options.disableStore) && this.client.options.disableStore.includes(this.model.slug)) {
+      return false;
+    }
+
+    if (this.client.options.disableStore === true) {
+      return false;
+    }
+
+    return true;
+  }
+
   processInstancePayload(payload: ModelJSON<T>): { updated: boolean; instance?: ModelInstance<T> } {
     if (!payload || typeof payload !== "object") {
       throw new Error("Invalid payload");
     }
 
-    let instance = payload._id ? this.#instancesMap.get(payload._id) : undefined;
+    if (!this.#isStoreEnabled()) {
+      const instance = this.model.hydrate(payload);
+      return { instance, updated: true };
+    }
+
+    let instance = payload._id ? this.#store.get(payload._id) : undefined;
     let updated = false;
 
     payload = this.#processPopulatedData(payload);
@@ -404,7 +466,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       }
     } else if (payload._id) {
       instance = this.model.hydrate(payload);
-      this.#instancesMap.set(payload._id, instance);
+      this.#store.set(payload._id, instance);
       updated = true;
     }
 
@@ -601,20 +663,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   clearInstances(): void {
-    this.#instancesMap.clear();
-  }
-
-  #getCachedInstance(id: string): ModelInstance<T> | undefined {
-    if (this.#instancesMap.has(id)) {
-      return this.#instancesMap.get(id);
-    }
-
-    const keyField = this.model.getKeyField();
-    if (keyField) {
-      return Array.from(this.#instancesMap.values()).find(instance => instance.get(keyField) === id);
-    }
-
-    return undefined;
+    this.#store.clear();
   }
 
   processAndCacheInstance(json: ModelJSON<T>): ModelInstance<T> | null {

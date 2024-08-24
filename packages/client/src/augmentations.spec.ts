@@ -132,7 +132,7 @@ describe("augmentations", () => {
       const observer = jest.fn();
       model.subscribe(observer);
 
-      adapter.instancesMap.set("123", model.hydrate({ _id: "123" }));
+      adapter.store.set("123", model.hydrate({ _id: "123" }));
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["123"] };
       adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
 
@@ -336,14 +336,14 @@ describe("augmentations", () => {
     it("should clear all instances from the cache", () => {
       const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
       const instance2 = TestModel.hydrate({ _id: "2", someField: "value2" });
-      adapter.instancesMap.set("1", instance1);
-      adapter.instancesMap.set("2", instance2);
+      adapter.store.set("1", instance1);
+      adapter.store.set("2", instance2);
 
-      expect(adapter.instancesMap.size).toBe(2);
+      expect(adapter.store.size).toBe(2);
 
       model.clearCache();
 
-      expect(adapter.instancesMap.size).toBe(0);
+      expect(adapter.store.size).toBe(0);
     });
 
     it("should return the model class", () => {
@@ -360,19 +360,19 @@ describe("augmentations", () => {
 
       const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
       const instance2 = OtherModel.hydrate({ _id: "2", someField: "value2" });
-      adapter.instancesMap.set("1", instance1);
-      otherAdapter.instancesMap.set("2", instance2);
+      adapter.store.set("1", instance1);
+      otherAdapter.store.set("2", instance2);
 
       model.clearCache();
 
-      expect(adapter.instancesMap.size).toBe(0);
-      expect(otherAdapter.instancesMap.size).toBe(1);
+      expect(adapter.store.size).toBe(0);
+      expect(otherAdapter.store.size).toBe(1);
     });
 
     it("should work with an empty cache", () => {
-      expect(adapter.instancesMap.size).toBe(0);
+      expect(adapter.store.size).toBe(0);
       model.clearCache();
-      expect(adapter.instancesMap.size).toBe(0);
+      expect(adapter.store.size).toBe(0);
     });
 
     it("should clear cache for inherited model classes", () => {
@@ -383,24 +383,24 @@ describe("augmentations", () => {
       const extendedAdapter = extendedModel.getAdapter() as ClientAdapter;
 
       const instance = ExtendedModel.hydrate({ _id: "1", someField: "value" });
-      extendedAdapter.instancesMap.set("1", instance);
+      extendedAdapter.store.set("1", instance);
 
-      expect(extendedAdapter.instancesMap.size).toBe(1);
+      expect(extendedAdapter.store.size).toBe(1);
       extendedModel.clearCache();
-      expect(extendedAdapter.instancesMap.size).toBe(0);
+      expect(extendedAdapter.store.size).toBe(0);
     });
 
     it("should allow adding new instances after clearing the cache", () => {
       const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
-      adapter.instancesMap.set("1", instance1);
+      adapter.store.set("1", instance1);
 
       model.clearCache();
 
       const instance2 = TestModel.hydrate({ _id: "2", someField: "value2" });
-      adapter.instancesMap.set("2", instance2);
+      adapter.store.set("2", instance2);
 
-      expect(adapter.instancesMap.size).toBe(1);
-      expect(adapter.instancesMap.get("2")).toBe(instance2);
+      expect(adapter.store.size).toBe(1);
+      expect(adapter.store.get("2")).toBe(instance2);
     });
 
     it("should not interfere with model's ability to create new instances", () => {
@@ -413,21 +413,21 @@ describe("augmentations", () => {
 
     it("should clear cache multiple times without errors", () => {
       const instance = TestModel.hydrate({ _id: "1", someField: "value" });
-      adapter.instancesMap.set("1", instance);
+      adapter.store.set("1", instance);
 
       model.clearCache();
-      expect(adapter.instancesMap.size).toBe(0);
+      expect(adapter.store.size).toBe(0);
 
       model.clearCache();
-      expect(adapter.instancesMap.size).toBe(0);
+      expect(adapter.store.size).toBe(0);
 
       model.clearCache();
-      expect(adapter.instancesMap.size).toBe(0);
+      expect(adapter.store.size).toBe(0);
     });
 
     it("should work correctly when called in combination with other methods", async () => {
       const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
-      adapter.instancesMap.set("1", instance1);
+      adapter.store.set("1", instance1);
 
       fetchSpy.mockResolvedValue(new Response('{"data": {"_id": "1", "someField": "updated"}}', { status: 200 }));
 
@@ -437,7 +437,7 @@ describe("augmentations", () => {
 
       expect(fetchSpy).toHaveBeenCalled();
       expect(refetchedInstance?.get("someField")).toBe("updated");
-      expect(adapter.instancesMap.size).toBe(1);
+      expect(adapter.store.size).toBe(1);
     });
   });
 
@@ -509,7 +509,7 @@ describe("augmentations", () => {
     it("should call the observer when the instance is deleted", () => {
       const observer = jest.fn();
       instance.subscribe(observer);
-      adapter.instancesMap.set(instance._id, instance);
+      adapter.store.set(instance._id, instance);
 
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["test-id"] };
       adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
@@ -588,7 +588,7 @@ describe("augmentations", () => {
     it("should handle deleteMultiple events that include the instance", () => {
       const observer = jest.fn();
       instance.subscribe(observer);
-      adapter.instancesMap.set(instance._id, instance);
+      adapter.store.set(instance._id, instance);
 
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["test-id", "other-id"] };
       adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
@@ -607,7 +607,7 @@ describe("augmentations", () => {
     });
 
     it("should handle create events (even though they shouldn't affect an existing instance)", () => {
-      adapter.instancesMap.set("test-id", instance);
+      adapter.store.set("test-id", instance);
       const observer = jest.fn();
       instance.subscribe(observer);
 
@@ -690,7 +690,7 @@ describe("augmentations", () => {
     it("should handle multiple updates in rapid succession", async () => {
       const observer = jest.fn();
       instance.subscribe(observer);
-      adapter.instancesMap.set("test-id", instance);
+      adapter.store.set("test-id", instance);
 
       const updateEvents = [{ someField: "update1" }, { someField: "update2" }, { someField: "update3" }];
 
@@ -739,8 +739,8 @@ describe("augmentations", () => {
         _createdAt: new Date().toJSON(),
         _updatedAt: new Date().toJSON(),
       });
-      adapter.instancesMap.set("1", i1);
-      adapter.instancesMap.set("2", i2);
+      adapter.store.set("1", i1);
+      adapter.store.set("2", i2);
       modelList = new ModelList(model, [i1, i2]);
     });
 
@@ -1360,7 +1360,7 @@ describe("augmentations", () => {
 
     it("should return the cached instance if available", async () => {
       const instance = model.hydrate({ _id: "cached-id", someField: "value" });
-      adapter.instancesMap.set("cached-id", instance);
+      adapter.store.set("cached-id", instance);
       const promise = model.get("cached-id");
       expect(promise.cached).toBe(instance);
     });
@@ -1382,7 +1382,7 @@ describe("augmentations", () => {
       const singleModel = client.getModel(SingleModel);
       const singleAdapter = singleModel.getAdapter() as ClientAdapter;
       const instance = singleModel.hydrate({ _id: "single-id" });
-      singleAdapter.instancesMap.set("single-id", instance);
+      singleAdapter.store.set("single-id", instance);
       const promise = singleModel.get();
       expect(promise.cached).toBe(instance);
     });
@@ -1476,7 +1476,7 @@ describe("augmentations", () => {
 
     it("should return null if not all instances are in cache", () => {
       const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
-      adapter.instancesMap.set("id1", instance1);
+      adapter.store.set("id1", instance1);
       const promise = model.getList({ ids: ["id1", "id2"] });
       expect(promise.cached).toBeNull();
     });
@@ -1484,8 +1484,8 @@ describe("augmentations", () => {
     it("should return a ModelList with cached instances if all are available", () => {
       const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
       const instance2 = model.hydrate({ _id: "id2", someField: "value2" });
-      adapter.instancesMap.set("id1", instance1);
-      adapter.instancesMap.set("id2", instance2);
+      adapter.store.set("id1", instance1);
+      adapter.store.set("id2", instance2);
       const promise = model.getList({ ids: ["id1", "id2"] });
       const cached = promise.cached;
       expect(cached).toBeInstanceOf(ModelList);
@@ -1504,8 +1504,8 @@ describe("augmentations", () => {
     it("should return a ModelList with available cached instances", () => {
       const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
       const instance2 = model.hydrate({ _id: "id2", someField: "value2" });
-      adapter.instancesMap.set("id1", instance1);
-      adapter.instancesMap.set("id2", instance2);
+      adapter.store.set("id1", instance1);
+      adapter.store.set("id2", instance2);
       const promise = model.getList({ ids: ["id1", "id2", "id3"] });
       const cachedPartial = promise.cachedPartial;
       expect(cachedPartial).toBeInstanceOf(ModelList);
@@ -1525,9 +1525,9 @@ describe("augmentations", () => {
       const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
       const instance2 = model.hydrate({ _id: "id2", someField: "value2" });
       const instance3 = model.hydrate({ _id: "id3", someField: "value3" });
-      adapter.instancesMap.set("id1", instance1);
-      adapter.instancesMap.set("id2", instance2);
-      adapter.instancesMap.set("id3", instance3);
+      adapter.store.set("id1", instance1);
+      adapter.store.set("id2", instance2);
+      adapter.store.set("id3", instance3);
       const promise = model.getList({ ids: ["id3", "id1", "id4", "id2"] });
       const cachedPartial = promise.cachedPartial;
       expect(cachedPartial).toBeInstanceOf(ModelList);
