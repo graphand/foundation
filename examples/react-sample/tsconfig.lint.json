@@ -7,6 +7,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "wallaby.js", "vite.config.ts", "jest-setup.ts", "graphand.config.js"],
+  "include": ["src", "functions", "wallaby.js", "vite.config.ts", "jest-setup.ts", "graphand.config.js"],
   "exclude": ["node_modules", "dist"]
 }

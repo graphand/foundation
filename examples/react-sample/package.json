@@ -33,7 +33,10 @@
     "vite": "^5.3.2"
   },
   "dependencies": {
-    "@graphand/core": "^0.15.13",
+    "@graphand/core": "^0.15.15",
     "@graphand/client": "*"
+  },
+  "graphand": {
+    "config": "./graphand.config.js"
   }
 }
