@@ -1,5 +1,5 @@
 import { Module, symbolModuleInit, symbolModuleDestroy, ClientAdapter, BehaviorSubject } from "@graphand/client";
-import { Model, ModelCrudEvent } from "@graphand/core";
+import { ModelCrudEvent } from "@graphand/core";
 import { io, Socket } from "socket.io-client";
 import RealtimeUpload from "./lib/RealtimeUpload";
 
@@ -8,11 +8,13 @@ type ModuleRealtimeOptions = {
   subscribeModels?: Array<string>;
   autoSubscribe?: boolean;
   autoConnect?: boolean;
+  transports?: string[];
+  handleConnectError?: (_error: Error) => void;
 };
 
 class ModuleRealtime extends Module<ModuleRealtimeOptions> {
   static moduleName = "realtime" as const;
-  defaults: Partial<ModuleRealtimeOptions> = { connectTimeout: 5000, autoConnect: true };
+  defaults: Partial<ModuleRealtimeOptions> = { connectTimeout: 5000, autoSubscribe: true, autoConnect: true };
 
   #uploadsMap = new Map<string, RealtimeUpload>();
   #subscribedModelsSubject = new BehaviorSubject<Array<string>>([]);
@@ -52,19 +54,17 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
     }
 
     if (this.conf.autoSubscribe) {
-      const _module = this;
+      const _module = this as ModuleRealtime;
       const client = this.client();
       const adapterClass = client.getAdapterClass();
-      const registerModel = adapterClass.registerModel;
-      adapterClass.registerModel = function <T extends typeof Model>(
-        this: T,
-        ...args: Parameters<typeof registerModel>
-      ) {
-        const [model] = args;
+      const subscribe = adapterClass.prototype.subscribe;
+      adapterClass.prototype.subscribe = function (...args: Parameters<typeof subscribe>) {
+        const adapter = this as ClientAdapter;
+        const model = adapter.model;
         if (model?.exposed && model?.slug) {
           _module.subscribeModels([model.slug]);
         }
-        registerModel.apply(this, args);
+        return subscribe.apply(this, args);
       };
     }
   }
@@ -108,11 +108,14 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
     const socket = io(url, {
       reconnectionDelayMax: 10000,
       rejectUnauthorized: false,
+      transports: this.conf.transports,
       auth: {
         accessToken: client.options.accessToken,
         project: client.options.project,
       },
     });
+
+    this.#socketSubject.next(socket);
 
     socket.on("realtime:event", (event: ModelCrudEvent) => {
       // The server is not supposed to send events for models that are not subscribed
@@ -129,7 +132,6 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
       adapter.dispatch(event);
     });
 
-    this.#socketSubject.next(socket);
     this.#connectPromise = new Promise<void>((resolve, reject) => {
       this.#connectTimeout = setTimeout(() => {
         reject(new Error("Connection timeout"));
@@ -142,6 +144,16 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
       });
 
       socket.on("connect_error", e => {
+        if (typeof this.conf.handleConnectError === "function") {
+          try {
+            this.conf.handleConnectError(e);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+          return;
+        }
+
         reject(e);
       });
     }).finally(() => {

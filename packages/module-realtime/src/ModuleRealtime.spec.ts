@@ -1,8 +1,7 @@
-import { ObjectId } from "bson";
 import { Client, ClientAdapter, ClientModules, ClientOptions, ModuleConstructor } from "@graphand/client";
 import ModuleRealtime from "./ModuleRealtime";
 import { Socket } from "socket.io-client";
-import { controllerModelCreate, DataModel, FieldTypes, Model, ModelCrudEvent } from "@graphand/core";
+import { controllerModelCreate, ModelCrudEvent } from "@graphand/core";
 import RealtimeUpload from "./lib/RealtimeUpload";
 
 export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]>(
@@ -118,82 +117,30 @@ describe("ModuleRealtime", () => {
       _client = new Client([[ModuleRealtime, { autoSubscribe: true, autoConnect: false }]], client.options);
     });
 
-    it("should auto subscribe to models", async () => {
+    it("should auto subscribe to models on Model.subscribe", async () => {
       const _module = _client.get("realtime");
       expect(_module.getSubscribedModels()).toHaveLength(0);
       const model = _client.getModel("testModel");
+      model.subscribe(() => {});
       expect(_module.getSubscribedModels()).toContain(model.slug);
     });
 
-    it("should auto subscribe to nested models", async () => {
-      const fetchSpy = jest.spyOn(global, "fetch");
+    it("should auto subscribe to models on Model.prototype.subscribe", async () => {
       const _module = _client.get("realtime");
       expect(_module.getSubscribedModels()).toHaveLength(0);
-      const dmTest = DataModel.hydrate({
-        _id: new ObjectId().toString(),
-        slug: "test",
-        definition: {
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-            },
-            rel: {
-              type: FieldTypes.RELATION,
-              options: {
-                ref: "test2",
-              },
-            },
-          },
-        },
-      });
-      const dmTest2 = DataModel.hydrate({
-        _id: new ObjectId().toString(),
-        slug: "test2",
-        definition: {
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-            },
-          },
-        },
-      });
-      fetchSpy.mockImplementation(async (args: any) => {
-        if (args.url.includes("datamodels/query")) {
-          const body = await args.json();
-          const slug = body.filter.slug;
-          const found = [dmTest, dmTest2].find(d => d.slug === slug);
-          return new Response(JSON.stringify({ data: { rows: [found?.toJSON()], count: 1 } }));
-        }
+      const model = _client.getModel("testModel");
+      const i = model.hydrate({});
+      i.subscribe(() => {});
+      expect(_module.getSubscribedModels()).toContain(model.slug);
+    });
 
-        return null;
-      });
+    it("should auto subscribe to models on ModelList.prototype.subscribe", async () => {
+      const _module = _client.get("realtime");
       expect(_module.getSubscribedModels()).toHaveLength(0);
-      const model = _client.getModel("test") as typeof Model & {
-        definition: {
-          keyField: "title";
-          fields: {
-            title: {
-              type: FieldTypes.TEXT;
-            };
-            rel: {
-              type: FieldTypes.RELATION;
-              options: {
-                ref: "test2";
-              };
-            };
-          };
-        };
-      };
-      expect(_module.getSubscribedModels()).toContain("test");
-      await model.initialize();
-      expect(_module.getSubscribedModels()).toContain("datamodels"); // Datamodel model has been used to initialize the model
-      expect(_module.getSubscribedModels()).not.toContain("test2"); // At this step, test2 model has not been used
-      const i = model.hydrate({ title: "test", rel: new ObjectId().toString() });
-      await i.rel.catch(() => null);
-      expect(_module.getSubscribedModels()).toContain("test2");
-      fetchSpy.mockRestore();
+      const model = _client.getModel("datamodels");
+      const list = await model.getList({});
+      list.subscribe(() => {});
+      expect(_module.getSubscribedModels()).toContain(model.slug);
     });
   });
 
