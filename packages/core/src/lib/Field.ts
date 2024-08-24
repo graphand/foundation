@@ -60,7 +60,6 @@ export class Field<T extends FieldTypes = FieldTypes> {
     const s = this.serializerMap?.[format] || this.serializerMap?.[Field.defaultSymbol];
 
     if (!s) {
-      console.warn(`No serializer found for format ${format} on field ${this.path}`);
       return value;
     }
 
