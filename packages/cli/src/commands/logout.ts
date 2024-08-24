@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient } from "@/utils";
+import { getClient } from "@/lib/utils";
 import chalk from "chalk";
 
 export const commandLogout = new Command("logout").description("Logout from the Graphand API").action(async () => {

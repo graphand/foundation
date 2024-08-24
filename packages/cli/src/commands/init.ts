@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { UserConfig } from "@/types";
 import fs from "node:fs";
 import path from "node:path";
-import { loadConfig, loadConfigFile, rmConfigFile } from "@/utils";
+import { loadConfig, loadConfigFile, rmConfigFile } from "@/lib/utils";
 import { isObjectId } from "@graphand/core";
 import chalk from "chalk";
 import { confirm, input } from "@inquirer/prompts";

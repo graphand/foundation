@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient } from "@/utils";
+import { getClient } from "@/lib/utils";
 import { password, input } from "@inquirer/prompts";
 import chalk from "chalk";
 

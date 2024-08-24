@@ -1,26 +1,24 @@
 import { Command } from "commander";
-import { getClient } from "@/utils";
-import { controllerCurrentAccount } from "@graphand/core";
-import ora from "ora";
+import { getClient, withSpinner } from "@/lib/utils";
 
 export const commandWhoami = new Command("whoami")
   .alias("me")
   .description("Get the current account")
-  .action(async () => {
-    const spinner = ora("Fetching current account...").start();
+  .action(() =>
+    withSpinner(async spinner => {
+      const client = await getClient();
 
-    const client = await getClient();
-    spinner.text = "Fetching current account...";
+      spinner.text = "Fetching current account...";
 
-    try {
-      const res = await client.execute(controllerCurrentAccount);
-      const json = await res.json();
+      const account = await client.me();
 
-      spinner.succeed("Current account fetched successfully");
+      if (!account) {
+        throw new Error("account not found");
+      }
+
+      spinner.succeed("Fetched current account successfully");
 
       console.log("");
-      console.log(JSON.stringify(json.data, null, 2));
-    } catch (e) {
-      spinner.fail((e as Error).message);
-    }
-  });
+      console.log(JSON.stringify(account?.toJSON(), null, 2));
+    }),
+  );

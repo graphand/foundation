@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient } from "@/utils";
+import { getClient } from "@/lib/utils";
 
 export const commandOptions = new Command("options").description("See client options").action(async () => {
   const client = await getClient();

@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient } from "@/utils";
+import { getClient } from "@/lib/utils";
 import ora from "ora";
 import qs from "qs";
 import { JSONQuery, ModelInstance } from "@graphand/core";
@@ -7,7 +7,7 @@ import chalk from "chalk";
 
 export const commandDescribe = new Command("describe")
   .alias("read")
-  .description("Get a model")
+  .description("Get a model instance")
   .arguments("<modelName> [key]")
   .option("-q --query <query>", "URL encoded JSONQuery object")
   .action(async (modelName, key, options) => {
@@ -17,7 +17,7 @@ export const commandDescribe = new Command("describe")
 
     await model.initialize();
 
-    const spinner = ora(`Fetching ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"}...`).start();
+    const spinner = ora(`Fetching ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"} ...`).start();
 
     try {
       if (key) {

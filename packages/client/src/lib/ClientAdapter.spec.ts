@@ -1898,7 +1898,7 @@ describe("ClientAdapter", () => {
     });
   });
 
-  describe.skip("On server", () => {
+  describe("On server", () => {
     let _client: Client;
     let model: typeof Model & {
       definition: {

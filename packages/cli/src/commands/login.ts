@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient } from "@/utils";
+import { getClient } from "@/lib/utils";
 import { password, input } from "@inquirer/prompts";
 import chalk from "chalk";
 import { AuthMethods, AuthProviders } from "@graphand/core";
@@ -10,8 +10,16 @@ export const commandLogin = new Command("login")
   .option("-p --provider <provider>", "Authentication provider")
   .option("-m --method <method>", "Authentication method")
   .option("-t --tokens <tokens>", "URL encoded access & refresh tokens")
-  .action(async function ({ provider, method, tokens }) {
+  .option("--set-access-token <accessToken>", "Set access token")
+  .action(async function ({ provider, method, tokens, setAccessToken }) {
     const client = await getClient();
+
+    if (setAccessToken) {
+      const refreshToken = await client.get("auth").storage.getItem("refreshToken");
+      client.get("auth").setTokens(String(setAccessToken), String(refreshToken));
+      return;
+    }
+
     provider ??= AuthProviders.LOCAL;
     method ??= AuthMethods.CODE;
     let credentials: Record<string, string> = {};
