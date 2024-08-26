@@ -616,6 +616,60 @@ describe("test validators", () => {
       await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
     });
 
+    it("datamodel with invalid field name should throw error", async () => {
+      await expect(
+        DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields: {
+              "invalid name": {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      await expect(
+        DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields: {
+              "invalid.name": {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      await expect(
+        DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields: {
+              "invalid!name": {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      await expect(
+        DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields: {
+              _invalidName: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+
     it("datamodel with field name as reserved keyword should throw error", async () => {
       const _create = async (fields: ModelDefinition["fields"]) => {
         return DataModel_.create({
