@@ -1114,7 +1114,7 @@ export const isValidDefinition = (definition: ModelDefinition | ModelInstance<ty
   if (fields) {
     const keys = Object.keys(fields || {});
 
-    const regex = new RegExp(Patterns.SLUG);
+    const regex = new RegExp(Patterns.FIELD);
     for (const key of keys) {
       if (key in Model.prototype) {
         return false;

@@ -616,6 +616,60 @@ describe("test validators", () => {
       await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
     });
 
+    it("datamodel with valid field name should not throw", async () => {
+      await expect(
+        DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields: {
+              validname: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        }),
+      ).resolves.toBeTruthy();
+
+      await expect(
+        DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields: {
+              "valid:name": {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        }),
+      ).resolves.toBeTruthy();
+
+      await expect(
+        DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields: {
+              "valid-name": {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        }),
+      ).resolves.toBeTruthy();
+
+      await expect(
+        DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields: {
+              valid_name: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        }),
+      ).resolves.toBeTruthy();
+    });
+
     it("datamodel with invalid field name should throw error", async () => {
       await expect(
         DataModel_.create({
