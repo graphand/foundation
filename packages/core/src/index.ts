@@ -77,4 +77,5 @@ export {
   getValidationValues,
   getNestedFieldsArrayForModel,
   getRelationModelsFromPath,
+  throwValidationError,
 } from "@/lib/utils";

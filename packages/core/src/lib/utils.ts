@@ -1182,3 +1182,20 @@ export const getValidationValues = (list: Array<ModelInstance<typeof Model>>, pa
 
   return values;
 };
+
+export const throwValidationError = (
+  definition: ValidatorDefinition,
+  opts?: {
+    path?: string;
+    value?: string;
+  },
+) => {
+  throw new ValidationError({
+    validators: [
+      new ValidationValidatorError({
+        validator: new Validator(definition, opts?.path),
+        value: opts?.value,
+      }),
+    ],
+  });
+};
