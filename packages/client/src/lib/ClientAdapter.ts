@@ -258,10 +258,28 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   async #createOneInternal(payload: any, ctx: TransactionCtx): Promise<ModelJSON<T>> {
+    let headers: Record<string, string> | undefined;
+
+    if (ctx.formData) {
+      if (!ctx.formData?.has("_json")) {
+        ctx.formData.append("_json", JSON.stringify(payload));
+      }
+
+      if ("getHeaders" in ctx.formData && typeof ctx.formData.getHeaders === "function") {
+        headers = ctx.formData.getHeaders();
+      }
+    }
+
+    if (ctx.uploadId) {
+      headers ??= {};
+      headers["Upload-Id"] = ctx.uploadId;
+    }
+
     const res = await this.client.execute(controllerModelCreate, {
       ctx,
       params: { model: this.model.slug },
       data: payload,
+      init: { body: ctx.formData, headers },
     });
 
     const json: ModelJSON<T> = await res.json().then(r => r.data);
@@ -269,11 +287,37 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return json;
   }
 
-  async #createMultipleInternal(payload: any, ctx: TransactionCtx): Promise<Array<ModelJSON<T>>> {
+  async #createMultipleInternal(data: any, ctx: TransactionCtx): Promise<Array<ModelJSON<T>>> {
+    let headers: Record<string, string> | undefined;
+
+    if (ctx.formData) {
+      if (!ctx.formData?.has("_json")) {
+        const newFormData = new FormData();
+        newFormData.append("_json", JSON.stringify(data));
+
+        // Append all existing fields from the original FormData
+        for (let [key, value] of ctx.formData.entries()) {
+          newFormData.append(key, value);
+        }
+
+        ctx.formData = newFormData;
+      }
+
+      if ("getHeaders" in ctx.formData && typeof ctx.formData.getHeaders === "function") {
+        headers = ctx.formData.getHeaders();
+      }
+    }
+
+    if (ctx.uploadId) {
+      headers ??= {};
+      headers["Upload-Id"] = ctx.uploadId;
+    }
+
     const res = await this.client.execute(controllerModelCreate, {
       ctx,
       params: { model: this.model.slug },
-      data: payload,
+      data,
+      init: { body: ctx.formData, headers },
     });
 
     const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
@@ -282,10 +326,37 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   async #updateById(id: string, update: any, ctx: TransactionCtx): Promise<ModelInstance<T> | null> {
+    let headers: Record<string, string> | undefined;
+    let data = { update };
+
+    if (ctx.formData) {
+      if (!ctx.formData?.has("_json")) {
+        const newFormData = new FormData();
+        newFormData.append("_json", JSON.stringify(data));
+
+        // Append all existing fields from the original FormData
+        for (let [key, value] of ctx.formData.entries()) {
+          newFormData.append(key, value);
+        }
+
+        ctx.formData = newFormData;
+      }
+
+      if ("getHeaders" in ctx.formData && typeof ctx.formData.getHeaders === "function") {
+        headers = ctx.formData.getHeaders();
+      }
+    }
+
+    if (ctx.uploadId) {
+      headers ??= {};
+      headers["Upload-Id"] = ctx.uploadId;
+    }
+
     const res = await this.client.execute(controllerModelUpdate, {
       ctx,
       params: { id, model: this.model.slug },
-      data: { update },
+      data,
+      init: { body: ctx.formData, headers },
     });
 
     const json: ModelJSON<T> = await res.json().then(r => r.data);
@@ -301,10 +372,37 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   async #updateMultipleInternal(query: JSONQuery, update: any, ctx: TransactionCtx): Promise<Array<ModelJSON<T>>> {
+    let headers: Record<string, string> | undefined;
+    let data = { ...query, update };
+
+    if (ctx.formData) {
+      if (!ctx.formData?.has("_json")) {
+        const newFormData = new FormData();
+        newFormData.append("_json", JSON.stringify(data));
+
+        // Append all existing fields from the original FormData
+        for (let [key, value] of ctx.formData.entries()) {
+          newFormData.append(key, value);
+        }
+
+        ctx.formData = newFormData;
+      }
+
+      if ("getHeaders" in ctx.formData && typeof ctx.formData.getHeaders === "function") {
+        headers = ctx.formData.getHeaders();
+      }
+    }
+
+    if (ctx.uploadId) {
+      headers ??= {};
+      headers["Upload-Id"] = ctx.uploadId;
+    }
+
     const res = await this.client.execute(controllerModelUpdate, {
       ctx,
       params: { id: "", model: this.model.slug },
-      data: { ...query, update },
+      data,
+      init: { body: ctx.formData, headers },
     });
 
     const json: Array<ModelJSON<T>> = await res.json().then(r => r.data);
@@ -332,10 +430,37 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   async #deleteMultipleInternal(query: JSONQuery, ctx: TransactionCtx): Promise<Array<string>> {
+    let headers: Record<string, string> | undefined;
+    let data = { ...query };
+
+    if (ctx.formData) {
+      if (!ctx.formData?.has("_json")) {
+        const newFormData = new FormData();
+        newFormData.append("_json", JSON.stringify(data));
+
+        // Append all existing fields from the original FormData
+        for (let [key, value] of ctx.formData.entries()) {
+          newFormData.append(key, value);
+        }
+
+        ctx.formData = newFormData;
+      }
+
+      if ("getHeaders" in ctx.formData && typeof ctx.formData.getHeaders === "function") {
+        headers = ctx.formData.getHeaders();
+      }
+    }
+
+    if (ctx.uploadId) {
+      headers ??= {};
+      headers["Upload-Id"] = ctx.uploadId;
+    }
+
     const res = await this.client.execute(controllerModelDelete, {
       ctx,
       params: { id: "", model: this.model.slug },
-      init: { body: JSON.stringify(query) },
+      data,
+      init: { body: ctx.formData, headers },
     });
 
     const ids: Array<string> = await res.json().then(r => r.data);

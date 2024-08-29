@@ -6,6 +6,8 @@ import { ClientAdapter } from "./lib/ClientAdapter";
 declare module "@graphand/core" {
   export interface TransactionCtx {
     disableCache?: boolean;
+    formData?: FormData;
+    uploadId?: string;
   }
 
   export interface Model {

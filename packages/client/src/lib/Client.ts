@@ -179,7 +179,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return `${scheme}://${project}.${endpoint}`;
   }
 
-  #buildUrl(controller: Controller, opts: { params?: Record<string, string>; query?: Record<string, string> }) {
+  buildUrl(controller: Controller, opts: { params?: Record<string, string>; query?: Record<string, string> }) {
     let path: string = controller.path;
 
     if (opts.params) {
@@ -340,7 +340,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       });
     }
 
-    const url = this.#buildUrl(controller, {
+    const url = this.buildUrl(controller, {
       params: opts.params as Record<string, string>,
       query: opts.query as Record<string, string>,
     });
@@ -369,6 +369,11 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     if (this.options.environment && (!init.headers || !("Content-Environment" in init.headers))) {
       init.headers ??= {};
       Object.assign(init.headers, { "Content-Environment": this.options.environment });
+    }
+
+    if (!opts?.ctx?.formData && (!init.headers || !("Content-Type" in init.headers))) {
+      init.headers ??= {};
+      Object.assign(init.headers, { "Content-Type": "application/json" });
     }
 
     if (opts.data) {
