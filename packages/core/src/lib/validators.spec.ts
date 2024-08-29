@@ -6,7 +6,7 @@ import { FieldTypes } from "@/enums/field-types";
 import { Model } from "@/lib/Model";
 import { Validator } from "@/lib/Validator";
 import { ValidatorOptions } from "@/types";
-import { DataModel, ModelDefinition } from "..";
+import { DataModel, FieldDefinition, ModelDefinition } from "..";
 
 describe("test validators", () => {
   const adapter = mockAdapter();
@@ -765,6 +765,44 @@ describe("test validators", () => {
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("datamodel with field name longer than 100 characters should throw error", async () => {
+      const fieldName = "a".repeat(101);
+      await expect(
+        DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields: {
+              [fieldName]: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("datamodel with more than 100 fields should throw error", async () => {
+      const _createModelWithFields = async (fieldsCount: number) => {
+        const fields: Record<string, FieldDefinition> = {};
+        for (let i = 0; i < fieldsCount; i++) {
+          fields[`field${i}`] = {
+            type: FieldTypes.TEXT,
+          };
+        }
+
+        return DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields,
+          },
+        });
+      };
+
+      await expect(_createModelWithFields(99)).resolves.toBeInstanceOf(DataModel);
+      await expect(_createModelWithFields(100)).resolves.toBeInstanceOf(DataModel);
+      await expect(_createModelWithFields(101)).rejects.toBeInstanceOf(ValidationError);
     });
   });
 
