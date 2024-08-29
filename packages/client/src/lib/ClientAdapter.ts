@@ -259,10 +259,19 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
   async #createOneInternal(payload: any, ctx: TransactionCtx): Promise<ModelJSON<T>> {
     let headers: Record<string, string> | undefined;
+    let data = payload;
 
     if (ctx.formData) {
       if (!ctx.formData?.has("_json")) {
-        ctx.formData.append("_json", JSON.stringify(payload));
+        const newFormData = new FormData();
+        newFormData.append("_json", JSON.stringify(data));
+
+        // Append all existing fields from the original FormData
+        for (let [key, value] of ctx.formData.entries()) {
+          newFormData.append(key, value);
+        }
+
+        ctx.formData = newFormData;
       }
 
       if ("getHeaders" in ctx.formData && typeof ctx.formData.getHeaders === "function") {
@@ -278,7 +287,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     const res = await this.client.execute(controllerModelCreate, {
       ctx,
       params: { model: this.model.slug },
-      data: payload,
+      data,
       init: { body: ctx.formData, headers },
     });
 
