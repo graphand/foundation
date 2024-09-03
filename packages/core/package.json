@@ -1,6 +1,6 @@
 {
   "name": "@graphand/core",
-  "version": "0.15.19",
+  "version": "0.15.20",
   "private": false,
   "exports": {
     "./package.json": "./package.json",

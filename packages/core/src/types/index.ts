@@ -357,6 +357,9 @@ export type AuthProviderCredentialsMap = {
     email: string;
     password: string;
   };
+  [AuthProviders.GRAPHAND]: {
+    reset?: boolean;
+  };
 };
 
 export type AuthProviderCredentials<T extends AuthProviders = keyof AuthProviderCredentialsMap | AuthProviders> =

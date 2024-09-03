@@ -517,7 +517,14 @@ export class Model {
    */
   async refreshData<T extends ModelInstance>(this: T, ctx?: TransactionCtx) {
     const newData = await this.model().execute("get", [this.get("_id", "json")], ctx);
+    if (!newData) {
+      throw new CoreError({
+        message: `Unable to refresh data on model ${this.model().slug}. New data is ${newData}`,
+      });
+    }
+
     this.setData(newData.getData());
+    return this;
   }
 
   /**

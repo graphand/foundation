@@ -442,6 +442,31 @@ describe("test fields", () => {
         const obj: object = { obj: true };
         await expect(() => model.validate([obj])).rejects.toThrow(ValidationError);
       });
+
+      it("should validate well with defaultField", async () => {
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                defaultField: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.TEXT,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+        await model.initialize();
+
+        await expect(
+          model.validate([{ obj: { field1: ["test1", "test2"], field2: ["test3", "test4", "test5"] } }]),
+        ).resolves.toBeTruthy();
+      });
     });
 
     describe("Proxy", () => {
