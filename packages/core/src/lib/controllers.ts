@@ -73,6 +73,12 @@ export const controllerGenAccountToken: Controller<{ params: { id: string } }> =
   secured: true,
 };
 
+export const controllerAccountPendingEmail: Controller<{ params: { id: string } }> = {
+  path: "/accounts/:id/pending-email",
+  methods: ["get"],
+  secured: true,
+};
+
 export const controllerGdxQuery: Controller<{
   query?: {
     includeSystemFields?: boolean;
