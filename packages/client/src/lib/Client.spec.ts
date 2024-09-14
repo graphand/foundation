@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
-import { Account, IdentityTypes, Model, ModelInstance } from "@graphand/core";
+import { Account, DataModel, IdentityTypes, Model, ModelInstance, ModelList } from "@graphand/core";
 import { Client } from "./Client";
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module";
 import { ClientAdapter } from "./ClientAdapter";
@@ -434,6 +434,35 @@ describe("Client", () => {
       await expect(
         client.execute({ path: "/test", methods: ["unsupported" as any], secured: false }),
       ).rejects.toThrow();
+    });
+
+    it("should be able to modify request init", async () => {
+      const requestFn = jest.fn(i => i);
+      mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
+      await client.execute({ path: "/test", methods: ["get"], secured: false }, { ctx: { onRequest: requestFn } });
+      expect(requestFn).toHaveBeenCalled();
+    });
+
+    it("should throw if onRequest returns invalid request init", async () => {
+      const requestFn = jest.fn(() => null);
+      mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
+      await expect(
+        client.execute({ path: "/test", methods: ["get"], secured: false }, { ctx: { onRequest: requestFn } }),
+      ).rejects.toThrow("Invalid request init");
+      expect(requestFn).toHaveBeenCalled();
+    });
+
+    it("should be able to call request init through the ClientAdapter (on model create)", async () => {
+      const _client = new Client([], { accessToken: "test-token", project: null });
+      const requestFn = jest.fn(i => i);
+      const dm = _client.getModel(DataModel).hydrate({
+        _id: new ObjectId().toString(),
+        slug: faker.random.alphaNumeric(10),
+      });
+      const list = new ModelList(_client.getModel(DataModel), [dm]);
+      mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ data: list.toJSON() }), { status: 200 }));
+      await expect(_client.getModel("test").create({}, { onRequest: requestFn })).rejects.toThrow();
+      expect(requestFn).toHaveBeenCalled();
     });
   });
 

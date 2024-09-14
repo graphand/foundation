@@ -8,6 +8,7 @@ declare module "@graphand/core" {
     disableCache?: boolean;
     formData?: FormData;
     uploadId?: string;
+    onRequest?: (_req: RequestInit) => RequestInit;
   }
 
   export interface Model {

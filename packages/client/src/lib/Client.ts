@@ -345,7 +345,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       query: opts.query as Record<string, string>,
     });
 
-    const init: RequestInit = Object.assign({}, opts.init);
+    let init: RequestInit = Object.assign({}, opts.init);
 
     if (!init.method) {
       const order = ["put", "post", "patch", "delete", "get", "options"] as Array<
@@ -378,6 +378,15 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     if (opts.data) {
       init.body ??= JSON.stringify(opts.data);
+    }
+
+    console.log(opts.ctx);
+    if (typeof opts.ctx?.onRequest === "function") {
+      init = opts.ctx.onRequest(init);
+    }
+
+    if (!init) {
+      throw new Error(`Invalid request init: ${init}`);
     }
 
     const request = new Request(url, init);
