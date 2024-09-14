@@ -262,7 +262,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     let data = payload;
 
     if (ctx.formData) {
-      if (!ctx.formData?.has("_json")) {
+      if (!ctx.formData?.has("_json") && data && typeof data === "object") {
         const newFormData = new FormData();
         newFormData.append("_json", JSON.stringify(data));
 
@@ -300,7 +300,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     let headers: Record<string, string> | undefined;
 
     if (ctx.formData) {
-      if (!ctx.formData?.has("_json")) {
+      if (!ctx.formData?.has("_json") && data && typeof data === "object") {
         const newFormData = new FormData();
         newFormData.append("_json", JSON.stringify(data));
 
@@ -339,7 +339,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     let data = { update };
 
     if (ctx.formData) {
-      if (!ctx.formData?.has("_json")) {
+      if (!ctx.formData?.has("_json") && data && typeof data === "object") {
         const newFormData = new FormData();
         newFormData.append("_json", JSON.stringify(data));
 
@@ -385,7 +385,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     let data = { ...query, update };
 
     if (ctx.formData) {
-      if (!ctx.formData?.has("_json")) {
+      if (!ctx.formData?.has("_json") && data && typeof data === "object") {
         const newFormData = new FormData();
         newFormData.append("_json", JSON.stringify(data));
 
@@ -443,7 +443,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     let data = { ...query };
 
     if (ctx.formData) {
-      if (!ctx.formData?.has("_json")) {
+      if (!ctx.formData?.has("_json") && data && typeof data === "object") {
         const newFormData = new FormData();
         newFormData.append("_json", JSON.stringify(data));
 
