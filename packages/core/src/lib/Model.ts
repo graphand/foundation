@@ -166,6 +166,12 @@ export class Model {
    * @param data
    */
   setData(data: ModelData) {
+    if (!data || typeof data !== "object") {
+      throw new CoreError({
+        message: `Invalid data: ${data}`,
+      });
+    }
+
     this.#data = data;
   }
 
