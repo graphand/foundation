@@ -380,7 +380,6 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       init.body ??= JSON.stringify(opts.data);
     }
 
-    console.log(opts.ctx);
     if (typeof opts.ctx?.onRequest === "function") {
       init = opts.ctx.onRequest(init);
     }
