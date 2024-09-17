@@ -1,6 +1,6 @@
 export enum JobStatus {
   QUEUED = "queued",
-  RUNNING = "running",
-  SUCCESS = "success",
+  ACTIVE = "active",
+  COMPLETED = "completed",
   FAILED = "failed",
 }
