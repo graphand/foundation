@@ -28,6 +28,9 @@ import type { Settings } from "@/models/Settings";
 import type { Token } from "@/models/Token";
 import type { Function } from "@/models/Function";
 import type { PromiseModelList } from "@/lib/PromiseModelList";
+import { Event } from "@/models/Event";
+import { Invitation } from "@/models/Invitation";
+import { Snapshot } from "@/models/Snapshot";
 export * from "./helpers";
 export * from "./fields";
 export * from "./validators";
@@ -151,21 +154,24 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
 export type Module<T extends typeof Model = typeof Model> = (_model: T) => void;
 
 export interface RefModelsMap {
-  accounts: typeof Account;
-  aggregations: typeof Aggregation;
-  authProviders: typeof AuthProvider;
-  connectors: typeof Connector;
-  datamodels: typeof DataModel;
-  environments: typeof Environment;
-  jobs: typeof Job;
-  keys: typeof Key;
-  medias: typeof Media;
-  mergeRequests: typeof MergeRequest;
-  mergeRequestEvents: typeof MergeRequestEvent;
-  roles: typeof Role;
-  settings: typeof Settings;
-  tokens: typeof Token;
-  functions: typeof Function;
+  [Account.slug]: typeof Account;
+  [Aggregation.slug]: typeof Aggregation;
+  [AuthProvider.slug]: typeof AuthProvider;
+  [Connector.slug]: typeof Connector;
+  [DataModel.slug]: typeof DataModel;
+  [Environment.slug]: typeof Environment;
+  [Event.slug]: typeof Event;
+  [Function.slug]: typeof Function;
+  [Invitation.slug]: typeof Invitation;
+  [Job.slug]: typeof Job;
+  [Key.slug]: typeof Key;
+  [Media.slug]: typeof Media;
+  [MergeRequest.slug]: typeof MergeRequest;
+  [MergeRequestEvent.slug]: typeof MergeRequestEvent;
+  [Role.slug]: typeof Role;
+  [Settings.slug]: typeof Settings;
+  [Snapshot.slug]: typeof Snapshot;
+  [Token.slug]: typeof Token;
 }
 
 export type DecodeRefModel<T extends string> = T extends keyof RefModelsMap ? RefModelsMap[T] : typeof Model;

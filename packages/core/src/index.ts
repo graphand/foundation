@@ -39,6 +39,7 @@ export { AuthProvider } from "@/models/AuthProvider";
 export { Connector } from "@/models/Connector";
 export { DataModel } from "@/models/DataModel";
 export { Environment } from "@/models/Environment";
+export { Event } from "@/models/Event";
 export { Function } from "@/models/Function";
 export { Invitation } from "@/models/Invitation";
 export { Job } from "@/models/Job";
