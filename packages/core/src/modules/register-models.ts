@@ -17,6 +17,7 @@ import { Settings } from "@/models/Settings";
 import { Snapshot } from "@/models/Snapshot";
 import { Function } from "@/models/Function";
 import { Event } from "@/models/Event";
+import { EventSubscription } from "@/models/EventSubscription";
 
 Adapter.registerModel(Account);
 Adapter.registerModel(Aggregation);
@@ -25,6 +26,7 @@ Adapter.registerModel(Connector);
 Adapter.registerModel(DataModel);
 Adapter.registerModel(Environment);
 Adapter.registerModel(Event);
+Adapter.registerModel(EventSubscription);
 Adapter.registerModel(Function);
 Adapter.registerModel(Invitation);
 Adapter.registerModel(Job);

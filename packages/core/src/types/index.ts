@@ -31,6 +31,7 @@ import type { PromiseModelList } from "@/lib/PromiseModelList";
 import { Event } from "@/models/Event";
 import { Invitation } from "@/models/Invitation";
 import { Snapshot } from "@/models/Snapshot";
+import { EventSubscription } from "@/models/EventSubscription";
 export * from "./helpers";
 export * from "./fields";
 export * from "./validators";
@@ -90,7 +91,7 @@ export type Sort =
   | [string, SortDirection][]
   | [string, SortDirection];
 
-export type Filter = JSONSubtype;
+export type Filter = string | JSONTypeObject;
 
 export type PopulateOption = {
   path: string;
@@ -161,6 +162,7 @@ export interface RefModelsMap {
   [DataModel.slug]: typeof DataModel;
   [Environment.slug]: typeof Environment;
   [Event.slug]: typeof Event;
+  [EventSubscription.slug]: typeof EventSubscription;
   [Function.slug]: typeof Function;
   [Invitation.slug]: typeof Invitation;
   [Job.slug]: typeof Job;

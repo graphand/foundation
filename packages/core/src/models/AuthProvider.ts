@@ -4,6 +4,7 @@ import { FieldTypes } from "@/enums/field-types";
 import { Role } from "@/models/Role";
 import { ModelDefinition } from "@/types";
 import { ValidatorTypes } from "@/enums/validator-types";
+import { AuthProviders } from "@/enums/auth-providers";
 
 @modelDecorator()
 export class AuthProvider extends Model {
@@ -27,7 +28,7 @@ export class AuthProvider extends Model {
           dependsOn: "type",
           default: {},
           fields: {
-            local: {
+            [AuthProviders.LOCAL]: {
               type: FieldTypes.NESTED,
               options: {
                 fields: {
@@ -37,7 +38,7 @@ export class AuthProvider extends Model {
                 },
               },
             },
-            facebook: {
+            [AuthProviders.FACEBOOK]: {
               type: FieldTypes.NESTED,
               options: {
                 fields: {
@@ -54,7 +55,7 @@ export class AuthProvider extends Model {
                 ],
               },
             },
-            graphand: {
+            [AuthProviders.GRAPHAND]: {
               type: FieldTypes.NESTED,
               options: {
                 default: {},
@@ -63,7 +64,7 @@ export class AuthProvider extends Model {
                 },
               },
             },
-            google: {
+            [AuthProviders.GOOGLE]: {
               type: FieldTypes.NESTED,
               options: {
                 fields: {
@@ -80,7 +81,7 @@ export class AuthProvider extends Model {
                 ],
               },
             },
-            github: {
+            [AuthProviders.GITHUB]: {
               type: FieldTypes.NESTED,
               options: {
                 fields: {
@@ -97,7 +98,7 @@ export class AuthProvider extends Model {
                 ],
               },
             },
-            apple: {
+            [AuthProviders.APPLE]: {
               type: FieldTypes.NESTED,
               options: {
                 fields: {

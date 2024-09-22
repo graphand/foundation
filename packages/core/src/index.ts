@@ -40,6 +40,7 @@ export { Connector } from "@/models/Connector";
 export { DataModel } from "@/models/DataModel";
 export { Environment } from "@/models/Environment";
 export { Event } from "@/models/Event";
+export { EventSubscription } from "@/models/EventSubscription";
 export { Function } from "@/models/Function";
 export { Invitation } from "@/models/Invitation";
 export { Job } from "@/models/Job";
@@ -63,6 +64,9 @@ export { MergeRequestTypes } from "@/enums/merge-request-types";
 export { Patterns } from "@/enums/patterns";
 export { RuleActions } from "@/enums/rule-actions";
 export { ValidatorTypes } from "@/enums/validator-types";
+export { EventSources } from "@/enums/event-sources";
+export { EventSeverities } from "@/enums/event-severities";
+export { SubscriptionChannels } from "@/enums/subscription-channels";
 export {
   isObjectId,
   crossFields,

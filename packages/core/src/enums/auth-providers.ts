@@ -1,5 +1,5 @@
 export enum AuthProviders {
-  LOCAL = "local",
+  LOCAL = "local", // Email + password
   FACEBOOK = "facebook",
   GRAPHAND = "graphand",
   GOOGLE = "google",
