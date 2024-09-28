@@ -1153,6 +1153,53 @@ describe("test fields", () => {
         expect(i.obj.number).toBeUndefined();
       });
 
+      // $ flag allows to point to the parent nested field instead of the root schema
+      it("should work with $ flag", async () => {
+        const _adapter = mockAdapter();
+
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["text", "number"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                dependsOn: "$.type",
+                strict: true,
+                fields: {
+                  text: {
+                    type: FieldTypes.TEXT,
+                  },
+                  number: {
+                    type: FieldTypes.NUMBER,
+                  },
+                },
+              },
+            },
+          },
+        } as const).extend({ adapterClass: _adapter });
+        await model.initialize();
+
+        const text = faker.lorem.word();
+
+        const i = model.hydrate({
+          type: "text",
+          obj: {
+            text,
+            number: 123,
+          },
+        });
+
+        expect(i.obj).toBeInstanceOf(Object);
+        expect(i.obj.text).toBe(text);
+        expect(i.obj.number).toBeUndefined();
+      });
+
       it("should use dependsOn to determine which field to use in json", async () => {
         const _adapter = mockAdapter();
 
@@ -1379,6 +1426,72 @@ describe("test fields", () => {
         expect(i.obj2.nested).toBeInstanceOf(Object);
         expect(i.obj2.nested.text).toBe(text);
         expect(i.obj2.nested.number).toBeUndefined();
+      });
+
+      it("should work with nested fields in array", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      type: {
+                        type: FieldTypes.TEXT,
+                        options: {
+                          enum: ["text", "number"],
+                          strict: true,
+                        },
+                      },
+                      obj: {
+                        type: FieldTypes.NESTED,
+                        options: {
+                          dependsOn: "$.type",
+                          strict: true,
+                          fields: {
+                            text: {
+                              type: FieldTypes.TEXT,
+                            },
+                            number: {
+                              type: FieldTypes.NUMBER,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+        await model.initialize();
+
+        const i = model.hydrate({
+          arr: [
+            {
+              type: "text",
+              obj: {
+                text: "test",
+                number: 123,
+              },
+            },
+            {
+              type: "number",
+              obj: {
+                text: "test",
+                number: 123,
+              },
+            },
+          ],
+        } as object);
+
+        expect(i.arr[0].obj.text).toBe("test");
+        expect(i.arr[0].obj.number).toBeUndefined();
+        expect(i.arr[1].obj.text).toBeUndefined();
+        expect(i.arr[1].obj.number).toBe(123);
       });
 
       it("should validate only the fields defined in the dependsOn field", async () => {

@@ -17,7 +17,7 @@ export class Event extends Model {
       tags: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
       payload: { type: FieldTypes.NESTED },
       mute: { type: FieldTypes.BOOLEAN, options: { default: false } },
-      serevrity: { type: FieldTypes.NUMBER, options: { default: EventSeverities.DEBUG } }, // Syslog protocol severity levels (0-7)
+      severity: { type: FieldTypes.NUMBER, options: { default: EventSeverities.DEBUG } }, // Syslog protocol severity levels (0-7)
       _source: {
         type: FieldTypes.TEXT,
         options: { enum: Object.values(EventSources), default: EventSources.USER, strict: true },
@@ -30,7 +30,7 @@ export class Event extends Model {
       },
       {
         type: ValidatorTypes.BOUNDARIES,
-        options: { field: "serevrity", min: 0, max: 7 },
+        options: { field: "severity", min: 0, max: 7 },
       },
     ],
   } satisfies ModelDefinition;

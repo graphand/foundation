@@ -25,7 +25,7 @@ export class AuthProvider extends Model {
         type: FieldTypes.NESTED,
         options: {
           strict: true,
-          dependsOn: "type",
+          dependsOn: "$.type",
           default: {},
           fields: {
             [AuthProviders.LOCAL]: {

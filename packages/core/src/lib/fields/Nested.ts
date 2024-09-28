@@ -37,7 +37,13 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     let filterKey: string;
 
     if (this.options.dependsOn) {
-      const dependsOn = from.get(this.options.dependsOn);
+      let dependsOnPath: string = this.options.dependsOn;
+      if (dependsOnPath.includes("$")) {
+        const parentPath = this.path.split(".").slice(0, -1).join(".");
+        dependsOnPath = dependsOnPath.replace("$", parentPath).replace(/^\./, "");
+      }
+
+      const dependsOn = from.get(dependsOnPath);
       if (dependsOn) {
         filterKey = dependsOn as string;
       }
@@ -113,7 +119,13 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     let filterKey: string;
 
     if (this.options.dependsOn) {
-      const dependsOn = from.get(this.options.dependsOn);
+      let dependsOnPath: string = this.options.dependsOn;
+      if (dependsOnPath.includes("$")) {
+        const parentPath = this.path.split(".").slice(0, -1).join(".");
+        dependsOnPath = dependsOnPath.replace("$", parentPath).replace(/^\./, "");
+      }
+
+      const dependsOn = from.get(dependsOnPath);
       if (dependsOn) {
         filterKey = dependsOn as string;
       }
