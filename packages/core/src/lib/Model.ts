@@ -52,7 +52,7 @@ export class Model {
   static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
   static slug: string; // The slug of the model used to identify it
   static freeMode: boolean = false; // Whether the model is free
-  static definition: object; // The definition of the model (use satisfies ModelDefinition)
+  static definition: ModelDefinition; // The definition of the model (use satisfies ModelDefinition)
   static adapterClass: typeof Adapter; // The adapter class to use with the model and inherited models
   static isEnvironmentScoped: boolean = false; // Whether the model is environment scoped or whole project scoped
   static cacheAdapter = true;

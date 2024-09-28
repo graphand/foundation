@@ -79,19 +79,19 @@ export const controllerAccountPendingEmail: Controller<{ params: { id: string } 
   secured: true,
 };
 
-export const controllerGdxQuery: Controller<{
+export const controllerGdxPull: Controller<{
   query?: {
     includeSystemFields?: boolean;
     omitMeta?: boolean;
   };
   data?: Record<string, JSONQuery | true>;
 }> = {
-  path: "/gdx/query",
+  path: "/gdx/pull",
   methods: ["post"],
   secured: true,
 };
 
-export const controllerGdxSync: Controller<{
+export const controllerGdxPush: Controller<{
   query?: {
     clean?: boolean;
     confirm?: boolean;
@@ -99,7 +99,7 @@ export const controllerGdxSync: Controller<{
   };
   data: JSONTypeObject;
 }> = {
-  path: "/gdx/sync",
+  path: "/gdx/push",
   methods: ["post"],
   secured: true,
 };
