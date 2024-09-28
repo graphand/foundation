@@ -13,8 +13,18 @@ import { ModuleRealtime } from "@graphand/client-module-realtime";
 import open from "open";
 import ModuleCli from "./ModuleCli";
 import ora, { Ora } from "ora";
-import { controllerJobLogs, Job, JobStatus, ModelInstance } from "@graphand/core";
+import {
+  controllerJobLogs,
+  isObjectId,
+  Job,
+  JobStatus,
+  JSONSubtypeArray,
+  JSONType,
+  JSONTypeObject,
+  ModelInstance,
+} from "@graphand/core";
 import LogProcessor from "./LogProcessor";
+import mime from "mime";
 
 export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]>(
   modules: ClientModules<T> = [] as ClientModules<T>,
@@ -126,40 +136,40 @@ export const loadConfig = async (): Promise<UserConfig> => {
   return config;
 };
 
-export const getClient = async (): Promise<Client<[typeof ModuleAuth, typeof ModuleRealtime, typeof ModuleCli]>> => {
-  if (Client.getGlobal()) {
-    return Client.getGlobal();
-  }
-
+export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Promise<
+  Client<[typeof ModuleAuth, typeof ModuleRealtime, typeof ModuleCli]>
+> => {
   let spinnerText = globalThis.spinner?.text;
   if (globalThis.spinner) {
     globalThis.spinner.text = "Initializing client ...";
   }
 
-  const config = await loadConfig();
+  const config: UserConfig = globalThis.userConfig ?? (await loadConfig());
   const configClient = (config.client || {}) as ClientOptions;
   const conf = loadConf(config.client.project);
-  const client = new Client(
+  const modules: ClientModules<ModuleConstructor[]> = [
     [
-      [
-        ModuleAuth,
-        {
-          storage: {
-            setItem: (key: string, value: string) => conf.set(key, value),
-            getItem: (key: string) => conf.get(key) as string,
-            removeItem: (key: string) => conf.delete(key),
-          },
-          handleRedirect: (url: string) => {
-            console.log(chalk.green(`Opening ${url} in your browser...`));
-            open(url);
-          },
+      ModuleAuth,
+      {
+        storage: {
+          setItem: (key: string, value: string) => conf.set(key, value),
+          getItem: (key: string) => conf.get(key) as string,
+          removeItem: (key: string) => conf.delete(key),
         },
-      ],
-      [ModuleRealtime, { transports: ["websocket"], handleConnectError: () => null }],
-      [ModuleCli],
+        handleRedirect: (url: string) => {
+          console.log(chalk.green(`Opening ${url} in your browser...`));
+          open(url);
+        },
+      },
     ],
-    { disableCache: true, ...configClient },
-  );
+    [ModuleCli],
+  ];
+
+  if (realtime) {
+    modules.push([ModuleRealtime, { transports: ["websocket"], handleConnectError: (): null => null }]);
+  }
+
+  const client = new Client(modules, { disableCache: true, ...configClient });
 
   await client.init();
 
@@ -196,7 +206,7 @@ export const waitJob = async ({
 }) => {
   const _getColorForJobStatus = (status: JobStatus): keyof typeof chalk => {
     switch (status) {
-      case JobStatus.SUCCESS:
+      case JobStatus.COMPLETED:
         return "green";
       case JobStatus.FAILED:
         return "red";
@@ -205,9 +215,7 @@ export const waitJob = async ({
     }
   };
 
-  const _fetch = async () => {
-    const job = await client.getModel(Job).get(jobId);
-
+  const _handleJob = async (job: ModelInstance<typeof Job>) => {
     if (spin) {
       let message: string;
       if (spin?.message) {
@@ -219,6 +227,17 @@ export const waitJob = async ({
     }
 
     await onChange?.(job);
+  };
+
+  const _fetch = async () => {
+    const job = await client
+      .getModel(Job)
+      .get(jobId)
+      .catch(() => null);
+
+    if (job) {
+      await _handleJob(job);
+    }
 
     return job;
   };
@@ -240,7 +259,8 @@ export const waitJob = async ({
 
   const endPromise = new Promise<void>(resolve => {
     unsubscribe = job.subscribe(() => {
-      if ([JobStatus.SUCCESS, JobStatus.FAILED].includes(job._status)) {
+      _handleJob(job);
+      if ([JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status)) {
         resolve();
       }
     });
@@ -252,7 +272,7 @@ export const waitJob = async ({
   if (pollInterval) {
     const pollPromise = new Promise<void>(async (resolve, reject) => {
       try {
-        while (![JobStatus.SUCCESS, JobStatus.FAILED].includes(job._status)) {
+        while (![JobStatus.COMPLETED, JobStatus.FAILED].includes(job?._status)) {
           job = await _fetch();
           await new Promise(resolve => setTimeout(resolve, pollInterval));
         }
@@ -287,7 +307,7 @@ export const waitJob = async ({
     await onFail?.(job);
   }
 
-  if (job._status === JobStatus.SUCCESS) {
+  if (job._status === JobStatus.COMPLETED) {
     if (spin) {
       let message: string;
       if (spin?.messageSuccess !== undefined) {
@@ -316,7 +336,7 @@ export const withSpinner = async <T = any>(
     throw?: boolean;
     skipJobs?: boolean;
   },
-): Promise<T> => {
+): Promise<void> => {
   const spinner = globalThis.spinner || (opts?.spinner ?? ora(opts?.start ?? "Loading ...").start());
   globalThis.spinner = spinner;
   globalThis.jobs = [];
@@ -353,7 +373,16 @@ export const withSpinner = async <T = any>(
       const succeed = typeof opts?.succeed === "function" ? opts?.succeed(res) : opts?.succeed || "Success";
       spinner.succeed(succeed);
     }
-    return res;
+
+    if (res) {
+      console.log("");
+
+      if (typeof res === "object") {
+        console.log(colorizeJson(res as JSONType));
+      } else {
+        console.log(res);
+      }
+    }
   } catch (_e) {
     e = _e as Error;
   } finally {
@@ -368,13 +397,16 @@ export const withSpinner = async <T = any>(
       for (const jobId of globalThis.jobs) {
         console.log("");
 
-        const spinner = ora(`Waiting for job ${jobId} to finish...`).start();
-
-        await waitJob({
-          client: globalThis.client,
-          jobId,
-          spin: { spinner },
-        });
+        await withSpinner(
+          async spinner => {
+            await waitJob({
+              client: globalThis.client,
+              jobId,
+              spin: { spinner },
+            });
+          },
+          { spinner: ora(`Waiting for job ${jobId} to finish...`).start() },
+        );
       }
     }
 
@@ -459,39 +491,229 @@ const decodeFileText = (value: string) => {
   return fileContent.toString();
 };
 
-const decodeFile = (value: string) => {
+const decodeFile = (value: string): File => {
   const filePath = path.resolve(String(value));
   if (!fs.existsSync(filePath)) {
     throw new Error(`File ${filePath} not found`);
   }
 
-  return fs.readFileSync(filePath);
+  return new File([fs.readFileSync(filePath)], path.basename(filePath), {
+    type: mime.getType(filePath) ?? "application/octet-stream",
+    lastModified: fs.statSync(filePath)?.mtime?.getTime(),
+  });
 };
 
-export const collectSetter = (value: string, previous: object) => {
-  const obj = qs.parse(value + "&" + qs.stringify(previous));
-  const operators = ["fileBase64", "fileText", "file", "stdin"];
-  return JSON.parse(JSON.stringify(obj), function (key, value) {
-    if (new RegExp(`^@(${operators.join("|")}):`).test(value)) {
+export const collectSetter = (
+  value: string,
+  previous?: JSONTypeObject | JSONSubtypeArray,
+): JSONTypeObject | JSONSubtypeArray => {
+  previous ??= {};
+
+  if (Array.isArray(previous)) {
+    previous = previous.reduce((acc, item, index) => {
+      Object.assign(acc, { [index]: item });
+      return acc;
+    }, {}) as JSONTypeObject;
+  }
+
+  const obj = qs.parse(value);
+
+  mergeDeep(previous as any, obj);
+
+  let result: JSONTypeObject | JSONSubtypeArray = previous;
+
+  const keys = Object.keys(previous || {});
+  if (keys.length && keys.every(isIntegerOrIntString)) {
+    const set = [];
+    for (const key of keys) {
+      set[parseInt(key)] = previous[key as keyof typeof previous];
+    }
+    result = set as JSONSubtypeArray;
+  }
+
+  const _processValue = (value: string) => {
+    const operators = ["fileBase64", "fileText", "stdin"];
+    if (new RegExp(`^@(${operators.join("|")}):?`).test(value)) {
       const [type, v] = value.split(":");
       switch (type.replace("@", "")) {
         case "fileBase64":
-          value = decodeFileBase64(v);
-          break;
+          return decodeFileBase64(v);
         case "fileText":
-          value = decodeFileText(v);
-          break;
-        case "file":
-          value = decodeFile(v);
-          break;
+          return decodeFileText(v);
         case "stdin":
-          value = process.stdin.read();
-          break;
+          return process.stdin.read() || "";
         default:
           break;
       }
     }
 
     return value;
-  });
+  };
+
+  return replaceAllStrings(result, _processValue);
+};
+
+export const collectFiles = (value: string, previous?: Record<string, File>): Record<string, File> => {
+  let field: string;
+  let path: string;
+
+  if (value.includes("=")) {
+    [field, path] = value.split("=");
+  } else {
+    field = "file";
+    path = value;
+  }
+
+  previous ??= {};
+  previous[field] = decodeFile(path);
+
+  return previous;
+};
+
+/**
+ * Simple object check.
+ * @param item
+ * @returns {boolean}
+ */
+export const isObject = (item: unknown) => {
+  return item && typeof item === "object" && !Array.isArray(item);
+};
+
+/**
+ * Deep merge two objects.
+ * @param target
+ * @param ...sources
+ */
+export const mergeDeep = <T extends Record<string, unknown>>(target: T, ...sources: T[]): T => {
+  if (!sources.length) return target;
+  const source = sources.shift();
+
+  if (isObject(target) && isObject(source)) {
+    for (const key in source) {
+      if (isObject(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} });
+        mergeDeep(target[key] as T, source[key] as T);
+      } else {
+        Object.assign(target, { [key]: source[key] });
+      }
+    }
+  }
+
+  return mergeDeep(target, ...sources);
+};
+
+export const replaceAllValues = (obj: unknown, find: unknown, replace: unknown): unknown => {
+  if (obj === find) {
+    return replace;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(v => replaceAllValues(v, find, replace));
+  }
+
+  const result: Record<string, unknown> = {};
+  for (const key in obj as Record<string, unknown>) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      result[key] = replaceAllValues(obj[key as keyof typeof obj], find, replace);
+    }
+  }
+  return result;
+};
+
+export const replaceAllStrings = <T>(input: T, replacer: (_str: string) => string): T => {
+  if (typeof input === "string") {
+    return replacer(input) as unknown as T;
+  }
+
+  if (Array.isArray(input)) {
+    return input.map(item => replaceAllStrings(item, replacer)) as unknown as T;
+  }
+
+  if (typeof input === "object" && input !== null) {
+    const result: JSONTypeObject = {};
+    for (const [key, value] of Object.entries(input)) {
+      result[key] = replaceAllStrings(value, replacer);
+    }
+    return result as T;
+  }
+
+  return input;
+};
+
+export const isIntegerOrIntString = (value: unknown): boolean => {
+  // Check if it's an integer
+  if (Number.isInteger(value)) {
+    return true;
+  }
+
+  // Check if it's a string representation of an integer
+  if (typeof value === "string" && /^-?\d+$/.test(value)) {
+    return true;
+  }
+
+  return false;
+};
+
+export const colorizeJson = (obj: JSONType) => {
+  const jsonString: string = JSON.stringify(obj, null, 2);
+
+  try {
+    // Parse the JSON string into an object
+    const jsonObject = JSON.parse(jsonString);
+
+    // Convert the object back to a string with indentation for better readability
+    const formattedJson = JSON.stringify(jsonObject, null, 2);
+
+    // Split the formatted JSON into lines
+    const lines = formattedJson.split("\n");
+
+    // Process each line and apply colors
+    const colorizedLines = lines.map(line =>
+      line
+        // Colorize keys and strings
+        .replace(/"([^"]+)"(:?)/g, (match, p1, p2) => {
+          // Colorize keys
+          if (p2) {
+            return chalk.cyan(`"${p1}"`) + p2;
+          }
+
+          if (isObjectId(p1)) {
+            return chalk.bold(`"${p1}"`) + p2;
+          }
+
+          let isDate: boolean;
+
+          try {
+            const date = new Date(p1);
+            isDate = date instanceof Date && !isNaN(date.getTime());
+          } catch (e) {
+            isDate = false;
+          }
+
+          if (isDate) {
+            return chalk.blue(`"${p1}"`);
+          }
+
+          return chalk.green(`"${p1}"`);
+        })
+
+        // Colorize numbers
+        .replace(/: (-?\d*\.?\d+)/g, (match, p1) => {
+          return `: ${chalk.yellow(p1)}`;
+        })
+
+        // Colorize booleans
+        .replace(/: (true|false)/g, (match, p1) => {
+          return `: ${chalk.magenta(p1)}`;
+        })
+
+        // Colorize null
+        .replace(/: null/g, `: ${chalk.gray("null")}`),
+    );
+
+    // Join the colorized lines and log to console
+    return colorizedLines.join("\n");
+  } catch (error) {
+    console.error(chalk.red("Error parsing JSON:"), error);
+  }
 };

@@ -1,28 +1,117 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { collectSetter, getClient, withSpinner } from "@/lib/utils";
+import { collectFiles, collectSetter, getClient, withSpinner } from "@/lib/utils";
+import { ModelInstance, ModelJSON } from "@graphand/core";
+import { Ora } from "ora";
+
+export const _create = async (options: {
+  modelName: string;
+  client?: Awaited<ReturnType<typeof getClient>>;
+  set?: ReturnType<typeof collectSetter>;
+  file?: Record<string, File>;
+  multiple?: boolean;
+  formData?: boolean;
+  spinner: Ora;
+  skipRealtimeUpload?: boolean;
+}) => {
+  const useFormData = options.formData ?? !!options.file;
+  const isMultiple = options.multiple ?? Boolean(Array.isArray(options.set));
+  const skipRealtimeUpload = options.skipRealtimeUpload ?? false;
+
+  const client = options.client ?? (await getClient({ realtime: true }));
+  const model = client.getModel(String(options.modelName));
+
+  options.spinner.text = `Initializing model ${model.slug} ...`;
+
+  await model.initialize();
+
+  options.spinner.text = `Creating ${chalk.cyan(model.slug)} instance...`;
+
+  let formData: FormData | undefined;
+  let uploadId: string | undefined;
+  let uploadPromise: Promise<void> | undefined;
+
+  if (useFormData) {
+    formData = new FormData();
+    if (options.file) {
+      Object.entries(options.file).forEach(([key, value]) => formData.append(key, value));
+    }
+
+    if (!skipRealtimeUpload) {
+      uploadId = Math.random().toString(36).substring(7);
+
+      const upload = client.get("realtime").getUpload(uploadId);
+      let unsubscribe: () => void;
+      uploadPromise = new Promise<void>(resolve => {
+        unsubscribe = upload.subscribe(async state => {
+          options.spinner.text = `Uploading ${chalk.cyan(model.slug)} ... ${state.percentage}%`;
+
+          if (!["uploading", "pending"].includes(state.status)) {
+            resolve();
+          }
+        });
+      }).finally(() => {
+        unsubscribe();
+      });
+    }
+  }
+
+  if (isMultiple) {
+    let payload: Array<ModelJSON<typeof model>>;
+    if (Array.isArray(options.set)) {
+      payload = options.set as Array<ModelJSON<typeof model>>;
+    } else {
+      payload = [options.set] as Array<ModelJSON<typeof model>>;
+    }
+
+    spinner.text = `Creating ${chalk.cyan(model.slug)} instances...`;
+
+    let instances: Array<ModelInstance<typeof model>>;
+
+    const createPromise = model.createMultiple(payload, { formData, uploadId }).then(i => (instances = i));
+
+    await Promise.race([uploadPromise, createPromise]);
+
+    if (!instances) {
+      await createPromise;
+    }
+
+    spinner.succeed(`Created ${instances.length} ${chalk.cyan(model.slug)} instances successfully`);
+
+    return instances.map(i => i.toJSON());
+  }
+
+  let payload: ModelJSON<typeof model>;
+  if (Array.isArray(options.set)) {
+    payload = options.set[0] as ModelJSON<typeof model>;
+  } else {
+    payload = options.set as ModelJSON<typeof model>;
+  }
+
+  let instance: ModelInstance<typeof model>;
+
+  const createPromise = model.create(payload, { formData, uploadId }).then(i => (instance = i));
+
+  await Promise.race([uploadPromise, createPromise]);
+
+  if (!instance) {
+    await createPromise;
+  }
+
+  options.spinner.succeed(`Created a ${chalk.cyan(model.slug)} instance successfully`);
+
+  return instance.toJSON();
+};
 
 export const commandCreate = new Command("create")
   .alias("new")
   .description("Create a new instance")
   .arguments("<modelName>")
-  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", collectSetter, {})
-  .action((modelName, options) =>
-    withSpinner(async spinner => {
-      const client = await getClient();
-      const model = client.getModel(String(modelName));
-
-      spinner.text = `Initializing model ${model.slug} ...`;
-
-      await model.initialize();
-
-      spinner.text = `Creating ${chalk.cyan(model.slug)} instance...`;
-
-      const instance = await model.create(options.set);
-
-      spinner.succeed(`Created ${chalk.cyan(model.slug)} instance successfully with _id ${chalk.cyan(instance._id)}`);
-
-      console.log("");
-      console.log(JSON.stringify(instance.toJSON(), null, 2));
-    }),
-  );
+  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", collectSetter)
+  .option("-f --file <file>", "File path to add", collectFiles)
+  .option("-m --multiple", "Create multiple instances")
+  .option("--skip-realtime-upload", "Skip realtime upload")
+  .option("--form-data", "Use form data instead of JSON body. Default true if file is provided")
+  .action(async (modelName, options) => {
+    return withSpinner(spinner => _create({ modelName, spinner, ...options }));
+  });

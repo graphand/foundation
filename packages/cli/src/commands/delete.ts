@@ -1,34 +1,52 @@
 import { Command } from "commander";
 import { getClient, withSpinner } from "@/lib/utils";
-import chalk from "chalk";
-import { ModelInstance } from "@graphand/core";
+import qs from "qs";
+import { JSONQuery } from "@graphand/core";
 
 export const commandDelete = new Command("delete")
   .description("Delete an instance")
   .arguments("<modelName> [key]")
-  .action((modelName, key) =>
+  .option("-q --query <query>", "URL encoded JSONQuery object")
+  .option("-f --fields <fields>", "Fields to display (comma separated)")
+  .option("-o --output <output>", "Output format (json, table)")
+  .option("-1", "Sort by -_id")
+  .option("--last", "Get the last created item")
+  .action((modelName, key, options) =>
     withSpinner(async spinner => {
       const client = await getClient();
       const model = client.getModel(String(modelName));
-      let instance: ModelInstance<typeof model>;
+      let deleted: Array<string> = [];
+
+      spinner.text = `Initializing model ${model.slug} ...`;
 
       await model.initialize();
 
+      spinner.text = `Deleting ${model.slug} ${key ? `with key ${key}` : "list"} ...`;
+
+      const start = Date.now();
+
       if (key) {
-        instance = await model.get(key);
+        deleted = await model.delete(key);
       } else {
-        instance = await model.get();
+        const query: JSONQuery = options.query ? qs.parse(options.query) : {};
+        if (options.last) {
+          query.limit = 1;
+          query.sort = { _id: -1 };
+        } else {
+          query.limit = Number(query.limit) || undefined;
+          query.pageSize = Number(query.pageSize) || undefined;
+          query.sort ??= options["1"] ? { _id: -1 } : undefined;
+        }
+
+        deleted = await model.delete(query);
       }
 
-      if (!instance) {
-        console.log(chalk.red(`Instance not found`));
-        return;
-      }
+      const end = Date.now();
 
-      spinner.text = `Deleting ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"} ...`;
-
-      await instance.delete();
-
-      spinner.succeed(`Deleted ${chalk.cyan(model.slug)} ${key ? `with key ${key}` : "list"}`);
+      spinner.succeed(
+        `Deleted ${model.slug} ${key ? `with key ${key}` : "list"}: ${deleted.length} result${
+          deleted.length > 1 ? "s" : ""
+        } processed in ${end - start}ms`,
+      );
     }),
   );

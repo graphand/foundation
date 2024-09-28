@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { getClient, withSpinner } from "@/lib/utils";
+import { colorizeJson, getClient, withSpinner } from "@/lib/utils";
 import { controllerFunctionRun, Function } from "@graphand/core";
 import { Command } from "commander";
 import qs from "qs";
@@ -36,7 +36,7 @@ export const commandRunFunction = new Command("function")
           const json = await res.json();
 
           console.log("");
-          console.log(JSON.stringify(json, null, 2));
+          console.log(colorizeJson(json));
         } else {
           spinner.fail(message);
         }
@@ -63,8 +63,7 @@ export const commandRunFunction = new Command("function")
           throw new Error(`Failed to execute function ${func.name}: ${(e as Error).message}`);
         }
 
-        console.log("");
-        console.log(JSON.stringify(e, null, 2));
+        return JSON.stringify(e, null, 2);
       }
     }),
   );

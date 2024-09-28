@@ -19,6 +19,7 @@ import { commandUpdate } from "./commands/update";
 import { commandDeploy } from "./commands/deploy";
 import { commandRun } from "./commands/run";
 import { commandLogs } from "./commands/logs";
+import { commandSrc } from "./commands/src";
 
 program
   .version(version)
@@ -42,11 +43,12 @@ program.addCommand(commandUpdate);
 program.addCommand(commandDeploy);
 program.addCommand(commandRun);
 program.addCommand(commandLogs);
+program.addCommand(commandSrc);
 
 program.hook("postAction", async () => {
   const client = globalThis.client;
   if (client) {
-    await client.destroy();
+    await client.destroy().catch(() => null);
   }
 });
 

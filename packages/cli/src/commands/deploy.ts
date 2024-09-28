@@ -9,7 +9,7 @@ import { Client } from "@graphand/client";
 export const commandDeploy = new Command("deploy")
   .description("Deploy a function")
   .arguments("<functionName> <codePath>")
-  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", collectSetter, {})
+  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", collectSetter)
   .option("-f --force", "Force deployment")
   .action(async (functionName, codePath, options) => {
     let func: ModelInstance<typeof Function>;
@@ -18,7 +18,7 @@ export const commandDeploy = new Command("deploy")
 
     await withSpinner(
       async spinner => {
-        client = await getClient();
+        client = await getClient({ realtime: true });
 
         const model = client.getModel(Function);
 
@@ -35,7 +35,15 @@ export const commandDeploy = new Command("deploy")
 
         func = await model.get(functionName).catch(() => null);
 
-        const payload: ModelJSON<typeof Function> = options.set;
+        let payload: ModelJSON<typeof Function>;
+
+        if (Array.isArray(options.set)) {
+          payload = options.set[0] as ModelJSON<typeof Function>;
+        } else {
+          payload = options.set as ModelJSON<typeof Function>;
+        }
+
+        payload ??= {};
 
         payload.name = functionName;
         payload.code = code;
@@ -78,8 +86,8 @@ export const commandDeploy = new Command("deploy")
     console.log("");
 
     const jobId = func.get("_job", "json");
-    await withSpinner(spinner =>
-      waitJob({
+    await withSpinner(async spinner => {
+      await waitJob({
         client,
         jobId,
         onFail: job => {
@@ -92,6 +100,6 @@ export const commandDeploy = new Command("deploy")
           messageSuccess: `Deployment job finished successfully. Function ${func._id} is now ready!`,
           messageFail: "",
         },
-      }),
-    );
+      });
+    });
   });

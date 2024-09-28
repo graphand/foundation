@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient, withSpinner } from "@/lib/utils";
+import { colorizeJson, getClient, withSpinner } from "@/lib/utils";
 import qs from "qs";
 import Table from "cli-table3";
 import {
@@ -21,7 +21,9 @@ export const commandGet = new Command("get")
   .arguments("<modelName> [key]")
   .option("-q --query <query>", "URL encoded JSONQuery object")
   .option("-f --fields <fields>", "Fields to display (comma separated)")
-  .option("-o --output <output>", "Output format (json, table)")
+  .option("-o --output <output>", "Output format (json, table, raw)")
+  .option("-1", "Sort by -_id")
+  .option("--last", "Get the last created item")
   .action((modelName, key, options) =>
     withSpinner(async spinner => {
       const client = await getClient();
@@ -32,10 +34,14 @@ export const commandGet = new Command("get")
 
       await model.initialize();
 
-      let fields: Array<string> = options.fields?.split(",");
+      let fields = Array.from(new Set(["_id", model.getKeyField(), ...model.fieldsKeys.slice(0, 2)]));
 
-      if (!fields?.length) {
-        fields = Array.from(new Set(["_id", model.getKeyField(), ...model.fieldsKeys.slice(0, 2)]));
+      if (options.fields) {
+        if (options.fields.startsWith("+")) {
+          fields = fields.concat(options.fields.slice(1).split(","));
+        } else {
+          fields = options.fields.split(",");
+        }
       }
 
       const populate: Populate = [];
@@ -74,9 +80,16 @@ export const commandGet = new Command("get")
         list = res ? new ModelList(model, [res]) : null;
       } else {
         const query: JSONQuery = options.query ? qs.parse(options.query) : {};
-        query.limit = Number(query.limit) || undefined;
-        query.pageSize = Number(query.pageSize) || undefined;
-        query.populate ??= populate;
+        if (options.last) {
+          query.limit = 1;
+          query.sort = { _id: -1 };
+        } else {
+          query.limit = Number(query.limit) || undefined;
+          query.pageSize = Number(query.pageSize) || undefined;
+          query.populate ??= populate;
+          query.sort ??= options["1"] ? { _id: -1 } : undefined;
+        }
+
         list = await model.getList(query);
       }
 
@@ -94,13 +107,24 @@ export const commandGet = new Command("get")
 
       const output = options.output ?? "table";
 
+      if (output === "raw") {
+        if (list.length > 1) {
+          console.log(chalk.yellow("Only one item can be displayed with raw output"));
+        }
+
+        const first = list[0];
+        console.log("");
+        console.log(JSON.stringify(first.getData(), null, 2));
+        return;
+      }
+
       if (output === "json") {
         if (options.fields) {
           console.log(chalk.yellow("Fields option is not supported with json output"));
         }
 
         console.log("");
-        console.log(JSON.stringify(list.toJSON(), null, 2));
+        console.log(colorizeJson(list.toJSON()));
         return;
       }
 

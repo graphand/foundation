@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient, withSpinner } from "@/lib/utils";
+import { colorizeJson, getClient, withSpinner } from "@/lib/utils";
 import qs from "qs";
 import { FetchError } from "@graphand/client";
 import chalk from "chalk";
@@ -17,6 +17,8 @@ import {
   controllerJobLogs,
   controllerFunctionLogs,
   controllerGenTokenToken,
+  controllerSnapshotsRestore,
+  controllerSubscriptionsPortal,
 } from "@graphand/core";
 
 const controllers = {
@@ -30,9 +32,11 @@ const controllers = {
   entry: controllerEntry,
   functionRun: controllerFunctionRun,
   subscriptionsCurrent: controllerSubscriptionsCurrent,
+  subscriptionsPortal: controllerSubscriptionsPortal,
   jobLogs: controllerJobLogs,
   functionLogs: controllerFunctionLogs,
   genTokenToken: controllerGenTokenToken,
+  snapshotRestore: controllerSnapshotsRestore,
 };
 
 export const commandExecute = new Command("execute")
@@ -57,27 +61,31 @@ export const commandExecute = new Command("execute")
 
       const startAt = Date.now();
 
-      const client = await getClient();
+      const client = await getClient({ realtime: true });
 
       const _handleRes = async (res: Response) => {
         const endAt = Date.now();
         const duration = endAt - startAt;
 
-        const message = `Executed ${chalk.cyan(controllerName)} in ${duration}ms with status ${res.status}`;
+        const message = `Fetched ${chalk.cyan(controllerName)} in ${duration}ms with status ${res.status}`;
 
         if (res.ok) {
           spinner.succeed(message);
 
           const json = await res.json();
 
+          if (!json.data) {
+            return;
+          }
+
           console.log("");
-          console.log(JSON.stringify(json, null, 2));
+          console.log(colorizeJson(json.data));
         } else {
           spinner.fail(message);
         }
       };
 
-      spinner.text = `Executing ${controllerName} ...`;
+      spinner.text = `Fetching ${controllerName} ...`;
 
       try {
         const r = await client.execute(controller, {

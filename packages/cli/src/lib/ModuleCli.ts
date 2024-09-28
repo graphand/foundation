@@ -12,7 +12,7 @@ class ModuleCli extends Module {
     client.hook(
       "afterRequest",
       async ({ err, res }) => {
-        if (res?.headers.get("content-type").includes("application/json")) {
+        if (res && !res.bodyUsed && res.headers.get("content-type").includes("application/json")) {
           const json = await res.clone().json();
           if (json.jobs?.length && Array.isArray(globalThis.jobs)) {
             globalThis.jobs.push(...json.jobs);
@@ -27,7 +27,7 @@ class ModuleCli extends Module {
           );
         }
       },
-      { handleErrors: true },
+      { handleErrors: true, order: 100 },
     );
   }
 

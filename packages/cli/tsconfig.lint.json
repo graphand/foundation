@@ -8,6 +8,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "wallaby.js", "vite.config.ts", "vitest.config.ts", "test-setup.ts"],
+  "include": ["src", "wallaby.cjs", "vite.config.ts", "vitest.config.ts", "test-setup.ts"],
   "exclude": ["node_modules", "dist"]
 }
