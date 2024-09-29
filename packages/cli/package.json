@@ -26,16 +26,14 @@
   },
   "devDependencies": {
     "@babel/preset-env": "^7.25.3",
-    "@inquirer/prompts": "^5.3.6",
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
     "@types/eslint": "^8.56.5",
     "@types/node": "^20.14.14",
     "@types/qs": "^6.9.15",
+    "builtin-modules": "^4.0.0",
     "dotenv": "^16.4.5",
-    "esbuild": "^0.23.0",
     "eslint": "^8.57.0",
-    "ora": "^8.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "vite": "^5.3.2",
@@ -44,11 +42,15 @@
   "dependencies": {
     "@graphand/client": "*",
     "@graphand/client-module-auth": "^1.0.0",
+    "@inquirer/prompts": "^5.3.6",
+    "chalk": "^5.3.0",
     "cli-table3": "^0.6.5",
     "commander": "^12.1.0",
     "conf": "^13.0.1",
+    "esbuild": "^0.23.0",
     "mime": "^4.0.4",
     "open": "^10.1.0",
+    "ora": "^8.0.1",
     "qs": "^6.13.0"
   }
 }

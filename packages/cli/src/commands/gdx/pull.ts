@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import fs from "fs";
 import qs from "qs";
 import { colorizeJson, getClient, getGdxPath, withSpinner } from "@/lib/utils";
 import { controllerGdxPull, JSONQuery, JSONTypeObject } from "@graphand/core";

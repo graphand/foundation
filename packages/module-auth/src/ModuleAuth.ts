@@ -69,7 +69,6 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       client.hook(
         "afterRequest",
         async ({ err, transaction }) => {
-          console.log(err);
           if (err?.some(e => (e as FetchError).code === ErrorCodes.TOKEN_EXPIRED)) {
             await this.refreshToken();
             throw transaction.retryToken;

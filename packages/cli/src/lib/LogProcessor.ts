@@ -20,9 +20,9 @@ class LogProcessor {
 
     const logEntry = JSON.parse(jsonStr);
 
-    const _timestamp = chalk.keyword("gray")(`[${logEntry["@timestamp"]}]`);
+    const _timestamp = chalk.gray(`[${logEntry["@timestamp"]}]`);
     const level = logEntry.log?.level ?? "info";
-    const _level = chalk.keyword(this.#getColorForLogLevel(level))(`(${level})`);
+    const _level = chalk[this.#getColorForLogLevel(level)](`(${level})`);
 
     let _log = `${_timestamp} ${_level}: ${logEntry.message}`;
 
@@ -42,7 +42,7 @@ class LogProcessor {
     }
   };
 
-  #getColorForLogLevel = (level: string): keyof typeof chalk => {
+  #getColorForLogLevel = (level: string) => {
     switch (level.toLowerCase()) {
       case "error":
       case "err":

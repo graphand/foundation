@@ -1,10 +1,10 @@
 import qs from "qs";
 import chalk from "chalk";
 import { UserConfig } from "@/types";
-import path from "node:path";
-import fs from "node:fs";
+import path from "path";
+import fs from "fs";
 import Conf from "conf";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath } from "url";
 import { transformSync } from "esbuild";
 import { program } from "commander";
 import { Client, ModuleConstructor, ClientModules, ClientOptions } from "@graphand/client";
@@ -255,7 +255,7 @@ export const waitJob = async ({
     messageFail?: string | ((_job: ModelInstance<typeof Job>) => string);
   };
 }) => {
-  const _getColorForJobStatus = (status: JobStatus): keyof typeof chalk => {
+  const _getColorForJobStatus = (status: JobStatus) => {
     switch (status) {
       case JobStatus.COMPLETED:
         return "green";
@@ -272,7 +272,7 @@ export const waitJob = async ({
       if (spin?.message) {
         message = typeof spin.message === "function" ? spin.message(job) : spin.message;
       }
-      message ??= `Job ${job._type} (${chalk.bold(job._id)}) is: ${chalk.keyword(_getColorForJobStatus(job._status))(job._status)} ...`;
+      message ??= `Job ${job._type} (${chalk.bold(job._id)}) is: ${chalk[_getColorForJobStatus(job._status)](job._status)} ...`;
 
       spin.spinner.text = message;
     }
@@ -348,7 +348,7 @@ export const waitJob = async ({
       if (spin?.messageFail !== undefined) {
         message = typeof spin.messageFail === "function" ? spin.messageFail(job) : spin.messageFail;
       }
-      message ??= `${chalk.keyword(_getColorForJobStatus(job._status))(job._status)}: Job ${job._type} (${chalk.bold(job._id)}) has failed with error: ${chalk.bold(String(job._result?.error ?? "Unknown error"))}`;
+      message ??= `${chalk[_getColorForJobStatus(job._status)](job._status)}: Job ${job._type} (${chalk.bold(job._id)}) has failed with error: ${chalk.bold(String(job._result?.error ?? "Unknown error"))}`;
 
       if (message) {
         spin.spinner.fail(message);
@@ -364,7 +364,7 @@ export const waitJob = async ({
       if (spin?.messageSuccess !== undefined) {
         message = typeof spin.messageSuccess === "function" ? spin.messageSuccess(job) : spin.messageSuccess;
       }
-      message ??= `${chalk.keyword(_getColorForJobStatus(job._status))(job._status)}: Job ${job._type} (${chalk.bold(job._id)}) has finished successfully`;
+      message ??= `${chalk[_getColorForJobStatus(job._status)](job._status)}: Job ${job._type} (${chalk.bold(job._id)}) has finished successfully`;
 
       if (message) {
         spin.spinner.succeed(message);

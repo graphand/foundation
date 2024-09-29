@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { UserConfig } from "@/types";
-import fs from "node:fs";
-import path from "node:path";
+import fs from "fs";
+import path from "path";
 import { loadConfig, getConfigPath, rmConfigFile } from "@/lib/utils";
 import { isObjectId } from "@graphand/core";
 import chalk from "chalk";

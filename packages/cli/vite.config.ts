@@ -3,6 +3,8 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import dts from "vite-plugin-dts";
 import path from "path";
 import fs from "fs";
+import { builtinModules } from "module";
+import pkg from "./package.json";
 
 export default defineConfig({
   plugins: [
@@ -33,22 +35,10 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
-        "commander",
-        "chalk",
-        "ora",
-        "conf",
-        /^node:.*/,
-        "os",
-        "fs",
-        "path",
-        "crypto",
-        "util",
-        "stream",
-        "tty",
-        "worker_threads",
-        "buffer",
-        "child_process",
-        "string_decoder",
+        // Exclude all Node.js built-in modules (e.g., 'fs', 'path')
+        ...builtinModules,
+        // Exclude dependencies specified in package.json
+        ...Object.keys(pkg.dependencies || {}),
       ],
       output: {
         globals: {},
