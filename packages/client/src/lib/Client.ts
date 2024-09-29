@@ -20,6 +20,7 @@ import {
   ErrorCodes,
   IdentityTypes,
   InferControllerInput,
+  JSONTypeObject,
   Model,
   ModelInstance,
   TransactionCtx,
@@ -179,7 +180,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return `${scheme}://${project}.${endpoint}`;
   }
 
-  buildUrl(controller: Controller, opts: { params?: Record<string, string>; query?: Record<string, string> }) {
+  buildUrl(controller: Controller, opts: { params?: Record<string, string>; query?: JSONTypeObject }) {
     let path: string = controller.path;
 
     if (opts.params) {
@@ -194,7 +195,15 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     if (opts.query) {
       Object.entries(opts.query).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
+        if (!value) {
+          return;
+        }
+
+        if (value === true) {
+          url.searchParams.set(key, "1");
+        } else {
+          url.searchParams.set(key, String(value));
+        }
       });
     }
 

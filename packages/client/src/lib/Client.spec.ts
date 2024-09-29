@@ -328,6 +328,26 @@ describe("Client", () => {
       );
     });
 
+    it("should handle true boolean query parameters correctly", async () => {
+      mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
+      await client.execute({ path: "/test", methods: ["get"], secured: false }, { query: { param: true } });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining("?param=1"),
+        }),
+      );
+    });
+
+    it("should handle false boolean query parameters correctly", async () => {
+      mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
+      await client.execute({ path: "/test", methods: ["get"], secured: false }, { query: { param: false } });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.not.stringContaining("param"),
+        }),
+      );
+    });
+
     it("should throw an error for secured endpoints without access token", async () => {
       await expect(client.execute({ path: "/secure", methods: ["get"], secured: true })).rejects.toThrow(
         "Access token is required",
