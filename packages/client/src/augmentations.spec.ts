@@ -35,7 +35,7 @@ describe("augmentations", () => {
   beforeEach(() => {
     client = new Client([], { accessToken: "test-token", project: "test-project" });
     model = client.getModel(TestModel);
-    adapter = model.getAdapter() as ClientAdapter;
+    adapter = model.getAdapter() as unknown as ClientAdapter;
   });
 
   afterEach(() => {
@@ -148,7 +148,7 @@ describe("augmentations", () => {
         static slug = "otherModel";
       }
 
-      const adapter2 = client.getModel(OtherModel).getAdapter() as ClientAdapter;
+      const adapter2 = client.getModel(OtherModel).getAdapter() as unknown as ClientAdapter;
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
       adapter2.dispatch({ ...event, model: "otherModel", data: [{ _id: "123" }] } as ModelCrudEvent<
@@ -218,7 +218,7 @@ describe("augmentations", () => {
         static slug = "newModel";
       }
       const newModel = client.getModel(NewModel);
-      const newAdapter = newModel.getAdapter() as ClientAdapter;
+      const newAdapter = newModel.getAdapter() as unknown as ClientAdapter;
 
       const observer = jest.fn();
       const unsubscribe = newModel.subscribe(observer);
@@ -254,7 +254,7 @@ describe("augmentations", () => {
         static slug = "otherModel";
       }
       const otherModel = client.getModel(OtherModel);
-      const otherAdapter = otherModel.getAdapter() as ClientAdapter;
+      const otherAdapter = otherModel.getAdapter() as unknown as ClientAdapter;
 
       const observer1 = jest.fn();
       const observer2 = jest.fn();
@@ -317,7 +317,7 @@ describe("augmentations", () => {
       }
 
       const extendedModel = client.getModel(ExtendedModel);
-      const extendedAdapter = extendedModel.getAdapter() as ClientAdapter;
+      const extendedAdapter = extendedModel.getAdapter() as unknown as ClientAdapter;
 
       const observer = jest.fn();
       extendedModel.subscribe(observer);
@@ -356,7 +356,7 @@ describe("augmentations", () => {
         static slug = "otherModel";
       }
       const otherModel = client.getModel(OtherModel);
-      const otherAdapter = otherModel.getAdapter() as ClientAdapter;
+      const otherAdapter = otherModel.getAdapter() as unknown as ClientAdapter;
 
       const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
       const instance2 = OtherModel.hydrate({ _id: "2", someField: "value2" });
@@ -380,7 +380,7 @@ describe("augmentations", () => {
         static slug = "extendedModel";
       }
       const extendedModel = client.getModel(ExtendedModel);
-      const extendedAdapter = extendedModel.getAdapter() as ClientAdapter;
+      const extendedAdapter = extendedModel.getAdapter() as unknown as ClientAdapter;
 
       const instance = ExtendedModel.hydrate({ _id: "1", someField: "value" });
       extendedAdapter.store.set("1", instance);
@@ -1380,7 +1380,7 @@ describe("augmentations", () => {
         };
       }
       const singleModel = client.getModel(SingleModel);
-      const singleAdapter = singleModel.getAdapter() as ClientAdapter;
+      const singleAdapter = singleModel.getAdapter() as unknown as ClientAdapter;
       const instance = singleModel.hydrate({ _id: "single-id" });
       singleAdapter.store.set("single-id", instance);
       const promise = singleModel.get();

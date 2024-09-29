@@ -1,4 +1,3 @@
-import { InferControllerInput } from "./../../core/src/types/index";
 import { FetchError, Module, symbolModuleDestroy, symbolModuleInit } from "@graphand/client";
 import {
   Account,
@@ -13,6 +12,7 @@ import {
   RegisterData,
   controllerRefreshToken,
   controllerCodeAuth,
+  InferControllerInput,
 } from "@graphand/core";
 import { AuthStorage } from "./types";
 

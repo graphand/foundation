@@ -50,7 +50,7 @@ describe("ClientAdapter", () => {
     });
 
     model = client.getModel(MockModel);
-    adapter = model.getAdapter() as ClientAdapter;
+    adapter = model.getAdapter() as unknown as ClientAdapter;
     jest.spyOn(global, "fetch");
     fetchMock = global.fetch as jest.Mock;
   });
@@ -337,7 +337,7 @@ describe("ClientAdapter", () => {
     it("should add instance to cache after get", async () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
       await model.get("123");
-      const _adapter = model.getAdapter() as ClientAdapter;
+      const _adapter = model.getAdapter() as unknown as ClientAdapter;
       expect(_adapter.store.has("123")).toBeTruthy();
     });
 
@@ -348,7 +348,7 @@ describe("ClientAdapter", () => {
         ),
       );
       await model.getList();
-      const _adapter = model.getAdapter() as ClientAdapter;
+      const _adapter = model.getAdapter() as unknown as ClientAdapter;
       expect(_adapter.store.has("123")).toBeTruthy();
       expect(_adapter.store.has("456")).toBeTruthy();
     });
@@ -1130,9 +1130,9 @@ describe("ClientAdapter", () => {
       modelRelated = client.getModel(RelatedModel);
       modelOtherRelated = client.getModel(OtherRelatedModel);
       modelWithRelation = client.getModel(MockModelWithRelation);
-      adapterRelated = modelRelated.getAdapter() as ClientAdapter;
-      adapterOtherRelated = modelOtherRelated.getAdapter() as ClientAdapter;
-      adapterWithRelation = modelWithRelation.getAdapter() as ClientAdapter;
+      adapterRelated = modelRelated.getAdapter() as unknown as ClientAdapter;
+      adapterOtherRelated = modelOtherRelated.getAdapter() as unknown as ClientAdapter;
+      adapterWithRelation = modelWithRelation.getAdapter() as unknown as ClientAdapter;
     });
 
     it("should process and cache populated data for a single relation", async () => {
@@ -1487,9 +1487,9 @@ describe("ClientAdapter", () => {
 
       await client.getModel(dm.slug).get(id1);
 
-      const adapter1 = client.getModel(dm.slug).getAdapter() as ClientAdapter;
-      const adapter2 = client.getModel(dmRelated.slug).getAdapter() as ClientAdapter;
-      const adapter3 = client.getModel(dmOtherRelated.slug).getAdapter() as ClientAdapter;
+      const adapter1 = client.getModel(dm.slug).getAdapter() as unknown as ClientAdapter;
+      const adapter2 = client.getModel(dmRelated.slug).getAdapter() as unknown as ClientAdapter;
+      const adapter3 = client.getModel(dmOtherRelated.slug).getAdapter() as unknown as ClientAdapter;
 
       expect(adapter1.store.has(id1)).toBeTruthy();
       expect(adapter2.store.has(id2)).toBeTruthy();
@@ -1557,7 +1557,7 @@ describe("ClientAdapter", () => {
         }
       >(slug);
       await model.get(id1);
-      const adapter = model.getAdapter() as ClientAdapter;
+      const adapter = model.getAdapter() as unknown as ClientAdapter;
 
       expect(adapter.store.has(id1)).toBeTruthy();
       expect(adapter.store.has(id2)).toBeTruthy();
@@ -1635,7 +1635,7 @@ describe("ClientAdapter", () => {
       });
 
       await client.getModel(dmNested.slug).get(id1);
-      const adapter = client.getModel(dmNested.slug).getAdapter() as ClientAdapter;
+      const adapter = client.getModel(dmNested.slug).getAdapter() as unknown as ClientAdapter;
 
       expect(adapter.store.has(id1)).toBeTruthy();
       expect(adapter.store.has(id2)).toBeTruthy();
@@ -1738,9 +1738,9 @@ describe("ClientAdapter", () => {
       });
 
       await client.getModel(dmDeep.slug).get(id1);
-      const adapter = client.getModel(dmDeep.slug).getAdapter() as ClientAdapter;
-      const adapter1 = client.getModel(dmDeep1.slug).getAdapter() as ClientAdapter;
-      const adapter2 = client.getModel(dmDeep2.slug).getAdapter() as ClientAdapter;
+      const adapter = client.getModel(dmDeep.slug).getAdapter() as unknown as ClientAdapter;
+      const adapter1 = client.getModel(dmDeep1.slug).getAdapter() as unknown as ClientAdapter;
+      const adapter2 = client.getModel(dmDeep2.slug).getAdapter() as unknown as ClientAdapter;
 
       expect(adapter.store.has(id1)).toBeTruthy();
       expect(adapter1.store.has(id2)).toBeTruthy();
@@ -1772,7 +1772,7 @@ describe("ClientAdapter", () => {
         disableCache: true,
       });
       modelWithDisabledCache = clientWithDisabledCache.getModel(MockModel);
-      adapterWithDisabledCache = modelWithDisabledCache.getAdapter() as ClientAdapter;
+      adapterWithDisabledCache = modelWithDisabledCache.getAdapter() as unknown as ClientAdapter;
       jest.spyOn(global, "fetch");
     });
 
@@ -1818,7 +1818,7 @@ describe("ClientAdapter", () => {
         disableCache: ["mockModel"],
       });
       const modelWithSelectiveCache = clientWithSelectiveCache.getModel(MockModel);
-      const adapterWithSelectiveCache = modelWithSelectiveCache.getAdapter() as ClientAdapter;
+      const adapterWithSelectiveCache = modelWithSelectiveCache.getAdapter() as unknown as ClientAdapter;
 
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
       await modelWithSelectiveCache.get("123");
@@ -1841,7 +1841,7 @@ describe("ClientAdapter", () => {
         disableStore: true,
       });
       modelWithDisabledStore = clientWithDisabledStore.getModel(MockModel);
-      adapterWithDisabledStore = modelWithDisabledStore.getAdapter() as ClientAdapter;
+      adapterWithDisabledStore = modelWithDisabledStore.getAdapter() as unknown as ClientAdapter;
       jest.spyOn(global, "fetch");
     });
 
@@ -1884,7 +1884,7 @@ describe("ClientAdapter", () => {
         disableStore: ["mockModel"],
       });
       const modelWithSelectiveStore = clientWithSelectiveStore.getModel(MockModel);
-      const adapterWithSelectiveStore = modelWithSelectiveStore.getAdapter() as ClientAdapter;
+      const adapterWithSelectiveStore = modelWithSelectiveStore.getAdapter() as unknown as ClientAdapter;
 
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
       await modelWithSelectiveStore.get("123");

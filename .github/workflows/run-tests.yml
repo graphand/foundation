@@ -10,13 +10,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    env:
-      ENDPOINT: ${{ secrets.ENDPOINT }}
-      SSL: ${{ secrets.SSL }}
-      PROJECT: ${{ secrets.PROJECT }}
-      ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
-      ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-
     steps:
       - uses: actions/checkout@v2
 
