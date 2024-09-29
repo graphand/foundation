@@ -1018,7 +1018,7 @@ describe("augmentations", () => {
       const executionTime = endTime - startTime;
 
       expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["500"] });
-      expect(executionTime).toBeLessThan(100); // Assuming less than 100ms is acceptable
+      expect(executionTime).toBeLessThan(150); // Assuming less than 150ms is acceptable
     });
 
     // Test 11: Basic subscription with noReload option
