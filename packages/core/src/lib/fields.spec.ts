@@ -1558,6 +1558,57 @@ describe("test fields", () => {
         ).rejects.toThrow(ValidationError);
       });
 
+      it("should still validate the fields concerned by the dependsOn field in nested fields", async () => {
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["text", "number"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                dependsOn: "type",
+                strict: true,
+                fields: {
+                  text: {
+                    type: FieldTypes.TEXT,
+                  },
+                  number: {
+                    type: FieldTypes.NUMBER,
+                  },
+                },
+                validators: [
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "text" }, // This validator should be applied
+                  },
+                ],
+              },
+            },
+          },
+          validators: [
+            {
+              type: ValidatorTypes.REQUIRED,
+              options: { field: "obj.number" }, // This validator should be ignored
+            },
+          ],
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              type: "text",
+              obj: {},
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
       it("should validate only the fields defined in the dependsOn field in nested fields", async () => {
         const model = mockModel({
           fields: {

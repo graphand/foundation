@@ -5,6 +5,8 @@ import { modelDecorator } from "@/lib/modelDecorator";
 import { ModelDefinition } from "@/types";
 import { Account } from "./Account";
 import { Role } from "./Role";
+import { ValidatorTypes } from "../enums/validator-types";
+import { Patterns } from "../enums/patterns";
 
 @modelDecorator()
 export class EventSubscription extends Model {
@@ -47,6 +49,7 @@ export class EventSubscription extends Model {
                         options: {
                           fields: {
                             value: { type: FieldTypes.RELATION, options: { ref: Account.slug } },
+                            field: { type: FieldTypes.TEXT },
                           },
                         },
                       },
@@ -67,13 +70,44 @@ export class EventSubscription extends Model {
                         },
                       },
                     },
+                    validators: [
+                      { type: ValidatorTypes.REQUIRED, options: { field: SubscriptionChannels.EMAIL } },
+                      { type: ValidatorTypes.REQUIRED, options: { field: SubscriptionChannels.ACCOUNT } },
+                      { type: ValidatorTypes.REQUIRED, options: { field: SubscriptionChannels.ROLE } },
+                      { type: ValidatorTypes.REQUIRED, options: { field: SubscriptionChannels.SLACK } },
+                      {
+                        type: ValidatorTypes.REQUIRED,
+                        options: { field: [SubscriptionChannels.EMAIL, "value"].join(".") },
+                      },
+                      {
+                        type: ValidatorTypes.REGEX,
+                        options: { pattern: Patterns.EMAIL, field: [SubscriptionChannels.EMAIL, "value"].join(".") },
+                      },
+                      {
+                        type: ValidatorTypes.REQUIRED,
+                        options: { field: [SubscriptionChannels.ROLE, "value"].join(".") },
+                      },
+                      {
+                        type: ValidatorTypes.REQUIRED,
+                        options: { field: [SubscriptionChannels.SLACK, "webhookUrl"].join(".") },
+                      },
+                      {
+                        type: ValidatorTypes.REGEX,
+                        options: { pattern: Patterns.URL, field: [SubscriptionChannels.SLACK, "webhookUrl"].join(".") },
+                      },
+                    ],
                   },
                 },
               },
+              validators: [
+                { type: ValidatorTypes.REQUIRED, options: { field: "channel" } },
+                { type: ValidatorTypes.REQUIRED, options: { field: "options" } },
+              ],
             },
           },
         },
       },
     },
+    validators: [{ type: ValidatorTypes.BOUNDARIES, options: { field: "channels", min: 1 } }],
   } satisfies ModelDefinition;
 }
