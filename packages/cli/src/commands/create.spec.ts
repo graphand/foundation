@@ -15,13 +15,8 @@ vi.mock("path");
 describe("Create Command", () => {
   globalThis.userConfig = {
     client: {
-      endpoint: process.env.ENDPOINT,
-      ssl: process.env.SSL !== "0",
-      accessToken: process.env.ACCESS_TOKEN,
-      project: process.env.PROJECT,
-      headers: {
-        "X-Access-Key": process.env.ACCESS_KEY,
-      },
+      accessToken: faker.internet.password(),
+      project: faker.internet.password(),
     },
   };
 

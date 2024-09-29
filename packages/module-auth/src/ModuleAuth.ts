@@ -1,3 +1,4 @@
+import { InferControllerInput } from "./../../core/src/types/index";
 import { FetchError, Module, symbolModuleDestroy, symbolModuleInit } from "@graphand/client";
 import {
   Account,
@@ -68,6 +69,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       client.hook(
         "afterRequest",
         async ({ err, transaction }) => {
+          console.log(err);
           if (err?.some(e => (e as FetchError).code === ErrorCodes.TOKEN_EXPIRED)) {
             await this.refreshToken();
             throw transaction.retryToken;
@@ -149,6 +151,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     providerOrData: RegisterData<P, M> | P,
     methodOrData?: Omit<RegisterData<P, M>, "provider"> | M,
     _data?: Omit<RegisterData<P, M>, "provider" | "method">,
+    query?: InferControllerInput<typeof controllerRegister>["query"],
   ) {
     let data: RegisterData<P, M>;
 
@@ -180,6 +183,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
 
     const res = await this.client().execute(controllerRegister, {
       data,
+      query,
     });
 
     const json = await res.json();

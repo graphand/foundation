@@ -5,7 +5,7 @@ import { SubscriptionChannels } from "../enums/subscription-channels";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
 
-describe.only("EventSubscription Model", () => {
+describe("EventSubscription Model", () => {
   const adapter = mockAdapter();
   const EventSubscriptionModel = EventSubscription.extend({ adapterClass: adapter });
 

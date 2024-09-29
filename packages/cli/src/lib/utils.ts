@@ -26,20 +26,6 @@ import {
 import LogProcessor from "./LogProcessor";
 import mime from "mime";
 
-export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]>(
-  modules: ClientModules<T> = [] as ClientModules<T>,
-  options: Partial<ClientOptions> = {},
-): Client<T> => {
-  options ??= {};
-  options.endpoint ??= process.env.ENDPOINT;
-  options.ssl ??= process.env.SSL !== "0";
-  options.accessToken ??= process.env.ACCESS_TOKEN;
-  options.project ??= process.env.PROJECT;
-  options.headers ??= {};
-  options.headers["X-Access-Key"] ??= process.env.ACCESS_KEY;
-  return new Client(modules, options as ClientOptions);
-};
-
 export const defineConfig = (config: UserConfig): UserConfig => {
   return config;
 };

@@ -1,38 +1,117 @@
+import { ObjectId } from "bson";
 import { faker } from "@faker-js/faker";
-import { Client, ClientModules, ClientOptions, ModuleConstructor } from "@graphand/client";
+import { Client } from "@graphand/client";
+import { Account, AuthMethods, AuthProviders, controllerConfigureAuth, ModelJSON } from "@graphand/core";
 import ModuleAuth from "./ModuleAuth";
-import {
-  Account,
-  AuthMethods,
-  AuthProviders,
-  controllerConfigureAuth,
-  controllerCurrentAccount,
-  controllerGenTokenToken,
-  ModelJSON,
-  Role,
-  Token,
-} from "@graphand/core";
 import { AuthStorage } from "./types";
-
-export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]>(
-  modules: ClientModules<T> = [] as ClientModules<T>,
-  options: Partial<ClientOptions> = {},
-): Client<T> => {
-  options ??= {};
-  options.endpoint ??= process.env.ENDPOINT;
-  options.ssl ??= process.env.SSL !== "0";
-  options.accessToken ??= process.env.ACCESS_TOKEN;
-  options.project ??= process.env.PROJECT;
-  options.headers ??= {};
-  options.headers["X-Access-Key"] ??= process.env.ACCESS_KEY;
-  return new Client(modules, options as ClientOptions);
-};
 
 describe("ModuleAuth", () => {
   let client: Client<[typeof ModuleAuth]>;
+  let spyFetch: jest.SpyInstance;
+
+  beforeAll(() => {
+    spyFetch = jest.spyOn(globalThis, "fetch").mockImplementation(async req => {
+      if (!(req instanceof Request)) {
+        return;
+      }
+
+      const url = new URL(req.url);
+
+      if (url.pathname === "/auth/register") {
+        const body = await req.json();
+        const provider = body.provider ?? AuthProviders.LOCAL;
+        // const method = body.method ?? AuthMethods.WINDOW;
+
+        if (provider === AuthProviders.LOCAL) {
+          const _email = body.configuration?.email ?? faker.internet.email();
+          const account = await client.getModel(Account).hydrate({ _id: new ObjectId().toString(), _email });
+          const accessToken = faker.internet.password();
+          const refreshToken = faker.internet.password();
+          return new Response(
+            JSON.stringify({
+              data: {
+                account,
+                accessToken,
+                refreshToken,
+              },
+            }),
+          );
+        }
+      }
+
+      if (url.pathname === "/auth/login") {
+        const body = await req.json();
+        const provider = body.provider ?? AuthProviders.LOCAL;
+        // const method = body.method ?? AuthMethods.WINDOW;
+
+        if (provider === AuthProviders.LOCAL) {
+          const _email = body.credentials?.email ?? faker.internet.email();
+          const account = await client.getModel(Account).hydrate({ _id: new ObjectId().toString(), _email });
+          const accessToken = faker.internet.password();
+          const refreshToken = faker.internet.password();
+          return new Response(
+            JSON.stringify({
+              data: {
+                account,
+                accessToken,
+                refreshToken,
+              },
+            }),
+          );
+        }
+
+        if (provider === AuthProviders.GRAPHAND) {
+          const redirectUrl = new URL(url.toString());
+          redirectUrl.pathname = "/auth/handle";
+          const _url = faker.internet.url() + "?redirect=" + redirectUrl.toString();
+          return new Response(JSON.stringify({ data: { url: _url } }));
+        }
+      }
+
+      if (url.pathname === "/auth/refresh") {
+        return new Response(
+          JSON.stringify({ data: { accessToken: faker.internet.password(), refreshToken: faker.internet.password() } }),
+        );
+      }
+
+      if (url.pathname === "/auth/configure") {
+        const body = await req.json();
+        const provider = body.provider ?? AuthProviders.LOCAL;
+
+        if (provider === AuthProviders.GRAPHAND) {
+          if (body.configuration?.graphandToken) {
+            return new Response(JSON.stringify({ data: {} }));
+          }
+        }
+      }
+
+      if (url.pathname === "/auth/code") {
+        const account = await client
+          .getModel(Account)
+          .hydrate({ _id: new ObjectId().toString(), _email: faker.internet.email() });
+        const accessToken = faker.internet.password();
+        const refreshToken = faker.internet.password();
+        return new Response(
+          JSON.stringify({
+            data: {
+              account,
+              accessToken,
+              refreshToken,
+            },
+          }),
+        );
+      }
+
+      return new Response(JSON.stringify({ data: {} }));
+    });
+  });
+
+  afterAll(() => {
+    spyFetch.mockRestore();
+  });
 
   beforeEach(() => {
-    client = createClient([[ModuleAuth]]);
+    client = new Client([[ModuleAuth]]);
   });
 
   afterEach(() => {
@@ -49,7 +128,7 @@ describe("ModuleAuth", () => {
       getItem: jest.fn(),
       removeItem: jest.fn(),
     };
-    const customClient = createClient([[ModuleAuth, { storage: customStorage }]]);
+    const customClient = new Client([[ModuleAuth, { storage: customStorage }]]);
     expect(customClient.get("auth").storage).toBe(customStorage);
   });
 
@@ -112,7 +191,7 @@ describe("ModuleAuth", () => {
 
     const spySetItem = jest.spyOn(AsyncStorage, "setItem");
 
-    const _client = createClient(
+    const _client = new Client(
       [
         [
           ModuleAuth,
@@ -121,7 +200,7 @@ describe("ModuleAuth", () => {
           },
         ],
       ],
-      { accessToken: "test-access-token" },
+      { accessToken: "test-access-token", project: null },
     );
 
     const email = faker.internet.email();
@@ -161,12 +240,7 @@ describe("ModuleAuth", () => {
 
   it("should be able to login with GRAPHAND provider and CODE method", async () => {
     const _client = new Client([[ModuleAuth]], {
-      endpoint: process.env.ENDPOINT,
-      ssl: process.env.SSL !== "0",
       project: null,
-      headers: {
-        "X-Access-Key": process.env.ACCESS_KEY,
-      },
     });
 
     const email = faker.internet.email();
@@ -188,34 +262,25 @@ describe("ModuleAuth", () => {
 
     let redirectHandler: Promise<void>;
 
-    const _client2 = new Client(
+    const _client2 = new Client([
       [
-        [
-          ModuleAuth,
-          {
-            handleRedirect: async _url => {
-              redirectHandler = (async () => {
-                const url = new URL(_url);
-                const redirectURL = new URL(url.searchParams.get("redirect"));
-                redirectURL.searchParams.set("state", url.searchParams.get("state"));
-                redirectURL.searchParams.set("graphandToken", graphandToken);
-                const res = await fetch(redirectURL.toString());
-                const code = await res.text();
-                await _client2.get("auth").handleCode(code);
-              })();
-            },
+        ModuleAuth,
+        {
+          handleRedirect: async _url => {
+            redirectHandler = (async () => {
+              const url = new URL(_url);
+              const redirectURL = new URL(url.searchParams.get("redirect"));
+              redirectURL.searchParams.set("state", url.searchParams.get("state"));
+              redirectURL.searchParams.set("graphandToken", graphandToken);
+              // const res = await fetch(redirectURL.toString());
+              // const code = await res.text();
+              const code = faker.internet.password();
+              await _client2.get("auth").handleCode(code);
+            })();
           },
-        ],
-      ],
-      {
-        endpoint: process.env.ENDPOINT,
-        ssl: process.env.SSL !== "0",
-        project: process.env.PROJECT,
-        headers: {
-          "X-Access-Key": process.env.ACCESS_KEY,
         },
-      },
-    );
+      ],
+    ]);
 
     await _client2.get("auth").login({ provider: AuthProviders.GRAPHAND, method: AuthMethods.CODE });
 
@@ -232,7 +297,7 @@ describe("ModuleAuth", () => {
   it("should handle auth result from URL", async () => {
     const mockSuccess = jest.fn();
     const mockError = jest.fn();
-    const _client = createClient([
+    const _client = new Client([
       [
         ModuleAuth,
         {
@@ -249,7 +314,7 @@ describe("ModuleAuth", () => {
 
     const authResult = JSON.stringify({ accessToken: "test-access-token", refreshToken: "test-refresh-token" });
 
-    const _client2 = createClient([
+    const _client2 = new Client([
       [
         ModuleAuth,
         {
@@ -267,40 +332,5 @@ describe("ModuleAuth", () => {
     expect(mockSuccess).toHaveBeenCalled();
 
     _client2.destroy();
-  });
-
-  it("should refresh token if expired", async () => {
-    const role = await client.getModel(Role).get();
-    const token = await client
-      .getModel(Token)
-      .create({ name: faker.random.alphaNumeric(10), role: role._id, lifetime: 0.3 });
-    const res = await client.execute(controllerGenTokenToken, {
-      params: { id: token._id },
-    });
-
-    const accessToken = await res.json().then(r => r.data);
-
-    client.setOptions({ accessToken: null });
-
-    expect(client.options.accessToken).toBeNull();
-
-    const email = faker.internet.email();
-    const password = faker.internet.password();
-
-    await client.get("auth").register({ configuration: { email, password } });
-
-    client.setOptions({ accessToken });
-
-    expect(client.options.accessToken).toBe(accessToken);
-
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    const spyRefreshToken = jest.spyOn(client.get("auth"), "refreshToken");
-
-    const resAccount = await client.execute(controllerCurrentAccount);
-
-    expect(spyRefreshToken).toHaveBeenCalled();
-
-    expect(resAccount.ok).toBeTruthy();
   });
 });

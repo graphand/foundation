@@ -106,7 +106,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
     const url = client.getBaseUrl(scheme);
 
     const socket = io(url, {
-      reconnectionDelayMax: 10000,
+      reconnectionDelayMax: this.conf.connectTimeout,
       rejectUnauthorized: false,
       transports: this.conf.transports,
       auth: {
@@ -134,16 +134,14 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
 
     this.#connectPromise = new Promise<void>((resolve, reject) => {
       this.#connectTimeout = setTimeout(() => {
-        reject(new Error("Connection timeout"));
+        _end();
         this.disconnect();
+        reject(new Error("Connection timeout"));
       }, this.conf.connectTimeout);
 
-      socket.on("connect", () => {
-        this.#subscribedModelsSubject.trigger();
-        resolve();
-      });
+      const _handleConnectError = (e: Error) => {
+        _end();
 
-      socket.on("connect_error", e => {
         if (typeof this.conf.handleConnectError === "function") {
           try {
             this.conf.handleConnectError(e);
@@ -155,9 +153,23 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
         }
 
         reject(e);
-      });
-    }).finally(() => {
-      this.#connectTimeout && clearTimeout(this.#connectTimeout);
+      };
+
+      const _handleConnect = () => {
+        _end();
+
+        this.#subscribedModelsSubject.trigger();
+        resolve();
+      };
+
+      const _end = () => {
+        this.#connectTimeout && clearTimeout(this.#connectTimeout);
+        socket.off("connect", _handleConnect);
+        socket.off("connect_error", _handleConnectError);
+      };
+
+      socket.once("connect", _handleConnect);
+      socket.once("connect_error", _handleConnectError);
     });
 
     return this.#connectPromise;

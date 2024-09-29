@@ -22,12 +22,6 @@ export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]
   options: Partial<ClientOptions> = {},
 ): Client<T> => {
   options ??= {};
-  options.endpoint ??= process.env.ENDPOINT;
-  options.ssl ??= process.env.SSL !== "0";
-  options.accessToken ??= process.env.ACCESS_TOKEN;
-  options.project ??= process.env.PROJECT;
-  options.headers ??= {};
-  options.headers["X-Access-Key"] ??= process.env.ACCESS_KEY;
   return new Client(modules, options as ClientOptions);
 };
 

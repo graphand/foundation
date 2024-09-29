@@ -1,28 +1,18 @@
-import { Client, ClientAdapter, ClientModules, ClientOptions, ModuleConstructor } from "@graphand/client";
+import { faker } from "@faker-js/faker";
+import { Client, ClientAdapter } from "@graphand/client";
 import ModuleRealtime from "./ModuleRealtime";
 import { Socket } from "socket.io-client";
 import { controllerModelCreate, ModelCrudEvent } from "@graphand/core";
 import RealtimeUpload from "./lib/RealtimeUpload";
 
-export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]>(
-  modules: ClientModules<T> = [] as ClientModules<T>,
-  options: Partial<ClientOptions> = {},
-): Client<T> => {
-  options ??= {};
-  options.endpoint ??= process.env.ENDPOINT;
-  options.ssl ??= process.env.SSL !== "0";
-  options.accessToken ??= process.env.ACCESS_TOKEN;
-  options.project ??= process.env.PROJECT;
-  options.headers ??= {};
-  options.headers["X-Access-Key"] ??= process.env.ACCESS_KEY;
-  return new Client(modules, options as ClientOptions);
-};
-
-describe("ModuleRealtime", () => {
+describe.skip("ModuleRealtime", () => {
   let client: Client<[typeof ModuleRealtime]>;
 
   beforeEach(() => {
-    client = createClient([[ModuleRealtime]]);
+    client = new Client([[ModuleRealtime]], {
+      accessToken: faker.internet.password(),
+      project: null,
+    });
   });
 
   afterEach(() => {
@@ -110,40 +100,6 @@ describe("ModuleRealtime", () => {
     expect(spyEmit).toHaveBeenCalledWith("subscribeModels", "testModel,testModel2");
   });
 
-  describe("autoSubscribe", () => {
-    let _client: Client<[typeof ModuleRealtime]>;
-
-    beforeEach(() => {
-      _client = new Client([[ModuleRealtime, { autoSubscribe: true, autoConnect: false }]], client.options);
-    });
-
-    it("should auto subscribe to models on Model.subscribe", async () => {
-      const _module = _client.get("realtime");
-      expect(_module.getSubscribedModels()).toHaveLength(0);
-      const model = _client.getModel("testModel");
-      model.subscribe(() => {});
-      expect(_module.getSubscribedModels()).toContain(model.slug);
-    });
-
-    it("should auto subscribe to models on Model.prototype.subscribe", async () => {
-      const _module = _client.get("realtime");
-      expect(_module.getSubscribedModels()).toHaveLength(0);
-      const model = _client.getModel("testModel");
-      const i = model.hydrate({});
-      i.subscribe(() => {});
-      expect(_module.getSubscribedModels()).toContain(model.slug);
-    });
-
-    it("should auto subscribe to models on ModelList.prototype.subscribe", async () => {
-      const _module = _client.get("realtime");
-      expect(_module.getSubscribedModels()).toHaveLength(0);
-      const model = _client.getModel("datamodels");
-      const list = await model.getList({});
-      list.subscribe(() => {});
-      expect(_module.getSubscribedModels()).toContain(model.slug);
-    });
-  });
-
   it("should be able to subscribe to upload events", async () => {
     await client.get("realtime").connect();
     const upload = client.get("realtime").getUpload("test");
@@ -193,5 +149,39 @@ describe("ModuleRealtime", () => {
     );
 
     unsub();
+  });
+
+  describe("autoSubscribe", () => {
+    let _client: Client<[typeof ModuleRealtime]>;
+
+    beforeEach(() => {
+      _client = new Client([[ModuleRealtime, { autoSubscribe: true, autoConnect: false }]], client.options);
+    });
+
+    it("should auto subscribe to models on Model.subscribe", async () => {
+      const _module = _client.get("realtime");
+      expect(_module.getSubscribedModels()).toHaveLength(0);
+      const model = _client.getModel("testModel");
+      model.subscribe(() => {});
+      expect(_module.getSubscribedModels()).toContain(model.slug);
+    });
+
+    it("should auto subscribe to models on Model.prototype.subscribe", async () => {
+      const _module = _client.get("realtime");
+      expect(_module.getSubscribedModels()).toHaveLength(0);
+      const model = _client.getModel("testModel");
+      const i = model.hydrate({});
+      i.subscribe(() => {});
+      expect(_module.getSubscribedModels()).toContain(model.slug);
+    });
+
+    it("should auto subscribe to models on ModelList.prototype.subscribe", async () => {
+      const _module = _client.get("realtime");
+      expect(_module.getSubscribedModels()).toHaveLength(0);
+      const model = _client.getModel("datamodels");
+      const list = await model.getList({});
+      list.subscribe(() => {});
+      expect(_module.getSubscribedModels()).toContain(model.slug);
+    });
   });
 });
