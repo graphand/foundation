@@ -1,6 +1,6 @@
 {
   "name": "@graphand/cli",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": false,
   "type": "module",
   "exports": {
@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@graphand/client": "*",
-    "@graphand/client-module-auth": "^0.0.0",
+    "@graphand/client-module-auth": "^1.0.0",
     "cli-table3": "^0.6.5",
     "commander": "^12.1.0",
     "conf": "^13.0.1",
