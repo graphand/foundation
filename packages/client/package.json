@@ -37,6 +37,6 @@
     "jsonwebtoken": "^9.0.2"
   },
   "dependencies": {
-    "@graphand/core": "^0.15.16"
+    "@graphand/core": "^0.16.2"
   }
 }
