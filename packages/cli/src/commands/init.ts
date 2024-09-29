@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { UserConfig } from "@/types";
 import fs from "node:fs";
 import path from "node:path";
-import { loadConfig, loadConfigFile, rmConfigFile } from "@/lib/utils";
+import { loadConfig, getConfigPath, rmConfigFile } from "@/lib/utils";
 import { isObjectId } from "@graphand/core";
 import chalk from "chalk";
 import { confirm, input } from "@inquirer/prompts";
@@ -24,7 +24,7 @@ export const commandInit = new Command("init").description("Initialize a new Gra
   }
 
   let config: Partial<UserConfig> = {};
-  const configPath = loadConfigFile();
+  const configPath = getConfigPath();
 
   if (configPath) {
     const filename = path.basename(configPath);

@@ -20,6 +20,8 @@ import { commandDeploy } from "./commands/deploy";
 import { commandRun } from "./commands/run";
 import { commandLogs } from "./commands/logs";
 import { commandSrc } from "./commands/src";
+import { commandModel } from "./commands/model";
+import { commandGdx } from "./commands/gdx";
 
 program
   .version(version)
@@ -44,6 +46,8 @@ program.addCommand(commandDeploy);
 program.addCommand(commandRun);
 program.addCommand(commandLogs);
 program.addCommand(commandSrc);
+program.addCommand(commandModel);
+program.addCommand(commandGdx);
 
 program.hook("postAction", async () => {
   const client = globalThis.client;

@@ -22,6 +22,7 @@ export const commandGet = new Command("get")
   .option("-q --query <query>", "URL encoded JSONQuery object")
   .option("-f --fields <fields>", "Fields to display (comma separated)")
   .option("-o --output <output>", "Output format (json, table, raw)")
+  .option("-w --max-width <maxWidth>", "The max width of the output table (default: 70)")
   .option("-1", "Sort by -_id")
   .option("--last", "Get the last created item")
   .action((modelName, key, options) =>
@@ -129,28 +130,59 @@ export const commandGet = new Command("get")
       }
 
       if (output === "table") {
-        const rows = list.map(i => {
-          const row: Array<string> = [];
+        const maxWidth = Number(options.maxWidth || 70);
 
-          fields?.forEach(field => {
-            let value = i.get(field, "json");
-            if (typeof value === "object") {
-              value = JSON.stringify(value);
-            }
-
-            if (isObjectId(value)) {
-              value = chalk.bold(String(value));
-            }
-
-            if (value === undefined) {
-              value = chalk.gray("undefined");
-            }
-
-            row.push(String(value));
-          });
-
-          return row;
+        // Compute the natural widths for each column based on the maximum cell content width
+        const naturalWidths = fields.map(field => {
+          const values = list.map(item => String(item.get(field, "json")));
+          const maxContentWidth = Math.max(...values.map(value => value.length), field.length);
+          return maxContentWidth;
         });
+
+        // Create a copy of naturalWidths to adjust
+        let columnWidths = [...naturalWidths];
+
+        const totalNaturalWidth = naturalWidths.reduce((sum, width) => sum + width, 0);
+
+        if (totalNaturalWidth > maxWidth) {
+          // Calculate how much we need to reduce the widths
+          const widthToReduce = totalNaturalWidth - maxWidth;
+
+          // Create an array of column indices sorted by natural width (descending)
+          const sortedIndices = naturalWidths
+            .map((width, index) => ({ width, index }))
+            .sort((a, b) => b.width - a.width)
+            .map(obj => obj.index);
+
+          // Distribute the reduction among the widest columns
+          let remainingReduction = widthToReduce;
+
+          for (const idx of sortedIndices) {
+            if (remainingReduction <= 0) break;
+
+            // Set a minimum column width (e.g., 30% of natural width or at least 5)
+            const minColWidth = Math.max(5, naturalWidths[idx] * 0.3);
+            const maxReduction = columnWidths[idx] - minColWidth;
+
+            if (maxReduction > 0) {
+              const reduction = Math.min(maxReduction, remainingReduction);
+              columnWidths[idx] -= reduction;
+              remainingReduction -= reduction;
+            }
+          }
+
+          // If after distributing the reduction we still have remaining reduction,
+          // we need to reduce all columns proportionally
+          if (remainingReduction > 0) {
+            const totalAdjustableWidth = columnWidths.reduce((sum, width) => sum + width, 0);
+            const scalingFactor = (totalAdjustableWidth - remainingReduction) / totalAdjustableWidth;
+
+            columnWidths = columnWidths.map(width => Math.max(5, Math.floor(width * scalingFactor)));
+          }
+        }
+
+        // Ensure column widths are integers
+        columnWidths = columnWidths.map(Math.floor);
 
         const table = new Table({
           chars: {
@@ -171,19 +203,34 @@ export const commandGet = new Command("get")
             middle: "  ",
           },
           style: { "padding-left": 0, "padding-right": 0 },
-          colWidths: fields?.map((f, i) => {
-            const maxWidth = Math.max(...rows.map(r => String(r[i]).length), f.length);
-            return Math.min(maxWidth, 24);
-          }),
+          colWidths: columnWidths,
           head: fields,
         });
 
-        rows.forEach(row => {
+        list.forEach(item => {
+          const row = fields.map(field => {
+            let value = item.get(field, "json");
+
+            if (typeof value === "object") {
+              value = JSON.stringify(value);
+            }
+
+            if (isObjectId(value)) {
+              value = chalk.bold(String(value));
+            }
+
+            if (value === undefined) {
+              value = chalk.gray("undefined");
+            }
+
+            return String(value);
+          });
+
           table.push(row);
         });
 
         console.log("");
-        console.table(table.toString());
+        console.log(table.toString());
         return;
       }
 

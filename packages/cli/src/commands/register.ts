@@ -4,8 +4,9 @@ import { password, input } from "@inquirer/prompts";
 import chalk from "chalk";
 
 export const commandRegister = new Command("register")
+  .option("-i --invitation-token <invitationToken>", "Invitation token")
   .description("Register with the Graphand API")
-  .action(async () => {
+  .action(async options => {
     const email = await input({
       message: "Email",
     });
@@ -24,7 +25,10 @@ export const commandRegister = new Command("register")
     }
 
     const client = await getClient();
-    await client.get("auth").register({ configuration: { email, password: pwd } });
+
+    await client.get("auth").register({ configuration: { email, password: pwd } }, undefined, undefined, {
+      invitationToken: options.invitationToken,
+    });
 
     console.log(chalk.green("Registration successful"));
   });

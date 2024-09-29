@@ -10,4 +10,7 @@ declare global {
 
 export type UserConfig = {
   client: ClientOptions;
+  gdx?: {
+    path: string;
+  };
 };

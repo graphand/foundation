@@ -44,7 +44,7 @@ export const defineConfig = (config: UserConfig): UserConfig => {
   return config;
 };
 
-export const loadConfigFile = (): string | null => {
+export const getConfigPath = (): string | null => {
   const { config } = program.opts() || {};
   if (config) {
     const configPath = path.resolve(config);
@@ -64,7 +64,13 @@ export const loadConfigFile = (): string | null => {
     return null;
   }
 
-  const configFiles = ["graphand.config.ts", "graphand.config.js", "graphand.config.mjs", "graphand.config.cjs"];
+  const configFiles = [
+    "graphand.config.ts",
+    "graphand.config.js",
+    "graphand.config.mjs",
+    "graphand.config.cjs",
+    "graphand.config.json",
+  ];
 
   for (const file of configFiles) {
     const configPath = path.join(process.cwd(), file);
@@ -77,7 +83,7 @@ export const loadConfigFile = (): string | null => {
 };
 
 export const rmConfigFile = () => {
-  const configPath = loadConfigFile();
+  const configPath = getConfigPath();
   if (configPath) {
     fs.rmSync(configPath);
   }
@@ -88,7 +94,7 @@ export const loadConf = (project: string): Conf => {
 };
 
 export const loadConfig = async (): Promise<UserConfig> => {
-  const configPath = loadConfigFile();
+  const configPath = getConfigPath();
   if (!configPath) {
     throw new Error("Configuration file not found. Run `graphand init` to create a configuration file");
   }
@@ -97,6 +103,11 @@ export const loadConfig = async (): Promise<UserConfig> => {
 
   try {
     const configContent = await fs.promises.readFile(configPath, "utf8");
+
+    if (path.extname(configPath) === ".json") {
+      config = JSON.parse(configContent);
+      return config;
+    }
 
     const result = transformSync(configContent, {
       loader: path.extname(configPath) === ".ts" ? "ts" : "js",
@@ -134,6 +145,60 @@ export const loadConfig = async (): Promise<UserConfig> => {
   }
 
   return config;
+};
+
+export const getGdxPath = async (): Promise<string | null> => {
+  const config = await loadConfig();
+
+  const gdxFiles = [config.gdx?.path, "graphand.gdx.js", "graphand.gdx.json"];
+
+  for (const file of gdxFiles) {
+    const configPath = path.join(process.cwd(), file);
+    if (fs.existsSync(configPath)) {
+      return configPath;
+    }
+  }
+
+  return null;
+};
+
+export const loadGdx = async (): Promise<JSONTypeObject> => {
+  const configPath = await getGdxPath();
+  if (!configPath) {
+    throw new Error("No gdx file found");
+  }
+
+  const configContent = await fs.promises.readFile(configPath, "utf8");
+
+  if (path.extname(configPath) === ".json") {
+    return JSON.parse(configContent);
+  }
+
+  const result = transformSync(configContent, {
+    loader: path.extname(configPath) === ".ts" ? "ts" : "js",
+    format: "esm",
+    target: "es2020",
+  });
+
+  const transpiledCode = result.code;
+
+  // Use dynamic import to load the transpiled code
+  const tempFilePath = fileURLToPath(new URL(`file://${process.cwd()}/temp-gdx.mjs`));
+  await fs.promises.writeFile(tempFilePath, transpiledCode);
+
+  try {
+    // Load the transpiled code
+    const importedConfig = await import(tempFilePath);
+
+    if (importedConfig.default) {
+      return importedConfig.default as JSONTypeObject;
+    }
+  } finally {
+    // Ensure temp file is deleted even if an error occurs
+    fs.promises.unlink(tempFilePath).catch(() => {});
+  }
+
+  throw new Error("Failed to load gdx file");
 };
 
 export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Promise<
