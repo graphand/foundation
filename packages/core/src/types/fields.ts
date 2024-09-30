@@ -55,7 +55,7 @@ export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
   _tsModel?: typeof Model;
 };
 
-export interface SystemFields<_M extends typeof Model> {
+export interface SystemFields<M extends typeof Model> {
   _id: { type: FieldTypes.ID };
   _createdAt: { type: FieldTypes.DATE };
   _createdBy: { type: FieldTypes.IDENTITY };
