@@ -3,7 +3,7 @@ export default function () {
     autoDetect: true,
     name: "@graphand/client",
     testFramework: {
-      configFile: "./jest.config.json",
+      configFile: "./vitest.config.ts",
     },
     runMode: "onsave",
   };

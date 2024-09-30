@@ -1,8 +1,8 @@
+import { Mock, MockInstance, vi } from "vitest";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
 import { Client } from "./Client.ts";
 import { ClientAdapter } from "./ClientAdapter.ts";
-import { ClientModules, ClientOptions, ModuleConstructor } from "../types.ts";
 import {
   DataModel,
   FieldTypes,
@@ -17,14 +17,6 @@ import {
   PromiseModelList,
   ValidationError,
 } from "@graphand/core";
-
-export const createClient = <T extends ModuleConstructor[] = ModuleConstructor[]>(
-  modules: ClientModules<T> = [] as ClientModules<T>,
-  options: Partial<ClientOptions> = {},
-): Client<T> => {
-  options ??= {};
-  return new Client(modules, options as ClientOptions);
-};
 
 describe("ClientAdapter", () => {
   @modelDecorator()
@@ -42,7 +34,7 @@ describe("ClientAdapter", () => {
   let client: Client;
   let model: typeof MockModel;
   let adapter: ClientAdapter;
-  let fetchMock: jest.Mock;
+  let fetchMock: MockInstance;
 
   beforeEach(() => {
     client = new Client([], {
@@ -52,12 +44,11 @@ describe("ClientAdapter", () => {
 
     model = client.getModel(MockModel);
     adapter = model.getAdapter() as unknown as ClientAdapter;
-    jest.spyOn(global, "fetch");
-    fetchMock = global.fetch as jest.Mock;
+    fetchMock = vi.spyOn(global, "fetch");
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("should fetch count correctly", async () => {
@@ -293,7 +284,7 @@ describe("ClientAdapter", () => {
   });
 
   it("should dispatch events on create", async () => {
-    const eventSpy = jest.spyOn(adapter, "dispatch");
+    const eventSpy = vi.spyOn(adapter, "dispatch");
     fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
     await model.create({ name: "Test" });
     expect(eventSpy).toHaveBeenCalledWith(
@@ -307,7 +298,7 @@ describe("ClientAdapter", () => {
   });
 
   it("should dispatch events on update", async () => {
-    const eventSpy = jest.spyOn(adapter, "dispatch");
+    const eventSpy = vi.spyOn(adapter, "dispatch");
     fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "UpdatedTest"}}'));
     await model.update("123", { $set: { name: "UpdatedTest" } });
     expect(eventSpy).toHaveBeenCalledWith(
@@ -321,7 +312,7 @@ describe("ClientAdapter", () => {
   });
 
   it("should dispatch events on delete", async () => {
-    const eventSpy = jest.spyOn(adapter, "dispatch");
+    const eventSpy = vi.spyOn(adapter, "dispatch");
     fetchMock.mockResolvedValueOnce(new Response('{"data": true}'));
     await model.delete("123");
     expect(eventSpy).toHaveBeenCalledWith(
@@ -623,16 +614,16 @@ describe("ClientAdapter", () => {
   });
 
   describe("Subscribe", () => {
-    let subscriber: jest.Mock;
+    let subscriber: Mock;
 
     beforeEach(() => {
-      subscriber = jest.fn();
+      subscriber = vi.fn();
       adapter.subscribe(subscriber);
     });
 
     afterEach(() => {
       adapter.clearInstances();
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should notify subscribers when a new instance is fetched", async () => {
@@ -655,7 +646,7 @@ describe("ClientAdapter", () => {
       );
       await model.getList();
 
-      expect(subscriber.mock.calls[0][0]).toEqual({
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({
         ids: ["123", "456"],
         operation: "fetch",
       });
@@ -665,7 +656,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
       await model.create({ name: "Test" });
 
-      expect(subscriber.mock.calls[0][0]).toEqual({
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({
         ids: ["123"],
         operation: "create",
       });
@@ -677,7 +668,7 @@ describe("ClientAdapter", () => {
       );
       await model.createMultiple([{ name: "Test1" }, { name: "Test2" }]);
 
-      expect(subscriber.mock.calls[0][0]).toEqual({
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({
         ids: ["123", "456"],
         operation: "create",
       });
@@ -687,7 +678,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "UpdatedTest"}}'));
       await model.update("123", { $set: { name: "UpdatedTest" } });
 
-      expect(subscriber.mock.calls[0][0]).toEqual({
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({
         ids: ["123"],
         operation: "update",
       });
@@ -699,7 +690,7 @@ describe("ClientAdapter", () => {
       );
       await model.update({ ids: ["123", "456"] }, { $set: { name: "UpdatedTest" } });
 
-      expect(subscriber.mock.calls[0][0]).toEqual({
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({
         ids: ["123", "456"],
         operation: "update",
       });
@@ -711,7 +702,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": true}'));
       await model.delete("123");
 
-      expect(subscriber.mock.calls[1][0]).toEqual({
+      expect(subscriber.mock.calls?.[1]?.[0]).toEqual({
         ids: ["123"],
         operation: "delete",
       });
@@ -723,7 +714,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": ["123", "456"]}'));
       await model.delete({ ids: ["123", "456"] });
 
-      expect(subscriber.mock.calls[1][0]).toEqual({
+      expect(subscriber.mock.calls?.[1]?.[0]).toEqual({
         ids: ["123"],
         operation: "delete",
       });
@@ -767,7 +758,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.getList({}, { disableCache: true });
 
-      expect(subscriber.mock.calls[0][0]).toEqual({
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({
         ids: ["123"],
         operation: "fetch",
       });
@@ -788,20 +779,20 @@ describe("ClientAdapter", () => {
       await model.delete("123");
 
       expect(subscriber.mock.calls.length).toBe(3);
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "create" });
-      expect(subscriber.mock.calls[1][0]).toEqual({ ids: ["123"], operation: "update" });
-      expect(subscriber.mock.calls[2][0]).toEqual({ ids: ["123"], operation: "delete" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "create" });
+      expect(subscriber.mock.calls?.[1]?.[0]).toEqual({ ids: ["123"], operation: "update" });
+      expect(subscriber.mock.calls?.[2]?.[0]).toEqual({ ids: ["123"], operation: "delete" });
     });
 
     it("should handle multiple subscribers", async () => {
-      const secondSubscriber = jest.fn();
+      const secondSubscriber = vi.fn();
       adapter.subscribe(secondSubscriber);
 
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
       await model.get("123");
 
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "fetch" });
-      expect(secondSubscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "fetch" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "fetch" });
+      expect(secondSubscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "fetch" });
     });
 
     it("should allow unsubscribing", async () => {
@@ -828,7 +819,7 @@ describe("ClientAdapter", () => {
       );
       await model.get("123", { disableCache: true });
 
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "fetch" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "fetch" });
     });
 
     it("should not notify subscribers when updating an instance with older _updatedAt", async () => {
@@ -856,14 +847,14 @@ describe("ClientAdapter", () => {
     it("should notify subscribers when an instance is added to the cache", async () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "NewTest"}}'));
       await model.get("123");
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "fetch" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "fetch" });
     });
 
     it("should notify subscribers when a new instance is created and added to cache", async () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "NewTest"}}'));
       await model.create({ name: "NewTest" });
       expect(subscriber.mock.calls.length).toBe(1);
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "create" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "create" });
     });
 
     it("should not notify subscribers when a fetched instance is already in cache", async () => {
@@ -887,7 +878,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.get("123", { disableCache: true });
       expect(subscriber.mock.calls.length).toBe(1);
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "fetch" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "fetch" });
     });
 
     it("should notify subscribers only for updated instances in getList", async () => {
@@ -917,7 +908,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.getList({}, { disableCache: true });
       expect(subscriber.mock.calls.length).toBe(1);
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "fetch" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "fetch" });
     });
 
     it("should notify subscribers when multiple instances are created", async () => {
@@ -926,7 +917,7 @@ describe("ClientAdapter", () => {
       );
       await model.createMultiple([{ name: "Test1" }, { name: "Test2" }]);
       expect(subscriber.mock.calls.length).toBe(1);
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123", "456"], operation: "create" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123", "456"], operation: "create" });
     });
 
     it("should notify subscribers when an instance is updated with new data", async () => {
@@ -942,7 +933,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response(body2));
       await model.update("123", { $set: { name: "UpdatedTest" } });
       expect(subscriber.mock.calls.length).toBe(1);
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "update" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "update" });
     });
 
     it("should notify subscribers when multiple instances are updated", async () => {
@@ -951,7 +942,7 @@ describe("ClientAdapter", () => {
       );
       await model.update({ ids: ["123", "456"] }, { $set: { name: "UpdatedTest" } });
       expect(subscriber.mock.calls.length).toBe(1);
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123", "456"], operation: "update" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123", "456"], operation: "update" });
     });
 
     it("should notify subscribers when an instance is deleted from cache", async () => {
@@ -962,7 +953,7 @@ describe("ClientAdapter", () => {
       fetchMock.mockResolvedValueOnce(new Response('{"data": true}'));
       await model.delete("123");
       expect(subscriber.mock.calls.length).toBe(1);
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "delete" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "delete" });
     });
 
     it("should not notify subscribers when deleting an instance not in cache", async () => {
@@ -972,7 +963,7 @@ describe("ClientAdapter", () => {
     });
 
     it("should allow multiple subscribers and notify all of them", async () => {
-      const secondSubscriber = jest.fn();
+      const secondSubscriber = vi.fn();
       adapter.subscribe(secondSubscriber);
 
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
@@ -980,8 +971,8 @@ describe("ClientAdapter", () => {
 
       expect(subscriber.mock.calls.length).toBe(1);
       expect(secondSubscriber.mock.calls.length).toBe(1);
-      expect(subscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "create" });
-      expect(secondSubscriber.mock.calls[0][0]).toEqual({ ids: ["123"], operation: "create" });
+      expect(subscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "create" });
+      expect(secondSubscriber.mock.calls?.[0]?.[0]).toEqual({ ids: ["123"], operation: "create" });
     });
   });
 
@@ -1776,11 +1767,11 @@ describe("ClientAdapter", () => {
       });
       modelWithDisabledCache = clientWithDisabledCache.getModel(MockModel);
       adapterWithDisabledCache = modelWithDisabledCache.getAdapter() as unknown as ClientAdapter;
-      jest.spyOn(global, "fetch");
+      vi.spyOn(global, "fetch");
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it("should not use cache when fetching a single model", async () => {
@@ -1845,11 +1836,11 @@ describe("ClientAdapter", () => {
       });
       modelWithDisabledStore = clientWithDisabledStore.getModel(MockModel);
       adapterWithDisabledStore = modelWithDisabledStore.getAdapter() as unknown as ClientAdapter;
-      jest.spyOn(global, "fetch");
+      vi.spyOn(global, "fetch");
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it("should not store instances in memory when fetching a single model", async () => {
@@ -1908,11 +1899,11 @@ describe("ClientAdapter", () => {
     };
 
     beforeEach(() => {
-      _client = createClient([]);
+      _client = new Client([]);
     });
 
     beforeAll(async () => {
-      _client = createClient([]);
+      _client = new Client([]);
       const datamodel = await _client.getModel(DataModel).create({
         slug: faker.random.alphaNumeric(10),
         definition: {

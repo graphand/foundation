@@ -3,7 +3,7 @@ export default function () {
     autoDetect: true,
     name: "@graphand/module-auth",
     testFramework: {
-      configFile: "./jest.config.json",
+      configFile: "./vitest.config.ts",
     },
     runMode: "onsave",
   };

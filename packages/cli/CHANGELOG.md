@@ -1,5 +1,15 @@
 # @graphand/cli
 
+## 1.1.1
+
+### Patch Changes
+
+- Refactor code for better esm compatibility
+- Updated dependencies
+- Updated dependencies
+  - @graphand/client-module-auth@1.1.1
+  - @graphand/client@1.1.1
+
 ## 1.1.0
 
 ### Minor Changes

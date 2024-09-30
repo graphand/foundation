@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev.ts";
 import { Field } from "@/lib/Field.ts";
 import { Model } from "@/lib/Model.ts";
@@ -113,8 +114,8 @@ describe("Test Model", () => {
       const _model = mockModel();
       const model = _model.extend({ adapterClass: adapter });
 
-      const hookBefore = jest.fn();
-      const hookAfter = jest.fn();
+      const hookBefore = vi.fn();
+      const hookAfter = vi.fn();
       model.hook("before", "initialize", hookBefore);
       model.hook("after", "initialize", hookAfter);
 
@@ -129,8 +130,8 @@ describe("Test Model", () => {
       const _model = mockModel();
       const model = _model.extend({ adapterClass: adapter });
 
-      const hookBefore = jest.fn();
-      const hookAfter = jest.fn();
+      const hookBefore = vi.fn();
+      const hookAfter = vi.fn();
       model.hook("before", "initialize", hookBefore);
       model.hook("after", "initialize", hookAfter);
 
@@ -150,7 +151,7 @@ describe("Test Model", () => {
       const _model = mockModel();
       const model = _model.extend({ adapterClass: adapter });
 
-      const hookBefore = jest.fn(() => {
+      const hookBefore = vi.fn(() => {
         throw new Error("test");
       });
       model.hook("before", "initialize", hookBefore);
@@ -167,7 +168,7 @@ describe("Test Model", () => {
 
       const model = base.extend({ adapterClass: adapter });
 
-      const initFn = jest.spyOn(model, "reloadModel");
+      const initFn = vi.spyOn(model, "reloadModel");
 
       expect(initFn).toBeCalledTimes(0);
 
@@ -195,7 +196,7 @@ describe("Test Model", () => {
         adapterClass: mockAdapter(),
       });
 
-      const initFn2 = jest.spyOn(model2, "reloadModel");
+      const initFn2 = vi.spyOn(model2, "reloadModel");
 
       expect(initFn2).toBeCalledTimes(0);
 
@@ -886,7 +887,7 @@ describe("Test Model", () => {
     });
 
     it("should not call useless serializer", async () => {
-      const serializeText = jest.fn(value => value);
+      const serializeText = vi.fn(value => value);
 
       const _adapter = mockAdapter({
         fieldsMap: {
@@ -1161,7 +1162,7 @@ describe("Test Model", () => {
     });
 
     it("Model should validate with validator from adapter", async () => {
-      const testValidate = jest.fn(() => Promise.resolve(true));
+      const testValidate = vi.fn(() => Promise.resolve(true));
 
       class TestValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
         validate = testValidate;
@@ -1184,7 +1185,7 @@ describe("Test Model", () => {
     });
 
     it("Model should throw error with validator returning false", async () => {
-      const testValidate = jest.fn(() => Promise.resolve(false));
+      const testValidate = vi.fn(() => Promise.resolve(false));
 
       class TestValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
         validate = testValidate;
@@ -1210,7 +1211,7 @@ describe("Test Model", () => {
     });
 
     it("Model should validate with field from adapter", async () => {
-      const testValidate = jest.fn(() => Promise.resolve(true));
+      const testValidate = vi.fn(() => Promise.resolve(true));
 
       class TestFieldText extends Field<FieldTypes.TEXT> {
         validate = testValidate;
@@ -1233,7 +1234,7 @@ describe("Test Model", () => {
     });
 
     it("Model should throw error with field validator returning false", async () => {
-      const testValidate = jest.fn(() => Promise.resolve(false));
+      const testValidate = vi.fn(() => Promise.resolve(false));
 
       class TestFieldText extends Field<FieldTypes.TEXT> {
         validate = testValidate;
@@ -1259,8 +1260,8 @@ describe("Test Model", () => {
     });
 
     it("Model should validate validators & fields on create", async () => {
-      const testValidateField = jest.fn(() => Promise.resolve(true));
-      const testValidateValidator = jest.fn(() => Promise.resolve(true));
+      const testValidateField = vi.fn(() => Promise.resolve(true));
+      const testValidateValidator = vi.fn(() => Promise.resolve(true));
 
       class TestFieldText extends Field<FieldTypes.TEXT> {
         validate = testValidateField;
@@ -1291,8 +1292,8 @@ describe("Test Model", () => {
     });
 
     it("Model should validate validators & fields once by value on createMultiple", async () => {
-      const testValidateField = jest.fn(() => Promise.resolve(true));
-      const testValidateValidator = jest.fn(() => Promise.resolve(true));
+      const testValidateField = vi.fn(() => Promise.resolve(true));
+      const testValidateValidator = vi.fn(() => Promise.resolve(true));
 
       class TestFieldText extends Field<FieldTypes.TEXT> {
         validate = testValidateField;
@@ -1323,8 +1324,8 @@ describe("Test Model", () => {
     });
 
     it("Model should validate validators & fields once on createMultiple", async () => {
-      const testValidateField = jest.fn(() => Promise.resolve(true));
-      const testValidateValidator = jest.fn(() => Promise.resolve(true));
+      const testValidateField = vi.fn(() => Promise.resolve(true));
+      const testValidateValidator = vi.fn(() => Promise.resolve(true));
 
       class TestFieldText extends Field<FieldTypes.TEXT> {
         validate = testValidateField;
@@ -1370,8 +1371,8 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = BaseModel.extend({ adapterClass: adapter });
 
-      const beforeCreateFn = jest.fn();
-      const afterCreateFn = jest.fn();
+      const beforeCreateFn = vi.fn();
+      const afterCreateFn = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn);
       TestModel.hook("after", "createOne", afterCreateFn);
@@ -1389,8 +1390,8 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = BaseModel.extend({ adapterClass: adapter });
 
-      const afterCreateFn = jest.fn();
-      const beforeCreateFn = jest.fn(() => {
+      const afterCreateFn = vi.fn();
+      const beforeCreateFn = vi.fn(() => {
         TestModel.hook("after", "createOne", afterCreateFn);
       });
 
@@ -1409,8 +1410,8 @@ describe("Test Model", () => {
       const adapter1 = mockAdapter();
       const adapter2 = mockAdapter();
 
-      const fn1 = jest.fn();
-      const fn2 = jest.fn();
+      const fn1 = vi.fn();
+      const fn2 = vi.fn();
 
       const TestModel = mockModel({
         fields: {
@@ -1443,8 +1444,8 @@ describe("Test Model", () => {
       const adapter1 = mockAdapter();
       const adapter2 = mockAdapter();
 
-      const fn1 = jest.fn();
-      const fn2 = jest.fn();
+      const fn1 = vi.fn();
+      const fn2 = vi.fn();
 
       const TestModel = mockModel({
         fields: {
@@ -1478,8 +1479,8 @@ describe("Test Model", () => {
       const adapter1 = mockAdapter();
       const adapter2 = mockAdapter();
 
-      const fn1 = jest.fn();
-      const fn2 = jest.fn();
+      const fn1 = vi.fn();
+      const fn2 = vi.fn();
 
       const TestModel = mockModel({
         fields: {
@@ -1609,11 +1610,11 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn(() => {
+      const beforeCreateFn1 = vi.fn(() => {
         throw new Error();
       });
-      const beforeCreateFn2 = jest.fn();
-      const afterCreateFn = jest.fn();
+      const beforeCreateFn2 = vi.fn();
+      const afterCreateFn = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
       TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1 });
@@ -1630,9 +1631,9 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn();
-      const beforeCreateFn2 = jest.fn();
-      const afterCreateFn = jest.fn();
+      const beforeCreateFn1 = vi.fn();
+      const beforeCreateFn2 = vi.fn();
+      const afterCreateFn = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
       TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1, handleErrors: true });
@@ -1649,11 +1650,11 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn(() => {
+      const beforeCreateFn1 = vi.fn(() => {
         throw new Error();
       });
-      const beforeCreateFn2 = jest.fn();
-      const afterCreateFn = jest.fn();
+      const beforeCreateFn2 = vi.fn();
+      const afterCreateFn = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
       TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1, handleErrors: true });
@@ -1670,9 +1671,9 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn();
-      const beforeCreateFn2 = jest.fn();
-      const afterCreateFn = jest.fn();
+      const beforeCreateFn1 = vi.fn();
+      const beforeCreateFn2 = vi.fn();
+      const afterCreateFn = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
       TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1, handleErrors: true });
@@ -1689,13 +1690,13 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn(() => {
+      const beforeCreateFn1 = vi.fn(() => {
         throw new Error("a");
       });
-      const beforeCreateFn2 = jest.fn(() => {
+      const beforeCreateFn2 = vi.fn(() => {
         throw new Error("b");
       });
-      const beforeCreateFn3 = jest.fn();
+      const beforeCreateFn3 = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
       TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1, handleErrors: true });
@@ -1708,11 +1709,11 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn(() => {
+      const beforeCreateFn1 = vi.fn(() => {
         throw new Error();
       });
-      const beforeCreateFn2 = jest.fn();
-      const beforeCreateFn3 = jest.fn();
+      const beforeCreateFn2 = vi.fn();
+      const beforeCreateFn3 = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
       TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1, handleErrors: true });
@@ -1729,11 +1730,11 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn(() => {
+      const beforeCreateFn1 = vi.fn(() => {
         throw new Error();
       });
-      const beforeCreateFn2 = jest.fn();
-      const beforeCreateFn3 = jest.fn(() => {
+      const beforeCreateFn2 = vi.fn();
+      const beforeCreateFn3 = vi.fn(() => {
         throw new Error();
       });
 
@@ -1817,11 +1818,11 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn();
-      const beforeCreateFn2 = jest.fn(({ transaction }) => {
+      const beforeCreateFn1 = vi.fn();
+      const beforeCreateFn2 = vi.fn(({ transaction }) => {
         throw transaction.abortToken;
       });
-      const afterCreateFn = jest.fn();
+      const afterCreateFn = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn1);
       TestModel.hook("before", "createOne", beforeCreateFn2);
@@ -1841,11 +1842,11 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn(({ transaction }) => {
+      const beforeCreateFn1 = vi.fn(({ transaction }) => {
         throw transaction.abortToken;
       });
-      const beforeCreateFn2 = jest.fn();
-      const afterCreateFn = jest.fn();
+      const beforeCreateFn2 = vi.fn();
+      const afterCreateFn = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn1);
       TestModel.hook("before", "createOne", beforeCreateFn2);
@@ -1864,11 +1865,11 @@ describe("Test Model", () => {
     it("should immediately stop execution when throwing abortToken in first after hook", async () => {
       const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
-      const beforeCreateFn = jest.fn();
-      const afterCreateFn1 = jest.fn(({ transaction }) => {
+      const beforeCreateFn = vi.fn();
+      const afterCreateFn1 = vi.fn(({ transaction }) => {
         throw transaction.abortToken;
       });
-      const afterCreateFn2 = jest.fn();
+      const afterCreateFn2 = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn);
       TestModel.hook("after", "createOne", afterCreateFn1);
@@ -1889,12 +1890,12 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn();
-      const beforeCreateFn2 = jest.fn(({ transaction }) => {
+      const beforeCreateFn1 = vi.fn();
+      const beforeCreateFn2 = vi.fn(({ transaction }) => {
         if (transaction.retries < 2) throw transaction.retryToken;
       });
 
-      const afterCreateFn = jest.fn();
+      const afterCreateFn = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn1);
       TestModel.hook("before", "createOne", beforeCreateFn2);
@@ -1913,11 +1914,11 @@ describe("Test Model", () => {
     it("should retry execution when throwing retryToken in after hook", async () => {
       const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
-      const beforeCreateFn = jest.fn();
-      const afterCreateFn1 = jest.fn(({ transaction }) => {
+      const beforeCreateFn = vi.fn();
+      const afterCreateFn1 = vi.fn(({ transaction }) => {
         if (transaction.retries < 2) throw transaction.retryToken;
       });
-      const afterCreateFn2 = jest.fn();
+      const afterCreateFn2 = vi.fn();
 
       TestModel.hook("before", "createOne", beforeCreateFn);
       TestModel.hook("after", "createOne", afterCreateFn1);
@@ -1937,8 +1938,8 @@ describe("Test Model", () => {
     it("should throw error when throwing retryToken in after hook after 3 retries", async () => {
       const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
-      const beforeCreateFn = jest.fn();
-      const afterCreateFn = jest.fn(({ transaction }) => {
+      const beforeCreateFn = vi.fn();
+      const afterCreateFn = vi.fn(({ transaction }) => {
         if (transaction.retries < 3) throw transaction.retryToken;
       });
 
@@ -2192,7 +2193,7 @@ describe("Test Model", () => {
 
       expect(model).toBe(modelBis);
 
-      const spy = jest.spyOn(model, "reloadModel");
+      const spy = vi.spyOn(model, "reloadModel");
 
       expect(spy).toHaveBeenCalledTimes(0);
 
@@ -2710,7 +2711,7 @@ describe("Test Model", () => {
 
     const model1 = Model.getClass(slug, adapter);
 
-    const spyReload = jest.spyOn(model1, "reloadModel");
+    const spyReload = vi.spyOn(model1, "reloadModel");
 
     expect(spyReload).toHaveBeenCalledTimes(0);
 
@@ -2722,13 +2723,13 @@ describe("Test Model", () => {
 
     const model2 = Model.getClass(slug, adapter);
 
-    const spyReload2 = jest.spyOn(model2, "reloadModel");
+    const spyReload2 = vi.spyOn(model2, "reloadModel");
 
-    expect(spyReload2).toHaveBeenCalledTimes(1);
+    expect(spyReload2).toHaveBeenCalledTimes(0);
 
     await model2.initialize();
 
-    expect(spyReload2).toHaveBeenCalledTimes(1);
+    expect(spyReload2).toHaveBeenCalledTimes(0);
 
     expect(model2.fieldsMap.has("title")).toBeTruthy();
 

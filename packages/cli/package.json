@@ -1,6 +1,6 @@
 {
   "name": "@graphand/cli",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": false,
   "type": "module",
   "exports": {
@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@graphand/client": "*",
-    "@graphand/client-module-auth": "^1.1.0",
+    "@graphand/client-module-auth": "^1.1.1",
     "@inquirer/prompts": "^5.3.6",
     "chalk": "^5.3.0",
     "cli-table3": "^0.6.5",

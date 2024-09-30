@@ -52,8 +52,8 @@ export const mockAdapter = ({
     }
 
     fetcher: AdapterFetcher<T> = {
-      count: jest.fn(() => Promise.resolve(this.thisCache.size)),
-      get: jest.fn(([query]) => {
+      count: () => Promise.resolve(this.thisCache.size),
+      get: ([query]) => {
         if (!query) {
           return Promise.resolve(null);
         }
@@ -72,8 +72,8 @@ export const mockAdapter = ({
         }
 
         return Promise.resolve(found || null);
-      }),
-      getList: jest.fn(([query]) => {
+      },
+      getList: ([query]) => {
         if (query?.ids) {
           const arr = Array.from(this.thisCache);
           const list = query.ids.map(id => arr.find(r => r._id === id)).filter(Boolean) as Array<ModelInstance<T>>;
@@ -81,22 +81,22 @@ export const mockAdapter = ({
         }
 
         return Promise.resolve(new ModelList(this.model, Array.from(this.thisCache)));
-      }),
-      createOne: jest.fn(async ([payload]) => {
+      },
+      createOne: async ([payload]) => {
         payload._id ??= String(new ObjectId());
         const i = this.model.hydrate(payload);
         this.thisCache.add(i as ModelInstance<T>);
         return Promise.resolve(i);
-      }),
-      createMultiple: jest.fn(([payload]) => {
+      },
+      createMultiple: ([payload]) => {
         const created = payload.map(p => {
           p._id ??= String(new ObjectId());
           return this.model.hydrate(p);
         });
         created.forEach(i => this.thisCache.add(i as ModelInstance<T>));
         return Promise.resolve(created);
-      }),
-      updateOne: jest.fn(([query, update]) => {
+      },
+      updateOne: ([query, update]) => {
         if (!query || !update) {
           return Promise.resolve(null);
         }
@@ -139,8 +139,8 @@ export const mockAdapter = ({
         found.setData(data);
 
         return Promise.resolve(found);
-      }),
-      updateMultiple: jest.fn(([query, update]) => {
+      },
+      updateMultiple: ([query, update]) => {
         if (!query || !update) {
           return Promise.resolve([]);
         }
@@ -164,8 +164,8 @@ export const mockAdapter = ({
         });
 
         return Promise.resolve(list);
-      }),
-      deleteOne: jest.fn(([query]) => {
+      },
+      deleteOne: ([query]) => {
         if (!query) {
           return Promise.resolve(false);
         }
@@ -177,8 +177,8 @@ export const mockAdapter = ({
         }
 
         return Promise.resolve(false);
-      }),
-      deleteMultiple: jest.fn(([query]) => {
+      },
+      deleteMultiple: ([query]) => {
         if (!query) {
           return Promise.resolve([]);
         }
@@ -186,7 +186,7 @@ export const mockAdapter = ({
         const ids = Array.from(this.thisCache).map(i => i._id);
         this.thisCache.clear();
         return Promise.resolve(ids as string[]);
-      }),
+      },
     };
   }
 

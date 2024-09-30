@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { ObjectId } from "bson";
 import { ModelUpdaterEvent } from "@/types.ts";
 import {
@@ -30,7 +31,7 @@ describe("augmentations", () => {
   let client: Client;
   let model: typeof TestModel;
   let adapter: ClientAdapter;
-  const fetchSpy = jest.spyOn(global, "fetch");
+  const mockFetch = vi.spyOn(global, "fetch");
 
   beforeEach(() => {
     client = new Client([], { accessToken: "test-token", project: "test-project" });
@@ -39,11 +40,11 @@ describe("augmentations", () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   afterAll(() => {
-    fetchSpy.mockRestore();
+    mockFetch.mockRestore();
   });
 
   describe("Model.subscribe", () => {
@@ -53,7 +54,7 @@ describe("augmentations", () => {
     });
 
     it("should call the observer when an event is dispatched", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       model.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
@@ -63,11 +64,11 @@ describe("augmentations", () => {
       >);
 
       expect(observer).toHaveBeenCalled();
-      expect(observer.mock.calls[0][0]).toEqual(event);
+      expect(observer.mock.calls?.[0]?.[0]).toEqual(event);
     });
 
     it("should not call the observer after unsubscribing", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       const unsubscribe = model.subscribe(observer);
 
       unsubscribe();
@@ -82,8 +83,8 @@ describe("augmentations", () => {
     });
 
     it("should allow multiple subscriptions", () => {
-      const observer1 = jest.fn();
-      const observer2 = jest.fn();
+      const observer1 = vi.fn();
+      const observer2 = vi.fn();
 
       model.subscribe(observer1);
       model.subscribe(observer2);
@@ -96,12 +97,12 @@ describe("augmentations", () => {
 
       expect(observer1).toHaveBeenCalled();
       expect(observer2).toHaveBeenCalled();
-      expect(observer1.mock.calls[0][0]).toEqual(event);
-      expect(observer2.mock.calls[0][0]).toEqual(event);
+      expect(observer1.mock.calls?.[0]?.[0]).toEqual(event);
+      expect(observer2.mock.calls?.[0]?.[0]).toEqual(event);
     });
 
     it("should handle create events", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       model.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
@@ -111,11 +112,11 @@ describe("augmentations", () => {
       >);
 
       expect(observer).toHaveBeenCalled();
-      expect(observer.mock.calls[0][0]).toEqual(event);
+      expect(observer.mock.calls?.[0]?.[0]).toEqual(event);
     });
 
     it("should handle update events", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       model.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["123"] };
@@ -125,11 +126,11 @@ describe("augmentations", () => {
       >);
 
       expect(observer).toHaveBeenCalled();
-      expect(observer.mock.calls[0][0]).toEqual(event);
+      expect(observer.mock.calls?.[0]?.[0]).toEqual(event);
     });
 
     it("should handle delete events", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       model.subscribe(observer);
 
       adapter.store.set("123", model.hydrate({ _id: "123" }));
@@ -137,11 +138,11 @@ describe("augmentations", () => {
       adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
 
       expect(observer).toHaveBeenCalled();
-      expect(observer.mock.calls[0][0]).toEqual(event);
+      expect(observer.mock.calls?.[0]?.[0]).toEqual(event);
     });
 
     it("should not call the observer for events from other models", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       model.subscribe(observer);
 
       class OtherModel extends Model {
@@ -160,7 +161,7 @@ describe("augmentations", () => {
     });
 
     it("should work with async observers", async () => {
-      const asyncObserver = jest.fn().mockImplementation(() => Promise.resolve());
+      const asyncObserver = vi.fn().mockImplementation(() => Promise.resolve());
       model.subscribe(asyncObserver);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
@@ -172,11 +173,11 @@ describe("augmentations", () => {
       await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(asyncObserver).toHaveBeenCalled();
-      expect(asyncObserver.mock.calls[0][0]).toEqual(event);
+      expect(asyncObserver.mock.calls?.[0]?.[0]).toEqual(event);
     });
 
     it("should not call the observer for events with empty ids", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       model.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: [] };
@@ -186,7 +187,7 @@ describe("augmentations", () => {
     });
 
     it("should handle multiple events in quick succession", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       model.subscribe(observer);
 
       const events: ModelUpdaterEvent[] = [
@@ -207,9 +208,9 @@ describe("augmentations", () => {
       });
 
       expect(observer).toHaveBeenCalledTimes(3);
-      expect(observer.mock.calls[0][0]).toEqual(events[0]);
-      expect(observer.mock.calls[1][0]).toEqual(events[1]);
-      expect(observer.mock.calls[2][0]).toEqual(events[2]);
+      expect(observer.mock.calls?.[0]?.[0]).toEqual(events[0]);
+      expect(observer.mock.calls?.[1]?.[0]).toEqual(events[1]);
+      expect(observer.mock.calls?.[2]?.[0]).toEqual(events[2]);
     });
 
     it("should handle subscription immediately after model creation", () => {
@@ -220,7 +221,7 @@ describe("augmentations", () => {
       const newModel = client.getModel(NewModel);
       const newAdapter = newModel.getAdapter() as unknown as ClientAdapter;
 
-      const observer = jest.fn();
+      const observer = vi.fn();
       const unsubscribe = newModel.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
@@ -229,12 +230,12 @@ describe("augmentations", () => {
         typeof model
       >);
 
-      expect(observer.mock.calls[0][0]).toEqual(event);
+      expect(observer.mock.calls?.[0]?.[0]).toEqual(event);
       expect(typeof unsubscribe).toBe("function");
     });
 
     it("should handle a large number of subscriptions", () => {
-      const observers = Array.from({ length: 1000 }, () => jest.fn());
+      const observers = Array.from({ length: 1000 }, () => vi.fn());
       observers.forEach(observer => model.subscribe(observer));
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["123"] };
@@ -244,7 +245,7 @@ describe("augmentations", () => {
       >);
 
       observers.forEach(observer => {
-        expect(observer.mock.calls[0][0]).toEqual(event);
+        expect(observer.mock.calls?.[0]?.[0]).toEqual(event);
       });
     });
 
@@ -256,8 +257,8 @@ describe("augmentations", () => {
       const otherModel = client.getModel(OtherModel);
       const otherAdapter = otherModel.getAdapter() as unknown as ClientAdapter;
 
-      const observer1 = jest.fn();
-      const observer2 = jest.fn();
+      const observer1 = vi.fn();
+      const observer2 = vi.fn();
 
       model.subscribe(observer1);
       otherModel.subscribe(observer2);
@@ -281,7 +282,7 @@ describe("augmentations", () => {
     });
 
     it("should handle subscriptions when model is cleared from cache", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       model.subscribe(observer);
 
       model.clearCache();
@@ -296,7 +297,7 @@ describe("augmentations", () => {
     });
 
     it("should not interfere with other Model static methods", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       model.subscribe(observer);
 
       expect(typeof model.getClient).toBe("function");
@@ -319,7 +320,7 @@ describe("augmentations", () => {
       const extendedModel = client.getModel(ExtendedModel);
       const extendedAdapter = extendedModel.getAdapter() as unknown as ClientAdapter;
 
-      const observer = jest.fn();
+      const observer = vi.fn();
       extendedModel.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
@@ -429,13 +430,13 @@ describe("augmentations", () => {
       const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
       adapter.store.set("1", instance1);
 
-      fetchSpy.mockResolvedValue(new Response('{"data": {"_id": "1", "someField": "updated"}}', { status: 200 }));
+      mockFetch.mockResolvedValue(new Response('{"data": {"_id": "1", "someField": "updated"}}', { status: 200 }));
 
       model.clearCache();
 
       const refetchedInstance = await model.get("1");
 
-      expect(fetchSpy).toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalled();
       expect(refetchedInstance?.get("someField")).toBe("updated");
       expect(adapter.store.size).toBe(1);
     });
@@ -483,7 +484,7 @@ describe("augmentations", () => {
     });
 
     it("should call the observer when the instance is updated", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       instance.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["test-id"] };
@@ -497,7 +498,7 @@ describe("augmentations", () => {
     });
 
     it("should not call the observer when a different instance is updated", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       instance.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["other-id"] };
@@ -507,7 +508,7 @@ describe("augmentations", () => {
     });
 
     it("should call the observer when the instance is deleted", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       instance.subscribe(observer);
       adapter.store.set(instance._id as string, instance);
 
@@ -518,7 +519,7 @@ describe("augmentations", () => {
     });
 
     it("should not call the observer after unsubscribing", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       const unsubscribe = instance.subscribe(observer);
 
       unsubscribe();
@@ -534,8 +535,8 @@ describe("augmentations", () => {
     });
 
     it("should handle multiple subscriptions on the same instance", () => {
-      const observer1 = jest.fn();
-      const observer2 = jest.fn();
+      const observer1 = vi.fn();
+      const observer2 = vi.fn();
 
       instance.subscribe(observer1);
       instance.subscribe(observer2);
@@ -552,7 +553,7 @@ describe("augmentations", () => {
     });
 
     it("should handle updateMultiple events that include the instance", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       instance.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["test-id", "other-id"] };
@@ -569,7 +570,7 @@ describe("augmentations", () => {
     });
 
     it("should not call the observer for updateMultiple events that don't include the instance", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       instance.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["other-id-1", "other-id-2"] };
@@ -586,7 +587,7 @@ describe("augmentations", () => {
     });
 
     it("should handle deleteMultiple events that include the instance", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       instance.subscribe(observer);
       adapter.store.set(instance._id as string, instance);
 
@@ -597,7 +598,7 @@ describe("augmentations", () => {
     });
 
     it("should not call the observer for deleteMultiple events that don't include the instance", () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       instance.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["other-id-1", "other-id-2"] };
@@ -608,7 +609,7 @@ describe("augmentations", () => {
 
     it("should handle create events (even though they shouldn't affect an existing instance)", () => {
       adapter.store.set("test-id", instance);
-      const observer = jest.fn();
+      const observer = vi.fn();
       instance.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["test-id"] };
@@ -622,7 +623,7 @@ describe("augmentations", () => {
     });
 
     it("should work with async observers", async () => {
-      const asyncObserver = jest.fn().mockImplementation(() => Promise.resolve());
+      const asyncObserver = vi.fn().mockImplementation(() => Promise.resolve());
       instance.subscribe(asyncObserver);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["test-id"] };
@@ -639,7 +640,7 @@ describe("augmentations", () => {
 
     it("should allow subscribing to a newly created instance", () => {
       const newInstance = model.hydrate({ _id: "new-id" });
-      const observer = jest.fn();
+      const observer = vi.fn();
       newInstance.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["new-id"] };
@@ -654,18 +655,18 @@ describe("augmentations", () => {
 
     it("should pass the previous data and event to the observer", async () => {
       const body1 = JSON.stringify({ data: { _id: "test-id", someField: "test123" } });
-      fetchSpy.mockResolvedValueOnce(new Response(body1));
+      mockFetch.mockResolvedValueOnce(new Response(body1));
 
       const i = await model.get("test-id");
       expect(i.someField).toBe("test123");
 
-      const observer = jest.fn();
+      const observer = vi.fn();
       i.subscribe(observer);
 
       const body2 = JSON.stringify({
         data: { _id: "test-id", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() },
       });
-      fetchSpy.mockResolvedValueOnce(new Response(body2));
+      mockFetch.mockResolvedValueOnce(new Response(body2));
       await i.update({ $set: { someField: "updated" } });
       expect(i.someField).toBe("updated");
 
@@ -677,7 +678,7 @@ describe("augmentations", () => {
       const body3 = JSON.stringify({
         data: { _id: "test-id", someField: "updated2", _updatedAt: new Date(Date.now() + 20).toJSON() },
       });
-      fetchSpy.mockResolvedValueOnce(new Response(body3));
+      mockFetch.mockResolvedValueOnce(new Response(body3));
       await i.update({ $set: { someField: "updated2" } });
       expect(i.someField).toBe("updated2");
 
@@ -688,32 +689,32 @@ describe("augmentations", () => {
     });
 
     it("should handle multiple updates in rapid succession", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       instance.subscribe(observer);
       adapter.store.set("test-id", instance);
 
       const updateEvents = [{ someField: "update1" }, { someField: "update2" }, { someField: "update3" }];
 
-      const fetchSpy = jest.spyOn(global, "fetch");
+      const mockFetch = vi.spyOn(global, "fetch");
 
       let i = 0;
       for (const update of updateEvents) {
         const body = JSON.stringify({
           data: { ...instance.getData(), ...update, _updatedAt: new Date(Date.now() + i + 1).toJSON() },
         });
-        fetchSpy.mockResolvedValueOnce(new Response(body));
+        mockFetch.mockResolvedValueOnce(new Response(body));
         await instance.update({ $set: update });
         i++;
       }
 
       expect(observer).toHaveBeenCalledTimes(3);
 
-      expect(observer.mock.calls[0][0]).toEqual({ _id: "test-id" });
-      expect(observer.mock.calls[0][1]).toEqual({ operation: "update", ids: ["test-id"] });
-      expect(observer.mock.calls[1][0]).toHaveProperty("someField", "update1");
-      expect(observer.mock.calls[1][1]).toEqual({ operation: "update", ids: ["test-id"] });
-      expect(observer.mock.calls[2][0]).toHaveProperty("someField", "update2");
-      expect(observer.mock.calls[2][1]).toEqual({ operation: "update", ids: ["test-id"] });
+      expect(observer.mock.calls?.[0]?.[0]).toEqual({ _id: "test-id" });
+      expect(observer.mock.calls?.[0]?.[1]).toEqual({ operation: "update", ids: ["test-id"] });
+      expect(observer.mock.calls?.[1]?.[0]).toHaveProperty("someField", "update1");
+      expect(observer.mock.calls?.[1]?.[1]).toEqual({ operation: "update", ids: ["test-id"] });
+      expect(observer.mock.calls?.[2]?.[0]).toHaveProperty("someField", "update2");
+      expect(observer.mock.calls?.[2]?.[1]).toEqual({ operation: "update", ids: ["test-id"] });
 
       expect(instance.getData()).toHaveProperty("someField", "update3");
     });
@@ -721,10 +722,6 @@ describe("augmentations", () => {
 
   describe("ModelList.prototype.subscribe", () => {
     let modelList: ModelList<typeof TestModel>;
-
-    afterAll(() => {
-      fetchSpy.mockRestore();
-    });
 
     beforeEach(() => {
       const i1 = model.hydrate({
@@ -744,14 +741,18 @@ describe("augmentations", () => {
       modelList = new ModelList(model, [i1, i2]);
     });
 
+    beforeAll(() => {
+      vi.restoreAllMocks();
+    });
+
     // Test 1: Unsubscribe functionality
     it("should stop calling the observer after unsubscribing", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       const unsubscribe = modelList.subscribe(observer);
 
       // This line is needed because the list is reloaded when an element is updated within the list and the server is not accessible in tests
       // So we need to mock the server response to prevent the list update process from being interrupted
-      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
+      mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
 
       adapter.dispatch({
         operation: "update",
@@ -778,11 +779,11 @@ describe("augmentations", () => {
 
     // Test 2: Loading state changes
     it("should call onLoadingChange with correct loading states", async () => {
-      const observer = jest.fn();
-      const onLoadingChange = jest.fn();
+      const observer = vi.fn();
+      const onLoadingChange = vi.fn();
       modelList.subscribe(observer, { onLoadingChange });
 
-      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
+      mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
 
       adapter.dispatch({
         operation: "update",
@@ -801,12 +802,12 @@ describe("augmentations", () => {
 
     // Test 3: Multiple subscriptions
     it("should handle multiple subscriptions independently", async () => {
-      const observer1 = jest.fn();
-      const observer2 = jest.fn();
+      const observer1 = vi.fn();
+      const observer2 = vi.fn();
       modelList.subscribe(observer1);
       modelList.subscribe(observer2);
 
-      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
+      mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
 
       adapter.dispatch({
         operation: "update",
@@ -824,15 +825,16 @@ describe("augmentations", () => {
     // Test 4: Error handling during reload
     it("should handle errors during reload and call onLoadingChange", async () => {
       const body = JSON.stringify({ data: modelList.toJSON() });
-      fetchSpy.mockResolvedValueOnce(new Response(body));
+      mockFetch.mockResolvedValueOnce(new Response(body));
+      await model.initialize();
       const _modelList = await model.getList();
 
-      const observer = jest.fn();
-      const onLoadingChange = jest.fn();
-      const onError = jest.fn();
+      const observer = vi.fn();
+      const onLoadingChange = vi.fn();
+      const onError = vi.fn();
       _modelList.subscribe(observer, { onLoadingChange, onError });
 
-      fetchSpy.mockRejectedValueOnce(new Error("Reload failed"));
+      mockFetch.mockRejectedValueOnce(new Error("Reload failed"));
 
       adapter.dispatch({
         operation: "update",
@@ -853,10 +855,10 @@ describe("augmentations", () => {
 
     // Test 5: No changes in list
     it("should not call the observer if the list hasn't changed after reload", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer);
 
-      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
+      mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ data: modelList.toJSON() })));
 
       adapter.dispatch({
         operation: "update",
@@ -873,17 +875,17 @@ describe("augmentations", () => {
     // Test 6: Create operation
     it("should call the observer when a new item is created and added to the list", async () => {
       const body = JSON.stringify({ data: modelList.toJSON() });
-      fetchSpy.mockResolvedValueOnce(new Response(body));
+      mockFetch.mockResolvedValueOnce(new Response(body));
       const _modelList = await model.getList();
 
-      const observer = jest.fn();
+      const observer = vi.fn();
       _modelList.subscribe(observer);
 
       const updatedList = [
         ...modelList.toJSON().rows,
         { _id: "3", someField: "new", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() },
       ];
-      fetchSpy.mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({ data: { rows: updatedList, count: updatedList.length } })),
       );
 
@@ -901,11 +903,11 @@ describe("augmentations", () => {
 
     // Test 7: Delete operation
     it("should call the observer when an item is deleted from the list", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer);
 
       const updatedList = modelList.toJSON().rows.filter(item => item._id !== "2");
-      fetchSpy.mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({ data: { rows: updatedList, count: updatedList.length } })),
       );
 
@@ -923,7 +925,7 @@ describe("augmentations", () => {
 
     // Test 8: Batch updates
     it("should handle batch updates correctly", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer);
 
       const updatedList = modelList.toJSON().rows.map(item => ({
@@ -931,7 +933,7 @@ describe("augmentations", () => {
         someField: item._id === "1" ? "updated1" : "updated2",
         _updatedAt: new Date(Date.now() + 10).toJSON(),
       }));
-      fetchSpy.mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({ data: { rows: updatedList, count: updatedList.length } })),
       );
 
@@ -953,11 +955,11 @@ describe("augmentations", () => {
 
     // Test 9: Reordering of list
     it("should call the observer when the list order changes", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer);
 
       const reorderedList = modelList.toJSON().rows.slice().reverse();
-      fetchSpy.mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({ data: { rows: reorderedList, count: reorderedList.length } })),
       );
 
@@ -990,8 +992,8 @@ describe("augmentations", () => {
         ),
       );
 
-      const observer = jest.fn();
-      const onLoadingChange = jest.fn();
+      const observer = vi.fn();
+      const onLoadingChange = vi.fn();
       largeList.subscribe(observer, { onLoadingChange });
 
       const updatedList = largeList
@@ -999,7 +1001,7 @@ describe("augmentations", () => {
         .rows.map(item =>
           item._id === "500" ? { ...item, someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() } : item,
         );
-      fetchSpy.mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({ data: { rows: updatedList, count: updatedList.length } })),
       );
 
@@ -1023,7 +1025,7 @@ describe("augmentations", () => {
 
     // Test 11: Basic subscription with noReload option
     it("should call the observer when an item in the list is updated with noReload option", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer, { noReload: true });
 
       adapter.dispatch({
@@ -1035,12 +1037,12 @@ describe("augmentations", () => {
 
       await new Promise(resolve => setTimeout(resolve, 0));
       expect(observer).toHaveBeenCalledWith({ operation: "update", ids: ["1"] });
-      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
     // Test 12: Subscription should not trigger for items not in the list
     it("should not call the observer for updates to items not in the list with noReload option", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer, { noReload: true });
 
       adapter.dispatch({
@@ -1056,7 +1058,7 @@ describe("augmentations", () => {
 
     // Test 13: Handling create operations with noReload
     it("should not call the observer for create operations with noReload option", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer, { noReload: true });
 
       adapter.dispatch({
@@ -1072,7 +1074,7 @@ describe("augmentations", () => {
 
     // Test 14: Handling delete operations with noReload
     it("should call the observer for delete operations of items in the list with noReload option", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer, { noReload: true, autoRemove: true });
 
       adapter.dispatch({
@@ -1088,8 +1090,8 @@ describe("augmentations", () => {
 
     // Test 15: Multiple subscriptions with noReload
     it("should handle multiple subscriptions independently with noReload option", async () => {
-      const observer1 = jest.fn();
-      const observer2 = jest.fn();
+      const observer1 = vi.fn();
+      const observer2 = vi.fn();
       modelList.subscribe(observer1, { noReload: true });
       modelList.subscribe(observer2, { noReload: true });
 
@@ -1107,7 +1109,7 @@ describe("augmentations", () => {
 
     // Test 16: Unsubscribe functionality with noReload
     it("should stop calling the observer after unsubscribing with noReload option", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       const unsubscribe = modelList.subscribe(observer, { noReload: true });
 
       adapter.dispatch({
@@ -1135,8 +1137,8 @@ describe("augmentations", () => {
 
     // Test 17: Subscription behavior without noReload option
     it("should reload the list when an update occurs without noReload option", async () => {
-      const observer = jest.fn();
-      const reloadSpy = jest.spyOn(modelList, "reload").mockResolvedValue();
+      const observer = vi.fn();
+      const reloadSpy = vi.spyOn(modelList, "reload").mockResolvedValue();
       modelList.subscribe(observer);
 
       adapter.dispatch({
@@ -1153,9 +1155,9 @@ describe("augmentations", () => {
 
     // Test 18: onLoadingChange callback
     it("should call onLoadingChange with correct loading states", async () => {
-      const observer = jest.fn();
-      const onLoadingChange = jest.fn();
-      const reloadSpy = jest.spyOn(modelList, "reload").mockResolvedValue();
+      const observer = vi.fn();
+      const onLoadingChange = vi.fn();
+      const reloadSpy = vi.spyOn(modelList, "reload").mockResolvedValue();
       modelList.subscribe(observer, { onLoadingChange });
 
       adapter.dispatch({
@@ -1175,9 +1177,9 @@ describe("augmentations", () => {
 
     // Test 19: onError callback
     it("should call onError when an error occurs during reload", async () => {
-      const observer = jest.fn();
-      const onError = jest.fn();
-      jest.spyOn(modelList, "reload").mockRejectedValue(new Error("Reload failed"));
+      const observer = vi.fn();
+      const onError = vi.fn();
+      vi.spyOn(modelList, "reload").mockRejectedValue(new Error("Reload failed"));
       modelList.subscribe(observer, { onError });
 
       adapter.dispatch({
@@ -1194,7 +1196,7 @@ describe("augmentations", () => {
 
     // Test 20: Subscription behavior with batch updates
     it("should handle batch updates correctly with noReload option", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer, { noReload: true });
 
       adapter.dispatch({
@@ -1223,13 +1225,13 @@ describe("augmentations", () => {
         },
       });
 
-      fetchSpy.mockResolvedValueOnce(new Response(body)); // First mock for the list first fetch
+      mockFetch.mockResolvedValueOnce(new Response(body)); // First mock for the list first fetch
 
       const fetchedList = await model.getList();
-      const observer = jest.fn();
+      const observer = vi.fn();
       fetchedList.subscribe(observer);
 
-      fetchSpy.mockResolvedValueOnce(new Response(body)); // Second mock for the list reload
+      mockFetch.mockResolvedValueOnce(new Response(body)); // Second mock for the list reload
 
       adapter.dispatch({
         operation: "update",
@@ -1244,11 +1246,11 @@ describe("augmentations", () => {
     });
 
     it("should call the observer when an item in the list is updated", async () => {
-      const fetchSpy = jest.spyOn(global, "fetch");
+      const mockFetch = vi.spyOn(global, "fetch");
       const body = JSON.stringify({ data: modelList.toJSON() });
-      fetchSpy.mockResolvedValueOnce(new Response(body));
+      mockFetch.mockResolvedValueOnce(new Response(body));
 
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer);
 
       await new Promise(resolve => setTimeout(resolve, 1));
@@ -1265,11 +1267,11 @@ describe("augmentations", () => {
     });
 
     it("should call the observer once for multiple updates in rapid succession", async () => {
-      const fetchSpy = jest.spyOn(global, "fetch");
+      const mockFetch = vi.spyOn(global, "fetch");
       const body = JSON.stringify({ data: modelList.toJSON() });
-      fetchSpy.mockResolvedValue(new Response(body));
+      mockFetch.mockResolvedValue(new Response(body));
 
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer);
 
       adapter.dispatch({
@@ -1291,11 +1293,11 @@ describe("augmentations", () => {
     });
 
     it("should call the observer when an item in the list is updated", async () => {
-      const observer = jest.fn();
-      const onLoadingChange = jest.fn();
+      const observer = vi.fn();
+      const onLoadingChange = vi.fn();
       modelList.subscribe(observer, { onLoadingChange });
 
-      const reloadSpy = jest.spyOn(modelList, "reload").mockResolvedValue();
+      const reloadSpy = vi.spyOn(modelList, "reload").mockResolvedValue();
 
       await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -1315,10 +1317,10 @@ describe("augmentations", () => {
     });
 
     it("should call the observer when an item is added or removed from the list", async () => {
-      const observer = jest.fn();
+      const observer = vi.fn();
       modelList.subscribe(observer);
 
-      const reloadSpy = jest.spyOn(modelList, "reload").mockImplementation(async () => {
+      const reloadSpy = vi.spyOn(modelList, "reload").mockImplementation(async () => {
         modelList.push(model.hydrate({ _id: "3", someField: "value3" }));
       });
 

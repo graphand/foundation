@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
 import { Account, DataModel, IdentityTypes, Model, ModelInstance, ModelList, TransactionCtx } from "@graphand/core";
@@ -8,8 +9,7 @@ import jsonwebtoken from "jsonwebtoken";
 
 describe("Client", () => {
   let client: Client;
-  const mockFetch = jest.fn();
-  global.fetch = mockFetch;
+  const mockFetch = vi.spyOn(global, "fetch");
 
   beforeEach(() => {
     client = new Client([]);
@@ -17,7 +17,7 @@ describe("Client", () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe("Module System and Dependencies", () => {
@@ -43,7 +43,7 @@ describe("Client", () => {
 
     // Test 3: Module initialization
     it("should call symbolModuleInit during client initialization", async () => {
-      const initMock = jest.fn();
+      const initMock = vi.fn();
       class InitModule extends Module {
         static moduleName = "InitModule" as const;
         async [symbolModuleInit]() {
@@ -57,7 +57,7 @@ describe("Client", () => {
 
     // Test 4: Module destruction
     it("should call symbolModuleDestroy during client destruction", async () => {
-      const destroyMock = jest.fn();
+      const destroyMock = vi.fn();
       class DestroyModule extends Module {
         static moduleName = "DestroyModule" as const;
         async [symbolModuleDestroy]() {
@@ -173,7 +173,7 @@ describe("Client", () => {
 
     // Test 13: Hook registration and execution
     it("should allow modules to register and execute hooks", async () => {
-      const hookMock = jest.fn();
+      const hookMock = vi.fn();
       class HookModule extends Module {
         static moduleName = "HookModule" as const;
         async [symbolModuleInit]() {
@@ -362,7 +362,7 @@ describe("Client", () => {
 
       expect(mockFetch).toHaveBeenCalledWith(expect.any(Request));
 
-      const calledRequest = mockFetch.mock.calls[0][0] as Request;
+      const calledRequest = mockFetch.mock.calls?.[0]?.[0] as Request;
       expect(calledRequest.headers.get("Authorization")).toBe("Bearer test-token");
     });
 
@@ -415,7 +415,7 @@ describe("Client", () => {
       await client.execute({ path: "/test", methods: ["get"], secured: false });
 
       expect(mockFetch).toHaveBeenCalledWith(expect.any(Request));
-      const calledRequest = mockFetch.mock.calls[0][0] as Request;
+      const calledRequest = mockFetch.mock.calls?.[0]?.[0] as Request;
       expect(calledRequest.headers.get("X-Custom-Header")).toBe("TestValue");
     });
 
@@ -427,7 +427,7 @@ describe("Client", () => {
       );
 
       expect(mockFetch).toHaveBeenCalledWith(expect.any(Request));
-      const calledRequest = mockFetch.mock.calls[0][0] as Request;
+      const calledRequest = mockFetch.mock.calls?.[0]?.[0] as Request;
       expect(calledRequest.url).toContain("?param=value+with+spaces");
     });
 
@@ -457,14 +457,14 @@ describe("Client", () => {
     });
 
     it("should be able to modify request init", async () => {
-      const requestFn = jest.fn(i => i);
+      const requestFn = vi.fn(i => i);
       mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
       await client.execute({ path: "/test", methods: ["get"], secured: false }, { ctx: { onRequest: requestFn } });
       expect(requestFn).toHaveBeenCalled();
     });
 
     it("should throw if onRequest returns invalid request init", async () => {
-      const requestFn = jest.fn(() => null) as unknown as TransactionCtx["onRequest"];
+      const requestFn = vi.fn(() => null) as unknown as TransactionCtx["onRequest"];
       mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
       await expect(
         client.execute({ path: "/test", methods: ["get"], secured: false }, { ctx: { onRequest: requestFn } }),
@@ -474,7 +474,7 @@ describe("Client", () => {
 
     it("should be able to call request init through the ClientAdapter (on model create)", async () => {
       const _client = new Client([], { accessToken: "test-token", project: null });
-      const requestFn = jest.fn(i => i);
+      const requestFn = vi.fn(i => i);
       const dm = _client.getModel(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10),
@@ -488,7 +488,7 @@ describe("Client", () => {
 
   describe("Hooks", () => {
     it("should execute beforeRequest hooks", async () => {
-      const hookFn = jest.fn();
+      const hookFn = vi.fn();
       client.hook("beforeRequest", hookFn);
       mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
       await client.execute({ path: "/test", methods: ["get"], secured: false });
@@ -496,7 +496,7 @@ describe("Client", () => {
     });
 
     it("should execute afterRequest hooks", async () => {
-      const hookFn = jest.fn();
+      const hookFn = vi.fn();
       client.hook("afterRequest", hookFn);
       mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
       await client.execute({ path: "/test", methods: ["get"], secured: false });
@@ -513,7 +513,7 @@ describe("Client", () => {
 
       expect(mockFetch).toHaveBeenCalledWith(expect.any(Request));
 
-      const calledRequest = mockFetch.mock.calls[0][0] as Request;
+      const calledRequest = mockFetch.mock.calls?.[0]?.[0] as Request;
       expect(calledRequest.headers.get("X-Custom-Header")).toBe("TestValue");
     });
 
@@ -614,8 +614,8 @@ describe("Client", () => {
     });
 
     it("should allow multiple hooks of the same phase", async () => {
-      const hookFn1 = jest.fn();
-      const hookFn2 = jest.fn();
+      const hookFn1 = vi.fn();
+      const hookFn2 = vi.fn();
       client.hook("beforeRequest", hookFn1);
       client.hook("beforeRequest", hookFn2);
       mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
@@ -645,7 +645,7 @@ describe("Client", () => {
     });
 
     it("should execute error handling hooks on hook errors", async () => {
-      const errorHook = jest.fn();
+      const errorHook = vi.fn();
       client.hook("beforeRequest", () => {
         throw new Error("Test error");
       });
@@ -656,7 +656,7 @@ describe("Client", () => {
     });
 
     it("should not execute non-error handling hooks after an error", async () => {
-      const normalHook = jest.fn();
+      const normalHook = vi.fn();
       client.hook("beforeRequest", () => {
         throw new Error("Test error");
       });
@@ -667,7 +667,7 @@ describe("Client", () => {
     });
 
     it("should allow hooks to be removed", async () => {
-      const hookFn = jest.fn();
+      const hookFn = vi.fn();
       client.hook("beforeRequest", hookFn);
       // Assuming there's a method to remove hooks
       client.removeHook("beforeRequest", hookFn);
@@ -677,7 +677,7 @@ describe("Client", () => {
     });
 
     it("should allow hooks to be conditionally executed", async () => {
-      const conditionalHook = jest.fn();
+      const conditionalHook = vi.fn();
       client.hook("beforeRequest", ({ req }) => {
         if (req.url.includes("/conditional")) {
           conditionalHook();
@@ -705,7 +705,7 @@ describe("Client", () => {
     });
 
     it("should handle async hooks correctly", async () => {
-      const asyncHook = jest.fn().mockResolvedValue(undefined);
+      const asyncHook = vi.fn().mockResolvedValue(undefined);
       client.hook("beforeRequest", asyncHook);
       mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
       await client.execute({ path: "/test", methods: ["get"], secured: false });
@@ -769,7 +769,8 @@ describe("Client", () => {
           }),
         }),
       );
-      expect(mockFetch.mock.calls[0][0].headers.get("X-Custom-Header")).toBe("TestValue");
+      const request = mockFetch.mock.calls?.[0]?.[0] as Request;
+      expect(request.headers.get("X-Custom-Header")).toBe("TestValue");
     });
 
     it("should allow modification of response in afterRequest hook", async () => {
@@ -812,7 +813,7 @@ describe("Client", () => {
     });
 
     it("should execute error handling hooks on hook errors", async () => {
-      const errorHook = jest.fn();
+      const errorHook = vi.fn();
       client.hook("beforeRequest", () => {
         throw new Error("Test error");
       });
@@ -825,7 +826,7 @@ describe("Client", () => {
     });
 
     it("should allow hooks to be removed", async () => {
-      const hookFn = jest.fn();
+      const hookFn = vi.fn();
       client.hook("beforeRequest", hookFn);
       client.removeHook("beforeRequest", hookFn);
 
@@ -836,7 +837,7 @@ describe("Client", () => {
     });
 
     it("should throw an error when trying to remove a non-existent hook", () => {
-      const hookFn = jest.fn();
+      const hookFn = vi.fn();
       expect(() => client.removeHook("beforeRequest", hookFn)).toThrow("Hook not found");
     });
   });

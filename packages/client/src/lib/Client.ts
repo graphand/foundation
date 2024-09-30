@@ -421,7 +421,9 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     try {
       res = await fetch(request);
 
+      console.log(request.url, !!res);
       if (!res) {
+        console.log(request.url, !!res);
         throw new Error("Response is null");
       }
 

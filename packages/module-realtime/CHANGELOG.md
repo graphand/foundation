@@ -1,5 +1,16 @@
 # @graphand/client-module-realtime
 
+## 1.1.1
+
+### Patch Changes
+
+- Replace jest with vitest
+- Refactor code for better esm compatibility
+- Updated dependencies
+- Updated dependencies
+  - @graphand/client@1.1.1
+  - @graphand/core@1.1.1
+
 ## 1.1.0
 
 ### Minor Changes

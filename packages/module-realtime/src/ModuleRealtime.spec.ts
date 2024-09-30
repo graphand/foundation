@@ -1,3 +1,4 @@
+import { vi, MockInstance } from "vitest";
 import { faker } from "@faker-js/faker";
 import { Client, ClientAdapter } from "@graphand/client";
 import ModuleRealtime from "./ModuleRealtime.ts";
@@ -7,10 +8,10 @@ import RealtimeUpload from "./lib/RealtimeUpload.ts";
 
 describe("ModuleRealtime", () => {
   let client: Client<[typeof ModuleRealtime]>;
-  let spyFetch: jest.SpyInstance;
+  let spyFetch: MockInstance;
 
   beforeAll(() => {
-    spyFetch = jest.spyOn(globalThis, "fetch").mockImplementation(async req => {
+    spyFetch = vi.spyOn(globalThis, "fetch").mockImplementation(async req => {
       if (!(req instanceof Request)) {
         return new Response();
       }
@@ -80,7 +81,7 @@ describe("ModuleRealtime", () => {
 
     const model = client.getModel("testModel");
     const adapter = model.getAdapter() as ClientAdapter;
-    const mockDispatch = jest.spyOn(adapter, "dispatch");
+    const mockDispatch = vi.spyOn(adapter, "dispatch");
     const event: ModelCrudEvent = {
       operation: "create",
       model: "testModel",
@@ -103,7 +104,7 @@ describe("ModuleRealtime", () => {
   });
 
   it.skip("should subscribe to models", async () => {
-    let spyEmit = jest.spyOn(client.get("realtime").getSocket(false) as Socket, "emit");
+    let spyEmit = vi.spyOn(client.get("realtime").getSocket(false) as Socket, "emit");
 
     client.get("realtime").subscribeModels(["testModel"]);
 
@@ -117,7 +118,7 @@ describe("ModuleRealtime", () => {
 
     await client.get("realtime").disconnect();
 
-    spyEmit = jest.spyOn(client.get("realtime").getSocket(false) as Socket, "emit");
+    spyEmit = vi.spyOn(client.get("realtime").getSocket(false) as Socket, "emit");
 
     await client.get("realtime").connect();
 
@@ -129,7 +130,7 @@ describe("ModuleRealtime", () => {
     const upload = client.get("realtime").getUpload("test");
     expect(upload).toBeInstanceOf(RealtimeUpload);
 
-    const stateSpy = jest.fn();
+    const stateSpy = vi.fn();
     const unsub = upload.subscribe(stateSpy);
 
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -155,8 +156,8 @@ describe("ModuleRealtime", () => {
 
     expect(stateSpy.mock.calls.length).toBeGreaterThan(2);
 
-    const firstCall = stateSpy.mock.calls[0][0];
-    const lastCall = stateSpy.mock.calls[stateSpy.mock.calls.length - 1][0];
+    const firstCall = stateSpy.mock.calls?.[0]?.[0];
+    const lastCall = stateSpy.mock.calls?.[stateSpy.mock.calls.length - 1]?.[0];
 
     expect(firstCall).toEqual(
       expect.objectContaining({

@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { ModelList } from "@/lib/ModelList.ts";
 import { mockModel } from "@/lib/test-utils.dev.ts";
 import { ModelInstance } from "../index.ts";
@@ -126,7 +127,7 @@ describe("test ModelList", () => {
 
   it("should reload the list correctly", async () => {
     const list = new ModelList(model);
-    const reloadSpy = jest.spyOn(model, "getList").mockResolvedValue(
+    const reloadSpy = vi.spyOn(model, "getList").mockResolvedValue(
       new ModelList(
         model,
         [

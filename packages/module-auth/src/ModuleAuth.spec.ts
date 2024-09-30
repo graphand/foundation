@@ -1,3 +1,4 @@
+import { MockInstance, vi } from "vitest";
 import { ObjectId } from "bson";
 import { faker } from "@faker-js/faker";
 import { Client } from "@graphand/client";
@@ -7,10 +8,10 @@ import { AuthStorage } from "./types.ts";
 
 describe("ModuleAuth", () => {
   let client: Client<[typeof ModuleAuth]>;
-  let spyFetch: jest.SpyInstance;
+  let spyFetch: MockInstance;
 
   beforeAll(() => {
-    spyFetch = jest.spyOn(globalThis, "fetch").mockImplementation(async req => {
+    spyFetch = vi.spyOn(globalThis, "fetch").mockImplementation(async req => {
       if (!(req instanceof Request)) {
         return new Response();
       }
@@ -124,9 +125,9 @@ describe("ModuleAuth", () => {
 
   it("should use custom storage when provided", () => {
     const customStorage: AuthStorage = {
-      setItem: jest.fn(),
-      getItem: jest.fn(),
-      removeItem: jest.fn(),
+      setItem: vi.fn(),
+      getItem: vi.fn(),
+      removeItem: vi.fn(),
     };
     const customClient = new Client([[ModuleAuth, { storage: customStorage }]]);
     expect(customClient.get("auth").storage).toBe(customStorage);
@@ -138,7 +139,7 @@ describe("ModuleAuth", () => {
     const email = faker.internet.email();
     const password = faker.internet.password();
 
-    const spySetTokens = jest.spyOn(client.get("auth"), "setTokens");
+    const spySetTokens = vi.spyOn(client.get("auth"), "setTokens");
 
     expect(spySetTokens).toHaveBeenCalledTimes(0);
 
@@ -189,7 +190,7 @@ describe("ModuleAuth", () => {
       },
     };
 
-    const spySetItem = jest.spyOn(AsyncStorage, "setItem");
+    const spySetItem = vi.spyOn(AsyncStorage, "setItem");
 
     const _client = new Client(
       [
@@ -206,7 +207,7 @@ describe("ModuleAuth", () => {
     const email = faker.internet.email();
     const password = faker.internet.password();
 
-    const spySetTokens = jest.spyOn(_client.get("auth"), "setTokens");
+    const spySetTokens = vi.spyOn(_client.get("auth"), "setTokens");
 
     expect(spySetTokens).toHaveBeenCalledTimes(0);
 
@@ -295,8 +296,8 @@ describe("ModuleAuth", () => {
   });
 
   it("should handle auth result from URL", async () => {
-    const mockSuccess = jest.fn();
-    const mockError = jest.fn();
+    const mockSuccess = vi.fn();
+    const mockError = vi.fn();
     const _client = new Client([
       [
         ModuleAuth,

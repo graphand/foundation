@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { BehaviorSubject } from "./BehaviorSubject.ts";
 import { SubjectObserver } from "../types.ts";
 
@@ -20,13 +21,13 @@ describe("BehaviorSubject", () => {
   });
 
   it("should notify new observer with current value immediately", () => {
-    const observer: SubjectObserver<number> = jest.fn();
+    const observer: SubjectObserver<number> = vi.fn();
     behaviorSubject.subscribe(observer);
     expect(observer).toHaveBeenCalledWith(initialValue, undefined);
   });
 
   it("should notify observers with new and previous values", () => {
-    const observer: SubjectObserver<number> = jest.fn();
+    const observer: SubjectObserver<number> = vi.fn();
     behaviorSubject.subscribe(observer);
     behaviorSubject.next(10);
     expect(observer).toHaveBeenCalledWith(10, 0);
@@ -38,8 +39,8 @@ describe("BehaviorSubject", () => {
   });
 
   it("should notify all observers on next", () => {
-    const observer1: SubjectObserver<number> = jest.fn();
-    const observer2: SubjectObserver<number> = jest.fn();
+    const observer1: SubjectObserver<number> = vi.fn();
+    const observer2: SubjectObserver<number> = vi.fn();
     behaviorSubject.subscribe(observer1);
     behaviorSubject.subscribe(observer2);
     behaviorSubject.next(10);
@@ -48,7 +49,7 @@ describe("BehaviorSubject", () => {
   });
 
   it("should allow observer to unsubscribe", () => {
-    const observer: SubjectObserver<number> = jest.fn();
+    const observer: SubjectObserver<number> = vi.fn();
     const unsubscribe = behaviorSubject.subscribe(observer);
     unsubscribe();
     behaviorSubject.next(10);
@@ -57,13 +58,13 @@ describe("BehaviorSubject", () => {
 
   it("should notify new observer with the latest value", () => {
     behaviorSubject.next(10);
-    const observer: SubjectObserver<number> = jest.fn();
+    const observer: SubjectObserver<number> = vi.fn();
     behaviorSubject.subscribe(observer);
     expect(observer).toHaveBeenCalledWith(10, undefined);
   });
 
   it("should not notify unsubscribed observer", () => {
-    const observer: SubjectObserver<number> = jest.fn();
+    const observer: SubjectObserver<number> = vi.fn();
     const unsubscribe = behaviorSubject.subscribe(observer);
     unsubscribe();
     behaviorSubject.next(10);
@@ -71,8 +72,8 @@ describe("BehaviorSubject", () => {
   });
 
   it("should notify all observers even after one unsubscribes", () => {
-    const observer1: SubjectObserver<number> = jest.fn();
-    const observer2: SubjectObserver<number> = jest.fn();
+    const observer1: SubjectObserver<number> = vi.fn();
+    const observer2: SubjectObserver<number> = vi.fn();
     const unsubscribe1 = behaviorSubject.subscribe(observer1);
     behaviorSubject.subscribe(observer2);
     unsubscribe1();
@@ -82,7 +83,7 @@ describe("BehaviorSubject", () => {
   });
 
   it("should notify observer with the correct previous value", () => {
-    const observer: SubjectObserver<number> = jest.fn();
+    const observer: SubjectObserver<number> = vi.fn();
     behaviorSubject.subscribe(observer);
     behaviorSubject.next(10);
     behaviorSubject.next(20);
@@ -90,8 +91,8 @@ describe("BehaviorSubject", () => {
   });
 
   it("should not affect other observers when one unsubscribes", () => {
-    const observer1: SubjectObserver<number> = jest.fn();
-    const observer2: SubjectObserver<number> = jest.fn();
+    const observer1: SubjectObserver<number> = vi.fn();
+    const observer2: SubjectObserver<number> = vi.fn();
     const unsubscribe1 = behaviorSubject.subscribe(observer1);
     behaviorSubject.subscribe(observer2);
     unsubscribe1();
@@ -102,13 +103,13 @@ describe("BehaviorSubject", () => {
 
   it("should notify observers with updated value immediately after subscription", () => {
     behaviorSubject.next(10);
-    const observer: SubjectObserver<number> = jest.fn();
+    const observer: SubjectObserver<number> = vi.fn();
     behaviorSubject.subscribe(observer);
     expect(observer).toHaveBeenCalledWith(10, undefined);
   });
 
   it("should allow re-subscribing an observer", () => {
-    const observer: SubjectObserver<number> = jest.fn();
+    const observer: SubjectObserver<number> = vi.fn();
     const unsubscribe = behaviorSubject.subscribe(observer);
     unsubscribe();
     behaviorSubject.subscribe(observer);
@@ -118,8 +119,8 @@ describe("BehaviorSubject", () => {
 
   it("should maintain state independently for different instances", () => {
     const behaviorSubject2 = new BehaviorSubject<number>(initialValue);
-    const observer1: SubjectObserver<number> = jest.fn();
-    const observer2: SubjectObserver<number> = jest.fn();
+    const observer1: SubjectObserver<number> = vi.fn();
+    const observer2: SubjectObserver<number> = vi.fn();
     behaviorSubject.subscribe(observer1);
     behaviorSubject2.subscribe(observer2);
     behaviorSubject.next(10);

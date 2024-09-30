@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { ObjectId } from "bson";
 import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils.dev.ts";
 import { FieldTypes } from "@/enums/field-types.ts";
@@ -496,11 +497,11 @@ describe("test fields", () => {
       });
 
       it("should not call other fields serializers thanks to the proxy", async () => {
-        const serializeText = jest.fn(({ value }) => {
+        const serializeText = vi.fn(({ value }) => {
           return typeof value === "string" ? value : String(value);
         });
 
-        const serializeNumber = jest.fn(({ value }) => {
+        const serializeNumber = vi.fn(({ value }) => {
           return parseFloat(value);
         });
 
@@ -556,11 +557,11 @@ describe("test fields", () => {
       });
 
       it("should not call other fields serializers thanks to the proxy even in nested objects", async () => {
-        const serializeText = jest.fn(({ value }) => {
+        const serializeText = vi.fn(({ value }) => {
           return typeof value === "string" ? value : String(value);
         });
 
-        const serializeNumber = jest.fn(({ value }) => {
+        const serializeNumber = vi.fn(({ value }) => {
           return parseFloat(value);
         });
 
@@ -632,11 +633,11 @@ describe("test fields", () => {
       });
 
       it("should not call other fields serializers thanks to the proxy even in nested array", async () => {
-        const serializeText = jest.fn(({ value }) => {
+        const serializeText = vi.fn(({ value }) => {
           return typeof value === "string" ? value : String(value);
         });
 
-        const serializeNumber = jest.fn(({ value }) => {
+        const serializeNumber = vi.fn(({ value }) => {
           return parseFloat(value);
         });
 
@@ -737,7 +738,7 @@ describe("test fields", () => {
     describe("options.fields", () => {
       it("should serialize from fields defined in options", async () => {
         const serializedText = faker.lorem.word();
-        const testSerializer = jest.fn(() => serializedText);
+        const testSerializer = vi.fn(() => serializedText);
 
         const _adapter = mockAdapter({
           fieldsMap: {
@@ -775,7 +776,7 @@ describe("test fields", () => {
       });
 
       it("should validate fields defined in options", async () => {
-        const testValidator = jest.fn(() => Promise.resolve(true));
+        const testValidator = vi.fn(() => Promise.resolve(true));
 
         class TestFieldText extends Field<FieldTypes.TEXT> {
           validate = testValidator;
@@ -816,8 +817,8 @@ describe("test fields", () => {
 
       it("should support nested JSON fields", async () => {
         const serializedText = faker.lorem.word();
-        const testSerializer = jest.fn(() => serializedText);
-        const testValidator = jest.fn(() => Promise.resolve(true));
+        const testSerializer = vi.fn(() => serializedText);
+        const testValidator = vi.fn(() => Promise.resolve(true));
 
         class TestFieldText extends Field<FieldTypes.TEXT> {
           validate = testValidator;
@@ -875,7 +876,7 @@ describe("test fields", () => {
       });
 
       it("should throw error if error happens in field validation", async () => {
-        const testValidator = jest.fn(() => Promise.resolve(false));
+        const testValidator = vi.fn(() => Promise.resolve(false));
 
         class TestFieldText extends Field<FieldTypes.TEXT> {
           validate = testValidator;
@@ -929,7 +930,7 @@ describe("test fields", () => {
 
     describe("options.validators", () => {
       it("should validate validators defined in options", async () => {
-        const testValidate = jest.fn(() => Promise.resolve(true));
+        const testValidate = vi.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
           validatorsMap: {
@@ -969,7 +970,7 @@ describe("test fields", () => {
       });
 
       it("should throw error if error happens in validator", async () => {
-        const testValidate = jest.fn(() => Promise.resolve(false));
+        const testValidate = vi.fn(() => Promise.resolve(false));
 
         const _adapter = mockAdapter({
           validatorsMap: {
@@ -1009,7 +1010,7 @@ describe("test fields", () => {
       });
 
       it("should support nested JSON fields and should not validate if nested value undefined", async () => {
-        const testValidate = jest.fn(() => Promise.resolve(true));
+        const testValidate = vi.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
           validatorsMap: {
@@ -1056,7 +1057,7 @@ describe("test fields", () => {
       });
 
       it("should support nested JSON fields and should validate if nested value is not undefined", async () => {
-        const testValidate = jest.fn(() => Promise.resolve(true));
+        const testValidate = vi.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
           validatorsMap: {
@@ -1990,7 +1991,7 @@ describe("test fields", () => {
     describe("options.defaultField", () => {
       it("should use defaultField by default to serialize", async () => {
         const serializedText = faker.lorem.word();
-        const testSerializer = jest.fn(() => serializedText);
+        const testSerializer = vi.fn(() => serializedText);
 
         const _adapter = mockAdapter({
           fieldsMap: {
@@ -2026,7 +2027,7 @@ describe("test fields", () => {
 
       it("should use defaultField by default to serialize in json", async () => {
         const serializedText = faker.lorem.word();
-        const testSerializer = jest.fn(() => serializedText);
+        const testSerializer = vi.fn(() => serializedText);
 
         const _adapter = mockAdapter({
           fieldsMap: {
@@ -2062,7 +2063,7 @@ describe("test fields", () => {
 
       it("should use defaultField only for not defined fields", async () => {
         const serializedText = faker.lorem.word();
-        const testSerializer = jest.fn(() => serializedText);
+        const testSerializer = vi.fn(() => serializedText);
 
         const _adapter = mockAdapter({
           fieldsMap: {
@@ -2104,7 +2105,7 @@ describe("test fields", () => {
       });
 
       it("should use defaultField by default to validate", async () => {
-        const testValidator = jest.fn(() => Promise.resolve(true));
+        const testValidator = vi.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
           fieldsMap: {
