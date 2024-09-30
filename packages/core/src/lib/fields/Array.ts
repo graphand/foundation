@@ -1,11 +1,11 @@
-import { FieldTypes } from "@/enums/field-types";
-import { FieldOptions, FieldSerializerInput } from "@/types";
-import { Field } from "@/lib/Field";
-import { Model } from "@/lib/Model";
-import { getFieldFromDefinition, getValidationValues, isObjectId } from "@/lib/utils";
-import { CoreError } from "@/lib/CoreError";
-import { PromiseModelList } from "@/lib/PromiseModelList";
-import { ModelList } from "@/lib/ModelList";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { FieldOptions, FieldSerializerInput } from "@/types/index.ts";
+import { Field } from "@/lib/Field.ts";
+import { Model } from "@/lib/Model.ts";
+import { getFieldFromDefinition, getValidationValues, isObjectId } from "@/lib/utils.ts";
+import { CoreError } from "@/lib/CoreError.ts";
+import { PromiseModelList } from "@/lib/PromiseModelList.ts";
+import { ModelList } from "@/lib/ModelList.ts";
 
 export class FieldArray extends Field<FieldTypes.ARRAY> {
   validate: Field<FieldTypes.ARRAY>["validate"] = async ({ list }) => {
@@ -74,13 +74,9 @@ export class FieldArray extends Field<FieldTypes.ARRAY> {
 
       if (model.isSingle()) {
         res = arrVal.map((v, i) => {
-          const itemsField = getFieldFromDefinition(
-            this.options.items,
-            adapter,
-            this.path + `.[${i}]`,
-          );
+          const itemsField = getFieldFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
 
-          return itemsField.serialize(v, format, from, ctx);
+          return itemsField?.serialize(v, format, from, ctx);
         });
       } else {
         const ids = arrVal.map(String);
@@ -98,7 +94,7 @@ export class FieldArray extends Field<FieldTypes.ARRAY> {
 
     const fieldId = getFieldFromDefinition<FieldTypes.ID>({ type: FieldTypes.ID }, adapter, "_id");
 
-    return arrVal.map(id => fieldId.serialize(id, format, from, ctx));
+    return arrVal.map(id => fieldId?.serialize(id, format, from, ctx));
   };
 
   _sStatic = (input: FieldSerializerInput) => {
@@ -109,7 +105,7 @@ export class FieldArray extends Field<FieldTypes.ARRAY> {
     return arrVal.map((v, i) => {
       const itemsField = getFieldFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
 
-      return itemsField.serialize(v, format, from, ctx);
+      return itemsField?.serialize(v, format, from, ctx);
     });
   };
 

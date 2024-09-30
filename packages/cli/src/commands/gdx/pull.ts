@@ -1,6 +1,6 @@
 import fs from "fs";
 import qs from "qs";
-import { colorizeJson, getClient, getGdxPath, withSpinner } from "@/lib/utils";
+import { colorizeJson, getClient, getGdxPath, withSpinner } from "@/lib/utils.ts";
 import { controllerGdxPull, JSONQuery, JSONTypeObject } from "@graphand/core";
 import { Command } from "commander";
 
@@ -14,7 +14,7 @@ export const commandGdxPull = new Command("pull")
     withSpinner(async () => {
       const client = await getClient();
 
-      let query: JSONTypeObject = qs.parse(options.query || "");
+      let query = qs.parse(options.query || "") as JSONTypeObject;
 
       if (options.models) {
         const models = String(options.models).split(",");
@@ -49,6 +49,10 @@ export const commandGdxPull = new Command("pull")
 
       if (output === "file") {
         const configPath = await getGdxPath();
+        if (!configPath) {
+          throw new Error("No GDX file found");
+        }
+
         await fs.promises.writeFile(configPath, JSON.stringify(json.data, null, 2));
         return;
       }

@@ -1,12 +1,33 @@
 import { faker } from "@faker-js/faker";
 import { Client, ClientAdapter } from "@graphand/client";
-import ModuleRealtime from "./ModuleRealtime";
+import ModuleRealtime from "./ModuleRealtime.ts";
 import { Socket } from "socket.io-client";
 import { controllerModelCreate, ModelCrudEvent } from "@graphand/core";
-import RealtimeUpload from "./lib/RealtimeUpload";
+import RealtimeUpload from "./lib/RealtimeUpload.ts";
 
-describe.skip("ModuleRealtime", () => {
+describe("ModuleRealtime", () => {
   let client: Client<[typeof ModuleRealtime]>;
+  let spyFetch: jest.SpyInstance;
+
+  beforeAll(() => {
+    spyFetch = jest.spyOn(globalThis, "fetch").mockImplementation(async req => {
+      if (!(req instanceof Request)) {
+        return new Response();
+      }
+
+      const url = new URL(req.url);
+
+      if (url.pathname === "/datamodels/query") {
+        return new Response(JSON.stringify({ data: { rows: [], count: 0 } }));
+      }
+
+      return new Response(JSON.stringify({ data: {} }));
+    });
+  });
+
+  afterAll(() => {
+    spyFetch.mockRestore();
+  });
 
   beforeEach(() => {
     client = new Client([[ModuleRealtime]], {
@@ -20,6 +41,7 @@ describe.skip("ModuleRealtime", () => {
   });
 
   it("should throw an error when connecting without an access token", () => {
+    // @ts-ignore
     const _client = client.clone({ accessToken: null });
     expect(() => _client.get("realtime").connect()).toThrow("Access token is required to connect to the socket");
     _client.destroy();
@@ -30,28 +52,28 @@ describe.skip("ModuleRealtime", () => {
     expect(client.get("realtime").getSocket(false)).toBeInstanceOf(Socket);
   });
 
-  it("should not connect automatically when autoConnect is false", async () => {
+  it.skip("should not connect automatically when autoConnect is false", async () => {
     const _client = new Client([[ModuleRealtime, { autoConnect: false }]], client.options);
     await _client.init();
     expect(_client.get("realtime").getSocket(false)).toBeUndefined();
     _client.destroy();
   });
 
-  it("should be able to connect to the socket", async () => {
+  it.skip("should be able to connect to the socket", async () => {
     const socket = client.get("realtime").getSocket();
     expect(socket).toBeInstanceOf(Socket);
-    expect(socket.connected).toBeFalsy();
+    expect(socket?.connected).toBeFalsy();
 
     await client.get("realtime").connect();
 
-    expect(socket.connected).toBeTruthy();
+    expect(socket?.connected).toBeTruthy();
 
     await client.get("realtime").disconnect();
 
-    expect(socket.connected).toBeFalsy();
+    expect(socket?.connected).toBeFalsy();
   });
 
-  it("should dispatch ModelCrudEvent on realtime:event", async () => {
+  it.skip("should dispatch ModelCrudEvent on realtime:event", async () => {
     client.get("realtime").subscribeModels(["testModel"]);
     await client.get("realtime").connect();
     const socket = client.get("realtime").getSocket();
@@ -66,20 +88,22 @@ describe.skip("ModuleRealtime", () => {
       data: [{ _id: "123" }],
     };
 
+    if (!socket) return;
+
     const [listener] = socket.listeners("realtime:event");
 
-    listener(event);
+    listener?.(event);
 
     expect(mockDispatch).toHaveBeenCalledWith(
       expect.objectContaining({
         ...event,
-        __socketId: socket.id,
+        __socketId: socket?.id,
       }),
     );
   });
 
-  it("should subscribe to models", async () => {
-    let spyEmit = jest.spyOn(client.get("realtime").getSocket(false), "emit");
+  it.skip("should subscribe to models", async () => {
+    let spyEmit = jest.spyOn(client.get("realtime").getSocket(false) as Socket, "emit");
 
     client.get("realtime").subscribeModels(["testModel"]);
 
@@ -93,14 +117,14 @@ describe.skip("ModuleRealtime", () => {
 
     await client.get("realtime").disconnect();
 
-    spyEmit = jest.spyOn(client.get("realtime").getSocket(false), "emit");
+    spyEmit = jest.spyOn(client.get("realtime").getSocket(false) as Socket, "emit");
 
     await client.get("realtime").connect();
 
     expect(spyEmit).toHaveBeenCalledWith("subscribeModels", "testModel,testModel2");
   });
 
-  it("should be able to subscribe to upload events", async () => {
+  it.skip("should be able to subscribe to upload events", async () => {
     await client.get("realtime").connect();
     const upload = client.get("realtime").getUpload("test");
     expect(upload).toBeInstanceOf(RealtimeUpload);

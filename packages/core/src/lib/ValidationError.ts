@@ -1,8 +1,8 @@
-import { CoreError } from "@/lib/CoreError";
-import { ValidationFieldError } from "@/lib/ValidationFieldError";
-import { ValidationValidatorError } from "@/lib/ValidationValidatorError";
-import { CoreErrorDefinition } from "@/types";
-import { ErrorCodes } from "@/enums/error-codes";
+import { CoreError } from "@/lib/CoreError.ts";
+import { ValidationFieldError } from "@/lib/ValidationFieldError.ts";
+import { ValidationValidatorError } from "@/lib/ValidationValidatorError.ts";
+import { CoreErrorDefinition } from "@/types/index.ts";
+import { ErrorCodes } from "@/enums/error-codes.ts";
 
 export class ValidationError extends CoreError {
   fields: Array<ValidationFieldError>;
@@ -32,10 +32,7 @@ export class ValidationError extends CoreError {
   }
 
   get fieldsPaths(): Array<string> {
-    return [
-      ...this.fields.map(f => f.field?.path),
-      ...this.validators.map(v => v.validator.getFullPath()),
-    ];
+    return [...this.fields.map(f => f.field?.path), ...this.validators.map(v => v.validator.getFullPath())];
   }
 
   get message() {
@@ -50,9 +47,9 @@ export class ValidationError extends CoreError {
       );
     }
     if (this.validators.length) {
-      let reason = `${this.validators.length} model validator${
-        this.validators.length > 1 ? "s" : ""
-      } (${this.validators.map(v => v.validator.type).join(", ")})`;
+      let reason = `${this.validators.length} model validator${this.validators.length > 1 ? "s" : ""} (${this.validators
+        .map(v => v.validator.type)
+        .join(", ")})`;
 
       const values = this.validators.filter(v => v.value !== undefined).map(v => v.value);
       if (values.length) {
@@ -85,7 +82,10 @@ export class ValidationError extends CoreError {
       },
     };
 
-    delete json.code;
+    if ("code" in json) {
+      // @ts-ignore
+      delete json.code;
+    }
 
     return json;
   }

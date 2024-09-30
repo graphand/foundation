@@ -1,10 +1,10 @@
-import { Adapter } from "@/lib/Adapter";
-import { AdapterFetcher, ModelDefinition, ModelInstance } from "@/types";
-import { ModelList } from "@/lib/ModelList";
-import { Model } from "@/lib/Model";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { defineFieldsProperties } from "@/lib/utils";
-import { Validator } from "@/lib/Validator";
+import { Adapter } from "@/lib/Adapter.ts";
+import { AdapterFetcher, ModelDefinition, ModelInstance } from "@/types/index.ts";
+import { ModelList } from "@/lib/ModelList.ts";
+import { Model } from "@/lib/Model.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { defineFieldsProperties } from "@/lib/utils.ts";
+import { Validator } from "@/lib/Validator.ts";
 import { ObjectId } from "bson";
 
 const cache: Map<typeof Model, Set<ModelInstance<typeof Model>>> = new Map();
@@ -61,7 +61,7 @@ export const mockAdapter = ({
         const cache = Array.from(this.thisCache);
 
         if (typeof query === "string") {
-          return Promise.resolve(cache.find(r => r._id === query));
+          return Promise.resolve(cache.find(r => r._id === query) || null);
         }
 
         let found = cache[0];
@@ -71,14 +71,13 @@ export const mockAdapter = ({
           found = cache.find(r => filterEntries.every(([key, value]) => r.get(key) === value));
         }
 
-        return Promise.resolve(found);
+        return Promise.resolve(found || null);
       }),
       getList: jest.fn(([query]) => {
         if (query?.ids) {
           const arr = Array.from(this.thisCache);
-          return Promise.resolve(
-            new ModelList(this.model, query.ids.map(id => arr.find(r => r._id === id)).filter(Boolean)),
-          );
+          const list = query.ids.map(id => arr.find(r => r._id === id)).filter(Boolean) as Array<ModelInstance<T>>;
+          return Promise.resolve(new ModelList(this.model, list));
         }
 
         return Promise.resolve(new ModelList(this.model, Array.from(this.thisCache)));
@@ -143,7 +142,7 @@ export const mockAdapter = ({
       }),
       updateMultiple: jest.fn(([query, update]) => {
         if (!query || !update) {
-          return Promise.resolve(null);
+          return Promise.resolve([]);
         }
 
         const list = Array.from(this.thisCache);
@@ -168,21 +167,25 @@ export const mockAdapter = ({
       }),
       deleteOne: jest.fn(([query]) => {
         if (!query) {
-          return Promise.resolve(null);
+          return Promise.resolve(false);
         }
 
         const [first] = Array.from(this.thisCache);
-        this.thisCache.delete(first);
-        return Promise.resolve(true);
+        if (first) {
+          this.thisCache.delete(first);
+          return Promise.resolve(true);
+        }
+
+        return Promise.resolve(false);
       }),
       deleteMultiple: jest.fn(([query]) => {
         if (!query) {
-          return Promise.resolve(null);
+          return Promise.resolve([]);
         }
 
         const ids = Array.from(this.thisCache).map(i => i._id);
         this.thisCache.clear();
-        return Promise.resolve(ids);
+        return Promise.resolve(ids as string[]);
       }),
     };
   }
@@ -193,7 +196,7 @@ export const mockAdapter = ({
 export const mockModel = <D extends ModelDefinition>(def?: D): typeof Model & { definition: D } => {
   return class extends Model {
     static slug = "a" + generateRandomString();
-    static definition = def;
+    static definition = def as any;
 
     constructor(doc: ModelData<typeof Model>) {
       super(doc);

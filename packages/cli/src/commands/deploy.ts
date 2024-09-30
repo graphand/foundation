@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { collectSetter, getClient, waitJob, withSpinner } from "@/lib/utils";
+import { collectSetter, getClient, waitJob, withSpinner } from "@/lib/utils.ts";
 import path from "path";
 import fs from "fs";
 import { Function, ModelInstance, ModelJSON } from "@graphand/core";
@@ -12,7 +12,7 @@ export const commandDeploy = new Command("deploy")
   .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", collectSetter)
   .option("-f --force", "Force deployment")
   .action(async (functionName, codePath, options) => {
-    let func: ModelInstance<typeof Function>;
+    let func: ModelInstance<typeof Function> | null | undefined;
     let updated = false;
     let client: Client;
 
@@ -85,7 +85,7 @@ export const commandDeploy = new Command("deploy")
 
     console.log("");
 
-    const jobId = func.get("_job", "json");
+    const jobId = func.get("_job", "json") as string;
     await withSpinner(async spinner => {
       await waitJob({
         client,
@@ -97,7 +97,7 @@ export const commandDeploy = new Command("deploy")
         spin: {
           spinner,
           message: `Deployment job is running ...`,
-          messageSuccess: `Deployment job finished successfully. Function ${func._id} is now ready!`,
+          messageSuccess: `Deployment job finished successfully. Function ${func?._id} is now ready!`,
           messageFail: "",
         },
       });

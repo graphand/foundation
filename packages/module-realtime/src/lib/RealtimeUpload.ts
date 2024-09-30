@@ -1,4 +1,4 @@
-import ModuleRealtime from "@/ModuleRealtime";
+import ModuleRealtime from "@/ModuleRealtime.ts";
 import { BehaviorSubject, SubjectObserver } from "@graphand/client";
 import { UploadEvent } from "@graphand/core";
 
@@ -27,6 +27,8 @@ class RealtimeUpload extends EventTarget {
     this.#id = id;
 
     this.#unsubscribe = this.#module.socketSubject.subscribe(socket => {
+      if (!socket) return;
+
       if (socket.connected) {
         socket.emit("subscribeUploads", this.#id);
       }
@@ -46,7 +48,11 @@ class RealtimeUpload extends EventTarget {
 
         this.dispatchEvent(customEvent);
 
-        const { type, percentage, contentLength, receivedLength } = event;
+        let { type, percentage, contentLength, receivedLength } = event;
+
+        contentLength ??= 0;
+        receivedLength ??= 0;
+        percentage ??= 0;
 
         const nextState: UploadState = { ...this.#stateSubject.getValue() };
 

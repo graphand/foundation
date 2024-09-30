@@ -1,11 +1,11 @@
-import { Model } from "@/lib/Model";
-import { modelDecorator } from "@/lib/modelDecorator";
-import { FieldTypes } from "@/enums/field-types";
-import { FieldsRestriction, ModelInstance, Rule } from "@/types";
-import { RuleActions } from "@/enums/rule-actions";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { Patterns } from "@/enums/patterns";
-import { ModelDefinition } from "@/types";
+import { Model } from "@/lib/Model.ts";
+import { modelDecorator } from "@/lib/modelDecorator.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { FieldsRestriction, ModelInstance, Rule } from "@/types/index.ts";
+import { RuleActions } from "@/enums/rule-actions.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { Patterns } from "@/enums/patterns.ts";
+import { ModelDefinition } from "@/types/index.ts";
 
 @modelDecorator()
 export class Role extends Model {

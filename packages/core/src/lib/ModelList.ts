@@ -1,5 +1,5 @@
-import { JSONQuery, ModelInstance } from "@/types";
-import { Model } from "@/lib/Model";
+import { JSONQuery, ModelInstance } from "@/types/index.ts";
+import { Model } from "@/lib/Model.ts";
 
 /**
  * ModelList is a class that extends the native Array class.
@@ -10,14 +10,14 @@ export class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
   #model: T; // Model class
   #query: JSONQuery; // Query used to fetch the list (returned by the adapter)
   #count: number; // Total count of the list (returned by the adapter)
-  #reloadPromise: Promise<void>; // Promise to wait for the reload to finish
+  #reloadPromise: Promise<void> | undefined; // Promise to wait for the reload to finish
 
   constructor(model: T, list: Array<ModelInstance<T>> = [], query?: JSONQuery, count?: number) {
     super(...list);
 
     this.#model = model;
-    this.#query = Object.freeze(query);
-    this.#count = count;
+    this.#query = Object.freeze(query) as JSONQuery;
+    this.#count = count as number;
   }
 
   /**
@@ -107,9 +107,9 @@ export class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
    * Returns an array of ids of the items of the list.
    */
   getIds(): Array<string> {
-    const ids = [];
+    const ids: Array<string> = [];
     for (const item of this) {
-      ids.push(item._id);
+      ids.push(item._id as string);
     }
     return ids;
   }
@@ -130,7 +130,7 @@ export class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
    * @returns The current list.
    */
   remove(ids: Array<string> = []) {
-    this.splice(0, this.length, ...this.filter(i => !ids.includes(i._id)));
+    this.splice(0, this.length, ...this.filter(i => !ids.includes(i._id as string)));
     return this;
   }
 }

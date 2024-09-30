@@ -1,27 +1,27 @@
-import { AdapterFetcher } from "@/types";
-import { Model } from "@/lib/Model";
-import { FieldTypes } from "@/enums/field-types";
-import { Field } from "@/lib/Field";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { Validator } from "@/lib/Validator";
-import { CoreError } from "./CoreError";
-import { FieldId } from "./fields/Id";
-import { FieldNumber } from "./fields/Number";
-import { FieldBoolean } from "./fields/Boolean";
-import { FieldDate } from "./fields/Date";
-import { FieldText } from "./fields/Text";
-import { FieldRelation } from "./fields/Relation";
-import { FieldNested } from "./fields/Nested";
-import { FieldIdentity } from "./fields/Identity";
-import { FieldArray } from "./fields/Array";
-import { ValidatorUnique } from "./validators/Unique";
-import { ValidatorRegex } from "./validators/Regex";
-import { ValidatorKeyField } from "./validators/KeyField";
-import { ValidatorDatamodelSlug } from "./validators/DatamodelSlug";
-import { ValidatorDatamodelDefinition } from "./validators/DatamodelDefinition";
-import { ValidatorLength } from "./validators/Length";
-import { ValidatorBoundaries } from "./validators/Boundaries";
-import { ValidatorRequired } from "./validators/Required";
+import { AdapterFetcher } from "@/types/index.ts";
+import { Model } from "@/lib/Model.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { Field } from "@/lib/Field.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { Validator } from "@/lib/Validator.ts";
+import { CoreError } from "./CoreError.ts";
+import { FieldId } from "./fields/Id.ts";
+import { FieldNumber } from "./fields/Number.ts";
+import { FieldBoolean } from "./fields/Boolean.ts";
+import { FieldDate } from "./fields/Date.ts";
+import { FieldText } from "./fields/Text.ts";
+import { FieldRelation } from "./fields/Relation.ts";
+import { FieldNested } from "./fields/Nested.ts";
+import { FieldIdentity } from "./fields/Identity.ts";
+import { FieldArray } from "./fields/Array.ts";
+import { ValidatorUnique } from "./validators/Unique.ts";
+import { ValidatorRegex } from "./validators/Regex.ts";
+import { ValidatorKeyField } from "./validators/KeyField.ts";
+import { ValidatorDatamodelSlug } from "./validators/DatamodelSlug.ts";
+import { ValidatorDatamodelDefinition } from "./validators/DatamodelDefinition.ts";
+import { ValidatorLength } from "./validators/Length.ts";
+import { ValidatorBoundaries } from "./validators/Boundaries.ts";
+import { ValidatorRequired } from "./validators/Required.ts";
 
 export class Adapter<T extends typeof Model = typeof Model> {
   static __name = "Adapter";
@@ -50,10 +50,10 @@ export class Adapter<T extends typeof Model = typeof Model> {
   static runWriteValidators: boolean; // If the adapter should run validators after a model create/update
   static _modelsRegistry: Map<string, typeof Model>;
 
-  fetcher: AdapterFetcher<T>; // The adapter configuration = how the adapter should process
+  fetcher: AdapterFetcher<T> | undefined; // The adapter configuration = how the adapter should process
   model: T; // The model of the current adapter instance
 
-  #cacheFieldsMap: Map<string, Field<FieldTypes>>; // Cache the fields of the current model
+  #cacheFieldsMap: Map<string, Field<FieldTypes>> | undefined; // Cache the fields of the current model
 
   constructor(model: T) {
     this.model = model;
@@ -84,7 +84,7 @@ export class Adapter<T extends typeof Model = typeof Model> {
     return modelsMap;
   }
 
-  static getClosestModel(slug: string): typeof Model {
+  static getClosestModel(slug: string): typeof Model | undefined {
     if (this.hasModel(slug)) {
       return this._modelsRegistry?.get(slug);
     }

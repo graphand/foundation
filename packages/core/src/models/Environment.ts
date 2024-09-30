@@ -1,10 +1,10 @@
-import { Model } from "@/lib/Model";
-import { modelDecorator } from "@/lib/modelDecorator";
-import { FieldTypes } from "@/enums/field-types";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { Job } from "@/models/Job";
-import { MergeRequest } from "@/models/MergeRequest";
-import { ModelDefinition } from "@/types";
+import { Model } from "@/lib/Model.ts";
+import { modelDecorator } from "@/lib/modelDecorator.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { Job } from "@/models/Job.ts";
+import { MergeRequest } from "@/models/MergeRequest.ts";
+import { ModelDefinition } from "@/types/index.ts";
 
 @modelDecorator()
 export class Environment extends Model {

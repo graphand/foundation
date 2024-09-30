@@ -1,9 +1,9 @@
-import { ModelDefinition } from "@/types";
-import { Model } from "@/lib/Model";
-import { Role } from "@/models/Role";
-import { modelDecorator } from "@/lib/modelDecorator";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { FieldTypes } from "@/enums/field-types";
+import { ModelDefinition } from "@/types/index.ts";
+import { Model } from "@/lib/Model.ts";
+import { Role } from "@/models/Role.ts";
+import { modelDecorator } from "@/lib/modelDecorator.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
 
 @modelDecorator()
 export class Account extends Model {

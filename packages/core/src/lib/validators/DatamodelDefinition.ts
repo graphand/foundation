@@ -1,8 +1,8 @@
-import { ValidatorTypes } from "@/enums/validator-types";
-import { Validator } from "@/lib/Validator";
-import { DataModel } from "@/models/DataModel";
-import { ModelInstance } from "@/types";
-import { isValidDefinition } from "@/lib/utils";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { Validator } from "@/lib/Validator.ts";
+import { DataModel } from "@/models/DataModel.ts";
+import { ModelInstance } from "@/types/index.ts";
+import { isValidDefinition } from "@/lib/utils.ts";
 
 export class ValidatorDatamodelDefinition extends Validator<ValidatorTypes.DATAMODEL_DEFINITION> {
   validate: Validator<ValidatorTypes.DATAMODEL_DEFINITION>["validate"] = async ({ list }) => {

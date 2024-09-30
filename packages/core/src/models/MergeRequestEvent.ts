@@ -1,12 +1,12 @@
-import { Model } from "@/lib/Model";
-import { modelDecorator } from "@/lib/modelDecorator";
-import { FieldTypes } from "@/enums/field-types";
-import { Job } from "@/models/Job";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { MergeRequestTypes } from "@/enums/merge-request-types";
-import { MergeRequestEventTypes } from "@/enums/merge-request-event-types";
-import { MergeRequest } from "@/models/MergeRequest";
-import { ModelDefinition } from "@/types";
+import { Model } from "@/lib/Model.ts";
+import { modelDecorator } from "@/lib/modelDecorator.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { Job } from "@/models/Job.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { MergeRequestTypes } from "@/enums/merge-request-types.ts";
+import { MergeRequestEventTypes } from "@/enums/merge-request-event-types.ts";
+import { MergeRequest } from "@/models/MergeRequest.ts";
+import { ModelDefinition } from "@/types/index.ts";
 
 @modelDecorator()
 export class MergeRequestEvent extends Model {

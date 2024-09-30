@@ -1,5 +1,5 @@
 import { Module, symbolModuleInit, symbolModuleDestroy, FetchError } from "@graphand/client";
-import { getClient } from "./utils";
+import { getClient } from "./utils.ts";
 import chalk from "chalk";
 
 class ModuleCli extends Module {
@@ -12,7 +12,7 @@ class ModuleCli extends Module {
     client.hook(
       "afterRequest",
       async ({ err, res }) => {
-        if (res && !res.bodyUsed && res.headers.get("content-type").includes("application/json")) {
+        if (res && !res.bodyUsed && res.headers.get("content-type")?.includes("application/json")) {
           const json = await res.clone().json();
           if (json.jobs?.length && Array.isArray(globalThis.jobs)) {
             globalThis.jobs.push(...json.jobs);

@@ -1,3 +1,3 @@
-export { defineConfig } from "@/lib/utils";
+export { defineConfig } from "@/lib/utils.ts";
 
-export * from "@/types";
+export * from "@/types.ts";

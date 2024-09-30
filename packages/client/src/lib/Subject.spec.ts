@@ -1,5 +1,5 @@
-import { Subject } from "./Subject";
-import { SubjectObserver } from "../types";
+import { Subject } from "./Subject.ts";
+import { SubjectObserver } from "../types.ts";
 
 describe("Subject", () => {
   let subject: Subject<number>;

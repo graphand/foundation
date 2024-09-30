@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient } from "@/lib/utils";
+import { getClient } from "@/lib/utils.ts";
 import { password, input } from "@inquirer/prompts";
 import chalk from "chalk";
 import { AuthMethods, AuthProviders } from "@graphand/core";
@@ -15,7 +15,7 @@ export const commandLogin = new Command("login")
     const client = await getClient();
 
     if (setAccessToken) {
-      const refreshToken = await client.get("auth").storage.getItem("refreshToken");
+      const refreshToken = await client.get("auth").storage?.getItem("refreshToken");
       client.get("auth").setTokens(String(setAccessToken), String(refreshToken));
       return;
     }

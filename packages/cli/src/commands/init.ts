@@ -1,8 +1,8 @@
 import { Command } from "commander";
-import { UserConfig } from "@/types";
+import { UserConfig } from "@/types.ts";
 import fs from "fs";
 import path from "path";
-import { loadConfig, getConfigPath, rmConfigFile } from "@/lib/utils";
+import { loadConfig, getConfigPath, rmConfigFile } from "@/lib/utils.ts";
 import { isObjectId } from "@graphand/core";
 import chalk from "chalk";
 import { confirm, input } from "@inquirer/prompts";
@@ -72,7 +72,7 @@ export const commandInit = new Command("init").description("Initialize a new Gra
   }
 
   const content = `
-      import { defineConfig } from "@graphand/cli";
+      import { defineConfig } from "@graphand/cli.ts";
 
       export default defineConfig($CONFIG);
     `

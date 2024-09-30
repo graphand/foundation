@@ -1,7 +1,7 @@
-import { ValidatorTypes } from "@/enums/validator-types";
-import { Validator } from "@/lib/Validator";
-import { Patterns } from "@/enums/patterns";
-import { getValidatorClass } from "../utils";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { Validator } from "@/lib/Validator.ts";
+import { Patterns } from "@/enums/patterns.ts";
+import { getValidatorClass } from "../utils.ts";
 
 export class ValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
   validate: Validator<ValidatorTypes.KEY_FIELD>["validate"] = async opts => {
@@ -10,7 +10,7 @@ export class ValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
     const validatorsMap = adapter?.base.validatorsMap ?? {};
 
     const _getValidator = <T extends ValidatorTypes>(type: T): typeof Validator<T> => {
-      let v: typeof Validator<T> = validatorsMap[type];
+      let v: typeof Validator<T> | undefined = validatorsMap[type];
       if (v === undefined) {
         v = getValidatorClass(type, adapter);
       }
@@ -46,9 +46,9 @@ export class ValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
     );
 
     const validates = await Promise.all([
-      validatorRegex.validate(opts),
-      validatorRequired.validate(opts),
-      validatorUnique.validate(opts),
+      validatorRegex?.validate?.(opts),
+      validatorRequired?.validate?.(opts),
+      validatorUnique?.validate?.(opts),
     ]);
 
     return validates.every(Boolean);

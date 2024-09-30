@@ -7,6 +7,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "wallaby.cjs", "vite.config.ts", "jest-setup.ts"],
+  "include": ["src", "wallaby.js", "vite.config.ts", "jest-setup.ts"],
   "exclude": ["node_modules", "dist"]
 }

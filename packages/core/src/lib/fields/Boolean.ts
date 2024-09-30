@@ -1,5 +1,5 @@
-import { FieldTypes } from "@/enums/field-types";
-import { Field } from "@/lib/Field";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { Field } from "@/lib/Field.ts";
 
 export class FieldBoolean extends Field<FieldTypes.BOOLEAN> {
   serializerMap: Field<FieldTypes.BOOLEAN>["serializerMap"] = {

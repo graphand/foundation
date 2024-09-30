@@ -2,26 +2,26 @@
 
 import { program } from "commander";
 import { version } from "../package.json";
-import { commandInit } from "./commands/init";
-import { commandEntry } from "./commands/entry";
-import { commandRegister } from "./commands/register";
-import { commandLogin } from "./commands/login";
-import { commandLogout } from "./commands/logout";
-import { commandOptions } from "./commands/options";
-import { commandWhoami } from "./commands/whoami";
-import { commandExecute } from "./commands/execute";
-import { commandGet } from "./commands/get";
-import { commandCount } from "./commands/count";
-import { commandDescribe } from "./commands/describe";
-import { commandDelete } from "./commands/delete";
-import { commandCreate } from "./commands/create";
-import { commandUpdate } from "./commands/update";
-import { commandDeploy } from "./commands/deploy";
-import { commandRun } from "./commands/run";
-import { commandLogs } from "./commands/logs";
-import { commandSrc } from "./commands/src";
-import { commandModel } from "./commands/model";
-import { commandGdx } from "./commands/gdx";
+import { commandInit } from "./commands/init.ts";
+import { commandEntry } from "./commands/entry.ts";
+import { commandRegister } from "./commands/register.ts";
+import { commandLogin } from "./commands/login.ts";
+import { commandLogout } from "./commands/logout.ts";
+import { commandOptions } from "./commands/options.ts";
+import { commandWhoami } from "./commands/whoami.ts";
+import { commandExecute } from "./commands/execute.ts";
+import { commandGet } from "./commands/get.ts";
+import { commandCount } from "./commands/count.ts";
+import { commandDescribe } from "./commands/describe.ts";
+import { commandDelete } from "./commands/delete.ts";
+import { commandCreate } from "./commands/create.ts";
+import { commandUpdate } from "./commands/update.ts";
+import { commandDeploy } from "./commands/deploy.ts";
+import { commandRun } from "./commands/run/index.ts";
+import { commandLogs } from "./commands/logs/index.ts";
+import { commandSrc } from "./commands/src.ts";
+import { commandModel } from "./commands/model.ts";
+import { commandGdx } from "./commands/gdx/index.ts";
 
 program
   .version(version)

@@ -7,7 +7,7 @@ import {
   MediaTransformOptions,
   ModelJSON,
   RegisterData,
-} from "@/types";
+} from "@/types/index.ts";
 
 export const controllerModelCount: Controller<{ params: { model: string }; query?: JSONQuery; data?: JSONQuery }> = {
   path: "/:model/count",
@@ -297,6 +297,14 @@ export const controllerAggregationRun: Controller<{
   data?: { let: JSONTypeObject };
 }> = {
   path: "/aggregations/:id/run",
+  methods: ["post"],
+  secured: true,
+};
+
+export const controllerEventSubscriptionsTest: Controller<{
+  params: { id: string };
+}> = {
+  path: "/eventSubscriptions/:id/test",
   methods: ["post"],
   secured: true,
 };

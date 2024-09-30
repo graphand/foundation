@@ -1,8 +1,8 @@
 import { InferModel, Model, ModelInstance, ModelJSON, ModelList, PromiseModel, PromiseModelList } from "@graphand/core";
-import { getCachedModel, getCachedModelList, getCachedPartialModelList } from "./lib/utils";
-import type { ClientAdapter } from "./lib/ClientAdapter";
-import type { InferModelFromList, ModelUpdaterEvent, SubjectObserver } from "./types";
-import type { Client } from "./lib/Client";
+import { getCachedModel, getCachedModelList, getCachedPartialModelList } from "./lib/utils.ts";
+import type { ClientAdapter } from "./lib/ClientAdapter.ts";
+import type { InferModelFromList, ModelUpdaterEvent, SubjectObserver } from "./types.ts";
+import type { Client } from "./lib/Client.ts";
 
 Model.subscribe = function <T extends typeof Model>(
   this: T,
@@ -28,7 +28,7 @@ Model.prototype.subscribe = function <T extends ModelInstance>(
 
 Model.hydrateAndCache = function <T extends typeof Model>(this: T, json?: ModelJSON<T>): ModelInstance<T> {
   const adapter = this.getAdapter() as ClientAdapter<T>;
-  return adapter.processAndCacheInstance(json);
+  return adapter.processAndCacheInstance(json) as ModelInstance<T>;
 };
 
 ModelList.prototype.getKey = function <T extends ModelList<typeof Model>>(this: T): string {
@@ -36,7 +36,8 @@ ModelList.prototype.getKey = function <T extends ModelList<typeof Model>>(this: 
 
   for (const i of this) {
     const _age = i.__getAge();
-    map.set(i._id, Math.max(_age, map.get(i._id) || 0));
+    const _id = i._id as string;
+    map.set(_id, Math.max(_age, map.get(_id) || 0));
   }
 
   return Array.from(map.entries())

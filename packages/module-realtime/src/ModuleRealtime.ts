@@ -1,7 +1,7 @@
 import { Module, symbolModuleInit, symbolModuleDestroy, ClientAdapter, BehaviorSubject } from "@graphand/client";
 import { ModelCrudEvent } from "@graphand/core";
 import { io, Socket } from "socket.io-client";
-import RealtimeUpload from "./lib/RealtimeUpload";
+import RealtimeUpload from "./lib/RealtimeUpload.ts";
 
 type ModuleRealtimeOptions = {
   connectTimeout?: number;
@@ -81,7 +81,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
     return Array.from(new Set(this.#subscribedModelsSubject.getValue()));
   }
 
-  getSocket(autoConnect: boolean = true): Socket {
+  getSocket(autoConnect: boolean = true): Socket | undefined {
     if (autoConnect && !this.#socketSubject.getValue()) {
       this.connect();
     }

@@ -1,4 +1,4 @@
-import { ValidatorTypes } from "@/enums/validator-types";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
 
 export type ValidatorOptionsMap = {
   [ValidatorTypes.EXISTS]: { field: string };
@@ -24,13 +24,10 @@ export type ValidatorOptionsMapOmitField = {
   };
 };
 
-export type ValidatorOptions<
-  T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes,
-> = T extends keyof ValidatorOptionsMap ? ValidatorOptionsMap[T] : Record<string, never>;
+export type ValidatorOptions<T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes> =
+  T extends keyof ValidatorOptionsMap ? ValidatorOptionsMap[T] : Record<string, never>;
 
-export type ValidatorDefinition<
-  T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes,
-> = {
+export type ValidatorDefinition<T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes> = {
   type: T;
   options?: T extends keyof ValidatorOptionsMap ? ValidatorOptionsMap[T] : never;
 };

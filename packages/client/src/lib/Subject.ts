@@ -1,4 +1,4 @@
-import { SubjectObserver } from "../types";
+import { SubjectObserver } from "../types.ts";
 
 export class Subject<T> {
   #observers: Array<SubjectObserver<T>> = [];
@@ -18,7 +18,7 @@ export class Subject<T> {
   }
 
   trigger() {
-    this.next(this.#previousValue);
+    this.next(this.#previousValue as T);
   }
 
   subscribe(observer: SubjectObserver<T>): () => void {

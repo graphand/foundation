@@ -1,5 +1,4 @@
-export { default as ModuleAuth } from "./ModuleAuth";
+export { default as ModuleAuth } from "./ModuleAuth.ts";
 
-export * from "./types";
-
-export default "./ModuleAuth";
+export * from "./types.ts";
+export default "./ModuleAuth.ts";

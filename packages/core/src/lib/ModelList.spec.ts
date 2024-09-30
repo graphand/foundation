@@ -1,5 +1,6 @@
-import { ModelList } from "@/lib/ModelList";
-import { mockModel } from "@/lib/test-utils.dev";
+import { ModelList } from "@/lib/ModelList.ts";
+import { mockModel } from "@/lib/test-utils.dev.ts";
+import { ModelInstance } from "../index.ts";
 
 describe("test ModelList", () => {
   let model: ReturnType<typeof mockModel>;
@@ -95,6 +96,8 @@ describe("test ModelList", () => {
     ]);
 
     expect(_list.lastUpdated).toBeDefined();
+    const lastUpdated = _list.lastUpdated as ModelInstance<typeof model>;
+    console.log(lastUpdated._id);
     expect(_list.lastUpdated?._id).toBe("b");
   });
 
@@ -142,7 +145,7 @@ describe("test ModelList", () => {
 
     expect(reloadSpy).toHaveBeenCalled();
     expect(list.length).toBe(1);
-    expect(list[0]._id).toBe("d");
+    expect(list?.[0]?._id).toBe("d");
   });
 
   it("should return the correct loading state", async () => {
@@ -166,7 +169,7 @@ describe("test ModelList", () => {
 
     const arr = list.toArray();
     expect(Array.isArray(arr)).toBe(true);
-    expect(arr[0]._id).toBe("a");
+    expect(arr?.[0]?._id).toBe("a");
   });
 
   it("toJSON should return a JSON representation of the list", () => {

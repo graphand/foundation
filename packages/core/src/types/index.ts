@@ -1,44 +1,44 @@
-import type { Model } from "@/lib/Model";
-import type { ModelList } from "@/lib/ModelList";
-import type { Field } from "@/lib/Field";
-import type { ErrorCodes } from "@/enums/error-codes";
-import type { Validator } from "@/lib/Validator";
-import type { Adapter } from "@/lib/Adapter";
-import type { ValidationError } from "@/lib/ValidationError";
-import type { AuthProviders } from "@/enums/auth-providers";
-import type { AuthMethods } from "@/enums/auth-methods";
-import type { MergeRequestTypes } from "@/enums/merge-request-types";
-import type { MergeRequestEventTypes } from "@/enums/merge-request-event-types";
-import type { FieldDefinition, InferModelDef, ModelJSON, SerializerFieldsMap } from "@/types/fields";
-import type { ValidatorDefinition } from "@/types/validators";
-import type { TransactionCtx } from "./ctx";
-import type { Account } from "@/models/Account";
-import type { Aggregation } from "@/models/Aggregation";
-import type { AuthProvider } from "@/models/AuthProvider";
-import type { Connector } from "@/models/Connector";
-import type { DataModel } from "@/models/DataModel";
-import type { Environment } from "@/models/Environment";
-import type { Job } from "@/models/Job";
-import type { Key } from "@/models/Key";
-import type { Media } from "@/models/Media";
-import type { MergeRequest } from "@/models/MergeRequest";
-import type { MergeRequestEvent } from "@/models/MergeRequestEvent";
-import type { Role } from "@/models/Role";
-import type { Settings } from "@/models/Settings";
-import type { Token } from "@/models/Token";
-import type { Function } from "@/models/Function";
-import type { PromiseModelList } from "@/lib/PromiseModelList";
-import { Event } from "@/models/Event";
-import { Invitation } from "@/models/Invitation";
-import { Snapshot } from "@/models/Snapshot";
-import { EventSubscription } from "@/models/EventSubscription";
-export * from "./helpers";
-export * from "./fields";
-export * from "./validators";
-export * from "./ctx";
+import type { Model } from "@/lib/Model.ts";
+import type { ModelList } from "@/lib/ModelList.ts";
+import type { Field } from "@/lib/Field.ts";
+import type { ErrorCodes } from "@/enums/error-codes.ts";
+import type { Validator } from "@/lib/Validator.ts";
+import type { Adapter } from "@/lib/Adapter.ts";
+import type { ValidationError } from "@/lib/ValidationError.ts";
+import type { AuthProviders } from "@/enums/auth-providers.ts";
+import type { AuthMethods } from "@/enums/auth-methods.ts";
+import type { MergeRequestTypes } from "@/enums/merge-request-types.ts";
+import type { MergeRequestEventTypes } from "@/enums/merge-request-event-types.ts";
+import type { FieldDefinition, InferModelDef, ModelJSON, SerializerFieldsMap } from "@/types/fields.ts";
+import type { ValidatorDefinition } from "@/types/validators.ts";
+import type { TransactionCtx } from "./ctx.ts";
+import type { Account } from "@/models/Account.ts";
+import type { Aggregation } from "@/models/Aggregation.ts";
+import type { AuthProvider } from "@/models/AuthProvider.ts";
+import type { Connector } from "@/models/Connector.ts";
+import type { DataModel } from "@/models/DataModel.ts";
+import type { Environment } from "@/models/Environment.ts";
+import type { Job } from "@/models/Job.ts";
+import type { Key } from "@/models/Key.ts";
+import type { Media } from "@/models/Media.ts";
+import type { MergeRequest } from "@/models/MergeRequest.ts";
+import type { MergeRequestEvent } from "@/models/MergeRequestEvent.ts";
+import type { Role } from "@/models/Role.ts";
+import type { Settings } from "@/models/Settings.ts";
+import type { Token } from "@/models/Token.ts";
+import type { Function } from "@/models/Function.ts";
+import type { PromiseModelList } from "@/lib/PromiseModelList.ts";
+import { Event } from "@/models/Event.ts";
+import { Invitation } from "@/models/Invitation.ts";
+import { Snapshot } from "@/models/Snapshot.ts";
+import { EventSubscription } from "@/models/EventSubscription.ts";
+export * from "./helpers.ts";
+export * from "./fields.ts";
+export * from "./validators.ts";
+export * from "./ctx.ts";
 
-export type Rule = ModelInstance<typeof Role>["rules"][number];
-export type FieldsRestriction = ModelInstance<typeof Role>["fieldsRestrictions"][number];
+export type Rule = NonNullable<ModelInstance<typeof Role>["rules"]>[number];
+export type FieldsRestriction = NonNullable<ModelInstance<typeof Role>["fieldsRestrictions"]>[number];
 export type SerializerFormat = keyof SerializerFieldsMap<FieldDefinition>;
 export type FieldsDefinition = Record<string, FieldDefinition>;
 export type ValidatorsDefinition = Array<ValidatorDefinition>;
@@ -54,7 +54,7 @@ export type JSONType = JSONTypeObject | JSONSubtypeArray;
 export type Transaction<
   M extends typeof Model = typeof Model,
   A extends keyof AdapterFetcher<M> = keyof AdapterFetcher<M>,
-  Args extends Parameters<AdapterFetcher<M>[A]>[0] = Parameters<AdapterFetcher<M>[A]>[0],
+  Args extends Parameters<NonNullable<AdapterFetcher<M>[A]>>[0] = Parameters<NonNullable<AdapterFetcher<M>[A]>>[0],
 > = {
   model: M["slug"];
   action: A;
@@ -192,13 +192,13 @@ export type HookCallbackArgs<
   T extends typeof Model,
 > = P extends "before"
   ? {
-      args: Parameters<AdapterFetcher<T>[A]>[0];
+      args: Parameters<NonNullable<AdapterFetcher<T>[A]>>[0];
       ctx: TransactionCtx;
       transaction: Transaction<T, A>;
       err: Array<Error | symbol> | undefined;
     }
   : HookCallbackArgs<"before", A, T> & {
-      res: ReturnType<AdapterFetcher<T>[A]>;
+      res: ReturnType<NonNullable<AdapterFetcher<T>[A]>>;
     };
 
 export type Hook<

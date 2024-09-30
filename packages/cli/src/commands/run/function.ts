@@ -1,6 +1,6 @@
 import chalk from "chalk";
-import { colorizeJson, getClient, withSpinner } from "@/lib/utils";
-import { controllerFunctionRun, Function } from "@graphand/core";
+import { colorizeJson, getClient, withSpinner } from "@/lib/utils.ts";
+import { controllerFunctionRun, Function, InferControllerInput } from "@graphand/core";
 import { Command } from "commander";
 import qs from "qs";
 import { FetchError } from "@graphand/client";
@@ -48,7 +48,9 @@ export const commandRunFunction = new Command("function")
 
       try {
         const r = await client.execute(controllerFunctionRun, {
-          params: Object.assign({}, params, { id: func._id }),
+          params: Object.assign({}, params, { id: func._id }) as NonNullable<
+            InferControllerInput<typeof controllerFunctionRun>
+          >["params"],
           query: options.query ? (qs.parse(options.query) as Record<string, string>) : undefined,
           init: {
             body: options.data ? JSON.stringify(qs.parse(options.data)) : undefined,
@@ -58,7 +60,7 @@ export const commandRunFunction = new Command("function")
         await _handleRes(r);
       } catch (e) {
         if (e instanceof FetchError) {
-          await _handleRes(e.res);
+          await _handleRes(e.res as Response);
         } else {
           throw new Error(`Failed to execute function ${func.name}: ${(e as Error).message}`);
         }

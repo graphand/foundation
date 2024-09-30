@@ -1,9 +1,9 @@
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
-import { Account, DataModel, IdentityTypes, Model, ModelInstance, ModelList } from "@graphand/core";
-import { Client } from "./Client";
-import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module";
-import { ClientAdapter } from "./ClientAdapter";
+import { Account, DataModel, IdentityTypes, Model, ModelInstance, ModelList, TransactionCtx } from "@graphand/core";
+import { Client } from "./Client.ts";
+import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.ts";
+import { ClientAdapter } from "./ClientAdapter.ts";
 import jsonwebtoken from "jsonwebtoken";
 
 describe("Client", () => {
@@ -464,7 +464,7 @@ describe("Client", () => {
     });
 
     it("should throw if onRequest returns invalid request init", async () => {
-      const requestFn = jest.fn(() => null);
+      const requestFn = jest.fn(() => null) as unknown as TransactionCtx["onRequest"];
       mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
       await expect(
         client.execute({ path: "/test", methods: ["get"], secured: false }, { ctx: { onRequest: requestFn } }),
@@ -863,6 +863,7 @@ describe("Client", () => {
     });
 
     it("should return null if no access token is provided", async () => {
+      // @ts-expect-error - accessToken is not defined on the client options
       _client.setOptions({ accessToken: null });
       const res = await _client.me();
       expect(res).toBeNull();

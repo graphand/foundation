@@ -6,7 +6,7 @@ import {
   PromiseModelList,
   Model,
 } from "@graphand/core";
-import { getCachedModelList } from "../utils";
+import { getCachedModelList } from "../utils.ts";
 
 class FieldArray extends CoreFieldArray {
   decodePopulate = (fn: any) => {

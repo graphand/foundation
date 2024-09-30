@@ -1,7 +1,7 @@
-import { FieldTypes } from "@/enums/field-types";
-import { FieldSerializerInput, JSONTypeObject } from "@/types";
-import { Field } from "@/lib/Field";
-import { getFieldFromDefinition, getNestedFieldsMap, getValidationValues } from "@/lib/utils";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { FieldSerializerInput, JSONTypeObject } from "@/types/index.ts";
+import { Field } from "@/lib/Field.ts";
+import { getFieldFromDefinition, getNestedFieldsMap, getValidationValues } from "@/lib/utils.ts";
 
 export class FieldNested extends Field<FieldTypes.NESTED> {
   static symbolIgnore = Symbol("ignore");
@@ -34,7 +34,7 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     const model = from.model();
     const fieldsMap = getNestedFieldsMap(model, this);
     const defaults = ctx?.defaults ?? true;
-    let filterKey: string;
+    let filterKey: string | undefined;
 
     if (this.options.dependsOn) {
       let dependsOnPath: string = this.options.dependsOn;
@@ -80,14 +80,14 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
         noField.forEach(k => {
           if (value[k] === undefined || value[k] === null) {
             json[k] = value[k];
-          } else {
+          } else if (this.options?.defaultField) {
             const tmpField = getFieldFromDefinition(
               this.options.defaultField,
               model.getAdapter(false),
               [this.path, k].join("."),
             );
 
-            json[k] = tmpField.serialize(value[k], input.format, from, ctx);
+            json[k] = tmpField?.serialize(value[k], input.format, from, ctx);
           }
         });
       }
@@ -144,7 +144,13 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
           return value;
         }
 
-        targetField = getFieldFromDefinition(this.options.defaultField, adapter, [this.path, prop].join("."));
+        const tmpField = getFieldFromDefinition(this.options.defaultField, adapter, [this.path, prop].join("."));
+
+        if (!tmpField) {
+          throw new Error(`Invalid default field ${this.options.defaultField}`);
+        }
+
+        targetField = tmpField;
       }
 
       if (!targetField) {

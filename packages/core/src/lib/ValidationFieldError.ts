@@ -1,4 +1,4 @@
-import { ValidationFieldErrorDefinition } from "@/types";
+import { ValidationFieldErrorDefinition } from "@/types/index.ts";
 
 export class ValidationFieldError {
   #definition: ValidationFieldErrorDefinition;
@@ -22,7 +22,7 @@ export class ValidationFieldError {
   toJSON(): {
     slug: string;
     field: ReturnType<ValidationFieldError["field"]["toJSON"]>;
-    validationError: ReturnType<ValidationFieldError["validationError"]["toJSON"]>;
+    validationError: ReturnType<NonNullable<ValidationFieldError["validationError"]>["toJSON"]> | undefined;
   } {
     return {
       slug: this.slug,

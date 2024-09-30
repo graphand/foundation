@@ -1,13 +1,13 @@
-import { ValidatorTypes } from "@/enums/validator-types";
-import { ModelInstance, TransactionCtx, ValidatorDefinition, ValidatorHook, ValidatorOptions } from "@/types";
-import { Model } from "@/lib/Model";
-import { getDefaultValidatorOptions } from "@/lib/utils";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { ModelInstance, TransactionCtx, ValidatorDefinition, ValidatorHook, ValidatorOptions } from "@/types/index.ts";
+import { Model } from "@/lib/Model.ts";
+import { getDefaultValidatorOptions } from "@/lib/utils.ts";
 
 export class Validator<T extends ValidatorTypes = ValidatorTypes> {
   #definition: ValidatorDefinition<T>;
   #path: undefined | string;
 
-  hooks: Array<ValidatorHook>;
+  hooks: Array<ValidatorHook> | undefined;
 
   constructor(definition: ValidatorDefinition<T>, path?: string) {
     this.#definition = definition;

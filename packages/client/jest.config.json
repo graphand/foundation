@@ -6,6 +6,17 @@
   "testMatch": ["**/__tests__/**/*.+(ts|tsx|js)", "**/?(*.)+(spec|test).+(ts|tsx|js)"],
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
   "moduleNameMapper": {
-    "^@/(.*)$": "<rootDir>/src/$1"
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  },
+  "extensionsToTreatAsEsm": [".ts"],
+  "transform": {
+    "^.+\\.(mt|t|cj|j)s$": [
+      "ts-jest",
+      {
+        "useESM": true,
+        "isolatedModules": true
+      }
+    ]
   }
 }

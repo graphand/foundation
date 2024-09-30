@@ -1,6 +1,6 @@
 import qs from "qs";
 import { Command } from "commander";
-import { collectSetter, getClient, withSpinner } from "@/lib/utils";
+import { collectSetter, getClient, withSpinner } from "@/lib/utils.ts";
 import { JSONQuery, ModelInstance, ModelList } from "@graphand/core";
 
 export const commandUpdate = new Command("update")
@@ -17,7 +17,7 @@ export const commandUpdate = new Command("update")
 
       await model.initialize();
 
-      let list: ModelList<typeof model>;
+      let list: ModelList<typeof model> | null;
 
       if (key) {
         const res = await model.get(key);
@@ -46,6 +46,9 @@ export const commandUpdate = new Command("update")
         }
 
         const i = list[0];
+        if (!i) {
+          throw new Error(`Instance not found`);
+        }
         await i.update({ $set: options.set });
         updated = [i];
       }

@@ -1,6 +1,6 @@
 import qs from "qs";
 import chalk from "chalk";
-import { UserConfig } from "@/types";
+import { UserConfig } from "@/types.ts";
 import path from "path";
 import fs from "fs";
 import Conf from "conf";
@@ -11,7 +11,7 @@ import { Client, ModuleConstructor, ClientModules, ClientOptions } from "@grapha
 import { ModuleAuth } from "@graphand/client-module-auth";
 import { ModuleRealtime } from "@graphand/client-module-realtime";
 import open from "open";
-import ModuleCli from "./ModuleCli";
+import ModuleCli from "./ModuleCli.ts";
 import ora, { Ora } from "ora";
 import {
   controllerJobLogs,
@@ -23,7 +23,7 @@ import {
   JSONTypeObject,
   ModelInstance,
 } from "@graphand/core";
-import LogProcessor from "./LogProcessor";
+import LogProcessor from "./LogProcessor.ts";
 import mime from "mime";
 
 export const defineConfig = (config: UserConfig): UserConfig => {
@@ -85,14 +85,14 @@ export const loadConfig = async (): Promise<UserConfig> => {
     throw new Error("Configuration file not found. Run `graphand init` to create a configuration file");
   }
 
-  let config: UserConfig;
+  let config: UserConfig | undefined;
 
   try {
     const configContent = await fs.promises.readFile(configPath, "utf8");
 
     if (path.extname(configPath) === ".json") {
       config = JSON.parse(configContent);
-      return config;
+      return config as UserConfig;
     }
 
     const result = transformSync(configContent, {
@@ -136,7 +136,14 @@ export const loadConfig = async (): Promise<UserConfig> => {
 export const getGdxPath = async (): Promise<string | null> => {
   const config = await loadConfig();
 
-  const gdxFiles = [config.gdx?.path, "graphand.gdx.js", "graphand.gdx.json"];
+  if (config.gdx?.path) {
+    const configPath = path.join(process.cwd(), config.gdx.path);
+    if (!fs.existsSync(configPath)) {
+      throw new Error(`GDX file ${configPath} not found`);
+    }
+  }
+
+  const gdxFiles = ["graphand.gdx.js", "graphand.gdx.json"];
 
   for (const file of gdxFiles) {
     const configPath = path.join(process.cwd(), file);
@@ -197,7 +204,7 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
 
   const config: UserConfig = globalThis.userConfig ?? (await loadConfig());
   const configClient = (config.client || {}) as ClientOptions;
-  const conf = loadConf(config.client.project);
+  const conf = loadConf(configClient.project || "");
   const modules: ClientModules<ModuleConstructor[]> = [
     [
       ModuleAuth,
@@ -272,7 +279,7 @@ export const waitJob = async ({
       if (spin?.message) {
         message = typeof spin.message === "function" ? spin.message(job) : spin.message;
       }
-      message ??= `Job ${job._type} (${chalk.bold(job._id)}) is: ${chalk[_getColorForJobStatus(job._status)](job._status)} ...`;
+      message ??= `Job ${job._type} (${chalk.bold(job._id)}) is: ${chalk[_getColorForJobStatus(job._status || JobStatus.FAILED)](job._status || "unknown")} ...`;
 
       spin.spinner.text = message;
     }
@@ -293,7 +300,13 @@ export const waitJob = async ({
     return job;
   };
 
-  let job: ModelInstance<typeof Job> = await _fetch();
+  let job: ModelInstance<typeof Job> = (await _fetch()) as ModelInstance<typeof Job>;
+
+  if (!job) {
+    throw new Error("Job not found");
+  }
+
+  job = job as ModelInstance<typeof Job>;
 
   await _fetch();
 
@@ -302,16 +315,16 @@ export const waitJob = async ({
       params: { id: jobId },
       query: { stream: "1" },
     })
-    .then(r => r.body.getReader());
+    .then(r => r.body?.getReader());
 
-  const logsPromise = processLogs({ stream, spinner: spin.spinner, endAction: "end-job" });
+  const logsPromise = processLogs({ stream, spinner: spin?.spinner, endAction: "end-job" });
 
-  let unsubscribe: () => void;
+  let unsubscribe: undefined | (() => void);
 
   const endPromise = new Promise<void>(resolve => {
     unsubscribe = job.subscribe(() => {
       _handleJob(job);
-      if ([JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status)) {
+      if (job._status && [JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status)) {
         resolve();
       }
     });
@@ -323,8 +336,8 @@ export const waitJob = async ({
   if (pollInterval) {
     const pollPromise = new Promise<void>(async (resolve, reject) => {
       try {
-        while (![JobStatus.COMPLETED, JobStatus.FAILED].includes(job?._status)) {
-          job = await _fetch();
+        while (job._status && ![JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status)) {
+          job = (await _fetch()) as ModelInstance<typeof Job>;
           await new Promise(resolve => setTimeout(resolve, pollInterval));
         }
         resolve();
@@ -451,7 +464,7 @@ export const withSpinner = async <T = any>(
         await withSpinner(
           async spinner => {
             await waitJob({
-              client: globalThis.client,
+              client: globalThis.client as Client,
               jobId,
               spin: { spinner },
             });
@@ -562,7 +575,7 @@ export const collectSetter = (
 
   if (Array.isArray(previous)) {
     previous = previous.reduce((acc, item, index) => {
-      Object.assign(acc, { [index]: item });
+      Object.assign(acc as JSONTypeObject, { [index]: item });
       return acc;
     }, {}) as JSONTypeObject;
   }
@@ -586,11 +599,13 @@ export const collectSetter = (
     const operators = ["fileBase64", "fileText", "stdin"];
     if (new RegExp(`^@(${operators.join("|")}):?`).test(value)) {
       const [type, v] = value.split(":");
+      if (!type) throw new Error(`Invalid type ${value}`);
+
       switch (type.replace("@", "")) {
         case "fileBase64":
-          return decodeFileBase64(v);
+          return decodeFileBase64(v || "");
         case "fileText":
-          return decodeFileText(v);
+          return decodeFileText(v || "");
         case "stdin":
           return process.stdin.read() || "";
         default:
@@ -609,6 +624,7 @@ export const collectFiles = (value: string, previous?: Record<string, File>): Re
   let path: string;
 
   if (value.includes("=")) {
+    // @ts-expect-error - assume that the value is a string
     [field, path] = value.split("=");
   } else {
     field = "file";
@@ -665,7 +681,8 @@ export const replaceAllValues = (obj: unknown, find: unknown, replace: unknown):
   const result: Record<string, unknown> = {};
   for (const key in obj as Record<string, unknown>) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      result[key] = replaceAllValues(obj[key as keyof typeof obj], find, replace);
+      const _obj = obj as Record<string, unknown>;
+      result[key] = replaceAllValues(_obj[key as keyof typeof _obj], find, replace);
     }
   }
   return result;

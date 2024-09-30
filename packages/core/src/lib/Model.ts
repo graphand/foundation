@@ -1,6 +1,6 @@
-import { Field } from "@/lib/Field";
-import { PromiseModel } from "@/lib/PromiseModel";
-import { PromiseModelList } from "@/lib/PromiseModelList";
+import { Field } from "@/lib/Field.ts";
+import { PromiseModel } from "@/lib/PromiseModel.ts";
+import { PromiseModelList } from "@/lib/PromiseModelList.ts";
 import {
   AdapterFetcher,
   FieldsPathItem,
@@ -23,9 +23,9 @@ import {
   ModelJSON,
   ModelObject,
   InferModel,
-} from "@/types";
-import { Adapter } from "@/lib/Adapter";
-import { Validator } from "@/lib/Validator";
+} from "@/types/index.ts";
+import { Adapter } from "@/lib/Adapter.ts";
+import { Validator } from "@/lib/Validator.ts";
 import {
   createFieldsMap,
   createValidatorsArray,
@@ -36,12 +36,12 @@ import {
   assignDatamodel,
   getModelInitPromise,
   defineFieldsProperties,
-} from "@/lib/utils";
-import { CoreError } from "@/lib/CoreError";
-import { ErrorCodes } from "@/enums/error-codes";
-import type { DataModel } from "@/models/DataModel";
-import { ModelList } from "./ModelList";
-import { FieldTypes } from "@/enums/field-types";
+} from "@/lib/utils.ts";
+import { CoreError } from "@/lib/CoreError.ts";
+import { ErrorCodes } from "@/enums/error-codes.ts";
+import type { DataModel } from "@/models/DataModel.ts";
+import { ModelList } from "./ModelList.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
 
 const noFieldSymbol = Symbol("noField");
 
@@ -67,7 +67,7 @@ export class Model {
   static __dm?: string | null; // The id of the datamodel that initialized the model if extensible. null if datamodel not found
   static __memo: {
     fieldsMap?: Map<string, Field>;
-    validatorsArray?: Array<Validator>;
+    validatorsArray?: Array<Validator | null>;
     fieldsKeys?: string[];
     fieldsProperties?: PropertyDescriptorMap;
   };
@@ -274,7 +274,7 @@ export class Model {
       return this.__initPromise;
     }
 
-    let opts = {};
+    let opts: Parameters<typeof getModelInitPromise>[1] = {};
     if (this.hasOwnProperty("__initOptions")) {
       opts = this.__initOptions;
     }
@@ -396,8 +396,8 @@ export class Model {
 
     // If no adapter class is provided, get the base adapter of the current model
     adapterClass ??= this.getAdapter(false)?.base;
-    let slug: string;
-    let model: typeof Model;
+    let slug: string | undefined;
+    let model: typeof Model | undefined;
 
     // If the input is a model class, get its slug and assign it to the model
     if (typeof input === "function" && "prototype" in input && input.prototype instanceof Model) {
@@ -407,11 +407,17 @@ export class Model {
 
     // If the slug is not defined, get it from the input if it's a string or a datamodel instance
     slug ??= typeof input === "string" ? input : (input as ModelInstance<typeof DataModel>).slug;
-    const dm: ModelInstance<typeof DataModel> = input instanceof Model && slug ? input : undefined;
+    const dm: ModelInstance<typeof DataModel> | undefined = input instanceof Model && slug ? input : undefined;
 
     // If no adapter class is provided and the input is a datamodel instance, get its base adapter
     if (!adapterClass && dm) {
       adapterClass = dm.model().getAdapter(false)?.base;
+    }
+
+    if (!slug) {
+      throw new CoreError({
+        message: `Invalid slug: ${slug}`,
+      });
     }
 
     // If the adapter class has the model, return it
@@ -433,7 +439,7 @@ export class Model {
     // If the model is not fount yet, we deduce it to be a generic model extended with a datamodel instance (extensible and environment scoped)
     model ??= class extends Model {
       static __name = `Data<${slug}>`;
-      static slug = slug;
+      static slug = slug as string;
       static connectable = true;
       static extensible = true; // A data class is extensible as it should be linked to a datamodel with the same slug
       static isEnvironmentScoped = true;
@@ -478,20 +484,23 @@ export class Model {
     format: S = "object" as S,
     ctx: SerializerCtx = {},
     value?: unknown,
-  ): T extends ModelInstance<infer R>
-    ? P extends keyof InferModelDef<R, S>
-      ? InferModelDef<R, S>[P]
-      : unknown
-    : unknown {
+  ):
+    | (T extends ModelInstance<infer R>
+        ? P extends keyof InferModelDef<R, S>
+          ? InferModelDef<R, S>[P]
+          : unknown
+        : unknown)
+    | undefined {
     ctx.outputFormat ??= format;
     const model = this.model();
-    let fieldsPaths: Array<FieldsPathItem>;
+    let fieldsPaths: Array<FieldsPathItem | null> | undefined;
 
     if (path.includes(".")) {
       fieldsPaths = getFieldsPathsFromPath(this.model(), path.split("."));
     } else {
       if (model.fieldsMap.has(path)) {
-        fieldsPaths = [{ field: model.fieldsMap.get(path), key: path }];
+        const field = model.fieldsMap.get(path) as Field;
+        fieldsPaths = [{ field, key: path }];
       }
     }
 
@@ -499,6 +508,7 @@ export class Model {
 
     if (!fieldsPaths?.length) {
       if (model.freeMode) {
+        // @ts-ignore
         return value[path] as any;
       }
 
@@ -522,7 +532,8 @@ export class Model {
    * @param {TransactionCtx} [ctx] - The transaction context.
    */
   async refreshData<T extends ModelInstance>(this: T, ctx?: TransactionCtx) {
-    const newData = await this.model().execute("get", [this.get("_id", "json")], ctx);
+    const _id = this.get("_id", "json") as string;
+    const newData = await this.model().execute("get", [_id], ctx);
     if (!newData) {
       throw new CoreError({
         message: `Unable to refresh data on model ${this.model().slug}. New data is ${newData}`,
@@ -601,7 +612,7 @@ export class Model {
         }
 
         const count = await this.execute("count", [query], ctx);
-        resolve(count);
+        resolve(count || 0);
       } catch (e) {
         reject(e);
       }
@@ -821,7 +832,8 @@ export class Model {
   async delete<T extends ModelInstance>(this: T, ctx?: TransactionCtx): Promise<T> {
     await this.model().initialize();
 
-    await this.model().execute("deleteOne", [this.get("_id", "json")], ctx);
+    const _id = this.get("_id", "json") as string;
+    await this.model().execute("deleteOne", [_id], ctx);
 
     return this;
   }
@@ -931,7 +943,7 @@ export class Model {
    * @returns the adapter object.
    */
   static getAdapter<T extends typeof Model>(this: T, required = true): Adapter<T> {
-    let adapter: Adapter;
+    let adapter: Adapter | undefined;
     const baseClass = this.getBaseClass();
     const adapterClass = baseClass?.adapterClass;
 
@@ -1011,7 +1023,7 @@ export class Model {
           executed.add(h);
           await h.fn.call(this, payload);
         } catch (e) {
-          payload.err.push(e as Error);
+          payload.err?.push(e as Error);
         }
       }, Promise.resolve());
     }
@@ -1020,14 +1032,14 @@ export class Model {
   static async execute<
     M extends typeof Model,
     A extends keyof AdapterFetcher<M>,
-    Args extends Parameters<AdapterFetcher[A]>[0],
+    Args extends Parameters<NonNullable<AdapterFetcher<M>[A]>>[0],
   >(
     this: M,
     action: A,
     args: Args,
     ctx: TransactionCtx = {},
     transaction?: Transaction<M, A, Args>,
-  ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
+  ): Promise<ReturnType<NonNullable<AdapterFetcher<M>[A]>>> {
     if (!ctx?.forceOperation) {
       if (
         this.isSingle() &&
@@ -1072,7 +1084,7 @@ export class Model {
       err: undefined,
     };
 
-    let res: Awaited<ReturnType<AdapterFetcher<M>[A]>>;
+    let res: Awaited<ReturnType<NonNullable<AdapterFetcher<M>[A]>>> | undefined;
 
     await this.executeHooks("before", action, payloadBefore, transaction);
 
@@ -1085,7 +1097,7 @@ export class Model {
     }
 
     try {
-      const fn = this.getAdapter().fetcher[action];
+      const fn = this.getAdapter().fetcher?.[action];
 
       if (!fn) {
         throw new CoreError({
@@ -1103,7 +1115,7 @@ export class Model {
 
     const payloadAfter: HookCallbackArgs<"after", A, M> = {
       ...payloadBefore,
-      res,
+      res: res as Awaited<ReturnType<NonNullable<AdapterFetcher<M>[A]>>>,
     };
 
     await this.executeHooks("after", action, payloadAfter, transaction);
@@ -1116,7 +1128,7 @@ export class Model {
       throw payloadAfter.err.at(-1);
     }
 
-    return payloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;
+    return payloadAfter.res as ReturnType<NonNullable<AdapterFetcher<M>[A]>>;
   }
 
   [Symbol.toPrimitive](hint: string): any {

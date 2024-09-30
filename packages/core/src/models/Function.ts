@@ -1,11 +1,11 @@
-import { ValidatorTypes } from "@/enums/validator-types";
-import { Model } from "@/lib/Model";
-import { modelDecorator } from "@/lib/modelDecorator";
-import { FieldTypes } from "@/enums/field-types";
-import { ModelDefinition } from "@/types";
-import { Job } from "./Job";
-import { Key } from "./Key";
-import { Role } from "./Role";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { Model } from "@/lib/Model.ts";
+import { modelDecorator } from "@/lib/modelDecorator.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { ModelDefinition } from "@/types/index.ts";
+import { Job } from "./Job.ts";
+import { Key } from "./Key.ts";
+import { Role } from "./Role.ts";
 
 @modelDecorator()
 export class Function extends Model {

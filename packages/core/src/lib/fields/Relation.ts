@@ -1,10 +1,10 @@
-import { FieldTypes } from "@/enums/field-types";
-import { Field } from "@/lib/Field";
-import { Model } from "@/lib/Model";
-import { getValidationValues, isObjectId } from "@/lib/utils";
-import { PromiseModel } from "@/lib/PromiseModel";
-import { FieldSerializerInput } from "@/types";
-import { CoreError } from "../CoreError";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { Field } from "@/lib/Field.ts";
+import { Model } from "@/lib/Model.ts";
+import { getValidationValues, isObjectId } from "@/lib/utils.ts";
+import { PromiseModel } from "@/lib/PromiseModel.ts";
+import { FieldSerializerInput } from "@/types/index.ts";
+import { CoreError } from "../CoreError.ts";
 
 export class FieldRelation extends Field<FieldTypes.RELATION> {
   validate: Field<FieldTypes.RELATION>["validate"] = async ({ list }) => {
@@ -59,7 +59,7 @@ export class FieldRelation extends Field<FieldTypes.RELATION> {
     // get the referenced model with the same adapter as from parameter
     const model = Model.getClass(this.options.ref, adapter.base);
 
-    return model.get(id, Object.assign({}, ctx?.transactionCtx));
+    return model.get(id as string, Object.assign({}, ctx?.transactionCtx));
   };
 
   serializerMap: Field<FieldTypes.RELATION>["serializerMap"] = {

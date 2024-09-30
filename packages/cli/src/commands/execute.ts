@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { colorizeJson, getClient, withSpinner } from "@/lib/utils";
+import { colorizeJson, getClient, withSpinner } from "@/lib/utils.ts";
 import qs from "qs";
 import { FetchError } from "@graphand/client";
 import chalk from "chalk";
@@ -99,7 +99,7 @@ export const commandExecute = new Command("execute")
         await _handleRes(r);
       } catch (e) {
         if (e instanceof FetchError) {
-          await _handleRes(e.res);
+          await _handleRes(e.res as Response);
         } else {
           throw new Error(`Failed to execute ${chalk.cyan(controllerName)}: ${(e as Error).message}`);
         }

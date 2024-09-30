@@ -1,8 +1,8 @@
 import { CoreError, ErrorCodes } from "@graphand/core";
-import { FetchErrorDefinition } from "../types";
+import { FetchErrorDefinition } from "../types.ts";
 
 export class FetchError extends CoreError {
-  res: Response;
+  res: Response | undefined;
 
   constructor({ res, ...coreDefinition }: FetchErrorDefinition = {}) {
     coreDefinition.code ??= ErrorCodes.UNKNOWN;

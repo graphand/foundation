@@ -1,5 +1,5 @@
-import { ModelJSON } from "@/types";
-import Model from "./lib/Model";
+import { ModelJSON } from "@/types/index.ts";
+import Model from "./lib/Model.ts";
 
 declare global {
   // eslint-disable-next-line no-unused-vars

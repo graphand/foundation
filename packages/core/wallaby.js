@@ -1,12 +1,10 @@
-"use strict";
-
-module.exports = function () {
+export default function () {
   return {
     autoDetect: true,
-    name: "@graphand/client",
+    name: "@graphand/core",
     testFramework: {
       configFile: "./jest.config.json",
     },
     runMode: "onsave",
   };
-};
+}

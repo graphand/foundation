@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
-import { Client } from "./Client";
-import { ClientAdapter } from "./ClientAdapter";
-import { ClientModules, ClientOptions, ModuleConstructor } from "../types";
+import { Client } from "./Client.ts";
+import { ClientAdapter } from "./ClientAdapter.ts";
+import { ClientModules, ClientOptions, ModuleConstructor } from "../types.ts";
 import {
   DataModel,
   FieldTypes,
+  JSONTypeObject,
   Model,
   ModelCrudEvent,
   modelDecorator,
@@ -440,7 +441,8 @@ describe("ClientAdapter", () => {
       await model.get("123", { disableCache: true });
       expect(adapter.store.get("123")?.get("name")).toBe("Test");
       const body3 = JSON.stringify({
-        data: { _id: "123", name: "NewTest", _updatedAt: new Date(i.__fetchedAt.getTime() + 10) },
+        // @ts-ignore
+        data: { _id: "123", name: "NewTest", _updatedAt: new Date(i.__fetchedAt?.getTime() + 10) },
       });
       fetchMock.mockResolvedValueOnce(new Response(body3));
       await model.get("123", { disableCache: true });
@@ -1009,7 +1011,7 @@ describe("ClientAdapter", () => {
             options: {
               ref: OtherRelatedModel.slug,
             },
-            _tsModel: undefined as typeof OtherRelatedModel,
+            _tsModel: undefined as unknown as typeof OtherRelatedModel,
           },
         },
       } satisfies ModelDefinition;
@@ -1028,7 +1030,7 @@ describe("ClientAdapter", () => {
             options: {
               ref: RelatedModel.slug,
             },
-            _tsModel: undefined as typeof RelatedModel,
+            _tsModel: undefined as unknown as typeof RelatedModel,
           },
           multiRelated: {
             type: FieldTypes.ARRAY,
@@ -1051,7 +1053,7 @@ describe("ClientAdapter", () => {
                   options: {
                     ref: RelatedModel.slug,
                   },
-                  _tsModel: undefined as typeof RelatedModel,
+                  _tsModel: undefined as unknown as typeof RelatedModel,
                 },
                 multiRelated: {
                   type: FieldTypes.ARRAY,
@@ -1061,7 +1063,7 @@ describe("ClientAdapter", () => {
                       options: {
                         ref: RelatedModel.slug,
                       },
-                      _tsModel: undefined as typeof RelatedModel,
+                      _tsModel: undefined as unknown as typeof RelatedModel,
                     },
                     distinct: true,
                   },
@@ -1071,7 +1073,7 @@ describe("ClientAdapter", () => {
                   options: {
                     ref: RelatedModel.slug,
                   },
-                  _tsModel: undefined as typeof RelatedModel,
+                  _tsModel: undefined as unknown as typeof RelatedModel,
                 },
               },
             },
@@ -1088,7 +1090,7 @@ describe("ClientAdapter", () => {
                       options: {
                         ref: RelatedModel.slug,
                       },
-                      _tsModel: undefined as typeof RelatedModel,
+                      _tsModel: undefined as unknown as typeof RelatedModel,
                     },
                     multiRelated: {
                       type: FieldTypes.ARRAY,
@@ -1098,7 +1100,7 @@ describe("ClientAdapter", () => {
                           options: {
                             ref: RelatedModel.slug,
                           },
-                          _tsModel: undefined as typeof RelatedModel,
+                          _tsModel: undefined as unknown as typeof RelatedModel,
                         },
                         distinct: true,
                       },
@@ -1108,7 +1110,7 @@ describe("ClientAdapter", () => {
                       options: {
                         ref: RelatedModel.slug,
                       },
-                      _tsModel: undefined as typeof RelatedModel,
+                      _tsModel: undefined as unknown as typeof RelatedModel,
                     },
                   },
                 },
@@ -1156,7 +1158,7 @@ describe("ClientAdapter", () => {
       expect(adapterWithRelation.store.get(relatedId)).toBeUndefined();
       expect(adapterRelated.store.get(relatedId)).toBeInstanceOf(RelatedModel);
       expect(result.related).toBeInstanceOf(PromiseModel);
-      expect(result.related.cached).toBeInstanceOf(RelatedModel);
+      expect(result.related?.cached).toBeInstanceOf(RelatedModel);
     });
 
     it("should process and cache populated data for multiple relations", async () => {
@@ -1181,10 +1183,10 @@ describe("ClientAdapter", () => {
       expect(adapterRelated.store.get(relatedId1)).toBeInstanceOf(RelatedModel);
       expect(adapterRelated.store.get(relatedId2)).toBeInstanceOf(RelatedModel);
       expect(result.multiRelated).toBeInstanceOf(PromiseModelList);
-      expect(result.multiRelated.cached).toBeInstanceOf(ModelList);
-      expect(result.multiRelated.cached.length).toBe(2);
-      expect(result.multiRelated.cached[0]).toBeInstanceOf(RelatedModel);
-      expect(result.multiRelated.cached[1]).toBeInstanceOf(RelatedModel);
+      expect(result.multiRelated?.cached).toBeInstanceOf(ModelList);
+      expect(result.multiRelated?.cached?.length).toBe(2);
+      expect(result.multiRelated?.cached?.[0]).toBeInstanceOf(RelatedModel);
+      expect(result.multiRelated?.cached?.[1]).toBeInstanceOf(RelatedModel);
     });
 
     it("should handle nested populated data with single relation", async () => {
@@ -1208,8 +1210,8 @@ describe("ClientAdapter", () => {
       expect(result.get("name")).toBe("Test");
       expect(result.getData().nested.related).toBe(nestedRelatedId);
       expect(adapterRelated.store.get(nestedRelatedId)).toBeInstanceOf(RelatedModel);
-      expect(result.nested.related).toBeInstanceOf(PromiseModel);
-      expect(result.nested.related.cached).toBeInstanceOf(RelatedModel);
+      expect(result.nested?.related).toBeInstanceOf(PromiseModel);
+      expect(result.nested?.related?.cached).toBeInstanceOf(RelatedModel);
     });
 
     it("should handle nested populated data with multiple relations", async () => {
@@ -1235,9 +1237,9 @@ describe("ClientAdapter", () => {
       expect(result.getData().nested.multiRelated).toEqual([nestedRelatedId1, nestedRelatedId2]);
       expect(adapterRelated.store.get(nestedRelatedId1)).toBeInstanceOf(RelatedModel);
       expect(adapterRelated.store.get(nestedRelatedId2)).toBeInstanceOf(RelatedModel);
-      expect(result.nested.multiRelated).toBeInstanceOf(PromiseModelList);
-      expect(result.nested.multiRelated.cached).toBeInstanceOf(ModelList);
-      expect(result.nested.multiRelated.cached.length).toBe(2);
+      expect(result.nested?.multiRelated).toBeInstanceOf(PromiseModelList);
+      expect(result.nested?.multiRelated?.cached).toBeInstanceOf(ModelList);
+      expect(result.nested?.multiRelated?.cached?.length).toBe(2);
     });
 
     it("should handle nested array populated data with single relations", async () => {
@@ -1262,10 +1264,10 @@ describe("ClientAdapter", () => {
       expect(result.getData().nestedArr[1].related).toBe(nestedArrRelatedId2);
       expect(adapterRelated.store.get(nestedArrRelatedId1)).toBeInstanceOf(RelatedModel);
       expect(adapterRelated.store.get(nestedArrRelatedId2)).toBeInstanceOf(RelatedModel);
-      expect(result.nestedArr[0].related).toBeInstanceOf(PromiseModel);
-      expect(result.nestedArr[0].related.cached).toBeInstanceOf(RelatedModel);
-      expect(result.nestedArr[1].related).toBeInstanceOf(PromiseModel);
-      expect(result.nestedArr[1].related.cached).toBeInstanceOf(RelatedModel);
+      expect(result.nestedArr?.[0]?.related).toBeInstanceOf(PromiseModel);
+      expect(result.nestedArr?.[0]?.related?.cached).toBeInstanceOf(RelatedModel);
+      expect(result.nestedArr?.[1]?.related).toBeInstanceOf(PromiseModel);
+      expect(result.nestedArr?.[1]?.related?.cached).toBeInstanceOf(RelatedModel);
     });
 
     it("should handle mixed populated and unpopulated data", async () => {
@@ -1348,13 +1350,13 @@ describe("ClientAdapter", () => {
       expect(adapterRelated.store.get(relatedId1)).toBeInstanceOf(RelatedModel);
       expect(adapterOtherRelated.store.get(relatedId2)).toBeInstanceOf(OtherRelatedModel);
 
-      expect(result.nested.related).toBeInstanceOf(PromiseModel);
-      expect(result.nested.related.cached).toBeInstanceOf(RelatedModel);
-      expect(result.nested.related.cached._id).toBe(relatedId1);
+      expect(result.nested?.related).toBeInstanceOf(PromiseModel);
+      expect(result.nested?.related?.cached).toBeInstanceOf(RelatedModel);
+      expect(result.nested?.related?.cached?._id).toBe(relatedId1);
 
-      expect(result.nested.related.cached.other).toBeInstanceOf(PromiseModel);
-      expect(result.nested.related.cached.other.cached).toBeInstanceOf(OtherRelatedModel);
-      expect(result.nested.related.cached.other.cached._id).toBe(relatedId2);
+      expect(result.nested?.related?.cached?.other).toBeInstanceOf(PromiseModel);
+      expect(result.nested?.related?.cached?.other?.cached).toBeInstanceOf(OtherRelatedModel);
+      expect(result.nested?.related?.cached?.other?.cached?._id).toBe(relatedId2);
     });
 
     it("should handle multiple levels of nested populated data for multiple relations", async () => {
@@ -1392,16 +1394,16 @@ describe("ClientAdapter", () => {
       expect(adapterRelated.store.get(relatedId2)).toBeInstanceOf(RelatedModel);
 
       expect(result.related).toBeInstanceOf(PromiseModel);
-      expect(result.related.cached).toBeInstanceOf(RelatedModel);
-      expect(result.related.cached._id).toBe(relatedId1);
+      expect(result.related?.cached).toBeInstanceOf(RelatedModel);
+      expect(result.related?.cached?._id).toBe(relatedId1);
 
       expect(result.multiRelated).toBeInstanceOf(PromiseModelList);
-      expect(result.multiRelated.cached).toBeInstanceOf(ModelList);
-      expect(result.multiRelated.cached.length).toBe(2);
-      expect(result.multiRelated.cached[0]).toBeInstanceOf(RelatedModel);
-      expect(result.multiRelated.cached[1]).toBeInstanceOf(RelatedModel);
-      expect(result.multiRelated.cached[0]._id).toBe(relatedId2);
-      expect(result.multiRelated.cached[1]._id).toBe(relatedId1);
+      expect(result.multiRelated?.cached).toBeInstanceOf(ModelList);
+      expect(result.multiRelated?.cached?.length).toBe(2);
+      expect(result.multiRelated?.cached?.[0]).toBeInstanceOf(RelatedModel);
+      expect(result.multiRelated?.cached?.[1]).toBeInstanceOf(RelatedModel);
+      expect(result.multiRelated?.cached?.[0]?._id).toBe(relatedId2);
+      expect(result.multiRelated?.cached?.[1]?._id).toBe(relatedId1);
     });
 
     it("should correctly handle and cache deeply nested relations across multiple dynamic models", async () => {
@@ -1460,6 +1462,7 @@ describe("ClientAdapter", () => {
           const body = await args.json();
           const slug = body.filter.slug;
           const found = [dmRelated, dm].find(d => d.slug === slug);
+          if (!found) return new Response(JSON.stringify({ data: { rows: [], count: 0 } }));
           return new Response(JSON.stringify({ data: { rows: [found.toJSON()], count: 1 } }));
         }
 
@@ -1485,11 +1488,11 @@ describe("ClientAdapter", () => {
       const id2 = new ObjectId().toString();
       const id3 = new ObjectId().toString();
 
-      await client.getModel(dm.slug).get(id1);
+      await client.getModel(dm.slug as string).get(id1);
 
-      const adapter1 = client.getModel(dm.slug).getAdapter() as unknown as ClientAdapter;
-      const adapter2 = client.getModel(dmRelated.slug).getAdapter() as unknown as ClientAdapter;
-      const adapter3 = client.getModel(dmOtherRelated.slug).getAdapter() as unknown as ClientAdapter;
+      const adapter1 = client.getModel(dm.slug as string).getAdapter() as unknown as ClientAdapter;
+      const adapter2 = client.getModel(dmRelated.slug as string).getAdapter() as unknown as ClientAdapter;
+      const adapter3 = client.getModel(dmOtherRelated.slug as string).getAdapter() as unknown as ClientAdapter;
 
       expect(adapter1.store.has(id1)).toBeTruthy();
       expect(adapter2.store.has(id2)).toBeTruthy();
@@ -1565,8 +1568,8 @@ describe("ClientAdapter", () => {
       const instance1 = model.get(id1).cached;
       const instance2 = model.get(id2).cached;
 
-      expect(instance1?.selfRef.cached).toBe(instance2);
-      expect(instance2?.selfRef.cached).toBe(instance1);
+      expect(instance1?.selfRef?.cached).toBe(instance2);
+      expect(instance2?.selfRef?.cached).toBe(instance1);
     });
 
     it("should correctly populate nested arrays with relations", async () => {
@@ -1634,8 +1637,8 @@ describe("ClientAdapter", () => {
         );
       });
 
-      await client.getModel(dmNested.slug).get(id1);
-      const adapter = client.getModel(dmNested.slug).getAdapter() as unknown as ClientAdapter;
+      await client.getModel(dmNested.slug as string).get(id1);
+      const adapter = client.getModel(dmNested.slug as string).getAdapter() as unknown as ClientAdapter;
 
       expect(adapter.store.has(id1)).toBeTruthy();
       expect(adapter.store.has(id2)).toBeTruthy();
@@ -1654,8 +1657,8 @@ describe("ClientAdapter", () => {
           };
         }
       >;
-      expect(instance?.items[0].subItem.cached).toBe(adapter.store.get(id2));
-      expect(instance?.items[1].subItem.cached).toBe(adapter.store.get(id3));
+      expect(instance?.items?.[0]?.subItem?.cached).toBe(adapter.store.get(id2));
+      expect(instance?.items?.[1]?.subItem?.cached).toBe(adapter.store.get(id3));
     });
 
     it("should update cache when deeply nested relations are modified", async () => {
@@ -1737,17 +1740,17 @@ describe("ClientAdapter", () => {
         );
       });
 
-      await client.getModel(dmDeep.slug).get(id1);
-      const adapter = client.getModel(dmDeep.slug).getAdapter() as unknown as ClientAdapter;
-      const adapter1 = client.getModel(dmDeep1.slug).getAdapter() as unknown as ClientAdapter;
-      const adapter2 = client.getModel(dmDeep2.slug).getAdapter() as unknown as ClientAdapter;
+      await client.getModel(dmDeep.slug as string).get(id1);
+      const adapter = client.getModel(dmDeep.slug as string).getAdapter() as unknown as ClientAdapter;
+      const adapter1 = client.getModel(dmDeep1.slug as string).getAdapter() as unknown as ClientAdapter;
+      const adapter2 = client.getModel(dmDeep2.slug as string).getAdapter() as unknown as ClientAdapter;
 
       expect(adapter.store.has(id1)).toBeTruthy();
       expect(adapter1.store.has(id2)).toBeTruthy();
       expect(adapter2.store.has(id3)).toBeTruthy();
 
       // Update the deeply nested relation
-      await client.getModel(dmDeep.slug).get(id1, { disableCache: true });
+      await client.getModel(dmDeep.slug as string).get(id1, { disableCache: true });
 
       expect(updateCount).toBe(2);
 
@@ -1941,10 +1944,10 @@ describe("ClientAdapter", () => {
       const created = await model.createMultiple([{ title: title1 }, { title: title2 }]);
       expect(Array.isArray(created)).toBeTruthy();
       expect(created.length).toBe(2);
-      expect(created[0].get("_id")).toBeDefined();
-      expect(created[0].get("title")).toBe(title1);
-      expect(created[1].get("_id")).toBeDefined();
-      expect(created[1].get("title")).toBe(title2);
+      expect(created?.[0]?.get("_id")).toBeDefined();
+      expect(created?.[0]?.get("title")).toBe(title1);
+      expect(created?.[1]?.get("_id")).toBeDefined();
+      expect(created?.[1]?.get("title")).toBe(title2);
     });
 
     it("should updateOne", async () => {
@@ -1961,7 +1964,7 @@ describe("ClientAdapter", () => {
       const i2 = await model.create({ title: faker.random.alphaNumeric(10) });
 
       const newTitle = faker.random.alphaNumeric(10);
-      await model.update({ ids: [i1._id, i2._id] }, { $set: { title: newTitle } });
+      await model.update({ ids: [i1._id as string, i2._id as string] }, { $set: { title: newTitle } });
 
       expect(i1.get("title")).toBe(newTitle);
       expect(i2.get("title")).toBe(newTitle);
@@ -1979,7 +1982,7 @@ describe("ClientAdapter", () => {
     it("should deleteMultiple", async () => {
       const i1 = await model.create({ title: faker.random.alphaNumeric(10) });
       const i2 = await model.create({ title: faker.random.alphaNumeric(10) });
-      await model.delete({ ids: [i1._id, i2._id] });
+      await model.delete({ ids: [i1._id as string, i2._id as string] });
       await expect(model.get(i1._id)).rejects.toThrow("not found");
       await expect(model.get(i2._id)).rejects.toThrow("not found");
     });
@@ -1989,9 +1992,9 @@ describe("ClientAdapter", () => {
         { title: faker.random.alphaNumeric(10) },
         { title: faker.random.alphaNumeric(10) },
       ]);
-      const filter = { title: { $in: [created[0].get("title"), created[1].get("title")] } };
+      const filter = { title: { $in: [created?.[0]?.get("title"), created?.[1]?.get("title")] } } as JSONTypeObject;
       expect(await model.count({ filter })).toBe(2);
-      await model.delete({ ids: [created[0]._id, created[1]._id] });
+      await model.delete({ ids: [created?.[0]?._id as string, created?.[1]?._id as string] });
       expect(await model.count({ filter })).toBe(0);
     });
   });

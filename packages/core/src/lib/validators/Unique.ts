@@ -1,6 +1,6 @@
-import { ValidatorTypes } from "@/enums/validator-types";
-import { Validator } from "@/lib/Validator";
-import { getValidationValues } from "../utils";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { Validator } from "@/lib/Validator.ts";
+import { getValidationValues } from "../utils.ts";
 
 export class ValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
   validate: Validator<ValidatorTypes.UNIQUE>["validate"] = async ({ list }) => {

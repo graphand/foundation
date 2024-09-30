@@ -1,10 +1,10 @@
-import { Model } from "@/lib/Model";
-import { modelDecorator } from "@/lib/modelDecorator";
-import { FieldTypes } from "@/enums/field-types";
-import { ModelDefinition } from "@/types";
-import { EventSources } from "@/enums/event-sources";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { EventSeverities } from "@/enums/event-severities";
+import { Model } from "@/lib/Model.ts";
+import { modelDecorator } from "@/lib/modelDecorator.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { ModelDefinition } from "@/types/index.ts";
+import { EventSources } from "@/enums/event-sources.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { EventSeverities } from "@/enums/event-severities.ts";
 
 @modelDecorator()
 export class Event extends Model {

@@ -1,4 +1,4 @@
-import { getClient, processLogs, withSpinner } from "@/lib/utils";
+import { getClient, processLogs, withSpinner } from "@/lib/utils.ts";
 import { controllerFunctionLogs, Function } from "@graphand/core";
 import { Command } from "commander";
 
@@ -32,7 +32,7 @@ export const commandLogsFunction = new Command("function")
       }
 
       const res = await client.execute(controllerFunctionLogs, {
-        params: { id: func._id },
+        params: { id: func._id as string },
         query,
       });
 
@@ -41,7 +41,7 @@ export const commandLogsFunction = new Command("function")
       }
 
       if (options.stream) {
-        stream = res.body.getReader();
+        stream = res.body?.getReader();
 
         spinner.succeed(`Logs stream opened for function ${functionName}`);
       } else {

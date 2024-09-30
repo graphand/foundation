@@ -14,7 +14,7 @@ import {
   controllerCodeAuth,
   InferControllerInput,
 } from "@graphand/core";
-import { AuthStorage } from "./types";
+import { AuthStorage } from "./types.ts";
 
 class MemoryStorage implements AuthStorage {
   private store: Record<string, string> = {};
@@ -89,7 +89,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       }
     }
 
-    const accessToken = await this.storage.getItem("accessToken");
+    const accessToken = await this.storage?.getItem("accessToken");
     if (accessToken) {
       client.setOptions({ accessToken });
     }
@@ -98,9 +98,12 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
   async [symbolModuleDestroy]() {}
 
   async setTokens(accessToken: string, refreshToken: string) {
-    await this.storage.setItem("accessToken", accessToken);
-    await this.storage.setItem("refreshToken", refreshToken);
     this.client().setOptions({ accessToken });
+
+    if (this.storage) {
+      await this.storage.setItem("accessToken", accessToken);
+      await this.storage.setItem("refreshToken", refreshToken);
+    }
   }
 
   async login<P extends AuthProviders = AuthProviders.LOCAL, M extends AuthMethods = AuthMethods.WINDOW>(
@@ -150,11 +153,11 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     providerOrData: RegisterData<P, M> | P,
     methodOrData?: Omit<RegisterData<P, M>, "provider"> | M,
     _data?: Omit<RegisterData<P, M>, "provider" | "method">,
-    query?: InferControllerInput<typeof controllerRegister>["query"],
+    query?: NonNullable<InferControllerInput<typeof controllerRegister>>["query"],
   ) {
     let data: RegisterData<P, M>;
 
-    if (data && typeof data === "object") {
+    if (_data && typeof _data === "object") {
       data = _data;
     } else {
       data = {};
@@ -191,6 +194,10 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
   }
 
   async refreshToken() {
+    if (!this.storage) {
+      throw new Error("No storage available");
+    }
+
     const refreshToken = await this.storage.getItem("refreshToken");
     if (!refreshToken) {
       throw new Error("No refresh token available");
@@ -256,9 +263,12 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
   }
 
   async logout() {
-    await this.storage.removeItem("accessToken");
-    await this.storage.removeItem("refreshToken");
     this.client().setOptions({ accessToken: undefined });
+
+    if (this.storage) {
+      await this.storage.removeItem("accessToken");
+      await this.storage.removeItem("refreshToken");
+    }
   }
 }
 

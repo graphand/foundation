@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient, withSpinner } from "@/lib/utils";
+import { getClient, withSpinner } from "@/lib/utils.ts";
 import { controllerMediaPrivate, controllerMediaPublic, Media, MediaTransformOptions } from "@graphand/core";
 import open from "open";
 
@@ -48,7 +48,7 @@ export const commandSrc = new Command("src")
       }
 
       if (options.fit) {
-        transformOptions.fit = options.fit;
+        transformOptions.fit = options.fit as NonNullable<MediaTransformOptions["fit"]>;
 
         if (!["cover", "contain", "fill", "inside", "outside"].includes(transformOptions.fit)) {
           throw new Error(`Invalid fit ${options.fit}`);
@@ -58,7 +58,7 @@ export const commandSrc = new Command("src")
       const controller = media.private ? controllerMediaPrivate : controllerMediaPublic;
 
       const url = client.buildUrl(controller, {
-        params: { id: media._id },
+        params: { id: media._id as string },
         query: transformOptions as Record<string, string>,
       });
 

@@ -1,2 +1,2 @@
-import "./src/modules/register-models";
-import "./src/modules/validators";
+import "./src/modules/register-models.ts";
+import "./src/modules/validators.ts";

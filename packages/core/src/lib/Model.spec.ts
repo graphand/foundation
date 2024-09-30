@@ -1,19 +1,19 @@
-import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev";
-import { Field } from "@/lib/Field";
-import { Model } from "@/lib/Model";
-import { FieldTypes } from "@/enums/field-types";
-import { Validator } from "@/lib/Validator";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { Account } from "@/models/Account";
-import { CoreError } from "@/lib/CoreError";
-import { DataModel } from "@/models/DataModel";
-import { ErrorCodes } from "@/enums/error-codes";
-import { Media } from "@/models/Media";
-import { ModelDefinition, ModelInstance, SerializerFieldsMap } from "@/types";
-import { PromiseModelList } from "@/lib/PromiseModelList";
-import { PromiseModel } from "@/lib/PromiseModel";
+import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev.ts";
+import { Field } from "@/lib/Field.ts";
+import { Model } from "@/lib/Model.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { Validator } from "@/lib/Validator.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { Account } from "@/models/Account.ts";
+import { CoreError } from "@/lib/CoreError.ts";
+import { DataModel } from "@/models/DataModel.ts";
+import { ErrorCodes } from "@/enums/error-codes.ts";
+import { Media } from "@/models/Media.ts";
+import { ModelDefinition, ModelInstance, SerializerFieldsMap } from "@/types/index.ts";
+import { PromiseModelList } from "@/lib/PromiseModelList.ts";
+import { PromiseModel } from "@/lib/PromiseModel.ts";
 import { faker } from "@faker-js/faker";
-import { Adapter } from "@/lib/Adapter";
+import { Adapter } from "@/lib/Adapter.ts";
 import { ObjectId } from "bson";
 
 describe("Test Model", () => {
@@ -179,10 +179,10 @@ describe("Test Model", () => {
 
       expect(initFn).toBeCalledTimes(1);
 
-      const lastCallArgs = initFn.mock.calls[0][0];
+      const lastCallArgs = initFn.mock.calls?.[0]?.[0];
 
-      expect(lastCallArgs.datamodel).toBeUndefined();
-      expect(lastCallArgs.ctx).toBeUndefined();
+      expect(lastCallArgs?.datamodel).toBeUndefined();
+      expect(lastCallArgs?.ctx).toBeUndefined();
 
       const model2 = model.extend({
         initOptions: {
@@ -203,7 +203,7 @@ describe("Test Model", () => {
 
       expect(initFn2).toBeCalledTimes(1);
 
-      const lastCall2Args = initFn2.mock.calls[0][0];
+      const lastCall2Args = initFn2.mock.calls?.[0]?.[0];
 
       expect(lastCall2Args?.datamodel).toBeInstanceOf(DataModel);
 
@@ -394,7 +394,7 @@ describe("Test Model", () => {
       });
 
       expect(created.get("test.nested")).toBe("123");
-      expect(created.test.nested).toBe("123");
+      expect(created.test?.nested).toBe("123");
     });
 
     it("should serialize with nested fields in array", async () => {
@@ -420,8 +420,8 @@ describe("Test Model", () => {
       expect(created.get("test.[]")).toEqual(["123"]);
       expect(created.get("test.toto")).toEqual(undefined);
       expect(created.test).toBeInstanceOf(Array);
-      expect(created.test.length).toEqual(1);
-      expect(created.test[0]).toEqual("123");
+      expect(created.test?.length).toEqual(1);
+      expect(created.test?.[0]).toEqual("123");
     });
 
     it("should serialize with nested fields in array of array", async () => {
@@ -1129,7 +1129,7 @@ describe("Test Model", () => {
       Object.assign(BaseModelWithKeyField.definition, { keyField: "title" });
       const TestModel = BaseModelWithKeyField.extend({ adapterClass: adapter });
 
-      const keyFieldValidator = TestModel.validatorsArray.find(v => v.type === ValidatorTypes.KEY_FIELD);
+      const keyFieldValidator = TestModel.validatorsArray.find(v => v?.type === ValidatorTypes.KEY_FIELD);
       expect(keyFieldValidator).toBeDefined();
     });
 
@@ -1151,9 +1151,9 @@ describe("Test Model", () => {
 
       const validators = TestModel.validatorsArray;
 
-      const keyFieldValidator = validators.find(v => v.type === ValidatorTypes.KEY_FIELD);
-      const uniqueValidator = validators.find(v => v.type === ValidatorTypes.UNIQUE);
-      const requiredValidator = validators.find(v => v.type === ValidatorTypes.REQUIRED);
+      const keyFieldValidator = validators.find(v => v?.type === ValidatorTypes.KEY_FIELD);
+      const uniqueValidator = validators.find(v => v?.type === ValidatorTypes.UNIQUE);
+      const requiredValidator = validators.find(v => v?.type === ValidatorTypes.REQUIRED);
 
       expect(keyFieldValidator).toBeDefined();
       expect(uniqueValidator).toBeUndefined();
@@ -2023,7 +2023,7 @@ describe("Test Model", () => {
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      Object.assign(dm.definition, {
+      Object.assign(dm.definition as ModelDefinition, {
         fields: {
           field2: {
             type: FieldTypes.TEXT,
@@ -2063,7 +2063,7 @@ describe("Test Model", () => {
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      Object.assign(dm.definition, {
+      Object.assign(dm.definition as ModelDefinition, {
         fields: {
           field2: {
             type: FieldTypes.TEXT,
@@ -2105,7 +2105,7 @@ describe("Test Model", () => {
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      Object.assign(dm.definition, {
+      Object.assign(dm.definition || {}, {
         keyField: "field2",
         fields: {
           field2: {
@@ -2324,7 +2324,7 @@ describe("Test Model", () => {
         }
       >(slug2, adapter).create({ rel: i1._id });
 
-      expect(i2.rel.model).toBe(Model1);
+      expect(i2.rel?.model).toBe(Model1);
     });
 
     it("should cache class on adapter by slug and use these models in relation fields", async () => {
@@ -2364,7 +2364,7 @@ describe("Test Model", () => {
         }
       >(slug2, adapter).create({ rel: i1._id });
 
-      expect(i2.rel.model).toHaveProperty("slug", slug1);
+      expect(i2.rel?.model).toHaveProperty("slug", slug1);
 
       const Model1 = class extends Model {
         static slug = slug1;
@@ -2383,7 +2383,7 @@ describe("Test Model", () => {
         }
       >(slug2, adapter).create({ rel: i1._id });
 
-      expect(i3.rel.model).toBe(Model1);
+      expect(i3.rel?.model).toBe(Model1);
     });
 
     it("should cache class on adapter by slug and use these models in array relation fields", async () => {
@@ -2442,7 +2442,7 @@ describe("Test Model", () => {
         }
       >(slug2, adapter).create({ rel: [i1._id] });
 
-      expect(i2.rel.model).toBe(Model1);
+      expect(i2.rel?.model).toBe(Model1);
     });
 
     it("should be able to get model from class", async () => {

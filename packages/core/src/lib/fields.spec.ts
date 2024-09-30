@@ -1,14 +1,14 @@
 import { ObjectId } from "bson";
-import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils.dev";
-import { FieldTypes } from "@/enums/field-types";
+import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils.dev.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
 import { faker } from "@faker-js/faker";
-import { Field } from "@/lib/Field";
-import { Validator } from "@/lib/Validator";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { ValidationError } from "@/lib/ValidationError";
-import { PromiseModel } from "@/lib/PromiseModel";
-import { Account, DataModel, JSONType, Model } from "@/index";
-import { PromiseModelList } from "@/lib/PromiseModelList";
+import { Field } from "@/lib/Field.ts";
+import { Validator } from "@/lib/Validator.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { ValidationError } from "@/lib/ValidationError.ts";
+import { PromiseModel } from "@/lib/PromiseModel.ts";
+import { Account, DataModel, JSONType, Model } from "@/index.ts";
+import { PromiseModelList } from "@/lib/PromiseModelList.ts";
 
 describe("test fields", () => {
   const adapter = mockAdapter({});
@@ -492,7 +492,7 @@ describe("test fields", () => {
         });
 
         expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.__isProxy).toBe(true);
+        expect(i.obj?.__isProxy).toBe(true);
       });
 
       it("should not call other fields serializers thanks to the proxy", async () => {
@@ -549,7 +549,7 @@ describe("test fields", () => {
         });
 
         expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.title).toBe("test");
+        expect(i.obj?.title).toBe("test");
 
         expect(serializeText).toHaveBeenCalledTimes(1);
         expect(serializeNumber).not.toHaveBeenCalled();
@@ -622,8 +622,8 @@ describe("test fields", () => {
         });
 
         expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.subObj).toBeInstanceOf(Object);
-        expect(i.obj.subObj.title).toBe("test");
+        expect(i.obj?.subObj).toBeInstanceOf(Object);
+        expect(i.obj?.subObj?.title).toBe("test");
         expect(serializeText).toHaveBeenCalledTimes(1);
 
         expect(i.get("obj.subObj.title")).toBe("test");
@@ -692,8 +692,8 @@ describe("test fields", () => {
         });
 
         expect(i.arr).toBeInstanceOf(Array);
-        expect(i.arr[0]).toBeInstanceOf(Object);
-        expect(i.arr[0].title).toBe("test");
+        expect(i.arr?.[0]).toBeInstanceOf(Object);
+        expect(i.arr?.[0]?.title).toBe("test");
 
         expect(serializeText).toHaveBeenCalledTimes(1);
         expect(serializeNumber).not.toHaveBeenCalled();
@@ -771,7 +771,7 @@ describe("test fields", () => {
 
         const i = model.hydrate({ obj });
         expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.title).toEqual(serializedText);
+        expect(i.obj?.title).toEqual(serializedText);
       });
 
       it("should validate fields defined in options", async () => {
@@ -864,8 +864,8 @@ describe("test fields", () => {
 
         const i = model.hydrate({ obj });
         expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.nested).toBeInstanceOf(Object);
-        expect(i.obj.nested.title).toEqual(serializedText);
+        expect(i.obj?.nested).toBeInstanceOf(Object);
+        expect(i.obj?.nested?.title).toEqual(serializedText);
 
         expect(testValidator).toBeCalledTimes(0);
 
@@ -1149,8 +1149,8 @@ describe("test fields", () => {
         });
 
         expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.text).toBe(text);
-        expect(i.obj.number).toBeUndefined();
+        expect(i.obj?.text).toBe(text);
+        expect(i.obj?.number).toBeUndefined();
       });
 
       // $ flag allows to point to the parent nested field instead of the root schema
@@ -1196,8 +1196,8 @@ describe("test fields", () => {
         });
 
         expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.text).toBe(text);
-        expect(i.obj.number).toBeUndefined();
+        expect(i.obj?.text).toBe(text);
+        expect(i.obj?.number).toBeUndefined();
       });
 
       it("should use dependsOn to determine which field to use in json", async () => {
@@ -1244,8 +1244,8 @@ describe("test fields", () => {
         const json = i.toJSON();
 
         expect(json.obj).toBeInstanceOf(Object);
-        expect(json.obj.text).toBe(text);
-        expect(json.obj.number).toBeUndefined();
+        expect(json.obj?.text).toBe(text);
+        expect(json.obj?.number).toBeUndefined();
       });
 
       it("should work with nested fields", async () => {
@@ -1299,9 +1299,9 @@ describe("test fields", () => {
         });
 
         expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.nested).toBeInstanceOf(Object);
-        expect(i.obj.nested.text).toBe(text);
-        expect(i.obj.nested.number).toBeUndefined();
+        expect(i.obj?.nested).toBeInstanceOf(Object);
+        expect(i.obj?.nested?.text).toBe(text);
+        expect(i.obj?.nested?.number).toBeUndefined();
       });
 
       it("should work in nested arrays", async () => {
@@ -1355,12 +1355,12 @@ describe("test fields", () => {
         });
 
         expect(i.arr).toBeInstanceOf(Array);
-        expect(i.arr[0]).toBeInstanceOf(Object);
-        expect(i.arr[0].text).toBe("text1");
-        expect(i.arr[0].number).toBeUndefined();
-        expect(i.arr[1]).toBeInstanceOf(Object);
-        expect(i.arr[1].text).toBe("text2");
-        expect(i.arr[1].number).toBeUndefined();
+        expect(i.arr?.[0]).toBeInstanceOf(Object);
+        expect(i.arr?.[0]?.text).toBe("text1");
+        expect(i.arr?.[0]?.number).toBeUndefined();
+        expect(i.arr?.[1]).toBeInstanceOf(Object);
+        expect(i.arr?.[1]?.text).toBe("text2");
+        expect(i.arr?.[1]?.number).toBeUndefined();
       });
 
       it("should work with dependsOn as a key to a nested field", async () => {
@@ -1423,9 +1423,9 @@ describe("test fields", () => {
         });
 
         expect(i.obj2).toBeInstanceOf(Object);
-        expect(i.obj2.nested).toBeInstanceOf(Object);
-        expect(i.obj2.nested.text).toBe(text);
-        expect(i.obj2.nested.number).toBeUndefined();
+        expect(i.obj2?.nested).toBeInstanceOf(Object);
+        expect(i.obj2?.nested?.text).toBe(text);
+        expect(i.obj2?.nested?.number).toBeUndefined();
       });
 
       it("should work with nested fields in array", async () => {
@@ -1488,10 +1488,10 @@ describe("test fields", () => {
           ],
         } as object);
 
-        expect(i.arr[0].obj.text).toBe("test");
-        expect(i.arr[0].obj.number).toBeUndefined();
-        expect(i.arr[1].obj.text).toBeUndefined();
-        expect(i.arr[1].obj.number).toBe(123);
+        expect(i.arr?.[0]?.obj?.text).toBe("test");
+        expect(i.arr?.[0]?.obj?.number).toBeUndefined();
+        expect(i.arr?.[1]?.obj?.text).toBeUndefined();
+        expect(i.arr?.[1]?.obj?.number).toBe(123);
       });
 
       it("should validate only the fields defined in the dependsOn field", async () => {
@@ -1878,9 +1878,9 @@ describe("test fields", () => {
         });
 
         expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.nested1).toBeInstanceOf(Object);
-        expect(i.obj.nested1.text).toBe(text);
-        expect(i.obj.nested2).toBeUndefined();
+        expect(i.obj?.nested1).toBeInstanceOf(Object);
+        expect(i.obj?.nested1?.text).toBe(text);
+        expect(i.obj?.nested2).toBeUndefined();
 
         await expect(
           model.validate([
@@ -1957,9 +1957,9 @@ describe("test fields", () => {
         });
 
         expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.nested1).toBeInstanceOf(Object);
-        expect(i.obj.nested1.text).toBe(text);
-        expect(i.obj.nested2).toBeUndefined();
+        expect(i.obj?.nested1).toBeInstanceOf(Object);
+        expect(i.obj?.nested1?.text).toBe(text);
+        expect(i.obj?.nested2).toBeUndefined();
 
         await expect(
           model.validate([
@@ -2057,7 +2057,7 @@ describe("test fields", () => {
         const json = i.toJSON();
 
         expect(json.obj).toBeInstanceOf(Object);
-        expect(json.obj.title).toEqual(serializedText);
+        expect(json.obj?.title).toEqual(serializedText);
       });
 
       it("should use defaultField only for not defined fields", async () => {
@@ -2446,8 +2446,8 @@ describe("test fields", () => {
       const i = model.hydrate({ rel: _id });
 
       expect(i.rel).toBeInstanceOf(PromiseModel);
-      expect(i.rel.model?.getBaseClass()).toBe(Account);
-      expect(i.rel.query).toEqual(_id);
+      expect(i.rel?.model?.getBaseClass()).toBe(Account);
+      expect(i.rel?.query).toEqual(_id);
     });
 
     it("should return null if value is null", async () => {
@@ -2463,6 +2463,7 @@ describe("test fields", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
+      // @ts-ignore
       const i = model.hydrate({ rel: null });
 
       expect(i.rel).toBe(null);
@@ -2618,8 +2619,8 @@ describe("test fields", () => {
       });
 
       expect(i.arrRel).toBeInstanceOf(PromiseModelList);
-      expect(i.arrRel.model?.getBaseClass()).toBe(Account);
-      expect(i.arrRel.query).toEqual({
+      expect(i.arrRel?.model?.getBaseClass()).toBe(Account);
+      expect(i.arrRel?.query).toEqual({
         ids: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
       });
     });
@@ -2648,7 +2649,7 @@ describe("test fields", () => {
       });
 
       // @ts-expect-error test
-      expect(i.obj.nested1.nested2.foo).toBe("bar");
+      expect(i.obj?.nested1.nested2.foo).toBe("bar");
       expect(i.get("obj.nested1.nested2.foo")).toBe("bar");
       expect(i.get("obj.nested1.nested2")).toEqual({ foo: "bar" });
       expect(i.get("obj.nested1.nested2.foo.bar")).toBe(undefined);

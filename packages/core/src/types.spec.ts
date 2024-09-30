@@ -1,9 +1,9 @@
-import { Model } from "@/lib/Model";
-import { FieldTypes } from "./enums/field-types";
-import { HookData, JSONSubtype, ModelDefinition, ModelJSON } from "@/types";
-import { PromiseModel } from "./lib/PromiseModel";
-import { Account } from "./models/Account";
-import { Role } from "./models/Role";
+import { Model } from "@/lib/Model.ts";
+import { FieldTypes } from "./enums/field-types.ts";
+import { HookData, JSONSubtype, ModelDefinition, ModelJSON } from "@/types/index.ts";
+import { PromiseModel } from "./lib/PromiseModel.ts";
+import { Account } from "./models/Account.ts";
+import { Role } from "./models/Role.ts";
 
 class CustomModel extends Model {
   static slug = "customModel";
@@ -16,7 +16,7 @@ class CustomModel extends Model {
   } satisfies ModelDefinition;
 }
 
-declare module "./types/index" {
+declare module "./types/index.ts" {
   export interface RefModelsMap {
     customModel: typeof CustomModel;
   }
@@ -44,8 +44,8 @@ describe("test types", () => {
 
       const i = CustomModel.hydrate();
 
-      simulateTypeCheck<string>(i.title); // Check title found as a string
-      simulateTypeCheck<string>(i._id); // Check _id found as a string
+      simulateTypeCheck<string | undefined>(i.title); // Check title found as a string
+      simulateTypeCheck<string | undefined>(i._id); // Check _id found as a string
       simulateTypeCheck<NoType<typeof i.title, number>>(i.title); // Check title is not a number
       simulateTypeCheck<NoProperty<typeof i, "subtitle">>(i); // Check subtitle is not found in i
     });
@@ -65,7 +65,7 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string>(i.field); // Check the field is a string
+          simulateTypeCheck<string | undefined>(i.field); // Check the field is a string
         });
 
         it("should validate text field with enum and strict", () => {
@@ -85,7 +85,7 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<"a" | "b" | "c">(i.field); // Check the field is a literal enum
+          simulateTypeCheck<"a" | "b" | "c" | undefined>(i.field); // Check the field is a literal enum
         });
 
         it("should validate text field with enum and not strict", () => {
@@ -105,7 +105,7 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string>(i.field); // Check the field is a string
+          simulateTypeCheck<string | undefined>(i.field); // Check the field is a string
         });
       });
 
@@ -130,8 +130,8 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string>(i.field?.title); // Check the field is a string
-          simulateTypeCheck<JSONSubtype>(i.field?.unknown);
+          simulateTypeCheck<string | undefined>(i.field?.title); // Check the field is a string
+          simulateTypeCheck<JSONSubtype | undefined>(i.field?.unknown);
         });
 
         it("should respect options.strict", () => {
@@ -155,7 +155,7 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string>(i.field?.title); // Check the field is a string
+          simulateTypeCheck<string | undefined>(i.field?.title); // Check the field is a string
           simulateTypeCheck<NoProperty<typeof i.field, "unknown">>(i.field);
         });
 
@@ -165,7 +165,7 @@ describe("test types", () => {
               fields: {
                 field: {
                   type: FieldTypes.NESTED,
-                  _ts: undefined as {
+                  _ts: undefined as unknown as {
                     subfield: string;
                   },
                 },
@@ -175,7 +175,7 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string>(i.field?.subfield); // Check the field is a string
+          simulateTypeCheck<string | undefined>(i.field?.subfield); // Check the field is a string
           simulateTypeCheck<NoProperty<typeof i.field, "unknown">>(i.field); // Check subtitle is not found in json
         });
       });
@@ -197,7 +197,7 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<PromiseModel<typeof Account>>(i.field); // Check the field is a PromiseModel
+          simulateTypeCheck<PromiseModel<typeof Account> | undefined>(i.field); // Check the field is a PromiseModel
         });
       });
 
@@ -215,7 +215,7 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<Date>(i.field); // Check the field is a Date
+          simulateTypeCheck<Date | undefined>(i.field); // Check the field is a Date
         });
       });
     });
@@ -235,11 +235,11 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<Date>(i.field); // Check the field is a string
+          simulateTypeCheck<Date | undefined>(i.field); // Check the field is a string
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string>(json.field); // Check the field is a string
+          simulateTypeCheck<string | undefined>(json.field); // Check the field is a string
           simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
         });
       });
@@ -261,11 +261,11 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<PromiseModel<typeof Account>>(i.field);
+          simulateTypeCheck<PromiseModel<typeof Account> | undefined>(i.field);
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string | ModelJSON<typeof Account>>(json.field);
+          simulateTypeCheck<string | ModelJSON<typeof Account> | undefined>(json.field);
         });
       });
 
@@ -286,11 +286,11 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string[]>(i.field); // Check the field is a string[]
+          simulateTypeCheck<string[] | undefined>(i.field); // Check the field is a string[]
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string[]>(json.field); // Check the field is a string[]
+          simulateTypeCheck<string[] | undefined>(json.field); // Check the field is a string[]
           simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
         });
       });
@@ -320,12 +320,12 @@ describe("test types", () => {
         field: "blabla",
       });
 
-      simulateTypeCheck<string>(i.title); // Check the field is a PromiseModel
-      simulateTypeCheck<PromiseModel<typeof Account>>(i.field); // Check the field is a PromiseModel
+      simulateTypeCheck<string | undefined>(i.title); // Check the field is a PromiseModel
+      simulateTypeCheck<PromiseModel<typeof Account> | undefined>(i.field); // Check the field is a PromiseModel
 
       const json = i.toJSON();
 
-      simulateTypeCheck<string | ModelJSON<typeof Account>>(json.field); // Check the field is a string
+      simulateTypeCheck<string | ModelJSON<typeof Account> | undefined>(json.field); // Check the field is a string
       simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
     });
   });
@@ -333,12 +333,12 @@ describe("test types", () => {
   it("should ...", () => {
     const i = Role.hydrate();
 
-    simulateTypeCheck<string>(i.slug); // Check the field is a string
+    simulateTypeCheck<string | undefined>(i.slug); // Check the field is a string
     simulateTypeCheck<Function>(i.getRulesInherited); // Check the field is a string
 
     const json = i.toJSON();
 
-    simulateTypeCheck<string>(json.slug); // Check the field is a string
+    simulateTypeCheck<string | undefined>(json.slug); // Check the field is a string
   });
 
   it("should ...", () => {
@@ -356,7 +356,7 @@ describe("test types", () => {
 
     const i = model.hydrate();
 
-    simulateTypeCheck<string>(i.field); // Check the field is a string
+    simulateTypeCheck<string | undefined>(i.field); // Check the field is a string
   });
 
   it("should ...", () => {
@@ -387,8 +387,8 @@ describe("test types", () => {
       }
     ).hydrate();
 
-    simulateTypeCheck<string>(i.get("field1", "json")); // Check the field is a string
-    simulateTypeCheck<number>(i.get("field2", "json")); // Check the field is a string
+    simulateTypeCheck<string | undefined>(i.get("field1", "json")); // Check the field is a string
+    simulateTypeCheck<number | undefined>(i.get("field2", "json")); // Check the field is a string
   });
 
   it("should ...", () => {
@@ -425,7 +425,7 @@ describe("test types", () => {
 
     const i = CustomModel.hydrate();
 
-    simulateTypeCheck<PromiseModel<typeof CustomModel>>(i.rel);
+    simulateTypeCheck<PromiseModel<typeof CustomModel> | undefined>(i.rel);
   });
 
   describe("hooks", () => {

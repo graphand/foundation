@@ -1,5 +1,5 @@
 import { ObjectId } from "bson";
-import { ModelUpdaterEvent } from "@/types";
+import { ModelUpdaterEvent } from "@/types.ts";
 import {
   FieldTypes,
   Model,
@@ -11,8 +11,8 @@ import {
   PromiseModel,
   PromiseModelList,
 } from "@graphand/core";
-import { Client } from "./lib/Client";
-import { ClientAdapter } from "./lib/ClientAdapter";
+import { Client } from "./lib/Client.ts";
+import { ClientAdapter } from "./lib/ClientAdapter.ts";
 
 describe("augmentations", () => {
   @modelDecorator()
@@ -509,7 +509,7 @@ describe("augmentations", () => {
     it("should call the observer when the instance is deleted", () => {
       const observer = jest.fn();
       instance.subscribe(observer);
-      adapter.store.set(instance._id, instance);
+      adapter.store.set(instance._id as string, instance);
 
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["test-id"] };
       adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
@@ -588,7 +588,7 @@ describe("augmentations", () => {
     it("should handle deleteMultiple events that include the instance", () => {
       const observer = jest.fn();
       instance.subscribe(observer);
-      adapter.store.set(instance._id, instance);
+      adapter.store.set(instance._id as string, instance);
 
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["test-id", "other-id"] };
       adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
@@ -1400,7 +1400,7 @@ describe("augmentations", () => {
               options: {
                 ref: TestModel.slug,
               },
-              _tsModel: undefined as typeof TestModel,
+              _tsModel: undefined as unknown as typeof TestModel,
             },
           },
         } satisfies ModelDefinition;
@@ -1409,13 +1409,13 @@ describe("augmentations", () => {
       const instance = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value" });
       const relModel = client.getModel(RelModel);
       const relInstance = relModel.hydrateAndCache({ _id: new ObjectId().toString(), rel: instance._id });
-      const rel = relInstance.get("rel") as PromiseModel<typeof TestModel>;
+      const rel = relInstance?.get("rel") as PromiseModel<typeof TestModel>;
       expect(rel).toBeInstanceOf(PromiseModel);
       expect(rel.cached).toBe(instance);
       expect(relInstance.get("rel.someField")).toBe("value");
       // @ts-expect-error test - someField is undefined on a PromiseModel instance
       expect(relInstance.rel.someField).toBeUndefined();
-      expect(relInstance.rel.cached.someField).toBe("value");
+      expect(relInstance.rel?.cached?.someField).toBe("value");
     });
 
     it("Model.prototype.get should pass the cached instance to the next field with a relation array field", async () => {
@@ -1434,7 +1434,7 @@ describe("augmentations", () => {
                   options: {
                     ref: TestModel.slug,
                   },
-                  _tsModel: undefined as typeof TestModel,
+                  _tsModel: undefined as unknown as typeof TestModel,
                 },
               },
             },
@@ -1448,14 +1448,14 @@ describe("augmentations", () => {
       const relModel = client.getModel(RelModel);
       const relInstance = relModel.hydrateAndCache({
         _id: new ObjectId().toString(),
-        relArr: [instance1._id, instance2._id],
+        relArr: [instance1._id as string, instance2._id as string],
       });
       const rel = relInstance.get("relArr") as PromiseModelList<typeof TestModel>;
       expect(rel).toBeInstanceOf(PromiseModelList);
       expect(rel.cached).toBeInstanceOf(ModelList);
-      expect(rel.cached.length).toBe(2);
-      expect(rel.cached[0]).toBe(instance1);
-      expect(rel.cached[1]).toBe(instance2);
+      expect(rel.cached?.length).toBe(2);
+      expect(rel.cached?.[0]).toBe(instance1);
+      expect(rel.cached?.[1]).toBe(instance2);
       expect(relInstance.get("relArr.[0].someField")).toBe("value1");
       expect(relInstance.get("relArr.[1].someField")).toBe("value2");
       expect(relInstance.get("relArr.[2].someField")).toBe(undefined);

@@ -1,5 +1,5 @@
-import { BehaviorSubject } from "./BehaviorSubject";
-import { SubjectObserver } from "../types";
+import { BehaviorSubject } from "./BehaviorSubject.ts";
+import { SubjectObserver } from "../types.ts";
 
 describe("BehaviorSubject", () => {
   let behaviorSubject: BehaviorSubject<number>;

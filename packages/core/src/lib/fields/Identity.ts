@@ -1,7 +1,7 @@
-import { FieldTypes } from "@/enums/field-types";
-import { IdentityTypes } from "@/enums/identity-types";
-import { Field } from "@/lib/Field";
-import { getValidationValues, isObjectId } from "@/lib/utils";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { IdentityTypes } from "@/enums/identity-types.ts";
+import { Field } from "@/lib/Field.ts";
+import { getValidationValues, isObjectId } from "@/lib/utils.ts";
 
 export class FieldIdentity extends Field<FieldTypes.IDENTITY> {
   validate: Field<FieldTypes.IDENTITY>["validate"] = async ({ list }) => {

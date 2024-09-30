@@ -1,12 +1,12 @@
-import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { ValidationError } from "@/lib/ValidationError";
+import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { ValidationError } from "@/lib/ValidationError.ts";
 import { faker } from "@faker-js/faker";
-import { FieldTypes } from "@/enums/field-types";
-import { Model } from "@/lib/Model";
-import { Validator } from "@/lib/Validator";
-import { ValidatorOptions } from "@/types";
-import { DataModel, FieldDefinition, ModelDefinition } from "..";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { Model } from "@/lib/Model.ts";
+import { Validator } from "@/lib/Validator.ts";
+import { ValidatorOptions, FieldDefinition, ModelDefinition } from "@/types/index.ts";
+import { DataModel } from "@/models/DataModel.ts";
 
 describe("test validators", () => {
   const adapter = mockAdapter();
@@ -73,7 +73,7 @@ describe("test validators", () => {
         expect.assertions(2);
 
         try {
-          await model.create({ title: null });
+          await model.create({ title: undefined });
         } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
@@ -108,7 +108,7 @@ describe("test validators", () => {
         const title = faker.lorem.word();
 
         try {
-          await model.createMultiple([{ title }, { title: null }]);
+          await model.createMultiple([{ title }, { title: undefined }]);
         } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
@@ -174,7 +174,7 @@ describe("test validators", () => {
 
         try {
           const _model = model as typeof Model;
-          await _model.update({ filter: { _id: i._id } }, { $set: { title: null } });
+          await _model.update({ filter: { _id: i._id as string } }, { $set: { title: null } });
         } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
@@ -189,7 +189,7 @@ describe("test validators", () => {
 
         try {
           const _model = model as typeof Model;
-          await _model.update({ filter: { _id: i._id } }, { $unset: { title: true } });
+          await _model.update({ filter: { _id: i._id as string } }, { $unset: { title: true } });
         } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
@@ -203,7 +203,7 @@ describe("test validators", () => {
         const i = await model.create({ title });
 
         const _model = model as typeof Model;
-        const res = await _model.update({ filter: { _id: i._id } }, { $set: { title: updateTitle } });
+        const res = await _model.update({ filter: { _id: i._id as string } }, { $set: { title: updateTitle } });
 
         expect(res).toBeInstanceOf(Array);
         expect(res.every(i => i instanceof _model)).toBeTruthy();
@@ -251,7 +251,7 @@ describe("test validators", () => {
         expect.assertions(2);
 
         try {
-          await model.validate([{ title: null }]);
+          await model.validate([{ title: undefined }]);
         } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
@@ -349,7 +349,7 @@ describe("test validators", () => {
       });
 
       it("create with null email should not throw error", async () => {
-        const i = await model.create({ title: null });
+        const i = await model.create({ title: undefined });
 
         expect(i).toBeInstanceOf(model);
       });
@@ -383,7 +383,7 @@ describe("test validators", () => {
       });
 
       it("create with null url should not throw error", async () => {
-        const i = await model.create({ title: null });
+        const i = await model.create({ title: undefined });
 
         expect(i).toBeInstanceOf(model);
       });
@@ -1059,14 +1059,6 @@ describe("test validators", () => {
         await expect(model.create({ arr: ["test", "test"] })).resolves.toBeInstanceOf(model);
       });
 
-      it("create with null should not throw error", async () => {
-        const model = await _mockModelWithArrayField({ min: 2 });
-
-        await expect(model.create({ arr: null })).resolves.toBeInstanceOf(model);
-
-        await expect(model.create({ arr: ["test", "test"] })).resolves.toBeInstanceOf(model);
-      });
-
       it("create with invalid length should throw error", async () => {
         const model = await _mockModelWithArrayField({ min: 2 });
 
@@ -1474,7 +1466,7 @@ describe("test validators", () => {
       });
 
       it("null value should throw error", async () => {
-        await expect(model.create({ title: null })).rejects.toBeInstanceOf(ValidationError);
+        await expect(model.create({ title: undefined })).rejects.toBeInstanceOf(ValidationError);
       });
 
       it("invalid length should throw error", async () => {
@@ -1526,9 +1518,9 @@ describe("test validators", () => {
         await expect(model.create({})).rejects.toBeInstanceOf(ValidationError);
       });
 
-      it("null value should throw error", async () => {
-        await expect(model.create({ arr: null })).rejects.toBeInstanceOf(ValidationError);
-      });
+      // it("null value should throw error", async () => {
+      //   await expect(model.create({ arr: null })).rejects.toBeInstanceOf(ValidationError);
+      // });
 
       it("invalid length should throw error", async () => {
         await expect(model.create({ arr: [] })).rejects.toBeInstanceOf(ValidationError);

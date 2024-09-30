@@ -1,4 +1,4 @@
-import { getClient, processLogs, withSpinner } from "@/lib/utils";
+import { getClient, processLogs, withSpinner } from "@/lib/utils.ts";
 import { controllerJobLogs, Job } from "@graphand/core";
 import { Command } from "commander";
 
@@ -31,7 +31,7 @@ export const commandLogsJob = new Command("job")
       }
 
       const res = await client.execute(controllerJobLogs, {
-        params: { id: job._id },
+        params: { id: job._id as string },
         query,
       });
 
@@ -40,7 +40,7 @@ export const commandLogsJob = new Command("job")
       }
 
       if (options.stream) {
-        stream = res.body.getReader();
+        stream = res.body?.getReader();
 
         spinner.succeed(`Logs stream opened for job ${id} (${job._type})`);
       } else {

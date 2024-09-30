@@ -1,7 +1,7 @@
-import { EventSubscription } from "@/models/EventSubscription";
-import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev";
-import { ValidationError } from "../lib/ValidationError";
-import { SubscriptionChannels } from "../enums/subscription-channels";
+import { EventSubscription } from "@/models/EventSubscription.ts";
+import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.ts";
+import { ValidationError } from "../lib/ValidationError.ts";
+import { SubscriptionChannels } from "../enums/subscription-channels.ts";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
 

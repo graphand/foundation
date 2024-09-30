@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { collectFiles, collectSetter, getClient, withSpinner } from "@/lib/utils";
+import { collectFiles, collectSetter, getClient, withSpinner } from "@/lib/utils.ts";
 import { ModelInstance, ModelJSON } from "@graphand/core";
 import { Ora } from "ora";
 
@@ -34,7 +34,7 @@ export const _create = async (options: {
   if (useFormData) {
     formData = new FormData();
     if (options.file) {
-      Object.entries(options.file).forEach(([key, value]) => formData.append(key, value));
+      Object.entries(options.file).forEach(([key, value]) => formData?.append(key, value));
     }
 
     if (!skipRealtimeUpload) {
@@ -64,9 +64,11 @@ export const _create = async (options: {
       payload = [options.set] as Array<ModelJSON<typeof model>>;
     }
 
-    spinner.text = `Creating ${chalk.cyan(model.slug)} instances...`;
+    if (spinner) {
+      spinner.text = `Creating ${chalk.cyan(model.slug)} instances...`;
+    }
 
-    let instances: Array<ModelInstance<typeof model>>;
+    let instances: Array<ModelInstance<typeof model>> | undefined;
 
     const createPromise = model.createMultiple(payload, { formData, uploadId }).then(i => (instances = i));
 
@@ -76,9 +78,9 @@ export const _create = async (options: {
       await createPromise;
     }
 
-    spinner.succeed(`Created ${instances.length} ${chalk.cyan(model.slug)} instances successfully`);
+    spinner?.succeed(`Created ${instances?.length} ${chalk.cyan(model.slug)} instances successfully`);
 
-    return instances.map(i => i.toJSON());
+    return instances?.map(i => i.toJSON()) as Array<ModelJSON<typeof model>>;
   }
 
   let payload: ModelJSON<typeof model>;
@@ -88,7 +90,7 @@ export const _create = async (options: {
     payload = options.set as ModelJSON<typeof model>;
   }
 
-  let instance: ModelInstance<typeof model>;
+  let instance: ModelInstance<typeof model> | undefined;
 
   const createPromise = model.create(payload, { formData, uploadId }).then(i => (instance = i));
 
@@ -100,7 +102,7 @@ export const _create = async (options: {
 
   options.spinner.succeed(`Created a ${chalk.cyan(model.slug)} instance successfully`);
 
-  return instance.toJSON();
+  return instance?.toJSON() as ModelJSON<typeof model>;
 };
 
 export const commandCreate = new Command("create")

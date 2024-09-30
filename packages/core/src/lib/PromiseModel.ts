@@ -1,7 +1,7 @@
-import { Model } from "@/lib/Model";
-import { JSONQuery, ModelInstance } from "@/types";
-import { Thenable } from "@/lib/Thenable";
-import { isObjectId } from "@/lib/utils";
+import { Model } from "@/lib/Model.ts";
+import { JSONQuery, ModelInstance } from "@/types/index.ts";
+import { Thenable } from "@/lib/Thenable.ts";
+import { isObjectId } from "@/lib/utils.ts";
 
 /**
  * PromiseModel is a class that extends the native Promise class.
@@ -21,7 +21,7 @@ export class PromiseModel<T extends typeof Model> extends Thenable<ModelInstance
     this.#query = query;
   }
 
-  get _id(): string {
+  get _id(): string | null {
     if (typeof this.query === "string" && isObjectId(this.query)) {
       return this.query;
     }
@@ -29,7 +29,7 @@ export class PromiseModel<T extends typeof Model> extends Thenable<ModelInstance
     // @ts-expect-error find _id on any object type
     const foundId: string | undefined = this.query?._id;
     if (isObjectId(foundId)) {
-      return foundId;
+      return foundId || null;
     }
 
     return null;
@@ -43,7 +43,7 @@ export class PromiseModel<T extends typeof Model> extends Thenable<ModelInstance
     return this.#query;
   }
 
-  [Symbol.toPrimitive](): string {
+  [Symbol.toPrimitive](): string | null {
     return this._id;
   }
 

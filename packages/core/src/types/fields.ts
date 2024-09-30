@@ -1,10 +1,18 @@
-import { DecodeRefModel, ModelDefinition, FieldsDefinition, ValidatorsDefinition } from "@/types";
-import { ValidatorDefinitionOmitField } from "@/types/validators";
-import { FieldTypes } from "@/enums/field-types";
-import { Model } from "@/lib/Model";
-import { PromiseModel } from "@/lib/PromiseModel";
-import { PromiseModelList } from "@/lib/PromiseModelList";
-import { JSONTypeObject, ModelInstance, SerializerCtx, SerializerFormat } from "..";
+import { ValidatorDefinitionOmitField } from "@/types/validators.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { Model } from "@/lib/Model.ts";
+import { PromiseModel } from "@/lib/PromiseModel.ts";
+import { PromiseModelList } from "@/lib/PromiseModelList.ts";
+import {
+  JSONTypeObject,
+  ModelInstance,
+  SerializerCtx,
+  SerializerFormat,
+  DecodeRefModel,
+  ModelDefinition,
+  FieldsDefinition,
+  ValidatorsDefinition,
+} from "../index.ts";
 
 export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
   [FieldTypes.ARRAY]: {
@@ -47,8 +55,7 @@ export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
   _tsModel?: typeof Model;
 };
 
-// eslint-disable-next-line no-unused-vars
-export interface SystemFields<M extends typeof Model> {
+export interface SystemFields<_M extends typeof Model> {
   _id: { type: FieldTypes.ID };
   _createdAt: { type: FieldTypes.DATE };
   _createdBy: { type: FieldTypes.IDENTITY };
@@ -143,7 +150,7 @@ export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "
 }
   ? R extends ModelDefinition["fields"]
     ? Partial<{
-        [F in keyof R]: InferFieldType<R[F], S>;
+        [F in keyof R]: R[F] extends FieldDefinition<FieldTypes> ? InferFieldType<R[F], S> : never;
       }> &
         unknown
     : unknown

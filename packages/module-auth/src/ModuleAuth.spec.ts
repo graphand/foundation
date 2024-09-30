@@ -2,8 +2,8 @@ import { ObjectId } from "bson";
 import { faker } from "@faker-js/faker";
 import { Client } from "@graphand/client";
 import { Account, AuthMethods, AuthProviders, controllerConfigureAuth, ModelJSON } from "@graphand/core";
-import ModuleAuth from "./ModuleAuth";
-import { AuthStorage } from "./types";
+import ModuleAuth from "./ModuleAuth.ts";
+import { AuthStorage } from "./types.ts";
 
 describe("ModuleAuth", () => {
   let client: Client<[typeof ModuleAuth]>;
@@ -12,7 +12,7 @@ describe("ModuleAuth", () => {
   beforeAll(() => {
     spyFetch = jest.spyOn(globalThis, "fetch").mockImplementation(async req => {
       if (!(req instanceof Request)) {
-        return;
+        return new Response();
       }
 
       const url = new URL(req.url);
@@ -260,7 +260,7 @@ describe("ModuleAuth", () => {
       data: { provider: AuthProviders.GRAPHAND, configuration: { graphandToken } },
     });
 
-    let redirectHandler: Promise<void>;
+    let redirectHandler: Promise<void> | undefined;
 
     const _client2 = new Client([
       [
@@ -269,9 +269,9 @@ describe("ModuleAuth", () => {
           handleRedirect: async _url => {
             redirectHandler = (async () => {
               const url = new URL(_url);
-              const redirectURL = new URL(url.searchParams.get("redirect"));
-              redirectURL.searchParams.set("state", url.searchParams.get("state"));
-              redirectURL.searchParams.set("graphandToken", graphandToken);
+              const redirectURL = new URL(url.searchParams?.get("redirect") || "");
+              redirectURL.searchParams.set("state", url.searchParams?.get("state") || "");
+              redirectURL.searchParams.set("graphandToken", graphandToken || "");
               // const res = await fetch(redirectURL.toString());
               // const code = await res.text();
               const code = faker.internet.password();

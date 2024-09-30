@@ -8,8 +8,8 @@ import {
   Transaction,
   ClientOptions,
   ModuleConstructor,
-} from "@/types";
-import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module";
+} from "@/types.ts";
+import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.ts";
 import {
   Account,
   Adapter,
@@ -25,10 +25,10 @@ import {
   ModelInstance,
   TransactionCtx,
 } from "@graphand/core";
-import { ClientAdapter } from "./ClientAdapter";
-import { BehaviorSubject } from "./BehaviorSubject";
-import { decodeClientModule, parseErrorFromJSON } from "./utils";
-import { FetchError } from "./FetchError";
+import { ClientAdapter } from "./ClientAdapter.ts";
+import { BehaviorSubject } from "./BehaviorSubject.ts";
+import { decodeClientModule, parseErrorFromJSON } from "./utils.ts";
+import { FetchError } from "./FetchError.ts";
 
 const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   endpoint: "api.graphand.cloud",
@@ -259,12 +259,12 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     }
   }
 
-  getAdapterClass(baseClass?: typeof Adapter) {
+  getAdapterClass(baseClass?: typeof Adapter): typeof ClientAdapter {
     if (!this.#adapterClass) {
       this.setAdapterClass((baseClass as typeof ClientAdapter) ?? ClientAdapter);
     }
 
-    return this.#adapterClass;
+    return this.#adapterClass as typeof ClientAdapter;
   }
 
   setAdapterClass(adapterClass: typeof ClientAdapter) {
@@ -298,6 +298,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     if (useClaimToken) {
       try {
         const parts = this.options.accessToken.split(".");
+        if (!parts[1]) return null;
         const payload = JSON.parse(atob(parts[1]));
 
         if (payload.type === IdentityTypes.ACCOUNT && payload.id) {
@@ -315,12 +316,12 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return this.getModel(Account).hydrateAndCache(data);
   }
 
-  async execute<C extends Controller<ControllerInput> = Controller<unknown>>(
+  async execute<C extends Controller<ControllerInput> = Controller<ControllerInput>>(
     controller: C,
     opts: {
-      params?: InferControllerInput<C>["params"];
-      query?: InferControllerInput<C>["query"];
-      data?: InferControllerInput<C>["data"];
+      params?: NonNullable<InferControllerInput<C>>["params"];
+      query?: NonNullable<InferControllerInput<C>>["query"];
+      data?: NonNullable<InferControllerInput<C>>["data"];
       ctx?: TransactionCtx;
       init?: RequestInit;
       maxRetries?: number;

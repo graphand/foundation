@@ -21,14 +21,15 @@ import {
   controllerModelCreate,
   controllerModelUpdate,
   controllerModelDelete,
+  FieldsPathItem,
 } from "@graphand/core";
-import { Client } from "./Client";
-import { Subject } from "./Subject";
-import { canUseIds } from "./utils";
-import { ModelUpdaterEvent, SubjectObserver } from "@/types";
-import { ClientError } from "./ClientError";
-import FieldRelation from "./fields/Relation";
-import FieldArray from "./fields/Array";
+import { Client } from "./Client.ts";
+import { Subject } from "./Subject.ts";
+import { canUseIds } from "./utils.ts";
+import { ModelUpdaterEvent, SubjectObserver } from "@/types.ts";
+import { ClientError } from "./ClientError.ts";
+import FieldRelation from "./fields/Relation.ts";
+import FieldArray from "./fields/Array.ts";
 
 export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   static client: Client;
@@ -75,7 +76,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   #handleCreateOrUpdate(event: ModelCrudEvent<"create" | "update", T>, updater: ModelUpdaterEvent): void {
     if (!event.data) return;
 
-    const data = event.operation === "create" ? event.data.filter(r => !this.#store.has(r._id)) : event.data;
+    const data = event.operation === "create" ? event.data.filter(r => !this.#store.has(r._id as string)) : event.data;
 
     const instanceList = data.map(r => this.processInstancePayload(r));
     const updated = instanceList
@@ -225,9 +226,9 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     const canUseIdsForQuery = canUseIds(query);
 
     if (canUseIdsForQuery) {
-      fromIdsList = this.getCachedList(query.ids, ctx);
+      fromIdsList = this.getCachedList(query.ids as Array<string>, ctx) || [];
       if (fromIdsList.length === query.ids?.length) {
-        return new ModelList(this.model, fromIdsList);
+        return new ModelList(this.model, fromIdsList as Array<ModelInstance<T>>);
       }
       query.ids = query.ids?.filter((id: string) => !this.#store.has(id));
     }
@@ -250,7 +251,8 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
     if (canUseIdsForQuery) {
       const combined = [...fromIdsList, ...instanceRes];
-      list = combined.sort((a, b) => query.ids.indexOf(String(a._id)) - query.ids.indexOf(String(b._id)));
+      const _ids = query.ids as Array<string>;
+      list = combined.sort((a, b) => _ids.indexOf(String(a._id)) - _ids.indexOf(String(b._id)));
       count += fromIdsList.length;
     }
 
@@ -377,7 +379,8 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     query.pageSize = 1;
     const list = await this.#updateMultipleInternal(query, update, ctx);
     if (!list?.length) return null;
-    return this.processInstancePayload(list[0]).instance as ModelInstance<T>;
+    const first = list[0] as ModelJSON<T>;
+    return this.processInstancePayload(first).instance as ModelInstance<T>;
   }
 
   async #updateMultipleInternal(query: JSONQuery, update: any, ctx: TransactionCtx): Promise<Array<ModelJSON<T>>> {
@@ -505,7 +508,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
   getCachedInstance(id: string | null, ctx: TransactionCtx): ModelInstance<T> | undefined {
     if (!this.#isCacheEnabled(ctx)) {
-      return null;
+      return undefined;
     }
 
     if (!id) {
@@ -604,7 +607,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       updated = true;
     }
 
-    if (updated) {
+    if (updated && instance) {
       instance.__fetchedAt = new Date();
     }
 
@@ -618,7 +621,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       const fields = getNestedFieldsArrayForModel(model);
 
       for (const field of fields) {
-        const fieldsPaths = getFieldsPathsFromPath(model, field.path).filter(Boolean);
+        const fieldsPaths = getFieldsPathsFromPath(model, field.path).filter(Boolean) as Array<FieldsPathItem>;
         let current = obj;
 
         for (const { field: currentField, key } of fieldsPaths) {
@@ -679,7 +682,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     }
 
     const processRelationField = (data: any, field: Field): any => {
-      const fieldsPaths = getFieldsPathsFromPath(this.model, field.path);
+      const fieldsPaths = getFieldsPathsFromPath(this.model, field.path).filter(Boolean) as Array<FieldsPathItem>;
       let current = data;
 
       for (const { field: currentField, key } of fieldsPaths) {
@@ -692,7 +695,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
               const refModel = this.client.getModel((arrayOptions.items.options as any).ref);
               const adapter = refModel.getAdapter() as ClientAdapter;
               current[key] = current[key].map((item: any) =>
-                typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance._id : item,
+                typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance?._id : item,
               );
             } else if (arrayOptions?.items?.type === FieldTypes.NESTED) {
               const nestedOptions = arrayOptions.items.options as FieldOptionsMap[FieldTypes.NESTED];
@@ -704,7 +707,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
           if (typeof current[key] === "object" && current[key] !== null) {
             const refModel = this.client.getModel((currentField.options as any).ref);
             const adapter = refModel.getAdapter() as ClientAdapter;
-            current[key] = adapter.processInstancePayload(current[key]).instance._id;
+            current[key] = adapter.processInstancePayload(current[key]).instance?._id;
           }
           break;
         } else if (currentField.type === FieldTypes.NESTED) {
@@ -754,7 +757,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         if (typeof processedObj[key] === "object" && processedObj[key] !== null) {
           const refModel = this.client.getModel((field.options as any).ref);
           const adapter = refModel.getAdapter() as ClientAdapter;
-          processedObj[key] = adapter.processInstancePayload(processedObj[key]).instance._id;
+          processedObj[key] = adapter.processInstancePayload(processedObj[key]).instance?._id;
         }
       } else if (field.type === FieldTypes.ARRAY) {
         const arrayOptions = field.options as FieldOptionsMap[FieldTypes.ARRAY];
@@ -763,7 +766,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
             const refModel = this.client.getModel((arrayOptions.items.options as any).ref);
             const adapter = refModel.getAdapter() as ClientAdapter;
             processedObj[key] = processedObj[key].map((item: any) =>
-              typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance._id : item,
+              typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance?._id : item,
             );
           } else if (arrayOptions?.items?.type === FieldTypes.NESTED) {
             const nestedOptions = arrayOptions.items.options as FieldOptionsMap[FieldTypes.NESTED];
@@ -800,7 +803,8 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     this.#store.clear();
   }
 
-  processAndCacheInstance(json: ModelJSON<T>): ModelInstance<T> | null {
+  processAndCacheInstance(json?: ModelJSON<T>): ModelInstance<T> | null {
+    json ??= {} as ModelJSON<T>;
     const { instance, updated } = this.processInstancePayload(json);
 
     if (updated && instance?._id) {

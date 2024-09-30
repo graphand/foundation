@@ -1,4 +1,4 @@
-import { Model } from "@/lib/Model";
+import { Model } from "@/lib/Model.ts";
 import {
   AdapterFetcher,
   FieldDefinition,
@@ -15,18 +15,19 @@ import {
   SerializerCtx,
   TransactionCtx,
   FieldsDefinition,
-} from "@/types";
-import { FieldTypes } from "@/enums/field-types";
-import { Field } from "@/lib/Field";
-import { ValidatorTypes } from "@/enums/validator-types";
-import { Validator } from "@/lib/Validator";
-import { Adapter } from "@/lib/Adapter";
-import { ValidationValidatorError } from "@/lib/ValidationValidatorError";
-import { ValidationFieldError } from "@/lib/ValidationFieldError";
-import { ValidationError } from "@/lib/ValidationError";
-import type { DataModel } from "@/models/DataModel";
-import { Patterns } from "@/enums/patterns";
-import { FieldNested } from "./fields/Nested";
+  Transaction,
+} from "@/types/index.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { Field } from "@/lib/Field.ts";
+import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { Validator } from "@/lib/Validator.ts";
+import { Adapter } from "@/lib/Adapter.ts";
+import { ValidationValidatorError } from "@/lib/ValidationValidatorError.ts";
+import { ValidationFieldError } from "@/lib/ValidationFieldError.ts";
+import { ValidationError } from "@/lib/ValidationError.ts";
+import type { DataModel } from "@/models/DataModel.ts";
+import { Patterns } from "@/enums/patterns.ts";
+import { FieldNested } from "./fields/Nested.ts";
 
 export const crossModelTree = (_model: typeof Model, cb: (_model: typeof Model) => void) => {
   let model = _model;
@@ -93,20 +94,27 @@ export const getRelationModelsFromPath = async (
  * string. It represents the path to a specific field in the model.
  * @returns The function `getFieldsPathsFromPath` returns an array of `FieldsPathItem` objects.
  */
-export const getFieldsPathsFromPath = (model: typeof Model, pathArr: Array<string> | string): Array<FieldsPathItem> => {
+export const getFieldsPathsFromPath = (
+  model: typeof Model,
+  pathArr: Array<string> | string,
+): Array<FieldsPathItem | null> => {
   const paths = Array.isArray(pathArr) ? pathArr : pathArr.split(".");
   const firstFieldKey = paths[0];
+  if (!firstFieldKey) {
+    return [];
+  }
+
   const firstField = model.fieldsMap?.get(firstFieldKey);
   const adapter = model.getAdapter(false);
 
-  const result: Array<FieldsPathItem> = firstField ? [{ key: firstFieldKey, field: firstField }] : [null];
+  const result: Array<FieldsPathItem | null> = firstField ? [{ key: firstFieldKey, field: firstField }] : [null];
 
   if (paths.length === 1) {
     return result;
   }
 
   for (let i = 1; i < paths.length; i++) {
-    const key = paths[i];
+    const key = paths[i] as string;
     const prevField = result[result.length - 1]?.field;
     const pathStr = result.map(item => item?.key).join(".");
 
@@ -118,19 +126,32 @@ export const getFieldsPathsFromPath = (model: typeof Model, pathArr: Array<strin
         const index = matchIndex[1] ? parseInt(matchIndex[1], 10) : null;
         if (index !== null) {
           const itemsField = getFieldFromDefinition(options.items, adapter, `${pathStr}.[${index}]`);
-          result.push({ key: `[${index}]`, field: itemsField });
+          if (itemsField) {
+            result.push({ key: `[${index}]`, field: itemsField });
+          } else {
+            result.push(null);
+          }
           continue;
         }
       }
 
       const itemsField = getFieldFromDefinition(options.items, adapter, `${pathStr}.[]`);
-      result.push({ key: "[]", field: itemsField });
+      if (itemsField) {
+        result.push({ key: "[]", field: itemsField });
+      } else {
+        result.push(null);
+      }
 
       if (matchIndex) continue;
 
       if (itemsField?.type === FieldTypes.NESTED) {
         const nestedOptions = itemsField.options as FieldOptions<FieldTypes.NESTED>;
-        const nextFieldDef = nestedOptions.fields[key];
+        const nextFieldDef = nestedOptions?.fields?.[key];
+        if (!nextFieldDef) {
+          result.push(null);
+          continue;
+        }
+
         const nextField = getFieldFromDefinition(nextFieldDef, adapter, `${pathStr}.[].${key}`);
         if (nextField) {
           result.push({ key, field: nextField });
@@ -146,6 +167,11 @@ export const getFieldsPathsFromPath = (model: typeof Model, pathArr: Array<strin
         nextFieldDef = {
           type: FieldTypes.DEFAULT,
         };
+      }
+
+      if (!nextFieldDef) {
+        result.push(null);
+        continue;
       }
 
       const nextField = getFieldFromDefinition(nextFieldDef, adapter, `${pathStr}.${key}`);
@@ -370,7 +396,7 @@ export const createFieldsMap = (model: typeof Model): Map<string, Field> => {
  * created. It is of type `typeof Model`.
  * @returns The function `createValidatorsArray` returns an array of `Validator` objects.
  */
-export const createValidatorsArray = (model: typeof Model): Array<Validator> => {
+export const createValidatorsArray = (model: typeof Model): Array<Validator | null> => {
   const definition = model.definition as ModelDefinition;
   let validators: Array<Readonly<ValidatorDefinition>> = Array.from(definition?.validators || []);
 
@@ -396,7 +422,7 @@ export const createValidatorsArray = (model: typeof Model): Array<Validator> => 
 
   const adapter = model.getAdapter(false);
 
-  return validators.map(def => getValidatorFromDefinition(def, adapter, null));
+  return validators.map(def => getValidatorFromDefinition(def, adapter, undefined));
 };
 
 /**
@@ -409,7 +435,7 @@ export const createValidatorsArray = (model: typeof Model): Array<Validator> => 
  * @returns The function `getFieldClass` returns the value of the variable `FieldClass`.
  */
 export const getFieldClass = <T extends FieldTypes>(type: T, adapter?: Adapter): typeof Field<T> => {
-  let FieldClass: typeof Field<T>;
+  let FieldClass: typeof Field<T> | undefined;
 
   if (type === FieldTypes.DEFAULT) {
     FieldClass = Field;
@@ -436,7 +462,7 @@ export const getFieldClass = <T extends FieldTypes>(type: T, adapter?: Adapter):
  * `Validator<any>`.
  */
 export const getValidatorClass = <T extends ValidatorTypes>(type: T, adapter?: Adapter): typeof Validator<T> => {
-  let ValidatorClass: typeof Validator<T> = adapter?.base.validatorsMap?.[type];
+  let ValidatorClass: typeof Validator<T> | undefined = adapter?.base.validatorsMap?.[type];
 
   if (!ValidatorClass) {
     ValidatorClass = Adapter.validatorsMap[type];
@@ -464,7 +490,7 @@ export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTy
   def: FieldDefinition<T>,
   adapter: Adapter,
   path: string,
-): Field<T> => {
+): Field<T> | null => {
   if (!def || typeof def !== "object") {
     return null;
   }
@@ -501,7 +527,7 @@ export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTy
 export const getValidatorFromDefinition = <T extends ValidatorTypes>(
   def: ValidatorDefinition<T>,
   adapter: Adapter,
-  path: string,
+  path?: string,
 ) => {
   if (!def || typeof def !== "object") {
     return null;
@@ -596,7 +622,7 @@ const _pathReplace = (field: Field, p: FieldsPathItem, fp: string) => {
  */
 export const _getter = (opts: {
   value?: unknown;
-  fieldsPaths: Array<{ key: string; field: Field }>;
+  fieldsPaths: Array<{ key: string; field: Field } | null>;
   noFieldSymbol: symbol;
   format: SerializerFormat;
   ctx: SerializerCtx;
@@ -613,6 +639,10 @@ export const _getter = (opts: {
 
     const { key, field } = fieldsPath;
 
+    if (!field) {
+      throw noFieldSymbol;
+    }
+
     const restPaths = fieldsPaths.slice(i + 1);
     const matchIndex = key.match(/\[(\d+)?\]/);
     if (matchIndex) {
@@ -624,13 +654,19 @@ export const _getter = (opts: {
         return arrVal.map((v: unknown, fi: number): unknown => {
           const thisPath = field.path.replace(/\[\]$/, `[${fi}]`);
           const _restPaths = restPaths.map(p => {
-            if (!p) {
+            if (!p?.field) {
+              return p;
+            }
+
+            const _f = getFieldFromDefinition(p.field.definition, adapter, _pathReplace(field, p, thisPath));
+
+            if (!_f) {
               return p;
             }
 
             return {
               ...p,
-              field: getFieldFromDefinition(p.field.definition, adapter, _pathReplace(field, p, thisPath)),
+              field: _f,
             };
           });
 
@@ -745,12 +781,24 @@ async function validateFields<T extends typeof Model>(opts: {
           const _field = field as Field<FieldTypes.NESTED>;
           const o = _field.options || {};
           if (o.defaultField) {
-            const noField = values.map(v => Object.keys(v).filter(k => !o.fields?.[k])).flat();
+            const noField = values
+              .map(v => {
+                if (!v || typeof v !== "object") {
+                  return [];
+                }
+
+                return Object.keys(v).filter(k => !o.fields?.[k]);
+              })
+              .flat();
 
             if (noField?.length) {
               const adapter = model.getAdapter();
               const _process = async (_path: string, _list: Array<ModelInstance<T>>) => {
-                const tmpField = getFieldFromDefinition(o.defaultField, adapter, _path);
+                const tmpField = o.defaultField && getFieldFromDefinition(o.defaultField, adapter, _path);
+
+                if (!tmpField) {
+                  return;
+                }
 
                 const promises = [
                   validateFields({
@@ -857,9 +905,9 @@ async function validateFields<T extends typeof Model>(opts: {
       }
     } catch (err) {
       const e = new ValidationFieldError({
-        slug: field.path.split(".").pop(),
+        slug: field.path.split(".").pop() as string,
         field,
-        validationError: err instanceof ValidationError ? err : null,
+        validationError: err instanceof ValidationError ? err : undefined,
       });
 
       errorsFieldsSet.add(e);
@@ -887,7 +935,7 @@ async function validateValidators<T extends typeof Model>({
   await Promise.all(
     validators.map(async ([validator, on]) => {
       try {
-        const validated = await validator.validate({
+        const validated = await validator?.validate?.({
           list: on,
           model,
           ctx,
@@ -944,9 +992,10 @@ export const validateModel = async <T extends typeof Model>(
   ];
 
   if (model.validatorsArray?.length) {
+    const validatorsArray = model.validatorsArray.filter(Boolean) as Array<Validator>;
     promises.push(
       validateValidators({
-        validators: model.validatorsArray.map(v => [v, instances]),
+        validators: validatorsArray.map(v => [v, instances]),
         model,
         ctx,
         errorsValidatorsSet,
@@ -1070,13 +1119,22 @@ export const getModelInitPromise = (
 ) => {
   const { datamodel, ctx } = opts;
 
+  const transaction: Transaction<typeof Model, "initialize"> = {
+    model: model.slug,
+    action: "initialize",
+    args: undefined as never,
+    retryToken: undefined,
+    abortToken: undefined,
+    retries: 0,
+  };
+
   return new Promise<void>(async (resolve, reject) => {
     try {
       const hooksBefore = getRecursiveHooksFromModel(model, "initialize", "before");
 
       await hooksBefore.reduce(async (p, hook) => {
         await p;
-        return hook.fn.call(model, undefined);
+        return hook.fn.call(model, { args: undefined as never, transaction, ctx: {}, err: [] });
       }, Promise.resolve());
 
       if (model.extensible) {
@@ -1087,7 +1145,7 @@ export const getModelInitPromise = (
 
       await hooksAfter.reduce(async (p, hook) => {
         await p;
-        return hook.fn.call(model, undefined);
+        return hook.fn.call(model, { args: undefined as never, transaction, ctx: {}, err: [], res: undefined });
       }, Promise.resolve());
     } catch (e) {
       return reject(e);

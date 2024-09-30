@@ -1,8 +1,8 @@
 import { ObjectId } from "bson";
 import { faker } from "@faker-js/faker";
 import { vi } from "vitest";
-import { getClient } from "@/lib/utils";
-import { _create, commandCreate } from "./create";
+import { getClient } from "@/lib/utils.ts";
+import { _create, commandCreate } from "./create.ts";
 import ora from "ora";
 import { controllerModelCreate, FieldTypes } from "@graphand/core";
 import { Subject } from "@graphand/client";
@@ -231,7 +231,7 @@ describe("Create Command", () => {
     });
 
     expect(spySucceed).toHaveBeenCalled();
-    const succeedCall = spySucceed.mock.calls[0][0];
+    const succeedCall = spySucceed.mock.calls?.[0]?.[0];
     expect(succeedCall).toContain("successfully");
     expect(succeedCall).toContain(datamodel.slug);
 
@@ -268,7 +268,7 @@ describe("Create Command", () => {
 
     const formData = createCall?.[1]?.ctx?.formData;
 
-    const keys = Array.from(formData.keys());
+    const keys = Array.from(formData?.keys() ?? []);
     expect(formData).toBeInstanceOf(FormData);
 
     expect(keys).toEqual(["_json", "file"]);

@@ -1,8 +1,8 @@
-import { crossModelTree, getFieldsPathsFromPath, getRelationModelsFromPath } from "@/lib/utils";
-import { Model } from "@/lib/Model";
-import { FieldTypes } from "@/enums/field-types";
-import { ModelDefinition } from "@/types";
-import { mockAdapter, mockModel } from "@/lib/test-utils.dev";
+import { crossModelTree, getFieldsPathsFromPath, getRelationModelsFromPath } from "@/lib/utils.ts";
+import { Model } from "@/lib/Model.ts";
+import { FieldTypes } from "@/enums/field-types.ts";
+import { ModelDefinition } from "@/types/index.ts";
+import { mockAdapter, mockModel } from "@/lib/test-utils.dev.ts";
 import { faker } from "@faker-js/faker";
 
 describe("test utils", () => {
@@ -51,8 +51,8 @@ describe("test utils", () => {
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(1);
-      expect(fPath[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath[0].field).toHaveProperty("options.__label", "field1");
+      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
     });
 
     it("should decode nested array fields", () => {
@@ -94,31 +94,31 @@ describe("test utils", () => {
       const fPath1 = getFieldsPathsFromPath(model, "field1.field2");
 
       expect(fPath1.length).toBe(3);
-      expect(fPath1[0].key).toBe("field1");
-      expect(fPath1[1].key).toBe("[]");
+      expect(fPath1[0]?.key).toBe("field1");
+      expect(fPath1[1]?.key).toBe("[]");
       expect(fPath1[2]).toBe(null);
 
-      const fPath2 = getFieldsPathsFromPath(model, "field1.[].field2");
+      const fPath2 = getFieldsPathsFromPath(model, "field1.[]?.field2");
 
       expect(fPath2.length).toBe(4);
-      expect(fPath2[0].key).toBe("field1");
-      expect(fPath2[1].key).toBe("[]");
-      expect(fPath2[2].key).toBe("[]");
-      expect(fPath2[3].key).toBe("field2");
+      expect(fPath2[0]?.key).toBe("field1");
+      expect(fPath2[1]?.key).toBe("[]");
+      expect(fPath2[2]?.key).toBe("[]");
+      expect(fPath2[3]?.key).toBe("field2");
 
-      const fPath3 = getFieldsPathsFromPath(model, "field1.[].[].field2");
+      const fPath3 = getFieldsPathsFromPath(model, "field1.[].[]?.field2");
 
       expect(fPath3.length).toBe(4);
-      expect(fPath3[0].key).toBe("field1");
-      expect(fPath3[1].key).toBe("[]");
-      expect(fPath3[2].key).toBe("[]");
-      expect(fPath3[3].key).toBe("field2");
+      expect(fPath3[0]?.key).toBe("field1");
+      expect(fPath3[1]?.key).toBe("[]");
+      expect(fPath3[2]?.key).toBe("[]");
+      expect(fPath3[3]?.key).toBe("field2");
 
       const fPath4 = getFieldsPathsFromPath(model, "field1.[]");
 
       expect(fPath4.length).toBe(2);
-      expect(fPath4[0].key).toBe("field1");
-      expect(fPath4[1].key).toBe("[]");
+      expect(fPath4[0]?.key).toBe("field1");
+      expect(fPath4[1]?.key).toBe("[]");
     });
 
     it("should decode array items field", () => {
@@ -147,10 +147,10 @@ describe("test utils", () => {
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(2);
-      expect(fPath[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath[1].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath[1].field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath[1]?.field).toHaveProperty("options.__label", "field1bis");
     });
 
     it("should decode array items field with index", () => {
@@ -179,10 +179,10 @@ describe("test utils", () => {
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(2);
-      expect(fPath[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath[1].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath[1].field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath[1]?.field).toHaveProperty("options.__label", "field1bis");
     });
 
     it("should decode json fields field", () => {
@@ -213,10 +213,10 @@ describe("test utils", () => {
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(2);
-      expect(fPath[0].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath[1].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath[1].field).toHaveProperty("options.__label", "field2");
+      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath[1]?.field).toHaveProperty("options.__label", "field2");
     });
 
     it("should decode json in array items field", () => {
@@ -254,23 +254,23 @@ describe("test utils", () => {
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(3);
-      expect(fPath[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath[1].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath[1].field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath[2].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath[2].field).toHaveProperty("options.__label", "field2");
+      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath[2]?.field).toHaveProperty("options.__label", "field2");
 
-      const fPath2 = getFieldsPathsFromPath(model, "field1.[].field2");
+      const fPath2 = getFieldsPathsFromPath(model, "field1.[]?.field2");
 
       expect(fPath2).toBeInstanceOf(Array);
       expect(fPath2.length).toEqual(3);
-      expect(fPath2[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath2[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath2[1].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath2[1].field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath2[2].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath2[2].field).toHaveProperty("options.__label", "field2");
+      expect(fPath2[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath2[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath2[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath2[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath2[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath2[2]?.field).toHaveProperty("options.__label", "field2");
     });
 
     it("should return null field for invalid path if strict", () => {
@@ -311,7 +311,7 @@ describe("test utils", () => {
       expect(fPath.length).toEqual(4);
       expect(fPath[3]).toBe(null);
 
-      const fPath2 = getFieldsPathsFromPath(model, "field1.[].field3");
+      const fPath2 = getFieldsPathsFromPath(model, "field1.[]?.field3");
 
       expect(fPath2).toBeInstanceOf(Array);
       expect(fPath2.length).toEqual(3);
@@ -362,16 +362,16 @@ describe("test utils", () => {
       // @ts-expect-error test
       model.definition.fields.field1.options.items.options.fields.field2.options.__label = "field2";
 
-      const fPath = getFieldsPathsFromPath(model, "field1.[].field3.field4");
+      const fPath = getFieldsPathsFromPath(model, "field1.[]?.field3.field4");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(4);
       expect(fPath[2]).toHaveProperty("key", "field3");
-      expect(fPath[2].field).toHaveProperty("type", FieldTypes.DEFAULT);
-      expect(fPath[2].field).toHaveProperty("path", "field1.[].field3");
+      expect(fPath[2]?.field).toHaveProperty("type", FieldTypes.DEFAULT);
+      expect(fPath[2]?.field).toHaveProperty("path", "field1.[].field3");
       expect(fPath[3]).toHaveProperty("key", "field4");
-      expect(fPath[3].field).toHaveProperty("type", FieldTypes.DEFAULT);
-      expect(fPath[3].field).toHaveProperty("path", "field1.[].field3.field4");
+      expect(fPath[3]?.field).toHaveProperty("type", FieldTypes.DEFAULT);
+      expect(fPath[3]?.field).toHaveProperty("path", "field1.[].field3.field4");
     });
 
     it("should decode complex schema fields", () => {
@@ -432,97 +432,97 @@ describe("test utils", () => {
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(1);
-      expect(fPath[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath[0].field).toHaveProperty("options.__label", "field1");
+      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
 
       const fPath2 = getFieldsPathsFromPath(model, "field1.field2");
 
       expect(fPath2).toBeInstanceOf(Array);
       expect(fPath2.length).toEqual(3);
-      expect(fPath2[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath2[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath2[1].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath2[1].field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath2[2].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath2[2].field).toHaveProperty("options.__label", "field2");
+      expect(fPath2[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath2[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath2[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath2[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath2[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath2[2]?.field).toHaveProperty("options.__label", "field2");
 
       const fPath3 = getFieldsPathsFromPath(model, "field1.field3");
 
       expect(fPath3).toBeInstanceOf(Array);
       expect(fPath3.length).toEqual(3);
-      expect(fPath3[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath3[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath3[1].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath3[1].field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath3[2].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath3[2].field).toHaveProperty("options.__label", "field3");
+      expect(fPath3[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath3[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath3[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath3[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath3[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath3[2]?.field).toHaveProperty("options.__label", "field3");
 
       const fPath4 = getFieldsPathsFromPath(model, "field1.field3.field4");
 
       expect(fPath4).toBeInstanceOf(Array);
       expect(fPath4.length).toEqual(5);
-      expect(fPath4[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath4[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath4[1].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath4[1].field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath4[2].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath4[2].field).toHaveProperty("options.__label", "field3");
-      expect(fPath4[3].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath4[3].field).toHaveProperty("options.__label", "field3bis");
-      expect(fPath4[4].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath4[4].field).toHaveProperty("options.__label", "field4");
+      expect(fPath4[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath4[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath4[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath4[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath4[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath4[2]?.field).toHaveProperty("options.__label", "field3");
+      expect(fPath4[3]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath4[3]?.field).toHaveProperty("options.__label", "field3bis");
+      expect(fPath4[4]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath4[4]?.field).toHaveProperty("options.__label", "field4");
 
-      const fPath5 = getFieldsPathsFromPath(model, "field1.[].field2");
+      const fPath5 = getFieldsPathsFromPath(model, "field1.[]?.field2");
 
       expect(fPath5).toBeInstanceOf(Array);
       expect(fPath5.length).toEqual(3);
-      expect(fPath5[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath5[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath5[1].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath5[1].field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath5[2].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath5[2].field).toHaveProperty("options.__label", "field2");
+      expect(fPath5[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath5[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath5[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath5[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath5[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath5[2]?.field).toHaveProperty("options.__label", "field2");
 
-      const fPath6 = getFieldsPathsFromPath(model, "field1.[].field3");
+      const fPath6 = getFieldsPathsFromPath(model, "field1.[]?.field3");
 
       expect(fPath6).toBeInstanceOf(Array);
       expect(fPath6.length).toEqual(3);
-      expect(fPath6[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath6[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath6[1].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath6[1].field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath6[2].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath6[2].field).toHaveProperty("options.__label", "field3");
+      expect(fPath6[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath6[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath6[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath6[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath6[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath6[2]?.field).toHaveProperty("options.__label", "field3");
 
-      const fPath7 = getFieldsPathsFromPath(model, "field1.[].field3.[].field4");
+      const fPath7 = getFieldsPathsFromPath(model, "field1.[]?.field3.[]?.field4");
 
       expect(fPath7).toBeInstanceOf(Array);
       expect(fPath7.length).toEqual(5);
-      expect(fPath7[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath7[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath7[1].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath7[1].field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath7[2].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath7[2].field).toHaveProperty("options.__label", "field3");
-      expect(fPath7[3].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath7[3].field).toHaveProperty("options.__label", "field3bis");
-      expect(fPath7[4].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath7[4].field).toHaveProperty("options.__label", "field4");
+      expect(fPath7[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath7[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath7[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath7[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath7[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath7[2]?.field).toHaveProperty("options.__label", "field3");
+      expect(fPath7[3]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath7[3]?.field).toHaveProperty("options.__label", "field3bis");
+      expect(fPath7[4]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath7[4]?.field).toHaveProperty("options.__label", "field4");
 
-      const fPath8 = getFieldsPathsFromPath(model, "field1.[].field3.[].field4.field5");
+      const fPath8 = getFieldsPathsFromPath(model, "field1.[]?.field3.[]?.field4.field5");
 
       expect(fPath8).toBeInstanceOf(Array);
       expect(fPath8.length).toEqual(6);
-      expect(fPath8[0].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath8[0].field).toHaveProperty("options.__label", "field1");
-      expect(fPath8[1].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath8[1].field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath8[2].field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath8[2].field).toHaveProperty("options.__label", "field3");
-      expect(fPath8[3].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath8[3].field).toHaveProperty("options.__label", "field3bis");
-      expect(fPath8[4].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath8[4].field).toHaveProperty("options.__label", "field4");
+      expect(fPath8[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath8[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath8[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath8[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath8[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath8[2]?.field).toHaveProperty("options.__label", "field3");
+      expect(fPath8[3]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath8[3]?.field).toHaveProperty("options.__label", "field3bis");
+      expect(fPath8[4]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath8[4]?.field).toHaveProperty("options.__label", "field4");
       expect(fPath8[5]).toBe(null);
     });
 
@@ -590,14 +590,14 @@ describe("test utils", () => {
       const fPath = getFieldsPathsFromPath(model3, "nested.rel.rel.title");
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(4);
-      expect(fPath[0].field).toHaveProperty("type", FieldTypes.NESTED);
-      expect(fPath[0].field).toHaveProperty("path", "nested");
-      expect(fPath[1].field).toHaveProperty("type", FieldTypes.RELATION);
-      expect(fPath[1].field).toHaveProperty("path", "nested.rel");
-      expect(fPath[2].field).toHaveProperty("type", FieldTypes.RELATION);
-      expect(fPath[2].field).toHaveProperty("path", "rel");
-      expect(fPath[3].field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath[3].field).toHaveProperty("path", "title");
+      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath[0]?.field).toHaveProperty("path", "nested");
+      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.RELATION);
+      expect(fPath[1]?.field).toHaveProperty("path", "nested.rel");
+      expect(fPath[2]?.field).toHaveProperty("type", FieldTypes.RELATION);
+      expect(fPath[2]?.field).toHaveProperty("path", "rel");
+      expect(fPath[3]?.field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath[3]?.field).toHaveProperty("path", "title");
     });
   });
 
@@ -636,7 +636,7 @@ describe("test utils", () => {
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(1);
-      expect(models[0].slug).toBe(model1);
+      expect(models[0]?.slug).toBe(model1);
     });
 
     it("should work with chained relation fields", async () => {
@@ -674,8 +674,8 @@ describe("test utils", () => {
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(2);
-      expect(models[0].slug).toBe(model1.slug);
-      expect(models[1].slug).toBe(model2);
+      expect(models[0]?.slug).toBe(model1.slug);
+      expect(models[1]?.slug).toBe(model2);
     });
 
     it("should work with nested relation fields", async () => {
@@ -708,7 +708,7 @@ describe("test utils", () => {
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(1);
-      expect(models[0].slug).toBe(model1.slug);
+      expect(models[0]?.slug).toBe(model1.slug);
     });
 
     it("should work with nested field in nested array and chained relation fields", async () => {
@@ -776,8 +776,8 @@ describe("test utils", () => {
       const models = await getRelationModelsFromPath(model, "nested.arr.[].rel.arr.[].rel");
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(2);
-      expect(models[0].slug).toBe(model1.slug);
-      expect(models[1].slug).toBe(model2);
+      expect(models[0]?.slug).toBe(model1.slug);
+      expect(models[1]?.slug).toBe(model2);
     });
 
     it("should return empty array if no relations found in nested field", async () => {
@@ -828,7 +828,7 @@ describe("test utils", () => {
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(1);
-      expect(models[0].slug).toBe(model1.slug);
+      expect(models[0]?.slug).toBe(model1.slug);
     });
   });
 });

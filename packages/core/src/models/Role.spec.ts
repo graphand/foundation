@@ -1,6 +1,6 @@
-import { Role } from "@/models/Role";
-import { RuleActions } from "@/enums/rule-actions";
-import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev";
+import { Role } from "@/models/Role.ts";
+import { RuleActions } from "@/enums/rule-actions.ts";
+import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.ts";
 
 describe("Role Model", () => {
   const adapter = mockAdapter();
@@ -40,7 +40,7 @@ describe("Role Model", () => {
       const instance = await RoleModel.create({
         slug: generateRandomString(),
         rules: [{ ref: "test", actions: [RuleActions.DELETE] }],
-        inherits: [inheritedRole1._id, inheritedRole2._id],
+        inherits: [inheritedRole1._id as string, inheritedRole2._id as string],
       });
 
       const rules = await instance.getRulesInherited();
@@ -60,13 +60,13 @@ describe("Role Model", () => {
       const inheritedRole2 = await RoleModel.create({
         slug: generateRandomString(),
         rules: [{ ref: "inherited2", actions: [RuleActions.UPDATE] }],
-        inherits: [inheritedRole1._id],
+        inherits: [inheritedRole1._id as string],
       });
 
       const instance = await RoleModel.create({
         slug: generateRandomString(),
         rules: [{ ref: "test", actions: [RuleActions.DELETE] }],
-        inherits: [inheritedRole2._id],
+        inherits: [inheritedRole2._id as string],
       });
 
       const rules = await instance.getRulesInherited();
@@ -103,7 +103,7 @@ describe("Role Model", () => {
       const instance = await RoleModel.create({
         slug: generateRandomString(),
         fieldsRestrictions: [{ ref: "test", actions: [RuleActions.DELETE] }],
-        inherits: [inheritedRole1._id, inheritedRole2._id],
+        inherits: [inheritedRole1._id as string, inheritedRole2._id as string],
       });
 
       const fieldsRestrictions = await instance.getFieldsRestrictionsInherited();
@@ -123,13 +123,13 @@ describe("Role Model", () => {
       const inheritedRole2 = await RoleModel.create({
         slug: generateRandomString(),
         fieldsRestrictions: [{ ref: "inherited2", actions: [RuleActions.UPDATE] }],
-        inherits: [inheritedRole1._id],
+        inherits: [inheritedRole1._id as string],
       });
 
       const instance = await RoleModel.create({
         slug: generateRandomString(),
         fieldsRestrictions: [{ ref: "test", actions: [RuleActions.DELETE] }],
-        inherits: [inheritedRole2._id],
+        inherits: [inheritedRole2._id as string],
       });
 
       const fieldsRestrictions = await instance.getFieldsRestrictionsInherited();

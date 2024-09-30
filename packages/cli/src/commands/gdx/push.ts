@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { getClient, loadGdx, withSpinner } from "@/lib/utils";
+import { getClient, loadGdx, withSpinner } from "@/lib/utils.ts";
 import { controllerGdxPush, JSONTypeObject } from "@graphand/core";
 import { Command } from "commander";
 

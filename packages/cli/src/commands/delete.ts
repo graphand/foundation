@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient, withSpinner } from "@/lib/utils";
+import { getClient, withSpinner } from "@/lib/utils.ts";
 import qs from "qs";
 import { JSONQuery } from "@graphand/core";
 

@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { commandRunFunction } from "./function";
+import { commandRunFunction } from "./function.ts";
 
 export const commandRun = new Command("run").description("Run an aggregation or a function").action(() => {
   console.log("run");

@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { colorizeJson, getClient, withSpinner } from "@/lib/utils";
+import { colorizeJson, getClient, withSpinner } from "@/lib/utils.ts";
 import qs from "qs";
 import Table from "cli-table3";
 import {
@@ -29,7 +29,7 @@ export const commandGet = new Command("get")
     withSpinner(async spinner => {
       const client = await getClient();
       const model = client.getModel(String(modelName));
-      let list: ModelList<typeof model>;
+      let list: ModelList<typeof model> | null;
 
       spinner.text = `Initializing model ${model.slug} ...`;
 
@@ -96,6 +96,10 @@ export const commandGet = new Command("get")
 
       const end = Date.now();
 
+      if (!list) {
+        throw new Error(`Not found`);
+      }
+
       spinner.succeed(
         `Fetched ${model.slug} ${key ? `with key ${key}` : "list"}: ${list.length} result${
           list.length > 1 ? "s" : ""
@@ -115,7 +119,7 @@ export const commandGet = new Command("get")
 
         const first = list[0];
         console.log("");
-        console.log(JSON.stringify(first.getData(), null, 2));
+        console.log(JSON.stringify(first?.getData(), null, 2));
         return;
       }
 
@@ -160,9 +164,11 @@ export const commandGet = new Command("get")
           for (const idx of sortedIndices) {
             if (remainingReduction <= 0) break;
 
+            columnWidths[idx] ??= 0;
+
             // Set a minimum column width (e.g., 30% of natural width or at least 5)
-            const minColWidth = Math.max(5, naturalWidths[idx] * 0.3);
-            const maxReduction = columnWidths[idx] - minColWidth;
+            const minColWidth = naturalWidths[idx] ? Math.max(5, naturalWidths[idx] * 0.3) : 5;
+            const maxReduction = (columnWidths[idx] as number) - minColWidth;
 
             if (maxReduction > 0) {
               const reduction = Math.min(maxReduction, remainingReduction);

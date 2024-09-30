@@ -1,13 +1,13 @@
-import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev";
-import { DataModel } from "./DataModel";
-import { ValidationError } from "@/lib/ValidationError";
+import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.ts";
+import { DataModel } from "./DataModel.ts";
+import { ValidationError } from "@/lib/ValidationError.ts";
 
 describe("DataModel Model", () => {
   const adapter = mockAdapter();
   const DataModelModel = DataModel.extend({ adapterClass: adapter });
 
   it("should throw error if no slug", async () => {
-    const datamodel = DataModelModel.hydrate({ slug: null });
+    const datamodel = DataModelModel.hydrate({ slug: undefined });
 
     await expect(DataModelModel.validate([datamodel])).rejects.toThrow(ValidationError);
   });
