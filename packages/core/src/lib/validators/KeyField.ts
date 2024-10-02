@@ -1,7 +1,7 @@
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { Validator } from "@/lib/Validator.ts";
-import { Patterns } from "@/enums/patterns.ts";
-import { getValidatorClass } from "../utils.ts";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { Validator } from "@/lib/Validator.js";
+import { Patterns } from "@/enums/patterns.js";
+import { getValidatorClass } from "../utils.js";
 
 export class ValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
   validate: Validator<ValidatorTypes.KEY_FIELD>["validate"] = async opts => {

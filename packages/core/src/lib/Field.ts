@@ -1,5 +1,5 @@
-import { FieldTypes } from "@/enums/field-types.ts";
-import { Model } from "@/lib/Model.ts";
+import { FieldTypes } from "@/enums/field-types.js";
+import { Model } from "@/lib/Model.js";
 import {
   FieldDefinition,
   FieldOptions,
@@ -10,7 +10,7 @@ import {
   TransactionCtx,
   SerializerFieldsMap,
   FieldSerializerInput,
-} from "@/types/index.ts";
+} from "@/types/index.js";
 
 export class Field<T extends FieldTypes = FieldTypes> {
   static readonly defaultSymbol: unique symbol = Symbol("defaultSerializer");

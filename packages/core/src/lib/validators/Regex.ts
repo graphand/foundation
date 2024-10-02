@@ -1,6 +1,6 @@
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { Validator } from "@/lib/Validator.ts";
-import { getValidationValues } from "../utils.ts";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { Validator } from "@/lib/Validator.js";
+import { getValidationValues } from "../utils.js";
 
 export class ValidatorRegex extends Validator<ValidatorTypes.REGEX> {
   validate: Validator<ValidatorTypes.REGEX>["validate"] = async ({ list }) => {

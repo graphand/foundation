@@ -1,8 +1,8 @@
 import { Mock, MockInstance, vi } from "vitest";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
-import { Client } from "./Client.ts";
-import { ClientAdapter } from "./ClientAdapter.ts";
+import { Client } from "./Client.js";
+import { ClientAdapter } from "./ClientAdapter.js";
 import {
   DataModel,
   FieldTypes,

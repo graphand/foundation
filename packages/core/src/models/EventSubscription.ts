@@ -1,12 +1,12 @@
-import { FieldTypes } from "@/enums/field-types.ts";
-import { SubscriptionChannels } from "@/enums/subscription-channels.ts";
-import { Model } from "@/lib/Model.ts";
-import { modelDecorator } from "@/lib/modelDecorator.ts";
-import { ModelDefinition } from "@/types/index.ts";
-import { Account } from "./Account.ts";
-import { Role } from "./Role.ts";
-import { ValidatorTypes } from "../enums/validator-types.ts";
-import { Patterns } from "../enums/patterns.ts";
+import { FieldTypes } from "@/enums/field-types.js";
+import { SubscriptionChannels } from "@/enums/subscription-channels.js";
+import { Model } from "@/lib/Model.js";
+import { modelDecorator } from "@/lib/modelDecorator.js";
+import { ModelDefinition } from "@/types/index.js";
+import { Account } from "./Account.js";
+import { Role } from "./Role.js";
+import { ValidatorTypes } from "../enums/validator-types.js";
+import { Patterns } from "../enums/patterns.js";
 
 @modelDecorator()
 export class EventSubscription extends Model {

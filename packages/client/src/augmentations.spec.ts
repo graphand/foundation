@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import { ObjectId } from "bson";
-import { ModelUpdaterEvent } from "@/types.ts";
+import { ModelUpdaterEvent } from "@/types.js";
 import {
   FieldTypes,
   Model,
@@ -12,8 +12,8 @@ import {
   PromiseModel,
   PromiseModelList,
 } from "@graphand/core";
-import { Client } from "./lib/Client.ts";
-import { ClientAdapter } from "./lib/ClientAdapter.ts";
+import { Client } from "./lib/Client.js";
+import { ClientAdapter } from "./lib/ClientAdapter.js";
 
 describe("augmentations", () => {
   @modelDecorator()

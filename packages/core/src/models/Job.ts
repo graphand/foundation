@@ -1,9 +1,9 @@
-import { Model } from "@/lib/Model.ts";
-import { modelDecorator } from "@/lib/modelDecorator.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { JobTypes } from "@/enums/job-types.ts";
-import { JobStatus } from "@/enums/job-status.ts";
-import { ModelDefinition } from "@/types/index.ts";
+import { Model } from "@/lib/Model.js";
+import { modelDecorator } from "@/lib/modelDecorator.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { JobTypes } from "@/enums/job-types.js";
+import { JobStatus } from "@/enums/job-status.js";
+import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Job extends Model {

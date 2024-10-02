@@ -1,20 +1,20 @@
 import { vi } from "vitest";
-import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev.ts";
-import { Field } from "@/lib/Field.ts";
-import { Model } from "@/lib/Model.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { Validator } from "@/lib/Validator.ts";
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { Account } from "@/models/Account.ts";
-import { CoreError } from "@/lib/CoreError.ts";
-import { DataModel } from "@/models/DataModel.ts";
-import { ErrorCodes } from "@/enums/error-codes.ts";
-import { Media } from "@/models/Media.ts";
-import { ModelDefinition, ModelInstance, SerializerFieldsMap } from "@/types/index.ts";
-import { PromiseModelList } from "@/lib/PromiseModelList.ts";
-import { PromiseModel } from "@/lib/PromiseModel.ts";
+import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev.js";
+import { Field } from "@/lib/Field.js";
+import { Model } from "@/lib/Model.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { Validator } from "@/lib/Validator.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { Account } from "@/models/Account.js";
+import { CoreError } from "@/lib/CoreError.js";
+import { DataModel } from "@/models/DataModel.js";
+import { ErrorCodes } from "@/enums/error-codes.js";
+import { Media } from "@/models/Media.js";
+import { ModelDefinition, ModelInstance, SerializerFieldsMap } from "@/types/index.js";
+import { PromiseModelList } from "@/lib/PromiseModelList.js";
+import { PromiseModel } from "@/lib/PromiseModel.js";
 import { faker } from "@faker-js/faker";
-import { Adapter } from "@/lib/Adapter.ts";
+import { Adapter } from "@/lib/Adapter.js";
 import { ObjectId } from "bson";
 
 describe("Test Model", () => {

@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { collectSetter, getClient, waitJob, withSpinner } from "@/lib/utils.ts";
+import { collectSetter, getClient, waitJob, withSpinner } from "@/lib/utils.js";
 import path from "path";
 import fs from "fs";
 import { Function, ModelInstance, ModelJSON } from "@graphand/core";

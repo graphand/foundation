@@ -1,5 +1,5 @@
-import { Model } from "@/lib/Model.ts";
-import { defineFieldsProperties } from "@/lib/utils.ts";
+import { Model } from "@/lib/Model.js";
+import { defineFieldsProperties } from "@/lib/utils.js";
 
 /**
  * A decorator that extends the model class with the defineFieldsProperties function in the constructor

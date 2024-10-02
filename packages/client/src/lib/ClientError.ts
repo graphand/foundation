@@ -1,5 +1,5 @@
 import { CoreError, ErrorCodes } from "@graphand/core";
-import { ClientErrorDefinition } from "../types.ts";
+import { ClientErrorDefinition } from "../types.js";
 
 export class ClientError extends CoreError {
   data: Record<string, any> | undefined;

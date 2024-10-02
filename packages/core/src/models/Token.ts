@@ -1,9 +1,9 @@
-import { Model } from "@/lib/Model.ts";
-import { modelDecorator } from "@/lib/modelDecorator.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { Role } from "@/models/Role.ts";
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { ModelDefinition } from "@/types/index.ts";
+import { Model } from "@/lib/Model.js";
+import { modelDecorator } from "@/lib/modelDecorator.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { Role } from "@/models/Role.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { ModelDefinition } from "@/types/index.js";
 
 // TODO: rename Token class as TokenGenerator, TokenDefinition
 

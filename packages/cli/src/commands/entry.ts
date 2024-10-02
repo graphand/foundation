@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient, withSpinner } from "@/lib/utils.ts";
+import { getClient, withSpinner } from "@/lib/utils.js";
 import { controllerEntry } from "@graphand/core";
 import chalk from "chalk";
 

@@ -14,7 +14,7 @@ import {
   controllerCodeAuth,
   InferControllerInput,
 } from "@graphand/core";
-import { AuthStorage } from "./types.ts";
+import { AuthStorage } from "./types.js";
 
 class MemoryStorage implements AuthStorage {
   private store: Record<string, string> = {};

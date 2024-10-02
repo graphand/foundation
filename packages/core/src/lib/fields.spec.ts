@@ -1,15 +1,15 @@
 import { vi } from "vitest";
 import { ObjectId } from "bson";
-import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils.dev.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
+import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
+import { FieldTypes } from "@/enums/field-types.js";
 import { faker } from "@faker-js/faker";
-import { Field } from "@/lib/Field.ts";
-import { Validator } from "@/lib/Validator.ts";
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { ValidationError } from "@/lib/ValidationError.ts";
-import { PromiseModel } from "@/lib/PromiseModel.ts";
-import { Account, DataModel, JSONType, Model } from "@/index.ts";
-import { PromiseModelList } from "@/lib/PromiseModelList.ts";
+import { Field } from "@/lib/Field.js";
+import { Validator } from "@/lib/Validator.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { ValidationError } from "@/lib/ValidationError.js";
+import { PromiseModel } from "@/lib/PromiseModel.js";
+import { Account, DataModel, JSONType, Model } from "@/index.js";
+import { PromiseModelList } from "@/lib/PromiseModelList.js";
 
 describe("test fields", () => {
   const adapter = mockAdapter({});

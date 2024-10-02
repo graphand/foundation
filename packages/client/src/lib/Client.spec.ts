@@ -2,9 +2,9 @@ import { vi } from "vitest";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
 import { Account, DataModel, IdentityTypes, Model, ModelInstance, ModelList, TransactionCtx } from "@graphand/core";
-import { Client } from "./Client.ts";
-import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.ts";
-import { ClientAdapter } from "./ClientAdapter.ts";
+import { Client } from "./Client.js";
+import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.js";
+import { ClientAdapter } from "./ClientAdapter.js";
 import jsonwebtoken from "jsonwebtoken";
 
 describe("Client", () => {

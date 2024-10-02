@@ -1,6 +1,6 @@
 import qs from "qs";
 import chalk from "chalk";
-import { UserConfig } from "@/types.ts";
+import { UserConfig } from "@/types.js";
 import path from "path";
 import fs from "fs";
 import Conf from "conf";
@@ -11,7 +11,7 @@ import { Client, ModuleConstructor, ClientModules, ClientOptions } from "@grapha
 import { ModuleAuth } from "@graphand/client-module-auth";
 import { ModuleRealtime } from "@graphand/client-module-realtime";
 import open from "open";
-import ModuleCli from "./ModuleCli.ts";
+import ModuleCli from "./ModuleCli.js";
 import ora, { Ora } from "ora";
 import {
   controllerJobLogs,
@@ -23,7 +23,7 @@ import {
   JSONTypeObject,
   ModelInstance,
 } from "@graphand/core";
-import LogProcessor from "./LogProcessor.ts";
+import LogProcessor from "./LogProcessor.js";
 import mime from "mime";
 
 export const defineConfig = (config: UserConfig): UserConfig => {

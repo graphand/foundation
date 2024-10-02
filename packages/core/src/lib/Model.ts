@@ -1,6 +1,6 @@
-import { Field } from "@/lib/Field.ts";
-import { PromiseModel } from "@/lib/PromiseModel.ts";
-import { PromiseModelList } from "@/lib/PromiseModelList.ts";
+import { Field } from "@/lib/Field.js";
+import { PromiseModel } from "@/lib/PromiseModel.js";
+import { PromiseModelList } from "@/lib/PromiseModelList.js";
 import {
   AdapterFetcher,
   FieldsPathItem,
@@ -23,9 +23,9 @@ import {
   ModelJSON,
   ModelObject,
   InferModel,
-} from "@/types/index.ts";
-import { Adapter } from "@/lib/Adapter.ts";
-import { Validator } from "@/lib/Validator.ts";
+} from "@/types/index.js";
+import { Adapter } from "@/lib/Adapter.js";
+import { Validator } from "@/lib/Validator.js";
 import {
   createFieldsMap,
   createValidatorsArray,
@@ -36,12 +36,12 @@ import {
   assignDatamodel,
   getModelInitPromise,
   defineFieldsProperties,
-} from "@/lib/utils.ts";
-import { CoreError } from "@/lib/CoreError.ts";
-import { ErrorCodes } from "@/enums/error-codes.ts";
-import type { DataModel } from "@/models/DataModel.ts";
-import { ModelList } from "./ModelList.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
+} from "@/lib/utils.js";
+import { CoreError } from "@/lib/CoreError.js";
+import { ErrorCodes } from "@/enums/error-codes.js";
+import type { DataModel } from "@/models/DataModel.js";
+import { ModelList } from "./ModelList.js";
+import { FieldTypes } from "@/enums/field-types.js";
 
 const noFieldSymbol = Symbol("noField");
 
@@ -495,8 +495,10 @@ export class Model {
     const model = this.model();
     let fieldsPaths: Array<FieldsPathItem | null> | undefined;
 
-    if (path.includes(".")) {
-      fieldsPaths = getFieldsPathsFromPath(this.model(), path.split("."));
+    if (path.includes(".") || path.includes("[")) {
+      // Parse the path to handle cases like "field[0].subfield" to follow the dot notation
+      const sanitizedPath = path.replace(/([^.])\[/g, "$1.[");
+      fieldsPaths = getFieldsPathsFromPath(this.model(), sanitizedPath.split("."));
     } else {
       if (model.fieldsMap.has(path)) {
         const field = model.fieldsMap.get(path) as Field;

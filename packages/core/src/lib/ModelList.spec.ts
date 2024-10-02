@@ -1,7 +1,7 @@
 import { vi } from "vitest";
-import { ModelList } from "@/lib/ModelList.ts";
-import { mockModel } from "@/lib/test-utils.dev.ts";
-import { ModelInstance } from "../index.ts";
+import { ModelList } from "@/lib/ModelList.js";
+import { mockModel } from "@/lib/test-utils.dev.js";
+import { ModelInstance } from "../index.js";
 
 describe("test ModelList", () => {
   let model: ReturnType<typeof mockModel>;

@@ -1,8 +1,8 @@
-import { CoreError } from "@/lib/CoreError.ts";
-import { ValidationFieldError } from "@/lib/ValidationFieldError.ts";
-import { ValidationValidatorError } from "@/lib/ValidationValidatorError.ts";
-import { CoreErrorDefinition } from "@/types/index.ts";
-import { ErrorCodes } from "@/enums/error-codes.ts";
+import { CoreError } from "@/lib/CoreError.js";
+import { ValidationFieldError } from "@/lib/ValidationFieldError.js";
+import { ValidationValidatorError } from "@/lib/ValidationValidatorError.js";
+import { CoreErrorDefinition } from "@/types/index.js";
+import { ErrorCodes } from "@/enums/error-codes.js";
 
 export class ValidationError extends CoreError {
   fields: Array<ValidationFieldError>;

@@ -1,5 +1,5 @@
-import { SubjectObserver } from "@/types.ts";
-import { Subject } from "./Subject.ts";
+import { SubjectObserver } from "@/types.js";
+import { Subject } from "./Subject.js";
 
 export class BehaviorSubject<T> extends Subject<T> {
   #currentValue: T;

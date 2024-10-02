@@ -1,4 +1,4 @@
-import { Model } from "@/lib/Model.ts";
+import { Model } from "@/lib/Model.js";
 import {
   AdapterFetcher,
   FieldDefinition,
@@ -16,18 +16,18 @@ import {
   TransactionCtx,
   FieldsDefinition,
   Transaction,
-} from "@/types/index.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { Field } from "@/lib/Field.ts";
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { Validator } from "@/lib/Validator.ts";
-import { Adapter } from "@/lib/Adapter.ts";
-import { ValidationValidatorError } from "@/lib/ValidationValidatorError.ts";
-import { ValidationFieldError } from "@/lib/ValidationFieldError.ts";
-import { ValidationError } from "@/lib/ValidationError.ts";
-import type { DataModel } from "@/models/DataModel.ts";
-import { Patterns } from "@/enums/patterns.ts";
-import { FieldNested } from "./fields/Nested.ts";
+} from "@/types/index.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { Field } from "@/lib/Field.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { Validator } from "@/lib/Validator.js";
+import { Adapter } from "@/lib/Adapter.js";
+import { ValidationValidatorError } from "@/lib/ValidationValidatorError.js";
+import { ValidationFieldError } from "@/lib/ValidationFieldError.js";
+import { ValidationError } from "@/lib/ValidationError.js";
+import type { DataModel } from "@/models/DataModel.js";
+import { Patterns } from "@/enums/patterns.js";
+import { FieldNested } from "./fields/Nested.js";
 
 export const crossModelTree = (_model: typeof Model, cb: (_model: typeof Model) => void) => {
   let model = _model;

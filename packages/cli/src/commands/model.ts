@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { colorizeJson, getClient } from "@/lib/utils.ts";
+import { colorizeJson, getClient } from "@/lib/utils.js";
 import { JSONTypeObject } from "@graphand/core";
 
 export const commandModel = new Command("model")

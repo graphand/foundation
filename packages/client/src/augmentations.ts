@@ -1,8 +1,8 @@
 import { InferModel, Model, ModelInstance, ModelJSON, ModelList, PromiseModel, PromiseModelList } from "@graphand/core";
-import { getCachedModel, getCachedModelList, getCachedPartialModelList } from "./lib/utils.ts";
-import type { ClientAdapter } from "./lib/ClientAdapter.ts";
-import type { InferModelFromList, ModelUpdaterEvent, SubjectObserver } from "./types.ts";
-import type { Client } from "./lib/Client.ts";
+import { getCachedModel, getCachedModelList, getCachedPartialModelList } from "./lib/utils.js";
+import type { ClientAdapter } from "./lib/ClientAdapter.js";
+import type { InferModelFromList, ModelUpdaterEvent, SubjectObserver } from "./types.js";
+import type { Client } from "./lib/Client.js";
 
 Model.subscribe = function <T extends typeof Model>(
   this: T,

@@ -1,6 +1,6 @@
 import fs from "fs";
 import qs from "qs";
-import { colorizeJson, getClient, getGdxPath, withSpinner } from "@/lib/utils.ts";
+import { colorizeJson, getClient, getGdxPath, withSpinner } from "@/lib/utils.js";
 import { controllerGdxPull, JSONQuery, JSONTypeObject } from "@graphand/core";
 import { Command } from "commander";
 

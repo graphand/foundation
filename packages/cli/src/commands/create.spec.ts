@@ -1,8 +1,8 @@
 import { ObjectId } from "bson";
 import { faker } from "@faker-js/faker";
 import { vi } from "vitest";
-import { getClient } from "@/lib/utils.ts";
-import { _create, commandCreate } from "./create.ts";
+import { getClient } from "@/lib/utils.js";
+import { _create, commandCreate } from "./create.js";
 import ora from "ora";
 import { controllerModelCreate, FieldTypes } from "@graphand/core";
 import { Subject } from "@graphand/client";

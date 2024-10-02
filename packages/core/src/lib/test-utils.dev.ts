@@ -1,10 +1,10 @@
-import { Adapter } from "@/lib/Adapter.ts";
-import { AdapterFetcher, ModelDefinition, ModelInstance } from "@/types/index.ts";
-import { ModelList } from "@/lib/ModelList.ts";
-import { Model } from "@/lib/Model.ts";
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { defineFieldsProperties } from "@/lib/utils.ts";
-import { Validator } from "@/lib/Validator.ts";
+import { Adapter } from "@/lib/Adapter.js";
+import { AdapterFetcher, ModelDefinition, ModelInstance } from "@/types/index.js";
+import { ModelList } from "@/lib/ModelList.js";
+import { Model } from "@/lib/Model.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { defineFieldsProperties } from "@/lib/utils.js";
+import { Validator } from "@/lib/Validator.js";
 import { ObjectId } from "bson";
 
 const cache: Map<typeof Model, Set<ModelInstance<typeof Model>>> = new Map();

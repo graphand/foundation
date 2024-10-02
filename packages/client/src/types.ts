@@ -1,7 +1,7 @@
 import { CoreErrorDefinition, InferModel, ModelInstance, ModelJSON, ModelList, Model } from "@graphand/core";
-import { Module } from "./lib/Module.ts";
-import { Client } from "./lib/Client.ts";
-import { ClientAdapter } from "./lib/ClientAdapter.ts";
+import { Module } from "./lib/Module.js";
+import { Client } from "./lib/Client.js";
+import { ClientAdapter } from "./lib/ClientAdapter.js";
 
 declare module "@graphand/core" {
   export interface TransactionCtx {

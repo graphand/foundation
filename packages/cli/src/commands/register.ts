@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient } from "@/lib/utils.ts";
+import { getClient } from "@/lib/utils.js";
 import { password, input } from "@inquirer/prompts";
 import chalk from "chalk";
 

@@ -1,10 +1,10 @@
 import { vi, MockInstance } from "vitest";
 import { faker } from "@faker-js/faker";
 import { Client, ClientAdapter } from "@graphand/client";
-import ModuleRealtime from "./ModuleRealtime.ts";
+import ModuleRealtime from "./ModuleRealtime.js";
 import { Socket } from "socket.io-client";
 import { controllerModelCreate, ModelCrudEvent } from "@graphand/core";
-import RealtimeUpload from "./lib/RealtimeUpload.ts";
+import RealtimeUpload from "./lib/RealtimeUpload.js";
 
 describe("ModuleRealtime", () => {
   let client: Client<[typeof ModuleRealtime]>;

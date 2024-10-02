@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { colorizeJson, getClient, withSpinner } from "@/lib/utils.ts";
+import { colorizeJson, getClient, withSpinner } from "@/lib/utils.js";
 import { controllerFunctionRun, Function, InferControllerInput } from "@graphand/core";
 import { Command } from "commander";
 import qs from "qs";

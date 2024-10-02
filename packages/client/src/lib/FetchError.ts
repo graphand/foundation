@@ -1,5 +1,5 @@
 import { CoreError, ErrorCodes } from "@graphand/core";
-import { FetchErrorDefinition } from "../types.ts";
+import { FetchErrorDefinition } from "../types.js";
 
 export class FetchError extends CoreError {
   res: Response | undefined;

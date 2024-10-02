@@ -1,5 +1,5 @@
-import { CoreErrorDefinition } from "@/types/index.ts";
-import { ErrorCodes } from "@/enums/error-codes.ts";
+import { CoreErrorDefinition } from "@/types/index.js";
+import { ErrorCodes } from "@/enums/error-codes.js";
 
 /**
  * CoreError class is the base Error class for Graphand.

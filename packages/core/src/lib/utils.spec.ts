@@ -1,8 +1,8 @@
-import { crossModelTree, getFieldsPathsFromPath, getRelationModelsFromPath } from "@/lib/utils.ts";
-import { Model } from "@/lib/Model.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { ModelDefinition } from "@/types/index.ts";
-import { mockAdapter, mockModel } from "@/lib/test-utils.dev.ts";
+import { crossModelTree, getFieldsPathsFromPath, getRelationModelsFromPath } from "@/lib/utils.js";
+import { Model } from "@/lib/Model.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { ModelDefinition } from "@/types/index.js";
+import { mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
 import { faker } from "@faker-js/faker";
 
 describe("test utils", () => {

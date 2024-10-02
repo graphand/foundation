@@ -1,12 +1,12 @@
 import "./augmentations";
 
-export { Module, symbolModuleInit, symbolModuleDestroy } from "@/lib/Module.ts";
-export { Client } from "@/lib/Client.ts";
-export { BehaviorSubject } from "@/lib/BehaviorSubject.ts";
-export { Subject } from "@/lib/Subject.ts";
-export { ClientAdapter } from "@/lib/ClientAdapter.ts";
-export { ClientError } from "@/lib/ClientError.ts";
-export { FetchError } from "@/lib/FetchError.ts";
+export { Module, symbolModuleInit, symbolModuleDestroy } from "@/lib/Module.js";
+export { Client } from "@/lib/Client.js";
+export { BehaviorSubject } from "@/lib/BehaviorSubject.js";
+export { Subject } from "@/lib/Subject.js";
+export { ClientAdapter } from "@/lib/ClientAdapter.js";
+export { ClientError } from "@/lib/ClientError.js";
+export { FetchError } from "@/lib/FetchError.js";
 
-export * from "@/types.ts";
-export default "@/lib/Client.ts";
+export * from "@/types.js";
+export default "@/lib/Client.js";

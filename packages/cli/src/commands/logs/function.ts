@@ -1,4 +1,4 @@
-import { getClient, processLogs, withSpinner } from "@/lib/utils.ts";
+import { getClient, processLogs, withSpinner } from "@/lib/utils.js";
 import { controllerFunctionLogs, Function } from "@graphand/core";
 import { Command } from "commander";
 

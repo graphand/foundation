@@ -1,7 +1,7 @@
-import { FieldTypes } from "@/enums/field-types.ts";
-import { FieldSerializerInput } from "@/index.ts";
-import { Field } from "@/lib/Field.ts";
-import { getValidationValues, isObjectId } from "@/lib/utils.ts";
+import { FieldTypes } from "@/enums/field-types.js";
+import { FieldSerializerInput } from "@/index.js";
+import { Field } from "@/lib/Field.js";
+import { getValidationValues, isObjectId } from "@/lib/utils.js";
 
 export class FieldText extends Field<FieldTypes.TEXT> {
   validate: Field<FieldTypes.TEXT>["validate"] = async ({ list }) => {

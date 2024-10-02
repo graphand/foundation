@@ -1,4 +1,4 @@
-import { ValidatorTypes } from "@/enums/validator-types.ts";
+import { ValidatorTypes } from "@/enums/validator-types.js";
 
 export type ValidatorOptionsMap = {
   [ValidatorTypes.EXISTS]: { field: string };

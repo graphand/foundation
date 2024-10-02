@@ -1,5 +1,5 @@
-import { InferModuleDependencies, ModuleConstructor } from "@/types.ts";
-import { Client } from "./Client.ts";
+import { InferModuleDependencies, ModuleConstructor } from "@/types.js";
+import { Client } from "./Client.js";
 
 export const symbolModuleInit = Symbol("ModuleInit");
 export const symbolModuleDestroy = Symbol("ModuleDestroy");

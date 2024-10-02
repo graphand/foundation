@@ -1,5 +1,5 @@
-import { JSONQuery, ModelInstance } from "@/types/index.ts";
-import { Model } from "@/lib/Model.ts";
+import { JSONQuery, ModelInstance } from "@/types/index.js";
+import { Model } from "@/lib/Model.js";
 
 /**
  * ModelList is a class that extends the native Array class.

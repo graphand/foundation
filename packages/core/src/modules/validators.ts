@@ -1,4 +1,4 @@
-import { Model } from "@/lib/Model.ts";
+import { Model } from "@/lib/Model.js";
 
 /**
  * This module add hooks to model class to run validators on create/update actions if the adapter enables it.

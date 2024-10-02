@@ -1,4 +1,4 @@
-import { SubjectObserver } from "../types.ts";
+import { SubjectObserver } from "../types.js";
 
 export class Subject<T> {
   #observers: Array<SubjectObserver<T>> = [];

@@ -1,10 +1,10 @@
-import { Model } from "@/lib/Model.ts";
-import { modelDecorator } from "@/lib/modelDecorator.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { Role } from "@/models/Role.ts";
-import { ModelDefinition } from "@/types/index.ts";
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { AuthProviders } from "@/enums/auth-providers.ts";
+import { Model } from "@/lib/Model.js";
+import { modelDecorator } from "@/lib/modelDecorator.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { Role } from "@/models/Role.js";
+import { ModelDefinition } from "@/types/index.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { AuthProviders } from "@/enums/auth-providers.js";
 
 @modelDecorator()
 export class AuthProvider extends Model {

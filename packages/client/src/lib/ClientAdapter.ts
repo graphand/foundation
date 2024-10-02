@@ -23,13 +23,13 @@ import {
   controllerModelDelete,
   FieldsPathItem,
 } from "@graphand/core";
-import { Client } from "./Client.ts";
-import { Subject } from "./Subject.ts";
-import { canUseIds } from "./utils.ts";
-import { ModelUpdaterEvent, SubjectObserver } from "@/types.ts";
-import { ClientError } from "./ClientError.ts";
-import FieldRelation from "./fields/Relation.ts";
-import FieldArray from "./fields/Array.ts";
+import { Client } from "./Client.js";
+import { Subject } from "./Subject.js";
+import { canUseIds } from "./utils.js";
+import { ModelUpdaterEvent, SubjectObserver } from "@/types.js";
+import { ClientError } from "./ClientError.js";
+import FieldRelation from "./fields/Relation.js";
+import FieldArray from "./fields/Array.js";
 
 export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   static client: Client;

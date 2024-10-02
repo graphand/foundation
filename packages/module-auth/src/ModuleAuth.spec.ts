@@ -3,8 +3,8 @@ import { ObjectId } from "bson";
 import { faker } from "@faker-js/faker";
 import { Client } from "@graphand/client";
 import { Account, AuthMethods, AuthProviders, controllerConfigureAuth, ModelJSON } from "@graphand/core";
-import ModuleAuth from "./ModuleAuth.ts";
-import { AuthStorage } from "./types.ts";
+import ModuleAuth from "./ModuleAuth.js";
+import { AuthStorage } from "./types.js";
 
 describe("ModuleAuth", () => {
   let client: Client<[typeof ModuleAuth]>;

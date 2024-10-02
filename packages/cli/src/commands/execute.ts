@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { colorizeJson, getClient, withSpinner } from "@/lib/utils.ts";
+import { colorizeJson, getClient, withSpinner } from "@/lib/utils.js";
 import qs from "qs";
 import { FetchError } from "@graphand/client";
 import chalk from "chalk";

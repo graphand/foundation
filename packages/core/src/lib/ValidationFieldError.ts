@@ -1,4 +1,4 @@
-import { ValidationFieldErrorDefinition } from "@/types/index.ts";
+import { ValidationFieldErrorDefinition } from "@/types/index.js";
 
 export class ValidationFieldError {
   #definition: ValidationFieldErrorDefinition;

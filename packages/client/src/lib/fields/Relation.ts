@@ -6,7 +6,7 @@ import {
   PromiseModel,
   Model,
 } from "@graphand/core";
-import { getCachedModel } from "../utils.ts";
+import { getCachedModel } from "../utils.js";
 
 class FieldRelation extends CoreFieldRelation {
   decodePopulate = (fn: any) => {

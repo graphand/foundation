@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient, withSpinner } from "@/lib/utils.ts";
+import { getClient, withSpinner } from "@/lib/utils.js";
 
 export const commandWhoami = new Command("whoami")
   .alias("me")

@@ -1,9 +1,9 @@
-import { Model } from "@/lib/Model.ts";
-import { modelDecorator } from "@/lib/modelDecorator.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { ModelDefinition } from "@/types/index.ts";
-import { Function } from "./Function.ts";
+import { Model } from "@/lib/Model.js";
+import { modelDecorator } from "@/lib/modelDecorator.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { ModelDefinition } from "@/types/index.js";
+import { Function } from "./Function.js";
 
 const functionRelationField = {
   type: FieldTypes.ARRAY,

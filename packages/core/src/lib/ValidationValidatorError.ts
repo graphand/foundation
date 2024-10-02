@@ -1,4 +1,4 @@
-import { ValidationValidatorErrorDefinition } from "@/types/index.ts";
+import { ValidationValidatorErrorDefinition } from "@/types/index.js";
 
 export class ValidationValidatorError {
   #definition: ValidationValidatorErrorDefinition;

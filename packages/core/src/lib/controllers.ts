@@ -7,7 +7,7 @@ import {
   MediaTransformOptions,
   ModelJSON,
   RegisterData,
-} from "@/types/index.ts";
+} from "@/types/index.js";
 
 export const controllerModelCount: Controller<{ params: { model: string }; query?: JSONQuery; data?: JSONQuery }> = {
   path: "/:model/count",

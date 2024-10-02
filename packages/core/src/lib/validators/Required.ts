@@ -1,6 +1,6 @@
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { Validator } from "@/lib/Validator.ts";
-import { getValidationValues } from "../utils.ts";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { Validator } from "@/lib/Validator.js";
+import { getValidationValues } from "../utils.js";
 
 export class ValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
   validate: Validator<ValidatorTypes.REQUIRED>["validate"] = async ({ list }) => {

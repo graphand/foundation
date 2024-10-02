@@ -1,7 +1,7 @@
-import { FieldTypes } from "@/enums/field-types.ts";
-import { FieldSerializerInput, JSONTypeObject } from "@/types/index.ts";
-import { Field } from "@/lib/Field.ts";
-import { getFieldFromDefinition, getNestedFieldsMap, getValidationValues } from "@/lib/utils.ts";
+import { FieldTypes } from "@/enums/field-types.js";
+import { FieldSerializerInput, JSONTypeObject } from "@/types/index.js";
+import { Field } from "@/lib/Field.js";
+import { getFieldFromDefinition, getNestedFieldsMap, getValidationValues } from "@/lib/utils.js";
 
 export class FieldNested extends Field<FieldTypes.NESTED> {
   static symbolIgnore = Symbol("ignore");

@@ -1,6 +1,6 @@
-import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.ts";
-import { DataModel } from "./DataModel.ts";
-import { ValidationError } from "@/lib/ValidationError.ts";
+import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.js";
+import { DataModel } from "./DataModel.js";
+import { ValidationError } from "@/lib/ValidationError.js";
 
 describe("DataModel Model", () => {
   const adapter = mockAdapter();

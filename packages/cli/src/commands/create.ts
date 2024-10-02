@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { collectFiles, collectSetter, getClient, withSpinner } from "@/lib/utils.ts";
+import { collectFiles, collectSetter, getClient, withSpinner } from "@/lib/utils.js";
 import { ModelInstance, ModelJSON } from "@graphand/core";
 import { Ora } from "ora";
 

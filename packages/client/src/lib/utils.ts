@@ -11,10 +11,10 @@ import {
   ValidationValidatorError,
   Validator,
 } from "@graphand/core";
-import { ModuleConstructor, ModuleWithConfig } from "@/types.ts";
-import { ClientError } from "./ClientError.ts";
-import { FetchError } from "./FetchError.ts";
-import { ClientAdapter } from "./ClientAdapter.ts";
+import { ModuleConstructor, ModuleWithConfig } from "@/types.js";
+import { ClientError } from "./ClientError.js";
+import { FetchError } from "./FetchError.js";
+import { ClientAdapter } from "./ClientAdapter.js";
 
 export const canUseIds = (query: JSONQuery): boolean => {
   if (

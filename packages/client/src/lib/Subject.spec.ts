@@ -1,6 +1,6 @@
 import { vi } from "vitest";
-import { Subject } from "./Subject.ts";
-import { SubjectObserver } from "../types.ts";
+import { Subject } from "./Subject.js";
+import { SubjectObserver } from "../types.js";
 
 describe("Subject", () => {
   let subject: Subject<number>;

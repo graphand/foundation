@@ -1,10 +1,10 @@
-import { ModelDefinition } from "@/types/index.ts";
-import { Model } from "@/lib/Model.ts";
-import { modelDecorator } from "@/lib/modelDecorator.ts";
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { Account } from "@/models/Account.ts";
-import { Patterns } from "@/enums/patterns.ts";
+import { ModelDefinition } from "@/types/index.js";
+import { Model } from "@/lib/Model.js";
+import { modelDecorator } from "@/lib/modelDecorator.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { Account } from "@/models/Account.js";
+import { Patterns } from "@/enums/patterns.js";
 
 @modelDecorator()
 export class Invitation extends Model {

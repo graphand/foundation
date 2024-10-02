@@ -1,4 +1,4 @@
-import ModuleRealtime from "@/ModuleRealtime.ts";
+import ModuleRealtime from "@/ModuleRealtime.js";
 import { BehaviorSubject, SubjectObserver } from "@graphand/client";
 import { UploadEvent } from "@graphand/core";
 

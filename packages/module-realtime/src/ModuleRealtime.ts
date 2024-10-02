@@ -1,7 +1,7 @@
 import { Module, symbolModuleInit, symbolModuleDestroy, ClientAdapter, BehaviorSubject } from "@graphand/client";
 import { ModelCrudEvent } from "@graphand/core";
 import { io, Socket } from "socket.io-client";
-import RealtimeUpload from "./lib/RealtimeUpload.ts";
+import RealtimeUpload from "./lib/RealtimeUpload.js";
 
 type ModuleRealtimeOptions = {
   connectTimeout?: number;

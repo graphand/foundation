@@ -1,5 +1,5 @@
 import { Module, symbolModuleInit, symbolModuleDestroy, FetchError } from "@graphand/client";
-import { getClient } from "./utils.ts";
+import { getClient } from "./utils.js";
 import chalk from "chalk";
 
 class ModuleCli extends Module {

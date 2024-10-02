@@ -3,7 +3,7 @@
   "display": "Default",
   "compilerOptions": {
     "declaration": true,
-    "declarationMap": true,
+    "declarationMap": false,
     "esModuleInterop": true,
     "incremental": false,
     "isolatedModules": true,
@@ -16,7 +16,6 @@
     "skipLibCheck": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "allowImportingTsExtensions": true,
     "strict": true,
     "target": "ESNext",
     "noEmit": true,

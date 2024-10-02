@@ -8,8 +8,8 @@ import {
   Transaction,
   ClientOptions,
   ModuleConstructor,
-} from "@/types.ts";
-import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.ts";
+} from "@/types.js";
+import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.js";
 import {
   Account,
   Adapter,
@@ -25,10 +25,10 @@ import {
   ModelInstance,
   TransactionCtx,
 } from "@graphand/core";
-import { ClientAdapter } from "./ClientAdapter.ts";
-import { BehaviorSubject } from "./BehaviorSubject.ts";
-import { decodeClientModule, parseErrorFromJSON } from "./utils.ts";
-import { FetchError } from "./FetchError.ts";
+import { ClientAdapter } from "./ClientAdapter.js";
+import { BehaviorSubject } from "./BehaviorSubject.js";
+import { decodeClientModule, parseErrorFromJSON } from "./utils.js";
+import { FetchError } from "./FetchError.js";
 
 const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   endpoint: "api.graphand.cloud",
@@ -421,9 +421,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     try {
       res = await fetch(request);
 
-      console.log(request.url, !!res);
       if (!res) {
-        console.log(request.url, !!res);
         throw new Error("Response is null");
       }
 

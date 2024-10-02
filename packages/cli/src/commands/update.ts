@@ -1,6 +1,6 @@
 import qs from "qs";
 import { Command } from "commander";
-import { collectSetter, getClient, withSpinner } from "@/lib/utils.ts";
+import { collectSetter, getClient, withSpinner } from "@/lib/utils.js";
 import { JSONQuery, ModelInstance, ModelList } from "@graphand/core";
 
 export const commandUpdate = new Command("update")

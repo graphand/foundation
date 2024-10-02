@@ -1,12 +1,12 @@
-import { ValidatorTypes } from "@/enums/validator-types.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { ValidationError } from "@/lib/ValidationError.ts";
-import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.ts";
-import { DataModel } from "@/models/DataModel.ts";
-import { Environment } from "@/models/Environment.ts";
-import { Media } from "@/models/Media.ts";
-import { Model } from "@/lib/Model.ts";
-import { Adapter, Field, FieldNested, ModelDefinition } from "./index.ts";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { ValidationError } from "@/lib/ValidationError.js";
+import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.js";
+import { DataModel } from "@/models/DataModel.js";
+import { Environment } from "@/models/Environment.js";
+import { Media } from "@/models/Media.js";
+import { Model } from "@/lib/Model.js";
+import { Adapter, Field, FieldNested, ModelDefinition } from "./index.js";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {

@@ -1,8 +1,8 @@
-import { Model } from "@/lib/Model.ts";
-import { modelDecorator } from "@/lib/modelDecorator.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { ModelDefinition } from "@/types/index.ts";
-import { Job } from "./Job.ts";
+import { Model } from "@/lib/Model.js";
+import { modelDecorator } from "@/lib/modelDecorator.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { ModelDefinition } from "@/types/index.js";
+import { Job } from "./Job.js";
 
 @modelDecorator()
 export class Snapshot extends Model {

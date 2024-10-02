@@ -1,11 +1,11 @@
-import { FieldTypes } from "@/enums/field-types.ts";
-import { FieldOptions, FieldSerializerInput } from "@/types/index.ts";
-import { Field } from "@/lib/Field.ts";
-import { Model } from "@/lib/Model.ts";
-import { getFieldFromDefinition, getValidationValues, isObjectId } from "@/lib/utils.ts";
-import { CoreError } from "@/lib/CoreError.ts";
-import { PromiseModelList } from "@/lib/PromiseModelList.ts";
-import { ModelList } from "@/lib/ModelList.ts";
+import { FieldTypes } from "@/enums/field-types.js";
+import { FieldOptions, FieldSerializerInput } from "@/types/index.js";
+import { Field } from "@/lib/Field.js";
+import { Model } from "@/lib/Model.js";
+import { getFieldFromDefinition, getValidationValues, isObjectId } from "@/lib/utils.js";
+import { CoreError } from "@/lib/CoreError.js";
+import { PromiseModelList } from "@/lib/PromiseModelList.js";
+import { ModelList } from "@/lib/ModelList.js";
 
 export class FieldArray extends Field<FieldTypes.ARRAY> {
   validate: Field<FieldTypes.ARRAY>["validate"] = async ({ list }) => {

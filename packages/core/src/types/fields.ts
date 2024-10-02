@@ -1,8 +1,8 @@
-import { ValidatorDefinitionOmitField } from "@/types/validators.ts";
-import { FieldTypes } from "@/enums/field-types.ts";
-import { Model } from "@/lib/Model.ts";
-import { PromiseModel } from "@/lib/PromiseModel.ts";
-import { PromiseModelList } from "@/lib/PromiseModelList.ts";
+import { ValidatorDefinitionOmitField } from "@/types/validators.js";
+import { FieldTypes } from "@/enums/field-types.js";
+import { Model } from "@/lib/Model.js";
+import { PromiseModel } from "@/lib/PromiseModel.js";
+import { PromiseModelList } from "@/lib/PromiseModelList.js";
 import {
   JSONTypeObject,
   ModelInstance,
@@ -12,7 +12,7 @@ import {
   ModelDefinition,
   FieldsDefinition,
   ValidatorsDefinition,
-} from "../index.ts";
+} from "../index.js";
 
 export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
   [FieldTypes.ARRAY]: {

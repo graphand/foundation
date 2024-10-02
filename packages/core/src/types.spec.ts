@@ -1,9 +1,9 @@
-import { Model } from "@/lib/Model.ts";
-import { FieldTypes } from "./enums/field-types.ts";
-import { HookData, JSONSubtype, ModelDefinition, ModelJSON } from "@/types/index.ts";
-import { PromiseModel } from "./lib/PromiseModel.ts";
-import { Account } from "./models/Account.ts";
-import { Role } from "./models/Role.ts";
+import { Model } from "@/lib/Model.js";
+import { FieldTypes } from "./enums/field-types.js";
+import { HookData, JSONSubtype, ModelDefinition, ModelJSON } from "@/types/index.js";
+import { PromiseModel } from "./lib/PromiseModel.js";
+import { Account } from "./models/Account.js";
+import { Role } from "./models/Role.js";
 
 class CustomModel extends Model {
   static slug = "customModel";

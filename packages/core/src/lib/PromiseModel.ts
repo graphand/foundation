@@ -1,7 +1,7 @@
-import { Model } from "@/lib/Model.ts";
-import { JSONQuery, ModelInstance } from "@/types/index.ts";
-import { Thenable } from "@/lib/Thenable.ts";
-import { isObjectId } from "@/lib/utils.ts";
+import { Model } from "@/lib/Model.js";
+import { JSONQuery, ModelInstance } from "@/types/index.js";
+import { Thenable } from "@/lib/Thenable.js";
+import { isObjectId } from "@/lib/utils.js";
 
 /**
  * PromiseModel is a class that extends the native Promise class.
