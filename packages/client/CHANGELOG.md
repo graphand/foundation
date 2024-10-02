@@ -1,5 +1,13 @@
 # @graphand/client
 
+## 1.1.2
+
+### Patch Changes
+
+- Clean code & replacing .ts imports with .js extension
+- Updated dependencies
+  - @graphand/core@1.1.3
+
 ## 1.1.1
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @graphand/cli
 
+## 1.1.2
+
+### Patch Changes
+
+- Clean code & replacing .ts imports with .js extension
+- Updated dependencies
+  - @graphand/client@1.1.2
+  - @graphand/client-module-auth@1.1.2
+
 ## 1.1.1
 
 ### Patch Changes

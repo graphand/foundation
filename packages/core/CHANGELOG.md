@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.1.3
+
+### Patch Changes
+
+- Clean code & replacing .ts imports with .js extension
+
 ## 1.1.2
 
 ### Patch Changes

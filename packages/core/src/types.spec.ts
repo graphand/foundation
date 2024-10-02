@@ -16,7 +16,7 @@ class CustomModel extends Model {
   } satisfies ModelDefinition;
 }
 
-declare module "./types/index.ts" {
+declare module "./types/index.js" {
   export interface RefModelsMap {
     customModel: typeof CustomModel;
   }

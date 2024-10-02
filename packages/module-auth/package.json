@@ -1,6 +1,6 @@
 {
   "name": "@graphand/client-module-auth",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": false,
   "type": "module",
   "exports": {
@@ -34,6 +34,6 @@
   },
   "dependencies": {
     "@graphand/client": "*",
-    "@graphand/core": "^1.1.1"
+    "@graphand/core": "^1.1.3"
   }
 }
