@@ -136,39 +136,60 @@ export const commandGet = new Command("get")
       if (output === "table") {
         const maxWidth = Number(options.maxWidth || 70);
 
-        // Compute the natural widths for each column based on the maximum cell content width
-        const naturalWidths = fields.map(field => {
-          const values = list.map(item => String(item.get(field, "json")));
-          const maxContentWidth = Math.max(...values.map(value => value.length), field.length);
-          return maxContentWidth;
+        // Calcul des largeurs naturelles pour chaque colonne en fonction de la largeur maximale du contenu des cellules
+        const naturalWidths = fields.map(fieldPath => {
+          const field = getFieldsPathsFromPath(model, String(fieldPath)).pop()?.field;
+          const isIdField = field && field.type === FieldTypes.ID;
+
+          if (isIdField) {
+            // Pour les champs de type ID, fixer la largeur à 24
+            return 24;
+          } else {
+            const values = list.map(item => String(item.get(fieldPath, "json")));
+            const maxContentWidth = Math.max(...values.map(value => value.length), fieldPath.length);
+            return maxContentWidth;
+          }
         });
 
-        // Create a copy of naturalWidths to adjust
+        // Tableau pour suivre quels champs sont de type ID
+        const isIdFieldArray = fields.map(fieldPath => {
+          const field = getFieldsPathsFromPath(model, String(fieldPath)).pop()?.field;
+          return field && field.type === FieldTypes.ID;
+        });
+
+        // Copie de naturalWidths pour ajustement
         let columnWidths = [...naturalWidths];
 
         const totalNaturalWidth = naturalWidths.reduce((sum, width) => sum + width, 0);
 
         if (totalNaturalWidth > maxWidth) {
-          // Calculate how much we need to reduce the widths
+          // Calcul de la réduction nécessaire des largeurs
           const widthToReduce = totalNaturalWidth - maxWidth;
 
-          // Create an array of column indices sorted by natural width (descending)
+          // Indices des colonnes triés par largeur naturelle décroissante
           const sortedIndices = naturalWidths
             .map((width, index) => ({ width, index }))
             .sort((a, b) => b.width - a.width)
             .map(obj => obj.index);
 
-          // Distribute the reduction among the widest columns
+          // Distribution de la réduction parmi les colonnes les plus larges
           let remainingReduction = widthToReduce;
 
           for (const idx of sortedIndices) {
-            if (remainingReduction <= 0) break;
+            if (remainingReduction <= 0) {
+              break;
+            }
+
+            if (isIdFieldArray[idx]) {
+              // Ignorer les champs de type ID
+              continue;
+            }
 
             columnWidths[idx] ??= 0;
 
-            // Set a minimum column width (e.g., 30% of natural width or at least 5)
+            // Définir une largeur minimale pour la colonne
             const minColWidth = naturalWidths[idx] ? Math.max(5, naturalWidths[idx] * 0.3) : 5;
-            const maxReduction = (columnWidths[idx] as number) - minColWidth;
+            const maxReduction = columnWidths[idx] - minColWidth;
 
             if (maxReduction > 0) {
               const reduction = Math.min(maxReduction, remainingReduction);
@@ -177,17 +198,25 @@ export const commandGet = new Command("get")
             }
           }
 
-          // If after distributing the reduction we still have remaining reduction,
-          // we need to reduce all columns proportionally
+          // Si une réduction supplémentaire est nécessaire, réduire proportionnellement les colonnes restantes
           if (remainingReduction > 0) {
-            const totalAdjustableWidth = columnWidths.reduce((sum, width) => sum + width, 0);
+            const totalAdjustableWidth = columnWidths.reduce(
+              (sum, width, idx) => sum + (isIdFieldArray[idx] ? 0 : width),
+              0,
+            );
             const scalingFactor = (totalAdjustableWidth - remainingReduction) / totalAdjustableWidth;
 
-            columnWidths = columnWidths.map(width => Math.max(5, Math.floor(width * scalingFactor)));
+            columnWidths = columnWidths.map((width, idx) => {
+              if (isIdFieldArray[idx]) {
+                return width; // Conserver la largeur fixe pour les champs ID
+              } else {
+                return Math.max(5, Math.floor(width * scalingFactor));
+              }
+            });
           }
         }
 
-        // Ensure column widths are integers
+        // S'assurer que les largeurs de colonnes sont des entiers
         columnWidths = columnWidths.map(Math.floor);
 
         const table = new Table({

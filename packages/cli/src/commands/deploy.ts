@@ -96,7 +96,7 @@ export const commandDeploy = new Command("deploy")
         },
         spin: {
           spinner,
-          message: `Deployment job is running ...`,
+          message: `Deployment job is active ...`,
           messageSuccess: `Deployment job finished successfully. Function ${func?._id} is now ready!`,
           messageFail: "",
         },

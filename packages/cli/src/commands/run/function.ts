@@ -30,16 +30,30 @@ export const commandRunFunction = new Command("function")
 
         const message = `Executed function ${chalk.cyan(func.name)} in ${duration}ms with status ${res.status}`;
 
-        if (res.ok) {
-          spinner.succeed(message);
+        if (!res.ok) {
+          spinner.fail(message);
+          return;
+        }
 
+        spinner.succeed(message);
+
+        const contentType = res.headers.get("content-type");
+
+        if (contentType?.includes("application/json")) {
           const json = await res.json();
-
           console.log("");
           console.log(colorizeJson(json));
-        } else {
-          spinner.fail(message);
+          return;
         }
+
+        if (contentType?.includes("text/plain")) {
+          const text = await res.text();
+          console.log("");
+          console.log(text);
+          return;
+        }
+
+        console.warn(`Unknown content type ${contentType}`);
       };
 
       spinner.text = `Executing function ${chalk.cyan(func.name)} (${chalk.bold(func._id)}) ...`;

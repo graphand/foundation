@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.1.3
+
+### Patch Changes
+
+- Improve table display on get command
+
 ## 1.1.2
 
 ### Patch Changes

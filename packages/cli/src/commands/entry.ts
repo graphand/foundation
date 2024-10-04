@@ -14,7 +14,6 @@ export const commandEntry = new Command("entry").description("Fetch the entry po
 
     spinner.succeed("Fetched entry point successfully: " + chalk.cyan(client.getBaseUrl()));
 
-    console.log("");
-    console.log(JSON.stringify(json.data, null, 2));
+    return json.data;
   });
 });
