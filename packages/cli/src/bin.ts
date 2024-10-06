@@ -22,6 +22,7 @@ import { commandLogs } from "./commands/logs/index.js";
 import { commandSrc } from "./commands/src.js";
 import { commandModel } from "./commands/model.js";
 import { commandGdx } from "./commands/gdx/index.js";
+import { commandGen } from "./commands/gen/index.js";
 
 program
   .version(version)
@@ -48,6 +49,7 @@ program.addCommand(commandLogs);
 program.addCommand(commandSrc);
 program.addCommand(commandModel);
 program.addCommand(commandGdx);
+program.addCommand(commandGen);
 
 program.hook("postAction", async () => {
   const client = globalThis.client;

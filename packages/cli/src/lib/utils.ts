@@ -143,7 +143,7 @@ export const getGdxPath = async (): Promise<string | null> => {
     }
   }
 
-  const gdxFiles = ["graphand.gdx.js", "graphand.gdx.json"];
+  const gdxFiles = ["graphand.gdx.ts", "graphand.gdx.js", "graphand.gdx.json"];
 
   for (const file of gdxFiles) {
     const configPath = path.join(process.cwd(), file);
@@ -784,4 +784,57 @@ export const colorizeJson = (obj: JSONType) => {
   } catch (error) {
     console.error(chalk.red("Error parsing JSON:"), error);
   }
+};
+
+/**
+ * Checks if the current project has TypeScript enabled.
+ * @returns {boolean} - Returns true if TypeScript is enabled, false otherwise.
+ */
+export const isTypescriptProject = () => {
+  const startDir = process.cwd();
+
+  // Helper function to find a file in the directory tree
+  function findUp(filename: string, dir: string) {
+    const root = path.parse(dir).root;
+    let currentDir = dir;
+
+    while (currentDir && currentDir !== root) {
+      const filePath = path.join(currentDir, filename);
+      if (fs.existsSync(filePath)) {
+        return filePath;
+      }
+      currentDir = path.dirname(currentDir);
+    }
+
+    // Check the root directory as well
+    const filePath = path.join(root, filename);
+    if (fs.existsSync(filePath)) {
+      return filePath;
+    }
+
+    return null;
+  }
+
+  // Check for tsconfig.json
+  const tsconfigPath = findUp("tsconfig.json", startDir);
+  if (tsconfigPath) {
+    return true;
+  }
+
+  // Check for TypeScript in package.json dependencies
+  const packageJsonPath = findUp("package.json", startDir);
+  if (packageJsonPath) {
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+      const deps = packageJson.dependencies || {};
+      const devDeps = packageJson.devDependencies || {};
+      if ("typescript" in deps || "typescript" in devDeps) {
+        return true;
+      }
+    } catch (error) {
+      // Ignore JSON parsing errors
+    }
+  }
+
+  return false;
 };
