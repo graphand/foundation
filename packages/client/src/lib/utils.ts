@@ -1,5 +1,6 @@
 import {
   Field,
+  FieldTypes,
   JSONQuery,
   Model,
   ModelInstance,
@@ -10,6 +11,7 @@ import {
   ValidationFieldError,
   ValidationValidatorError,
   Validator,
+  ValidatorTypes,
 } from "@graphand/core";
 import { ModuleConstructor, ModuleWithConfig } from "@/types.js";
 import { ClientError } from "./ClientError.js";
@@ -60,7 +62,7 @@ export const parseErrorFromJSON = (json: any, res?: Response) => {
     const fields = json.reason?.fields?.map((f: any) => {
       const field = new Field(
         {
-          type: f.field.type,
+          type: f.field.type as FieldTypes,
           options: f.field.options,
         },
         f.field.path,
@@ -73,7 +75,7 @@ export const parseErrorFromJSON = (json: any, res?: Response) => {
     const validators = json.reason?.validators?.map((v: any) => {
       const validator = new Validator(
         {
-          type: v.validator.type,
+          type: v.validator.type as ValidatorTypes,
           options: v.validator.options,
         },
         v.validator.path,
