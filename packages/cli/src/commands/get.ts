@@ -25,8 +25,8 @@ export const commandGet = new Command("get")
   .option("-w --max-width <maxWidth>", "The max width of the output table (default: 70)")
   .option("-1", "Sort by -_id")
   .option("--last", "Get the last created item")
-  .action((modelName, key, options) =>
-    withSpinner(async spinner => {
+  .action(async (modelName, key, options) => {
+    await withSpinner(async spinner => {
       const client = await getClient();
       const model = client.getModel(String(modelName));
       let list: ModelList<typeof model> | null;
@@ -270,5 +270,5 @@ export const commandGet = new Command("get")
       }
 
       throw new Error(`Invalid output format ${output}`);
-    }),
-  );
+    });
+  });

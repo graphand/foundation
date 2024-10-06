@@ -8,8 +8,8 @@ export const commandUpdate = new Command("update")
   .arguments("<modelName> [key]")
   .option("-q --query <query>", "URL encoded JSONQuery object")
   .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", collectSetter)
-  .action((modelName, key, options) =>
-    withSpinner(async spinner => {
+  .action(async (modelName, key, options) => {
+    await withSpinner(async spinner => {
       const client = await getClient({ realtime: true });
       const model = client.getModel(String(modelName));
 
@@ -56,5 +56,5 @@ export const commandUpdate = new Command("update")
       spinner.succeed(`Updated ${updated.length} instance(s) of ${model.slug} successfully`);
 
       return updated.map(i => i.toJSON());
-    }),
-  );
+    });
+  });

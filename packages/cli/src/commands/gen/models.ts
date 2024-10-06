@@ -3,6 +3,7 @@ import { DataModel } from "@graphand/core";
 import { Command } from "commander";
 import fs from "fs";
 import path from "path";
+import { execSync } from "child_process";
 
 export const commandGenModels = new Command("models")
   .description("Gen models")
@@ -21,7 +22,8 @@ export const commandGenModels = new Command("models")
         throw new Error("Out dir is required");
       }
 
-      const extension = isTypescriptProject() ? "ts" : "js";
+      const isTs = isTypescriptProject();
+      const extension = isTs ? "ts" : "js";
 
       const outDir = path.resolve(options.outDir);
 
@@ -39,20 +41,32 @@ export const commandGenModels = new Command("models")
 
         spinner.text = `Generating ${filename} ...`;
 
+        const lineImport = isTs
+          ? `import { Model, ModelDefinition } from "@graphand/core"`
+          : `import { Model } from "@graphand/core"`;
+
+        const lineSlug = isTs ? `static slug = "${datamodel.slug}" as const` : `static slug = "${datamodel.slug}"`;
+
+        const lineDefinition = isTs
+          ? `static definition = ${JSON.stringify(datamodel.definition)} satisfies ModelDefinition`
+          : `static definition = ${JSON.stringify(datamodel.definition)}`;
+
         const content = `
-import { DataModel } from "@graphand/core";
+          ${lineImport}
 
-class ${datamodel.name} extends DataModel {
-  static __name = "Data<${datamodel.name}>";
-  static slug = "${datamodel.slug}";
-  static definition = ${JSON.stringify(datamodel.definition)};
-}
+          class ${datamodel.name} extends Model {
+            static __name = "Data<${datamodel.name}>";
+            ${lineSlug}
+            ${lineDefinition}
+          }
 
-export default ${datamodel.name};
-      `;
+          export default ${datamodel.name};
+        `.trim();
 
         const filePath = path.join(outDir, filename);
-        fs.writeFileSync(filePath, content.trim());
+        fs.writeFileSync(filePath, content);
+
+        execSync(`npx prettier --write ${filePath}`);
       }
 
       spinner.text = `Generation successful`;

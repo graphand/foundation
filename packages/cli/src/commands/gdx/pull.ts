@@ -10,8 +10,8 @@ export const commandGdxPull = new Command("pull")
   .option("-q --query <query>", "The gdx query object")
   .option("-s --include-system-fields", "Include system fields")
   .option("-o --output <output>", "Output (json, file)")
-  .action(options =>
-    withSpinner(async () => {
+  .action(async options => {
+    await withSpinner(async () => {
       const client = await getClient();
 
       let query = qs.parse(options.query || "") as JSONTypeObject;
@@ -58,5 +58,5 @@ export const commandGdxPull = new Command("pull")
       }
 
       throw new Error(`Invalid output ${output}`);
-    }),
-  );
+    });
+  });

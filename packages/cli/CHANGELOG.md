@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.1.4
+
+### Patch Changes
+
+- improve models generation
+
 ## 1.1.3
 
 ### Patch Changes

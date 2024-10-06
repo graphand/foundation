@@ -12,7 +12,7 @@ export const commandSrc = new Command("src")
   .option("-f --fit <fit>", "Fit of the thumbnail. cover | contain | fill | inside | outside")
   .option("-o --open", "Open the media in the browser")
   .action(async (key, options) => {
-    return withSpinner(async spinner => {
+    await withSpinner(async spinner => {
       const client = await getClient();
 
       const media = await client.getModel(Media).get(key);

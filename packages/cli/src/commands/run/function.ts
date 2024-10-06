@@ -12,8 +12,8 @@ export const commandRunFunction = new Command("function")
   .option("-p --params <params>", "URL encoded params options")
   .option("-q --query <query>", "URL encoded query options")
   .option("-d --data <data>", "URL encoded data options")
-  .action((functionName, options) =>
-    withSpinner(async spinner => {
+  .action(async (functionName, options) => {
+    await withSpinner(async spinner => {
       const client = await getClient();
 
       const func = await client.getModel(Function).get(functionName);
@@ -81,5 +81,5 @@ export const commandRunFunction = new Command("function")
 
         return JSON.stringify(e, null, 2);
       }
-    }),
-  );
+    });
+  });

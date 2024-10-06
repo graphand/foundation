@@ -47,8 +47,8 @@ export const commandExecute = new Command("execute")
   .option("-q --query <query>", "URL encoded query options")
   .option("-d --data <data>", "URL encoded data options")
   .description("Execute a Graphand API endpoint")
-  .action((controllerName, options) =>
-    withSpinner(async spinner => {
+  .action(async (controllerName, options) => {
+    await withSpinner(async spinner => {
       if (!controllerName) {
         throw new Error("Controller name is required");
       }
@@ -107,5 +107,5 @@ export const commandExecute = new Command("execute")
         console.log("");
         console.log(JSON.stringify(e, null, 2));
       }
-    }),
-  );
+    });
+  });

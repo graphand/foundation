@@ -7,8 +7,8 @@ export const commandCount = new Command("count")
   .description("Count a model")
   .arguments("<modelName>]")
   .option("-q --query <query>", "URL encoded JSONQuery object")
-  .action((modelName, options) =>
-    withSpinner(async spinner => {
+  .action(async (modelName, options) => {
+    await withSpinner(async spinner => {
       const client = await getClient();
       const model = client.getModel(String(modelName));
 
@@ -32,5 +32,5 @@ export const commandCount = new Command("count")
       spinner.succeed();
 
       console.log(count);
-    }),
-  );
+    });
+  });

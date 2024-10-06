@@ -11,8 +11,8 @@ export const commandDelete = new Command("delete")
   .option("-o --output <output>", "Output format (json, table)")
   .option("-1", "Sort by -_id")
   .option("--last", "Get the last created item")
-  .action((modelName, key, options) =>
-    withSpinner(async spinner => {
+  .action(async (modelName, key, options) => {
+    await withSpinner(async spinner => {
       const client = await getClient();
       const model = client.getModel(String(modelName));
       let deleted: Array<string> = [];
@@ -48,5 +48,5 @@ export const commandDelete = new Command("delete")
           deleted.length > 1 ? "s" : ""
         } processed in ${end - start}ms`,
       );
-    }),
-  );
+    });
+  });

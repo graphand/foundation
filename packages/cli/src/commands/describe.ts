@@ -10,7 +10,7 @@ export const commandDescribe = new Command("describe")
   .arguments("<modelName> [key]")
   .option("-q --query <query>", "URL encoded JSONQuery object")
   .action(async (modelName, key, options) => {
-    return withSpinner(async spinner => {
+    await withSpinner(async spinner => {
       const client = await getClient();
       const model = client.getModel(String(modelName));
       let instance: ModelInstance<typeof model>;

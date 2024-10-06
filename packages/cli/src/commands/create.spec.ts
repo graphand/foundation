@@ -62,13 +62,14 @@ describe("Create Command", () => {
     }
   });
 
-  it("should ...", async () => {
+  it("should create an entry without set or file options", async () => {
     await commandCreate.parseAsync(["node", "create", datamodel.slug]);
 
     const opts = commandCreate.opts();
 
     expect(opts.set).toBeUndefined();
     expect(opts.file).toBeUndefined();
+    expect(spyFetch).toHaveBeenCalledTimes(2); // Once for datamodels/query, once for create
   });
 
   it("should parse setters as object", async () => {
@@ -79,7 +80,7 @@ describe("Create Command", () => {
     expect(opts).toMatchObject({ set: { foo: { bar: "baz" } } });
   });
 
-  it("should ...", async () => {
+  it("should handle file content as base64 when using @fileBase64", async () => {
     const spy1 = vi.spyOn(path, "resolve").mockReturnValue("/mocked/path/test.txt");
     const spy2 = vi.spyOn(fs, "existsSync").mockReturnValue(true);
     const spy3 = vi.spyOn(fs, "readFileSync").mockReturnValue("test");
@@ -102,7 +103,7 @@ describe("Create Command", () => {
     spy3.mockRestore();
   });
 
-  it("should ...", async () => {
+  it("should handle file content as text when using @fileText", async () => {
     const spy1 = vi.spyOn(path, "resolve").mockReturnValue("/mocked/path/test.txt");
     const spy2 = vi.spyOn(fs, "existsSync").mockReturnValue(true);
     const spy3 = vi.spyOn(fs, "readFileSync").mockReturnValue("test");
@@ -125,7 +126,7 @@ describe("Create Command", () => {
     spy3.mockRestore();
   });
 
-  it("should ...", async () => {
+  it("should handle stdin input when using @stdin", async () => {
     const spyStdin = vi.spyOn(process.stdin, "read").mockImplementation(() => "test");
 
     await commandCreate.parseAsync(["node", "create", datamodel.slug, "--set", "test=@stdin"]);
@@ -178,7 +179,7 @@ describe("Create Command", () => {
     spy2.mockRestore();
   });
 
-  it("should parse file", async () => {
+  it("should parse file and create File object", async () => {
     const spy1 = vi.spyOn(path, "resolve").mockReturnValue("/mocked/path/test.txt");
     const spy2 = vi.spyOn(fs, "existsSync").mockReturnValue(true);
     const spy3 = vi.spyOn(fs, "readFileSync").mockReturnValue("test");
@@ -216,7 +217,7 @@ describe("Create Command", () => {
     spy4.mockRestore();
   });
 
-  it("should ...", async () => {
+  it("should create an entry and display success message", async () => {
     const spinner = ora();
     const spySucceed = vi.spyOn(spinner, "succeed");
     const spyFail = vi.spyOn(spinner, "fail");
@@ -272,5 +273,33 @@ describe("Create Command", () => {
     expect(formData).toBeInstanceOf(FormData);
 
     expect(keys).toEqual(["_json", "file"]);
+  });
+
+  it("should handle multiple file uploads", async () => {
+    const spinner = ora();
+    const client = await getClient({ realtime: true });
+    await client.init();
+    const spyExecute = vi.spyOn(client, "execute");
+
+    await _create({
+      client,
+      modelName: datamodel.slug,
+      skipRealtimeUpload: true,
+      set: { title: faker.lorem.word() },
+      spinner,
+      file: {
+        file1: new File(["test1"], "test1.txt", { type: "text/plain" }),
+        file2: new File(["test2"], "test2.txt", { type: "text/plain" }),
+      },
+    });
+
+    const createCall = spyExecute.mock.calls.find(c => JSON.stringify(c[0]) === JSON.stringify(controllerModelCreate));
+    expect(createCall).toBeDefined();
+
+    const formData = createCall?.[1]?.ctx?.formData;
+    expect(formData).toBeInstanceOf(FormData);
+
+    const keys = Array.from(formData?.keys() ?? []);
+    expect(keys).toEqual(["_json", "file1", "file2"]);
   });
 });

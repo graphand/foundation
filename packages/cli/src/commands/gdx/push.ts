@@ -8,8 +8,8 @@ export const commandGdxPush = new Command("push")
   .option("--clean", "Clean")
   .option("--confirm", "Confirm")
   .option("-v --verbose", "Verbose")
-  .action(options =>
-    withSpinner(async () => {
+  .action(async options => {
+    await withSpinner(async () => {
       const gdx = await loadGdx();
 
       const client = await getClient();
@@ -59,5 +59,5 @@ export const commandGdxPush = new Command("push")
       console.log("");
 
       lines.forEach(line => console.log(chalk.green(line)));
-    }),
-  );
+    });
+  });
