@@ -27,8 +27,12 @@ export type ValidatorOptionsMapOmitField = {
 export type ValidatorOptions<T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes> =
   T extends keyof ValidatorOptionsMap ? ValidatorOptionsMap[T] : Record<string, never>;
 
-export type ValidatorDefinition<T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes> = {
-  type: T;
+export type ValidatorDefinitions = {
+  [K in ValidatorTypes]: ValidatorDefinition<K>;
+}[ValidatorTypes];
+
+export type ValidatorDefinition<T extends ValidatorTypes = ValidatorTypes> = {
+  type: T | `${T}`;
   options?: T extends keyof ValidatorOptionsMap ? ValidatorOptionsMap[T] : never;
 };
 

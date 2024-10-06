@@ -14,9 +14,9 @@ import {
   ValidatorsDefinition,
 } from "../index.js";
 
-export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
+export type FieldOptionsMap = {
   [FieldTypes.ARRAY]: {
-    items: FieldDefinition<T>;
+    items: FieldDefinitions;
     validators?: Array<ValidatorDefinitionOmitField>;
     distinct?: boolean;
   };
@@ -33,7 +33,7 @@ export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
   };
   [FieldTypes.NESTED]: {
     default?: JSONTypeObject;
-    defaultField?: FieldDefinition;
+    defaultField?: FieldDefinitions;
     dependsOn?: string;
     fields?: FieldsDefinition;
     strict?: boolean;
@@ -48,8 +48,12 @@ export type FieldOptions<T extends FieldTypes = FieldTypes> = T extends keyof Fi
   ? FieldOptionsMap[T]
   : never;
 
+export type FieldDefinitions = {
+  [K in FieldTypes]: FieldDefinition<K>;
+}[FieldTypes];
+
 export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
-  type: T;
+  type: T | `${T}`;
   options?: FieldOptions<T>;
   _ts?: any;
   _tsModel?: typeof Model;
@@ -63,7 +67,7 @@ export interface SystemFields<M extends typeof Model> {
   _updatedBy: { type: FieldTypes.IDENTITY };
 }
 
-export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes> = FieldDefinition> {
+export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition> {
   json: {
     [FieldTypes.ID]: string;
     [FieldTypes.IDENTITY]: string;
@@ -137,11 +141,18 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes> = Fie
   validation: {};
 }
 
+// type EnumLiteralType<T> = T extends { [k: string]: infer U } ? U : never;
+type StringToFieldType<T extends string> = T extends `${infer U extends FieldTypes}` ? U : never;
+
 export type InferFieldType<D extends FieldDefinition, F extends SerializerFormat> = "_ts" extends keyof D
   ? D["_ts"]
   : F extends keyof SerializerFieldsMap<D>
   ? D["type"] extends keyof SerializerFieldsMap<D>[F]
     ? SerializerFieldsMap<D>[F][D["type"]]
+    : StringToFieldType<D["type"]> extends keyof SerializerFieldsMap<D>[F]
+    ? SerializerFieldsMap<D>[F][StringToFieldType<D["type"]>]
+    : `${D["type"]}` extends keyof SerializerFieldsMap<D>[F]
+    ? SerializerFieldsMap<D>[F][`${D["type"]}`]
     : unknown
   : unknown;
 

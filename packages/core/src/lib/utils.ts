@@ -501,7 +501,7 @@ export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTy
     return adapter.cacheFieldsMap.get(cacheKey) as Field<T>;
   }
 
-  const FieldClass = getFieldClass(def.type, adapter) as typeof Field<T>;
+  const FieldClass = getFieldClass(def.type as FieldTypes, adapter) as typeof Field<T>;
 
   const field = new FieldClass(def, path);
 
@@ -539,7 +539,7 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
   //   return adapter.cacheValidatorsMap.get(cacheKey);
   // }
 
-  const ValidatorClass = getValidatorClass(def.type, adapter) as typeof Validator<T>;
+  const ValidatorClass = getValidatorClass(def.type as ValidatorTypes, adapter) as typeof Validator<T>;
 
   const validator = new ValidatorClass(def, path);
 

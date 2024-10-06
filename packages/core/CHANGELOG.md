@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.1.4
+
+### Patch Changes
+
+- improve typescript integration for ModelDefinition
+
 ## 1.1.3
 
 ### Patch Changes
