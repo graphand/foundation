@@ -1,5 +1,11 @@
 # @graphand/client
 
+## 1.1.3
+
+### Patch Changes
+
+- upgrade core version
+
 ## 1.1.2
 
 ### Patch Changes

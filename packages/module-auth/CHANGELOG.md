@@ -1,5 +1,13 @@
 # @graphand/client-module-auth
 
+## 1.1.3
+
+### Patch Changes
+
+- upgrade core version
+- Updated dependencies
+  - @graphand/client@1.1.3
+
 ## 1.1.2
 
 ### Patch Changes
