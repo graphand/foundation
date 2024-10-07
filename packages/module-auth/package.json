@@ -27,6 +27,6 @@
   },
   "dependencies": {
     "@graphand/client": "*",
-    "@graphand/core": "^1.1.4"
+    "@graphand/core": "^1.1.5"
   }
 }
