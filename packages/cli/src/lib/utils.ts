@@ -7,7 +7,7 @@ import Conf from "conf";
 import { fileURLToPath } from "url";
 import { transformSync } from "esbuild";
 import { program } from "commander";
-import { Client, ModuleConstructor, ClientModules, ClientOptions } from "@graphand/client";
+import { Client, ClientModules, ClientOptions } from "@graphand/client";
 import { ModuleAuth } from "@graphand/client-module-auth";
 import { ModuleRealtime } from "@graphand/client-module-realtime";
 import open from "open";
