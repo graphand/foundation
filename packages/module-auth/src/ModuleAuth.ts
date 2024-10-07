@@ -35,9 +35,10 @@ class MemoryStorage implements AuthStorage {
 type ModuleAuthOptions = {
   autoRefreshToken?: boolean;
   storage?: AuthStorage;
+  storagePrefix?: string;
   handleRedirect?: (_url: string) => void;
   handleResult?: {
-    url: string | URL;
+    url: string | URL | Promise<string | URL>;
     onSuccess?: (_url: URL) => void;
     onError?: (_error: Error) => void;
   };
@@ -81,7 +82,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     if (this.conf.handleResult) {
       const { url, onSuccess, onError } = this.conf.handleResult;
       try {
-        const newUrl = await this.handleResult(url);
+        const newUrl = await this.handleResult(await url);
         onSuccess?.(newUrl);
         return;
       } catch (e) {
@@ -89,7 +90,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       }
     }
 
-    const accessToken = await this.storage?.getItem("accessToken");
+    const accessToken = await this.storage?.getItem(this.getStorageKey("accessToken"));
     if (accessToken) {
       client.setOptions({ accessToken });
     }
@@ -97,12 +98,26 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
 
   async [symbolModuleDestroy]() {}
 
+  getStoragePrefix() {
+    if (this.conf.storagePrefix) {
+      return this.conf.storagePrefix;
+    }
+
+    const client = this.client();
+    return client.options.project ? `graphand-auth:${client.options.project}` : "graphand-auth";
+  }
+
+  getStorageKey(key: string) {
+    const prefix = this.getStoragePrefix();
+    return `${prefix}:${key}`;
+  }
+
   async setTokens(accessToken: string, refreshToken: string) {
     this.client().setOptions({ accessToken });
 
     if (this.storage) {
-      await this.storage.setItem("accessToken", accessToken);
-      await this.storage.setItem("refreshToken", refreshToken);
+      await this.storage.setItem(this.getStorageKey("accessToken"), accessToken);
+      await this.storage.setItem(this.getStorageKey("refreshToken"), refreshToken);
     }
   }
 
@@ -198,12 +213,12 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       throw new Error("No storage available");
     }
 
-    const refreshToken = await this.storage.getItem("refreshToken");
+    const refreshToken = await this.storage.getItem(this.getStorageKey("refreshToken"));
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
 
-    const accessToken = await this.storage.getItem("accessToken");
+    const accessToken = await this.storage.getItem(this.getStorageKey("accessToken"));
     if (!accessToken) {
       throw new Error("No access token available");
     }
@@ -266,8 +281,8 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     this.client().setOptions({ accessToken: undefined });
 
     if (this.storage) {
-      await this.storage.removeItem("accessToken");
-      await this.storage.removeItem("refreshToken");
+      await this.storage.removeItem(this.getStorageKey("accessToken"));
+      await this.storage.removeItem(this.getStorageKey("refreshToken"));
     }
   }
 }
