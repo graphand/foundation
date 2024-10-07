@@ -13,29 +13,16 @@ import type { FieldDefinition, InferModelDef, ModelJSON, SerializerFieldsMap } f
 import type { ValidatorDefinition } from "@/types/validators.js";
 import type { TransactionCtx } from "./ctx.js";
 import type { Account } from "@/models/Account.js";
-import type { Aggregation } from "@/models/Aggregation.js";
-import type { AuthProvider } from "@/models/AuthProvider.js";
 import type { Connector } from "@/models/Connector.js";
 import type { DataModel } from "@/models/DataModel.js";
-import type { Environment } from "@/models/Environment.js";
-import type { Job } from "@/models/Job.js";
-import type { Key } from "@/models/Key.js";
-import type { Media } from "@/models/Media.js";
-import type { MergeRequest } from "@/models/MergeRequest.js";
-import type { MergeRequestEvent } from "@/models/MergeRequestEvent.js";
 import type { Role } from "@/models/Role.js";
-import type { Settings } from "@/models/Settings.js";
-import type { Token } from "@/models/Token.js";
-import type { Function } from "@/models/Function.js";
 import type { PromiseModelList } from "@/lib/PromiseModelList.js";
-import { Event } from "@/models/Event.js";
-import { Invitation } from "@/models/Invitation.js";
-import { Snapshot } from "@/models/Snapshot.js";
-import { EventSubscription } from "@/models/EventSubscription.js";
+import { ModelInstance } from "@/index.js";
 export * from "./helpers.js";
 export * from "./fields.js";
 export * from "./validators.js";
 export * from "./ctx.js";
+export * from "./models.js";
 
 export type Rule = NonNullable<ModelInstance<typeof Role>["rules"]>[number];
 export type FieldsRestriction = NonNullable<ModelInstance<typeof Role>["fieldsRestrictions"]>[number];
@@ -154,36 +141,6 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
 
 export type Module<T extends typeof Model = typeof Model> = (_model: T) => void;
 
-export interface RefModelsMap {
-  [Account.slug]: typeof Account;
-  [Aggregation.slug]: typeof Aggregation;
-  [AuthProvider.slug]: typeof AuthProvider;
-  [Connector.slug]: typeof Connector;
-  [DataModel.slug]: typeof DataModel;
-  [Environment.slug]: typeof Environment;
-  [Event.slug]: typeof Event;
-  [EventSubscription.slug]: typeof EventSubscription;
-  [Function.slug]: typeof Function;
-  [Invitation.slug]: typeof Invitation;
-  [Job.slug]: typeof Job;
-  [Key.slug]: typeof Key;
-  [Media.slug]: typeof Media;
-  [MergeRequest.slug]: typeof MergeRequest;
-  [MergeRequestEvent.slug]: typeof MergeRequestEvent;
-  [Role.slug]: typeof Role;
-  [Settings.slug]: typeof Settings;
-  [Snapshot.slug]: typeof Snapshot;
-  [Token.slug]: typeof Token;
-}
-
-export type DecodeRefModel<T extends string> = T extends keyof RefModelsMap ? RefModelsMap[T] : typeof Model;
-
-export type ModelInstance<M extends typeof Model = typeof Model> = (M["definition"] extends ModelDefinition
-  ? InstanceType<typeof Model>
-  : unknown) &
-  InstanceType<M> &
-  InferModelDef<M, "object">;
-
 export type HookPhase = "before" | "after";
 
 export type HookCallbackArgs<
@@ -214,23 +171,24 @@ export type Hook<
   adapterClass?: typeof Adapter | Array<typeof Adapter>;
 };
 
-export type Jsonified<T> = T extends Promise<ModelInstance<infer M>>
-  ? InferModelDef<M, "json">
-  : T extends Promise<ModelInstance<infer M> | null>
-  ? InferModelDef<M, "json"> | null
-  : T extends Promise<ModelInstance<infer M>[]>
-  ? InferModelDef<M, "json">[]
-  : T extends ModelInstance<infer M>
-  ? InferModelDef<M, "json">
-  : T extends PromiseModelList<infer M>
-  ? { rows: InferModelDef<M, "json">[]; count: number }
-  : T extends Promise<ModelList<infer M>>
-  ? { rows: InferModelDef<M, "json">[]; count: number }
-  : T extends ModelList<infer M>
-  ? { rows: InferModelDef<M, "json">[]; count: number }
-  : T extends Error
-  ? { message: string; code: string }
-  : Awaited<T>;
+export type Jsonified<T> =
+  T extends Promise<ModelInstance<infer M>>
+    ? InferModelDef<M, "json">
+    : T extends Promise<ModelInstance<infer M> | null>
+      ? InferModelDef<M, "json"> | null
+      : T extends Promise<ModelInstance<infer M>[]>
+        ? InferModelDef<M, "json">[]
+        : T extends ModelInstance<infer M>
+          ? InferModelDef<M, "json">
+          : T extends PromiseModelList<infer M>
+            ? { rows: InferModelDef<M, "json">[]; count: number }
+            : T extends Promise<ModelList<infer M>>
+              ? { rows: InferModelDef<M, "json">[]; count: number }
+              : T extends ModelList<infer M>
+                ? { rows: InferModelDef<M, "json">[]; count: number }
+                : T extends Error
+                  ? { message: string; code: string }
+                  : Awaited<T>;
 
 export type HookData<
   P extends HookPhase = HookPhase,
@@ -400,13 +358,6 @@ export type AuthProviderConfigurePayloadMap = {
 export type AuthProviderConfigurePayload<
   T extends AuthProviders = keyof AuthProviderConfigurePayloadMap | AuthProviders,
 > = T extends keyof AuthProviderConfigurePayloadMap ? AuthProviderConfigurePayloadMap[T] : Record<string, never>;
-
-export type ModelDefinition = Readonly<{
-  keyField?: Readonly<string>;
-  single?: Readonly<boolean>;
-  fields?: Readonly<FieldsDefinition>;
-  validators?: Readonly<ValidatorsDefinition>;
-}>;
 
 type ConnectorEventTypes = "up" | "down" | "reset" | "create" | "update" | "delete";
 export type ConnectorEvent<

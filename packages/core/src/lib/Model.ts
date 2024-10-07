@@ -12,7 +12,7 @@ import {
   Module,
   ModelInstance,
   UpdateObject,
-  RefModelsMap,
+  Models,
   InferModelDef,
   JSONTypeObject,
   SerializerFormat,
@@ -372,21 +372,15 @@ export class Model {
    */
   static getClass<
     M extends typeof Model | undefined = undefined,
-    T extends string | keyof RefModelsMap | ModelInstance<typeof DataModel> | typeof Model =
+    T extends string | keyof Models | ModelInstance<typeof DataModel> | typeof Model =
       | string
-      | keyof RefModelsMap
+      | keyof Models
       | ModelInstance<typeof DataModel>
       | typeof Model,
   >(
     input: T,
     adapterClass?: typeof Adapter,
-  ): M extends undefined
-    ? T extends typeof Model
-      ? T
-      : T extends keyof RefModelsMap
-      ? RefModelsMap[T]
-      : typeof Model
-    : M {
+  ): M extends undefined ? (T extends typeof Model ? T : T extends keyof Models ? Models[T] : typeof Model) : M {
     // Throw an error if the input is not provided
     if (!input) {
       throw new CoreError({

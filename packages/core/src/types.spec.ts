@@ -6,7 +6,7 @@ import { Account } from "./models/Account.js";
 import { Role } from "./models/Role.js";
 
 class CustomModel extends Model {
-  static slug = "customModel";
+  static slug = "customModel" as const;
   static definition = {
     fields: {
       field: {
@@ -16,9 +16,26 @@ class CustomModel extends Model {
   } satisfies ModelDefinition;
 }
 
+class CustomAccount extends Model {
+  static slug = "accounts" as const;
+  static definition = {
+    ...Account.definition,
+    fields: {
+      ...Account.definition.fields,
+      foo: {
+        type: FieldTypes.TEXT,
+      },
+      bar: {
+        type: "text",
+      },
+    },
+  } satisfies ModelDefinition;
+}
+
 declare module "./types/index.js" {
-  export interface RefModelsMap {
-    customModel: typeof CustomModel;
+  export interface ModelsOverrides {
+    [CustomModel.slug]: typeof CustomModel;
+    [CustomAccount.slug]: typeof CustomAccount;
   }
 }
 
@@ -38,6 +55,9 @@ describe("test types", () => {
             title: {
               type: FieldTypes.TEXT,
             },
+            subtitle: {
+              type: "text",
+            },
           },
         } satisfies ModelDefinition;
       }
@@ -45,9 +65,12 @@ describe("test types", () => {
       const i = CustomModel.hydrate();
 
       simulateTypeCheck<string | undefined>(i.title); // Check title found as a string
+      simulateTypeCheck<string | undefined>(i.subtitle); // Check subtitle found as a string
       simulateTypeCheck<string | undefined>(i._id); // Check _id found as a string
       simulateTypeCheck<NoType<typeof i.title, number>>(i.title); // Check title is not a number
-      simulateTypeCheck<NoProperty<typeof i, "subtitle">>(i); // Check subtitle is not found in i
+      simulateTypeCheck<NoType<typeof i.subtitle, number>>(i.subtitle); // Check subtitle is not a number
+
+      simulateTypeCheck<NoProperty<typeof i, "foo">>(i); // Check foo is not found in i
     });
 
     describe("test object", () => {
@@ -363,6 +386,22 @@ describe("test types", () => {
     const ModelFromSlug = Model.getClass("customModel");
 
     simulateTypeCheck<typeof CustomModel>(ModelFromSlug);
+
+    const i = ModelFromSlug.hydrate();
+
+    simulateTypeCheck<string | undefined>(i.field); // Check the field is a string
+  });
+
+  it("should ...", () => {
+    const ModelFromSlug = Model.getClass("accounts");
+
+    simulateTypeCheck<typeof CustomAccount>(ModelFromSlug);
+
+    const i = ModelFromSlug.hydrate();
+
+    simulateTypeCheck<PromiseModel<typeof Role> | undefined>(i.role); // Check the role has been inherited from Account
+    simulateTypeCheck<string | undefined>(i.get("role", "json"));
+    simulateTypeCheck<string | undefined>(i.foo); // Check the foo field is a string
   });
 
   it("should ...", () => {

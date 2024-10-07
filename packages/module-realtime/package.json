@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@graphand/client": "*",
-    "@graphand/core": "^1.1.5",
+    "@graphand/core": "^1.1.6",
     "socket.io-client": "^4.7.5"
   }
 }

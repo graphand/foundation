@@ -59,13 +59,17 @@ export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
   _tsModel?: typeof Model;
 };
 
-export interface SystemFields<M extends typeof Model> {
+export interface SystemFieldsBase {
   _id: { type: FieldTypes.ID };
   _createdAt: { type: FieldTypes.DATE };
   _createdBy: { type: FieldTypes.IDENTITY };
   _updatedAt: { type: FieldTypes.DATE };
   _updatedBy: { type: FieldTypes.IDENTITY };
 }
+
+export interface SystemFieldsOverrides<M extends typeof Model> {}
+
+export type SystemFields<M extends typeof Model> = Omit<SystemFieldsBase, keyof SystemFieldsOverrides<M>> & SystemFieldsOverrides<M>;
 
 export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition> {
   json: {
@@ -147,14 +151,14 @@ type StringToFieldType<T extends string> = T extends `${infer U extends FieldTyp
 export type InferFieldType<D extends FieldDefinition, F extends SerializerFormat> = "_ts" extends keyof D
   ? D["_ts"]
   : F extends keyof SerializerFieldsMap<D>
-  ? D["type"] extends keyof SerializerFieldsMap<D>[F]
-    ? SerializerFieldsMap<D>[F][D["type"]]
-    : StringToFieldType<D["type"]> extends keyof SerializerFieldsMap<D>[F]
-    ? SerializerFieldsMap<D>[F][StringToFieldType<D["type"]>]
-    : `${D["type"]}` extends keyof SerializerFieldsMap<D>[F]
-    ? SerializerFieldsMap<D>[F][`${D["type"]}`]
-    : unknown
-  : unknown;
+    ? D["type"] extends keyof SerializerFieldsMap<D>[F]
+      ? SerializerFieldsMap<D>[F][D["type"]]
+      : StringToFieldType<D["type"]> extends keyof SerializerFieldsMap<D>[F]
+        ? SerializerFieldsMap<D>[F][StringToFieldType<D["type"]>]
+        : `${D["type"]}` extends keyof SerializerFieldsMap<D>[F]
+          ? SerializerFieldsMap<D>[F][`${D["type"]}`]
+          : unknown
+    : unknown;
 
 export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "object"> = (M extends {
   definition: { fields: infer R };
