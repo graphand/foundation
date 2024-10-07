@@ -15,9 +15,19 @@
     "lint": "turbo lint"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.8",
+    "@manypkg/get-packages": "1.1.3",
+    "dotenv": "^16.4.5",
+    "eslint": "^8.57.1",
     "prettier": "^3.2.5",
     "turbo": "^2.0.4",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vite": "^5.4.8",
+    "vite-plugin-dts": "^4.2.3",
+    "vite-tsconfig-paths": "^5.0.1",
+    "vitest": "^2.1.2",
+    "@types/eslint": "^8.56.5",
+    "@types/node": "^20.14.8"
   },
   "engines": {
     "node": ">=18"
@@ -31,8 +41,5 @@
     "packages/core",
     "packages/module-auth",
     "packages/module-realtime"
-  ],
-  "dependencies": {
-    "@changesets/cli": "^2.27.8"
-  }
+  ]
 }

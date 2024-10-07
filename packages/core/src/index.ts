@@ -82,5 +82,5 @@ export {
   getValidationValues,
   getNestedFieldsArrayForModel,
   getRelationModelsFromPath,
-  throwValidationError,
+  createValidationError,
 } from "@/lib/utils.js";

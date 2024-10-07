@@ -1018,6 +1018,7 @@ export const validateModel = async <T extends typeof Model>(
     throw new ValidationError({
       fields: Array.from(errorsFieldsSet),
       validators: Array.from(errorsValidatorsSet),
+      model: model.slug,
     });
   }
 
@@ -1245,14 +1246,16 @@ export const getValidationValues = (list: Array<ModelInstance<typeof Model>>, pa
   return values;
 };
 
-export const throwValidationError = (
+export const createValidationError = (
   definition: ValidatorDefinition,
   opts?: {
+    model?: string;
     path?: string;
     value?: string;
   },
 ) => {
-  throw new ValidationError({
+  return new ValidationError({
+    model: opts?.model,
     validators: [
       new ValidationValidatorError({
         validator: new Validator(definition, opts?.path),

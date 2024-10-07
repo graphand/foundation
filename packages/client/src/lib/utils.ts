@@ -89,6 +89,7 @@ export const parseErrorFromJSON = (json: any, res?: Response) => {
     throw new ValidationError({
       fields,
       validators,
+      model: json.model,
     });
   }
 

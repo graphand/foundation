@@ -7,19 +7,23 @@ import { ErrorCodes } from "@/enums/error-codes.js";
 export class ValidationError extends CoreError {
   fields: Array<ValidationFieldError>;
   validators: Array<ValidationValidatorError>;
+  model?: string;
 
   constructor({
     fields,
     validators,
+    model,
     ...coreDefinition
   }: CoreErrorDefinition & {
     fields?: Array<ValidationFieldError>;
     validators?: Array<ValidationValidatorError>;
+    model?: string;
   }) {
     super(coreDefinition);
 
     this.fields = fields ?? [];
     this.validators = validators ?? [];
+    this.model = model;
 
     Object.defineProperty(this, "fieldsPaths", {
       enumerable: true,
@@ -68,6 +72,10 @@ export class ValidationError extends CoreError {
       message += ` on path${paths.length > 1 ? "s" : ""} ${paths.join(", ")}`;
     }
 
+    if (this.model) {
+      message += ` on model ${this.model}`;
+    }
+
     return message;
   }
 
@@ -76,6 +84,7 @@ export class ValidationError extends CoreError {
       ...super.toJSON(),
       type: "ValidationError",
       fieldsPaths: this.fieldsPaths,
+      model: this.model,
       reason: {
         fields: this.fields.map(f => f.toJSON()),
         validators: this.validators.map(v => v.toJSON()),

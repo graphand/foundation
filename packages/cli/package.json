@@ -25,19 +25,10 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.25.3",
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
-    "@types/eslint": "^8.56.5",
-    "@types/node": "^20.14.14",
     "@types/qs": "^6.9.15",
-    "builtin-modules": "^4.0.0",
-    "dotenv": "^16.4.5",
-    "eslint": "^8.57.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.4",
-    "vite": "^5.3.2",
-    "vitest": "^2.0.5"
+    "builtin-modules": "^4.0.0"
   },
   "dependencies": {
     "@graphand/client": "*",
