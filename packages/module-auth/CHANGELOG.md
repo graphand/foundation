@@ -1,5 +1,11 @@
 # @graphand/client-module-auth
 
+## 1.2.0
+
+### Minor Changes
+
+- improve callback handle to add support for all auth methods
+
 ## 1.1.3
 
 ### Patch Changes
