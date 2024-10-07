@@ -1,5 +1,11 @@
 # @graphand/client
 
+## 1.2.2
+
+### Patch Changes
+
+- clean console.log
+
 ## 1.2.1
 
 ### Patch Changes

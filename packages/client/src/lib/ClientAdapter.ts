@@ -132,8 +132,6 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         return this.#getSingle(ctx);
       }
 
-      console.log(query);
-
       return typeof query === "string" ? this.#getById(query, ctx) : this.#getByQuery(query, ctx);
     },
 
