@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.1.5
+
+### Patch Changes
+
+- add model on ValidationError to improve debug"
+
 ## 1.1.4
 
 ### Patch Changes
