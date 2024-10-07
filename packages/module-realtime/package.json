@@ -1,6 +1,6 @@
 {
   "name": "@graphand/client-module-realtime",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": false,
   "type": "module",
   "exports": {
@@ -27,7 +27,15 @@
   },
   "dependencies": {
     "@graphand/client": "*",
-    "@graphand/core": "^1.2.0",
+    "@graphand/core": "^1.2.1",
     "socket.io-client": "^4.7.5"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "!**/*.spec.d.ts",
+    "!**/*.dev.d.ts",
+    "!**/*.spec.d.ts",
+    "!**/*.map"
+  ]
 }

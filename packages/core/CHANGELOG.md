@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.2.1
+
+### Patch Changes
+
+- clean npm package & fix cli login
+
 ## 1.2.0
 
 ### Minor Changes

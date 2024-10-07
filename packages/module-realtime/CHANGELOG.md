@@ -1,5 +1,14 @@
 # @graphand/client-module-realtime
 
+## 1.2.1
+
+### Patch Changes
+
+- clean npm package & fix cli login
+- Updated dependencies
+  - @graphand/client@1.2.1
+  - @graphand/core@1.2.1
+
 ## 1.2.0
 
 ### Minor Changes

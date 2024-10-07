@@ -1,5 +1,14 @@
 # @graphand/cli
 
+## 1.2.1
+
+### Patch Changes
+
+- clean npm package & fix cli login
+- Updated dependencies
+  - @graphand/client-module-auth@1.3.1
+  - @graphand/client@1.2.1
+
 ## 1.2.0
 
 ### Minor Changes

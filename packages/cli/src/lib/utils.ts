@@ -14,6 +14,7 @@ import open from "open";
 import ModuleCli from "./ModuleCli.js";
 import ora, { Ora } from "ora";
 import {
+  AuthMethods,
   controllerJobLogs,
   isObjectId,
   Job,
@@ -195,7 +196,7 @@ export const loadGdx = async (): Promise<JSONTypeObject> => {
 };
 
 export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Promise<
-  Client<[typeof ModuleAuth, typeof ModuleRealtime, typeof ModuleCli]>
+  Client<[typeof ModuleAuth, typeof ModuleCli, typeof ModuleRealtime]>
 > => {
   let spinnerText = globalThis.spinner?.text;
   if (globalThis.spinner) {
@@ -205,7 +206,9 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
   const config: UserConfig = globalThis.userConfig ?? (await loadConfig());
   const configClient = (config.client || {}) as ClientOptions;
   const conf = loadConf(configClient.project || "");
-  const modules: ClientModules<ModuleConstructor[]> = [
+
+  // @ts-ignore
+  const modules: ClientModules<[typeof ModuleAuth, typeof ModuleCli, typeof ModuleRealtime]> = [
     [
       ModuleAuth,
       {
@@ -214,9 +217,18 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
           getItem: (key: string) => conf.get(key) as string,
           removeItem: (key: string) => conf.delete(key),
         },
-        handleRedirect: (url: string) => {
-          console.log(chalk.green(`Opening ${url} in your browser...`));
-          open(url);
+        handleCallback: {
+          [AuthMethods.CODE]: async url => {
+            const _url = url.toString();
+            console.log(chalk.green(`Opening ${_url} in your browser...`));
+            open(_url);
+          },
+          [AuthMethods.REDIRECT]: () => {
+            throw new Error(`Method redirect is not supported with CLI. Use ${AuthMethods.CODE} instead`);
+          },
+          [AuthMethods.WINDOW]: () => {
+            throw new Error(`Method window is not supported with CLI. Use ${AuthMethods.CODE} instead`);
+          },
         },
       },
     ],

@@ -1,6 +1,6 @@
 {
   "name": "@graphand/core",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": false,
   "type": "module",
   "exports": {
@@ -33,6 +33,7 @@
     "README.md",
     "!**/*.spec.d.ts",
     "!**/*.dev.d.ts",
+    "!**/*.spec.d.ts",
     "!**/*.map"
   ]
 }
