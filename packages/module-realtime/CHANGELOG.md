@@ -1,5 +1,11 @@
 # @graphand/client-module-realtime
 
+## 1.2.0
+
+### Minor Changes
+
+- bump version
+
 ## 1.1.3
 
 ### Patch Changes

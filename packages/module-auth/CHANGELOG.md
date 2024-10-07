@@ -1,5 +1,11 @@
 # @graphand/client-module-auth
 
+## 1.3.0
+
+### Minor Changes
+
+- bump version
+
 ## 1.2.0
 
 ### Minor Changes
