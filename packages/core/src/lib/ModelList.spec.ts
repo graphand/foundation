@@ -98,8 +98,7 @@ describe("test ModelList", () => {
 
     expect(_list.lastUpdated).toBeDefined();
     const lastUpdated = _list.lastUpdated as ModelInstance<typeof model>;
-    console.log(lastUpdated._id);
-    expect(_list.lastUpdated?._id).toBe("b");
+    expect(lastUpdated?._id).toBe("b");
   });
 
   it("lastUpdated should return last element if multiple elements are updated at the same time", async () => {

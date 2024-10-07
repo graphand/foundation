@@ -10,6 +10,12 @@ export class ValidatorRegex extends Validator<ValidatorTypes.REGEX> {
 
     const regex = new RegExp(this.options.pattern, this.options.options?.join(""));
 
-    return !values.some(v => !regex.test(v as string));
+    values.forEach(v => {
+      if (!regex.test(v as string)) {
+        throw new Error(`value does not match pattern ${this.options.pattern}`);
+      }
+    });
+
+    return true;
   };
 }

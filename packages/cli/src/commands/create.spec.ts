@@ -40,8 +40,8 @@ describe("Create Command", () => {
 
     routerSubject.next(req);
 
-    if (req.url.endsWith("datamodels/query") && req.method === "POST") {
-      return new Response(JSON.stringify({ data: { rows: [datamodel], count: 1 } }));
+    if (req.url.endsWith(`/datamodels/${datamodel.slug}`) && req.method === "GET") {
+      return new Response(JSON.stringify({ data: datamodel }));
     }
 
     if (req.url.endsWith(`/${datamodel.slug}`) && req.method === "POST") {

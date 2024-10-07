@@ -316,6 +316,48 @@ describe("Test Model", () => {
       expect(model.fieldsMap.get("test2")).toBeInstanceOf(Field);
       expect(model.getKeyField()).toEqual("name");
     });
+
+    it("Medias singularity is not overriden by datamodel", async () => {
+      const adapter = mockAdapter();
+      await DataModel.extend({ adapterClass: adapter }).create({
+        slug: Media.slug,
+        definition: {
+          single: true,
+          fields: {
+            test2: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        },
+      });
+
+      const model = Media.extend({ adapterClass: adapter });
+      await model.initialize();
+
+      expect(model.fieldsMap.get("test2")).toBeInstanceOf(Field);
+      expect(model.isSingle()).toBe(false);
+    });
+
+    it("Medias base fields are not overriden by datamodel", async () => {
+      const adapter = mockAdapter();
+      await DataModel.extend({ adapterClass: adapter }).create({
+        slug: Media.slug,
+        definition: {
+          single: true,
+          fields: {
+            name: {
+              type: FieldTypes.NUMBER,
+            },
+          },
+        },
+      });
+
+      const model = Media.extend({ adapterClass: adapter });
+      await model.initialize();
+
+      expect(model.fieldsMap.get("name")).toBeInstanceOf(Field);
+      expect(model.fieldsMap.get("name")?.type).toBe(FieldTypes.TEXT);
+    });
   });
 
   describe("Model getter", () => {

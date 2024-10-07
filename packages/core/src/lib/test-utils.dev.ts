@@ -3,7 +3,7 @@ import { AdapterFetcher, ModelDefinition, ModelInstance } from "@/types/index.js
 import { ModelList } from "@/lib/ModelList.js";
 import { Model } from "@/lib/Model.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { defineFieldsProperties } from "@/lib/utils.js";
+import { defineFieldsProperties, isObjectId } from "@/lib/utils.js";
 import { Validator } from "@/lib/Validator.js";
 import { ObjectId } from "bson";
 
@@ -61,7 +61,13 @@ export const mockAdapter = ({
         const cache = Array.from(this.thisCache);
 
         if (typeof query === "string") {
-          return Promise.resolve(cache.find(r => r._id === query) || null);
+          const keyField = this.model.getKeyField();
+
+          if (keyField === "_id" || isObjectId(query)) {
+            return Promise.resolve(cache.find(r => r._id === query) || null);
+          }
+
+          return Promise.resolve(cache.find(r => r.get(keyField) === query) || null);
         }
 
         let found = cache[0];

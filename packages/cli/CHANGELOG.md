@@ -1,5 +1,18 @@
 # @graphand/cli
 
+## 1.2.0
+
+### Minor Changes
+
+- improve validation with error details
+- improve datamodel initialization performance
+- clean code
+
+### Patch Changes
+
+- Updated dependencies
+  - @graphand/client@1.2.0
+
 ## 1.1.4
 
 ### Patch Changes

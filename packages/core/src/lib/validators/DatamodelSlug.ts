@@ -13,14 +13,12 @@ export class ValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_S
 
     if (!values?.length) return true;
 
-    const _isInvalid = (slug: string | undefined) => {
-      if (!slug || !modelsMap.has(slug)) {
-        return false;
+    values.forEach((slug: string | undefined) => {
+      if (slug && modelsMap.has(slug) && !modelsMap.get(slug)?.extensible) {
+        throw new Error(`model slug "${slug}" is reserved`);
       }
+    });
 
-      return !modelsMap.get(slug)?.extensible;
-    };
-
-    return !values.some(_isInvalid);
+    return true;
   };
 }

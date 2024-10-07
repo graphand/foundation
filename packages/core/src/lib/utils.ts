@@ -944,9 +944,10 @@ async function validateValidators<T extends typeof Model>({
         if (!validated) {
           throw null;
         }
-      } catch (_) {
+      } catch (err) {
         const e = new ValidationValidatorError({
           validator,
+          message: (err as Error)?.message,
         });
 
         errorsValidatorsSet.add(e);
@@ -1167,30 +1168,30 @@ export const isValidFieldDefinition = (def: FieldDefinition) => {
   return true;
 };
 
-export const isValidDefinition = (definition: ModelDefinition | ModelInstance<typeof DataModel>["definition"]) => {
+export const validateDefinition = (definition: ModelDefinition | ModelInstance<typeof DataModel>["definition"]) => {
   const fields = definition?.fields;
 
   if (fields) {
     const keys = Object.keys(fields || {});
 
     if (keys.length > 100) {
-      return false;
+      throw new Error(`fields limit is 100`);
     }
 
     const regex = new RegExp(Patterns.FIELD);
     for (const key of keys) {
       if (key in Model.prototype) {
-        return false;
+        throw new Error(`field name "${key}" is reserved`);
       }
 
       if (!regex.test(key)) {
-        return false;
+        throw new Error(`invalid field name "${key}"`);
       }
     }
 
-    Object.values(fields).forEach(def => {
+    Object.entries(fields).forEach(([key, def]) => {
       if (!isValidFieldDefinition(def)) {
-        return false;
+        throw new Error(`invalid definition for field "${key}"`);
       }
     });
   }
@@ -1201,11 +1202,11 @@ export const isValidDefinition = (definition: ModelDefinition | ModelInstance<ty
     const keyFieldField = fields?.[keyField];
 
     if (!keyFieldField) {
-      return false;
+      throw new Error(`keyField not found in fields`);
     }
 
     if (keyFieldField.type !== FieldTypes.TEXT) {
-      return false;
+      throw new Error(`keyField must be a text field`);
     }
 
     if (
@@ -1213,7 +1214,7 @@ export const isValidDefinition = (definition: ModelDefinition | ModelInstance<ty
       "default" in keyFieldField.options &&
       keyFieldField.options.default !== undefined
     ) {
-      return false;
+      throw new Error(`keyField must not have a default value`);
     }
   }
 
@@ -1252,6 +1253,7 @@ export const createValidationError = (
     model?: string;
     path?: string;
     value?: string;
+    message?: string;
   },
 ) => {
   return new ValidationError({
@@ -1259,6 +1261,7 @@ export const createValidationError = (
     validators: [
       new ValidationValidatorError({
         validator: new Validator(definition, opts?.path),
+        message: opts?.message,
         value: opts?.value,
       }),
     ],

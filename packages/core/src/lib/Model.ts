@@ -293,10 +293,7 @@ export class Model {
     let { datamodel, ctx } = opts ?? {};
     const adapter = this.getAdapter();
 
-    datamodel ??= await Model.getClass<typeof DataModel>("datamodels", adapter.base).get(
-      { filter: { slug: this.slug } },
-      ctx,
-    );
+    datamodel ??= await Model.getClass<typeof DataModel>("datamodels", adapter.base).get(this.slug, ctx);
 
     assignDatamodel(this, datamodel);
 
@@ -415,7 +412,7 @@ export class Model {
     }
 
     // If the adapter class has the model, return it
-    const adapterModel = adapterClass?.getClosestModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
+    const adapterModel = adapterClass?.getClosestModel?.(slug) as ReturnType<typeof Model.getClass<M, T>>;
     if (adapterModel) {
       if (adapterModel.getAdapter(false)?.base === adapterClass) {
         if (model && adapterModel.getBaseClass() !== model.getBaseClass()) {

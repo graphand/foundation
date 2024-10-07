@@ -15,10 +15,15 @@ export class ValidationValidatorError {
     return this.#definition.value;
   }
 
+  get message() {
+    return this.#definition.message;
+  }
+
   toJSON() {
     return {
       validator: this.validator.toJSON(),
       value: this.value,
+      message: this.message,
     };
   }
 }

@@ -2,10 +2,16 @@ import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Validator } from "@/lib/Validator.js";
 import { DataModel } from "@/models/DataModel.js";
 import { ModelInstance } from "@/types/index.js";
-import { isValidDefinition } from "@/lib/utils.js";
+import { validateDefinition } from "../utils.js";
 
 export class ValidatorDatamodelDefinition extends Validator<ValidatorTypes.DATAMODEL_DEFINITION> {
   validate: Validator<ValidatorTypes.DATAMODEL_DEFINITION>["validate"] = async ({ list }) => {
-    return !list.some((m: ModelInstance<typeof DataModel>) => !isValidDefinition(m.definition));
+    list.forEach((m: ModelInstance<typeof DataModel>) => {
+      if (!validateDefinition(m.definition)) {
+        throw new Error(`invalid definition for model "${m.slug}"`);
+      }
+    });
+
+    return true;
   };
 }

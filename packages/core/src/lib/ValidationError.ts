@@ -25,6 +25,10 @@ export class ValidationError extends CoreError {
     this.validators = validators ?? [];
     this.model = model;
 
+    Object.defineProperty(this, "message", {
+      enumerable: true,
+      value: this.message,
+    });
     Object.defineProperty(this, "fieldsPaths", {
       enumerable: true,
       value: this.fieldsPaths,
@@ -36,7 +40,9 @@ export class ValidationError extends CoreError {
   }
 
   get fieldsPaths(): Array<string> {
-    return [...this.fields.map(f => f.field?.path), ...this.validators.map(v => v.validator.getFullPath())];
+    return [...this.fields.map(f => f.field?.path), ...this.validators.map(v => v.validator.getFullPath())].filter(
+      Boolean,
+    );
   }
 
   get message() {
@@ -50,14 +56,38 @@ export class ValidationError extends CoreError {
           .join(", ")})`,
       );
     }
+
+    const paths = Array.from(new Set(this.fieldsPaths || [])).filter(Boolean);
+    if (paths?.length) {
+      message += ` on path${paths.length > 1 ? "s" : ""} ${paths.join(", ")}`;
+    }
+
+    if (this.model) {
+      message += ` on model ${this.model}`;
+    }
+
     if (this.validators.length) {
-      let reason = `${this.validators.length} model validator${this.validators.length > 1 ? "s" : ""} (${this.validators
-        .map(v => v.validator.type)
-        .join(", ")})`;
+      let reason: string;
+
+      if (this.validators.length > 1) {
+        reason = `${this.validators.length} model validators`;
+      } else {
+        reason = `a model validator`;
+      }
 
       const values = this.validators.filter(v => v.value !== undefined).map(v => v.value);
       if (values.length) {
         reason += ` for value${values.length > 1 ? "s" : ""} ${values.join(", ")}`;
+      }
+
+      const messages = this.validators.filter(v => v.message).map(v => v.message);
+      if (messages.length) {
+        reason += `: ${messages.join()}`;
+      }
+
+      const types = this.validators.map(v => v.validator.type).join(", ");
+      if (types) {
+        reason += ` (${types})`;
       }
 
       reasons.push(reason);
@@ -65,15 +95,6 @@ export class ValidationError extends CoreError {
 
     if (reasons.length) {
       message += ` with ${reasons.join(" and ")}`;
-    }
-
-    if (this.fieldsPaths?.length) {
-      const paths = Array.from(new Set(this.fieldsPaths));
-      message += ` on path${paths.length > 1 ? "s" : ""} ${paths.join(", ")}`;
-    }
-
-    if (this.model) {
-      message += ` on model ${this.model}`;
     }
 
     return message;

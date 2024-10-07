@@ -10,18 +10,18 @@ export class ValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
 
     const { min, max } = this.options;
 
-    return !values.some(v => {
+    values.forEach(v => {
       const num = Array.isArray(v) ? v.length : parseFloat(v as string);
 
       if (min !== undefined && num < min) {
-        return true;
+        throw new Error(`value ${v} is lower than min ${min}`);
       }
 
       if (max !== undefined && num > max) {
-        return true;
+        throw new Error(`value ${v} is higher than max ${max}`);
       }
-
-      return false;
     });
+
+    return true;
   };
 }

@@ -132,6 +132,8 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         return this.#getSingle(ctx);
       }
 
+      console.log(query);
+
       return typeof query === "string" ? this.#getById(query, ctx) : this.#getByQuery(query, ctx);
     },
 
@@ -506,22 +508,22 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return ids.map(id => this.getCachedInstance(id, ctx)).filter(Boolean) as Array<ModelInstance<T>>;
   }
 
-  getCachedInstance(id: string | null, ctx: TransactionCtx): ModelInstance<T> | undefined {
+  getCachedInstance(idOrKey: string | null, ctx: TransactionCtx): ModelInstance<T> | undefined {
     if (!this.#isCacheEnabled(ctx)) {
       return undefined;
     }
 
-    if (!id) {
+    if (!idOrKey) {
       return this.#store.values().next().value;
     }
 
-    if (this.#store.has(id)) {
-      return this.#store.get(id);
+    if (this.#store.has(idOrKey)) {
+      return this.#store.get(idOrKey);
     }
 
     const keyField = this.model.getKeyField();
     if (keyField) {
-      return Array.from(this.#store.values()).find(instance => instance.get(keyField) === id);
+      return Array.from(this.#store.values()).find(instance => instance.get(keyField, "json") === idOrKey);
     }
 
     return undefined;

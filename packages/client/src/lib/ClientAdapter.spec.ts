@@ -1448,13 +1448,11 @@ describe("ClientAdapter", () => {
       });
 
       fetchMock.mockImplementation(async (args: any) => {
-        // Mock datamodels
-        if (args.url.includes("datamodels/query")) {
-          const body = await args.json();
-          const slug = body.filter.slug;
+        // Mock datamodels query
+        if (args.url.includes("datamodels/")) {
+          const slug = args.url.split("/").pop();
           const found = [dmRelated, dm].find(d => d.slug === slug);
-          if (!found) return new Response(JSON.stringify({ data: { rows: [], count: 0 } }));
-          return new Response(JSON.stringify({ data: { rows: [found.toJSON()], count: 1 } }));
+          return new Response(JSON.stringify({ data: found?.toJSON() }));
         }
 
         return new Response(
@@ -1497,27 +1495,22 @@ describe("ClientAdapter", () => {
       const id2 = new ObjectId().toString();
 
       fetchMock.mockImplementation(async (args: any) => {
-        if (args.url.includes("datamodels/query")) {
+        if (args.url.includes("datamodels/")) {
           return new Response(
             JSON.stringify({
               data: {
-                rows: [
-                  {
-                    _id: new ObjectId().toString(),
-                    slug,
-                    definition: {
-                      keyField: "title",
-                      fields: {
-                        title: { type: FieldTypes.TEXT },
-                        selfRef: {
-                          type: FieldTypes.RELATION,
-                          options: { ref: slug },
-                        },
-                      },
+                _id: new ObjectId().toString(),
+                slug,
+                definition: {
+                  keyField: "title",
+                  fields: {
+                    title: { type: FieldTypes.TEXT },
+                    selfRef: {
+                      type: FieldTypes.RELATION,
+                      options: { ref: slug },
                     },
                   },
-                ],
-                count: 1,
+                },
               },
             }),
           );
@@ -1598,8 +1591,8 @@ describe("ClientAdapter", () => {
       const id3 = new ObjectId().toString();
 
       fetchMock.mockImplementation(async (args: any) => {
-        if (args.url.includes("datamodels/query")) {
-          return new Response(JSON.stringify({ data: { rows: [dmNested.toJSON()], count: 1 } }));
+        if (args.url.includes("datamodels/")) {
+          return new Response(JSON.stringify({ data: dmNested.toJSON() }));
         }
 
         return new Response(
@@ -1701,11 +1694,10 @@ describe("ClientAdapter", () => {
 
       let updateCount = 0;
       fetchMock.mockImplementation(async (args: any) => {
-        if (args.url.includes("datamodels/query")) {
-          const body = await args.json();
-          const slug = body.filter.slug;
+        if (args.url.includes("datamodels/")) {
+          const slug = args.url.split("/").pop();
           const found = [dmDeep, dmDeep1, dmDeep2].find(d => d.slug === slug);
-          return new Response(JSON.stringify({ data: { rows: [found?.toJSON()], count: 1 } }));
+          return new Response(JSON.stringify({ data: found?.toJSON() }));
         }
 
         updateCount++;

@@ -10,7 +10,7 @@ export class ValidatorLength extends Validator<ValidatorTypes.LENGTH> {
 
     const { min, max } = this.options;
 
-    return !values.some(v => {
+    values.forEach(v => {
       let length = (v as string)?.length ?? 0;
 
       if (typeof v === "number") {
@@ -18,14 +18,14 @@ export class ValidatorLength extends Validator<ValidatorTypes.LENGTH> {
       }
 
       if (min !== undefined && length < min) {
-        return true;
+        throw new Error(`length is less than min ${min}`);
       }
 
       if (max !== undefined && length > max) {
-        return true;
+        throw new Error(`length is greater than max ${max}`);
       }
-
-      return false;
     });
+
+    return true;
   };
 }

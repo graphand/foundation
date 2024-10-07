@@ -83,6 +83,7 @@ export const parseErrorFromJSON = (json: any, res?: Response) => {
 
       return new ValidationValidatorError({
         validator,
+        message: v.message,
         value: v.value,
       });
     });

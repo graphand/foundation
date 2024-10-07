@@ -227,6 +227,7 @@ export type ValidationFieldErrorDefinition = {
 
 export type ValidationValidatorErrorDefinition = {
   validator: Validator;
+  message?: string;
   value?: string;
 };
 

@@ -1,5 +1,13 @@
 # @graphand/core
 
+## 1.2.0
+
+### Minor Changes
+
+- improve validation with error details
+- improve datamodel initialization performance
+- clean code
+
 ## 1.1.6
 
 ### Patch Changes
