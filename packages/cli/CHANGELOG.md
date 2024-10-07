@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.2.2
+
+### Patch Changes
+
+- add support for $cli operator in gdx and subscriptionsUpgrade controller
+
 ## 1.2.1
 
 ### Patch Changes

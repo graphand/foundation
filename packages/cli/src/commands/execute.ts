@@ -19,6 +19,7 @@ import {
   controllerGenTokenToken,
   controllerSnapshotsRestore,
   controllerSubscriptionsPortal,
+  controllerSubscriptionsUpgrade,
 } from "@graphand/core";
 
 const controllers = {
@@ -33,6 +34,7 @@ const controllers = {
   functionRun: controllerFunctionRun,
   subscriptionsCurrent: controllerSubscriptionsCurrent,
   subscriptionsPortal: controllerSubscriptionsPortal,
+  subscriptionsUpgrade: controllerSubscriptionsUpgrade,
   jobLogs: controllerJobLogs,
   functionLogs: controllerFunctionLogs,
   genTokenToken: controllerGenTokenToken,

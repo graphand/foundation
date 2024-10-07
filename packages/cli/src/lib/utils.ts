@@ -177,22 +177,39 @@ export const loadGdx = async (): Promise<JSONTypeObject> => {
   const transpiledCode = result.code;
 
   // Use dynamic import to load the transpiled code
-  const tempFilePath = fileURLToPath(new URL(`file://${process.cwd()}/temp-gdx.mjs`));
+  const tempFilePath = fileURLToPath(new URL(`file://${process.cwd()}/.tmp-gdx.mjs`));
   await fs.promises.writeFile(tempFilePath, transpiledCode);
+
+  let gdx: JSONTypeObject | undefined;
 
   try {
     // Load the transpiled code
     const importedConfig = await import(tempFilePath);
 
     if (importedConfig.default) {
-      return importedConfig.default as JSONTypeObject;
+      gdx = importedConfig.default as JSONTypeObject;
     }
   } finally {
     // Ensure temp file is deleted even if an error occurs
     fs.promises.unlink(tempFilePath).catch(() => {});
   }
 
-  throw new Error("Failed to load gdx file");
+  if (gdx && "$cli" in gdx && Object.keys(gdx["$cli"] as object).length) {
+    const cli = gdx["$cli"] as JSONTypeObject;
+    const assign = Object.entries(cli).reduce((acc, [key, value]) => {
+      return collectSetter(`${key}=${value}`, acc);
+    }, {});
+
+    mergeDeep(gdx, assign);
+  }
+
+  delete gdx?.["$cli"];
+
+  if (!gdx) {
+    throw new Error("Failed to load gdx file");
+  }
+
+  return gdx;
 };
 
 export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Promise<
