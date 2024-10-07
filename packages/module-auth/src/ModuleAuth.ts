@@ -14,7 +14,7 @@ import {
   controllerCodeAuth,
   InferControllerInput,
 } from "@graphand/core";
-import { AuthStorage } from "./types.js";
+import { AuthCallbackHandler, AuthStorage } from "./types.js";
 
 class MemoryStorage implements AuthStorage {
   private store: Record<string, string> = {};
@@ -36,8 +36,10 @@ type ModuleAuthOptions = {
   autoRefreshToken?: boolean;
   storage?: AuthStorage;
   storagePrefix?: string;
-  handleRedirect?: (_url: string) => void;
-  handleResult?: {
+  getRedirectUrl?: () => string | URL | Promise<string | URL>;
+  handleCallback?: AuthCallbackHandler; // { window: ..., redirect: ..., code: ... }
+  handleAccessToken?: (_accessToken: string | undefined) => void;
+  handleRedirectUrl?: {
     url: string | URL | Promise<string | URL>;
     onSuccess?: (_url: URL) => void;
     onError?: (_error: Error) => void;
@@ -70,7 +72,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       client.hook(
         "afterRequest",
         async ({ err, transaction }) => {
-          if (err?.some(e => (e as FetchError).code === ErrorCodes.TOKEN_EXPIRED)) {
+          if (err?.filter(Boolean).some(e => (e as FetchError).code === ErrorCodes.TOKEN_EXPIRED)) {
             await this.refreshToken();
             throw transaction.retryToken;
           }
@@ -79,10 +81,10 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       );
     }
 
-    if (this.conf.handleResult) {
-      const { url, onSuccess, onError } = this.conf.handleResult;
+    if (this.conf.handleRedirectUrl) {
+      const { url, onSuccess, onError } = this.conf.handleRedirectUrl;
       try {
-        const newUrl = await this.handleResult(await url);
+        const newUrl = await this.handleRedirectUrl(await url);
         onSuccess?.(newUrl);
         return;
       } catch (e) {
@@ -92,11 +94,19 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
 
     const accessToken = await this.storage?.getItem(this.getStorageKey("accessToken"));
     if (accessToken) {
-      client.setOptions({ accessToken });
+      this.#setClientToken(accessToken);
     }
   }
 
   async [symbolModuleDestroy]() {}
+
+  #setClientToken(accessToken: string | undefined) {
+    this.client().setOptions({ accessToken });
+
+    if (typeof this.conf.handleAccessToken === "function") {
+      this.conf.handleAccessToken(accessToken);
+    }
+  }
 
   getStoragePrefix() {
     if (this.conf.storagePrefix) {
@@ -113,7 +123,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
   }
 
   async setTokens(accessToken: string, refreshToken: string) {
-    this.client().setOptions({ accessToken });
+    this.#setClientToken(accessToken);
 
     if (this.storage) {
       await this.storage.setItem(this.getStorageKey("accessToken"), accessToken);
@@ -149,19 +159,23 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
 
     data.method ??= AuthMethods.WINDOW as M;
 
-    if (data.method === AuthMethods.REDIRECT) {
+    if (data.method === AuthMethods.REDIRECT && !data.options?.redirect) {
+      if (typeof this.conf.getRedirectUrl !== "function") {
+        let message = "getRedirectUrl option must be a valid function to use redirect method";
+        if (typeof window !== "undefined") message += ". You can use window.location.href in browser";
+        throw new Error(message);
+      }
+
       data.options ??= {} as any;
       const options = data.options as AuthMethodOptions<AuthMethods.REDIRECT>;
-      options.redirect ??= window.location.href;
+      options.redirect ??= new URL(await this.conf.getRedirectUrl()).toString();
     }
 
-    const res = await this.client().execute(controllerLogin, {
-      data,
-    });
+    const res = await this.client().execute(controllerLogin, { data });
 
     const json = await res.json();
 
-    return this.handleAuthResult(json.data);
+    return this.handleAuthResult(json.data, data.method, data.options);
   }
 
   async register<P extends AuthProviders = AuthProviders.LOCAL, M extends AuthMethods = AuthMethods.WINDOW>(
@@ -192,20 +206,23 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
 
     data.method ??= AuthMethods.WINDOW as M;
 
-    if (data.method === AuthMethods.REDIRECT) {
+    if (data.method === AuthMethods.REDIRECT && !data.options?.redirect) {
+      if (typeof this.conf.getRedirectUrl !== "function") {
+        let message = "getRedirectUrl option must be a valid function to use redirect method";
+        if (typeof window !== "undefined") message += ". You can use window.location.href in browser";
+        throw new Error(message);
+      }
+
       data.options ??= {} as any;
       const options = data.options as AuthMethodOptions<AuthMethods.REDIRECT>;
-      options.redirect ??= window.location.href;
+      options.redirect ??= new URL(await this.conf.getRedirectUrl()).toString();
     }
 
-    const res = await this.client().execute(controllerRegister, {
-      data,
-      query,
-    });
+    const res = await this.client().execute(controllerRegister, { data, query });
 
     const json = await res.json();
 
-    return this.handleAuthResult(json.data);
+    return this.handleAuthResult(json.data, data.method, data.options);
   }
 
   async refreshToken() {
@@ -234,12 +251,19 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     return json.data;
   }
 
-  async handleAuthResult(result: AuthResult) {
+  async handleAuthResult<M extends AuthMethods>(result: AuthResult, method: M, options?: AuthMethodOptions<M>) {
     if ("url" in result) {
-      if (typeof this.conf.handleRedirect !== "function") {
-        throw new Error("handleRedirect option must be a valid function");
+      if (!this.conf.handleCallback) {
+        throw new Error(`handleCallback option must be defined to handle the callback url for method ${method}`);
       }
-      this.conf.handleRedirect(result.url);
+
+      if (!this.conf.handleCallback[method]) {
+        throw new Error(
+          `handleCallback.${method} option must be defined to handle the callback url for method ${method}`,
+        );
+      }
+
+      await this.conf.handleCallback[method](new URL(result.url), options);
       return;
     }
 
@@ -252,7 +276,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     return instance;
   }
 
-  async handleResult(url: string | URL): Promise<URL> {
+  async handleRedirectUrl(url: string | URL): Promise<URL> {
     url = typeof url === "string" ? new URL(url) : url;
     const authResult = url.searchParams.get("authResult");
 
@@ -274,11 +298,11 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
 
     const json = await res.json();
 
-    return this.handleAuthResult(json.data);
+    return this.handleAuthResult(json.data, AuthMethods.CODE);
   }
 
   async logout() {
-    this.client().setOptions({ accessToken: undefined });
+    this.#setClientToken(undefined);
 
     if (this.storage) {
       await this.storage.removeItem(this.getStorageKey("accessToken"));
