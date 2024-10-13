@@ -12,7 +12,7 @@ export const commandGdxPush = new Command("push")
     await withSpinner(async () => {
       const gdx = await loadGdx();
 
-      const client = await getClient();
+      const client = await getClient({ realtime: true });
 
       const res = await client.execute(controllerGdxPush, {
         query: {

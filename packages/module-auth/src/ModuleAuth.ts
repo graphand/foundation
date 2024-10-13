@@ -263,7 +263,8 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
         );
       }
 
-      await this.conf.handleCallback[method](new URL(result.url), options);
+      const url = new URL(result.url.startsWith("/") ? "http://" + result.url : result.url);
+      await this.conf.handleCallback[method](url, options);
       return;
     }
 

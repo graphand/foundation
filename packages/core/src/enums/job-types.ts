@@ -3,7 +3,6 @@ export enum JobTypes {
   INIT_SNAPHSOT = "initSnapshot",
   INIT_ENVIRONMENT = "initEnvironment",
   INIT_MERGE_REQUEST = "initMergeRequest",
-  INIT_FUNCTION = "initFunction",
   APPROVE_MERGE_REQUEST = "approveMergeRequest",
   PATCH_MERGE_REQUEST = "patchMergeRequest",
   SANDBOX_MERGE_REQUEST = "sandboxMergeRequest",
@@ -13,6 +12,6 @@ export enum JobTypes {
   MIGRATE_PROJECT = "migrateProject",
   REMOVE_PROJECT = "removeProject",
   REMOVE_FUNCTION = "removeFunction",
-  UPDATE_FUNCTION = "updateFunction",
+  DEPLOY_FUNCTION = "deployFunction",
   RUN_FUNCTION = "runFunction",
 }

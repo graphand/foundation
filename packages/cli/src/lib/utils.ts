@@ -164,34 +164,34 @@ export const loadGdx = async (): Promise<JSONTypeObject> => {
 
   const configContent = await fs.promises.readFile(configPath, "utf8");
 
-  if (path.extname(configPath) === ".json") {
-    return JSON.parse(configContent);
-  }
-
-  const result = transformSync(configContent, {
-    loader: path.extname(configPath) === ".ts" ? "ts" : "js",
-    format: "esm",
-    target: "es2020",
-  });
-
-  const transpiledCode = result.code;
-
-  // Use dynamic import to load the transpiled code
-  const tempFilePath = fileURLToPath(new URL(`file://${process.cwd()}/.tmp-gdx.mjs`));
-  await fs.promises.writeFile(tempFilePath, transpiledCode);
-
   let gdx: JSONTypeObject | undefined;
 
-  try {
-    // Load the transpiled code
-    const importedConfig = await import(tempFilePath);
+  if (path.extname(configPath) === ".json") {
+    gdx = JSON.parse(configContent);
+  } else {
+    const result = transformSync(configContent, {
+      loader: path.extname(configPath) === ".ts" ? "ts" : "js",
+      format: "esm",
+      target: "es2020",
+    });
 
-    if (importedConfig.default) {
-      gdx = importedConfig.default as JSONTypeObject;
+    const transpiledCode = result.code;
+
+    // Use dynamic import to load the transpiled code
+    const tempFilePath = fileURLToPath(new URL(`file://${process.cwd()}/.tmp-gdx.mjs`));
+    await fs.promises.writeFile(tempFilePath, transpiledCode);
+
+    try {
+      // Load the transpiled code
+      const importedConfig = await import(tempFilePath);
+
+      if (importedConfig.default) {
+        gdx = importedConfig.default as JSONTypeObject;
+      }
+    } finally {
+      // Ensure temp file is deleted even if an error occurs
+      fs.promises.unlink(tempFilePath).catch(() => {});
     }
-  } finally {
-    // Ensure temp file is deleted even if an error occurs
-    fs.promises.unlink(tempFilePath).catch(() => {});
   }
 
   if (gdx && "$cli" in gdx && Object.keys(gdx["$cli"] as object).length) {
@@ -361,7 +361,7 @@ export const waitJob = async ({
 
   let racePromise: Promise<void>;
 
-  pollInterval ??= 3000;
+  pollInterval ??= 2000;
   if (pollInterval) {
     const pollPromise = new Promise<void>(async (resolve, reject) => {
       try {
@@ -548,17 +548,23 @@ export const processLogs = async ({
     // Set up CTRL+C handler
     const _sigintHandler = () => {
       processor.abort();
+      stream.cancel();
       // Remove the handler to allow the process to exit
       process.off("SIGINT", _sigintHandler);
+      process.exit(0); // Force exit on SIGINT
     };
 
-    process.on("SIGINT", _sigintHandler);
+    process.once("SIGINT", _sigintHandler);
 
     try {
       await processor.processStream(stream);
     } finally {
-      // Ensure we remove the SIGINT listener
+      // Ensure we remove the SIGINT handler
       process.off("SIGINT", _sigintHandler);
+
+      if (!stream.closed) {
+        stream.cancel();
+      }
     }
   }
 };

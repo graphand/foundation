@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.2.2
+
+### Patch Changes
+
+- combine init & update function into deploy function job type"
+
 ## 1.2.1
 
 ### Patch Changes
