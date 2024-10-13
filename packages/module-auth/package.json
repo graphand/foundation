@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@graphand/client": "*",
-    "@graphand/core": "^1.2.2"
+    "@graphand/core": "^1.2.3"
   },
   "files": [
     "dist",

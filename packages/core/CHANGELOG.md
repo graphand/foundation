@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.2.3
+
+### Patch Changes
+
+- fix Model.reloadModel if datamodel is not found
+
 ## 1.2.2
 
 ### Patch Changes

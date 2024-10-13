@@ -289,13 +289,22 @@ export class Model {
    * If the model is not extensible (Role, Token, etc.), this method does nothing.
    * @returns
    */
-  static async reloadModel(opts?: { datamodel?: ModelInstance<typeof DataModel>; ctx?: TransactionCtx }) {
+  static async reloadModel(opts?: {
+    datamodel?: ModelInstance<typeof DataModel>;
+    ctx?: TransactionCtx;
+  }): Promise<ModelInstance<typeof DataModel> | undefined> {
     let { datamodel, ctx } = opts ?? {};
     const adapter = this.getAdapter();
 
-    datamodel ??= await Model.getClass<typeof DataModel>("datamodels", adapter.base).get(this.slug, ctx);
+    if (!datamodel) {
+      datamodel = await Model.getClass("datamodels", adapter.base)
+        .get(this.slug, ctx)
+        .catch(() => undefined);
+    }
 
-    assignDatamodel(this, datamodel);
+    if (datamodel) {
+      assignDatamodel(this, datamodel);
+    }
 
     return datamodel;
   }
