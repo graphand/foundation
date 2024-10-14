@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.2.6
+
+### Patch Changes
+
+- rebuild core
+
 ## 1.2.5
 
 ### Patch Changes
