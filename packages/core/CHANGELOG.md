@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.2.5
+
+### Patch Changes
+
+- fix Adapter class
+
 ## 1.2.4
 
 ### Patch Changes

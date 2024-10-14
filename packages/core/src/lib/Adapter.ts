@@ -72,7 +72,7 @@ export class Adapter<T extends typeof Model = typeof Model> {
 
     const parent = Object.getPrototypeOf(this) as typeof Adapter;
 
-    if (parent?._modelsRegistry) {
+    if (typeof parent.getRecursiveModelsMap === "function") {
       parent.getRecursiveModelsMap().forEach((model, slug) => {
         if (!modelsMap.has(slug)) {
           modelsMap.set(slug, model);
@@ -90,11 +90,11 @@ export class Adapter<T extends typeof Model = typeof Model> {
 
     const parent = Object.getPrototypeOf(this) as typeof Adapter;
 
-    if (!parent?._modelsRegistry) {
-      return;
+    if (typeof parent.getClosestModel === "function") {
+      return parent.getClosestModel(slug);
     }
 
-    return parent.getClosestModel(slug);
+    return;
   }
 
   static getModelsRegistry() {
