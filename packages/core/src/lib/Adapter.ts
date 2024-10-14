@@ -70,8 +70,7 @@ export class Adapter<T extends typeof Model = typeof Model> {
       modelsMap.set(model.slug, model);
     });
 
-    // @ts-expect-error __proto__
-    const parent = this.__proto__ as typeof Adapter;
+    const parent = Object.getPrototypeOf(this) as typeof Adapter;
 
     if (parent?._modelsRegistry) {
       parent.getRecursiveModelsMap().forEach((model, slug) => {
@@ -89,8 +88,7 @@ export class Adapter<T extends typeof Model = typeof Model> {
       return this._modelsRegistry?.get(slug);
     }
 
-    // @ts-expect-error __proto__
-    const parent = this.__proto__ as typeof Adapter;
+    const parent = Object.getPrototypeOf(this) as typeof Adapter;
 
     if (!parent?._modelsRegistry) {
       return;

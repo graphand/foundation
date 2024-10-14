@@ -35,8 +35,7 @@ export const crossModelTree = (_model: typeof Model, cb: (_model: typeof Model) 
   do {
     cb(model);
 
-    // @ts-expect-error __proto__
-    model = model.__proto__;
+    model = Object.getPrototypeOf(model);
   } while (model && model !== Model);
 
   cb(Model);

@@ -1,5 +1,13 @@
 # @graphand/client
 
+## 1.2.3
+
+### Patch Changes
+
+- fix: replace **proto** tag with Object.getPrototypeOf
+- Updated dependencies
+  - @graphand/core@1.2.4
+
 ## 1.2.2
 
 ### Patch Changes

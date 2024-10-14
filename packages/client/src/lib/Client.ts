@@ -305,7 +305,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
           return this.getModel(Account).get(payload.id);
         }
       } catch (e) {
-        console.error(e);
+        throw new Error(`Unable to decode claim access token: ${(e as Error).message}`);
       }
     }
 
