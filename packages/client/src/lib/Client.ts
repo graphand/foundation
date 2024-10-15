@@ -381,7 +381,8 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       Object.assign(init.headers, { "Content-Environment": this.options.environment });
     }
 
-    if (!opts?.ctx?.formData && (!init.headers || !("Content-Type" in init.headers))) {
+    const _isFormData = init.body instanceof FormData || opts?.ctx?.formData;
+    if (!_isFormData && (!init.headers || !("Content-Type" in init.headers))) {
       init.headers ??= {};
       Object.assign(init.headers, { "Content-Type": "application/json" });
     }

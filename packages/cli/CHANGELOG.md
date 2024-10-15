@@ -1,5 +1,13 @@
 # @graphand/cli
 
+## 1.2.5
+
+### Patch Changes
+
+- add support for medias upload in gdx push in cli 💾
+- Updated dependencies
+  - @graphand/client@1.2.6
+
 ## 1.2.4
 
 ### Patch Changes

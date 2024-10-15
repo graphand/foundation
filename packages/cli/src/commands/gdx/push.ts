@@ -7,29 +7,70 @@ export const commandGdxPush = new Command("push")
   .description("gdx push")
   .option("--clean", "Clean")
   .option("--confirm", "Confirm")
+  .option("--skip-realtime-upload", "Skip realtime upload")
   .option("-v --verbose", "Verbose")
   .action(async options => {
-    await withSpinner(async () => {
-      const gdx = await loadGdx();
+    await withSpinner(async spinner => {
+      const { json, file } = await loadGdx();
 
       const client = await getClient({ realtime: true });
+
+      let formData: FormData | undefined;
+      let uploadId: string | undefined;
+      let uploadResolve: (typeof Promise<void>)["resolve"] | undefined;
+      let body: RequestInit["body"];
+
+      if (file && Object.keys(file).length) {
+        formData = new FormData();
+        formData.append("_json", JSON.stringify(json));
+        Object.entries(file).forEach(([key, value]) => formData?.append(key, value));
+        body = formData;
+      }
+
+      body ??= JSON.stringify(json);
+
+      if (!options.skipRealtimeUpload) {
+        uploadId = Math.random().toString(36).substring(7);
+
+        const upload = client.get("realtime").getUpload(uploadId);
+        let unsubscribe: () => void;
+        new Promise<void>(resolve => {
+          uploadResolve = resolve as (typeof Promise<void>)["resolve"];
+          unsubscribe = upload.subscribe(async state => {
+            spinner.text = `Uploading data ... ${state.percentage}%`;
+
+            if (!["uploading", "pending"].includes(state.status)) {
+              resolve();
+            }
+          });
+        }).finally(() => {
+          unsubscribe();
+        });
+      }
 
       const res = await client.execute(controllerGdxPush, {
         query: {
           confirm: options.confirm,
           clean: options.clean,
         },
-        data: gdx,
+        init: {
+          body,
+          headers: {
+            "Upload-Id": uploadId || "",
+          },
+        },
       });
 
-      const json = await res.json();
+      uploadResolve?.();
+
+      const resJSON = await res.json();
 
       if (options.verbose) {
-        return json.data;
+        return resJSON.data;
       }
 
       const data: Record<string, { create: JSONTypeObject; update: JSONTypeObject; delete: JSONTypeObject }> =
-        json.data;
+        resJSON.data;
 
       let lines = [];
 

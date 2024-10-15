@@ -156,7 +156,7 @@ export const getGdxPath = async (): Promise<string | null> => {
   return null;
 };
 
-export const loadGdx = async (): Promise<JSONTypeObject> => {
+export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<string, File> | undefined }> => {
   const configPath = await getGdxPath();
   if (!configPath) {
     throw new Error("No gdx file found");
@@ -164,10 +164,11 @@ export const loadGdx = async (): Promise<JSONTypeObject> => {
 
   const configContent = await fs.promises.readFile(configPath, "utf8");
 
-  let gdx: JSONTypeObject | undefined;
+  let json: JSONTypeObject | undefined;
+  let file: Record<string, File> | undefined;
 
   if (path.extname(configPath) === ".json") {
-    gdx = JSON.parse(configContent);
+    json = JSON.parse(configContent);
   } else {
     const result = transformSync(configContent, {
       loader: path.extname(configPath) === ".ts" ? "ts" : "js",
@@ -186,7 +187,7 @@ export const loadGdx = async (): Promise<JSONTypeObject> => {
       const importedConfig = await import(tempFilePath);
 
       if (importedConfig.default) {
-        gdx = importedConfig.default as JSONTypeObject;
+        json = importedConfig.default as JSONTypeObject;
       }
     } finally {
       // Ensure temp file is deleted even if an error occurs
@@ -194,22 +195,30 @@ export const loadGdx = async (): Promise<JSONTypeObject> => {
     }
   }
 
-  if (gdx && "$cli" in gdx && Object.keys(gdx["$cli"] as object).length) {
-    const cli = gdx["$cli"] as JSONTypeObject;
-    const assign = Object.entries(cli).reduce((acc, [key, value]) => {
+  if (json && "$cli.set" in json && Object.keys(json["$cli.set"] as object).length) {
+    const set = json["$cli.set"] as JSONTypeObject;
+    const assign = Object.entries(set).reduce((acc, [key, value]) => {
       return collectSetter(`${key}=${value}`, acc);
     }, {});
 
-    mergeDeep(gdx, assign);
+    mergeDeep(json, assign);
   }
 
-  delete gdx?.["$cli"];
+  if (json && "$cli.file" in json && Object.keys(json["$cli.file"] as object).length) {
+    const _file = json["$cli.file"] as JSONTypeObject;
+    file = Object.entries(_file).reduce((acc, [key, value]) => {
+      return collectFiles(`${key}=${value}`, acc);
+    }, {});
+  }
 
-  if (!gdx) {
+  if (!json) {
     throw new Error("Failed to load gdx file");
   }
 
-  return gdx;
+  delete json["$cli.set"];
+  delete json["$cli.file"];
+
+  return { json, file };
 };
 
 export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Promise<
