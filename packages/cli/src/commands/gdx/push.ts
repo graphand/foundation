@@ -29,7 +29,9 @@ export const commandGdxPush = new Command("push")
 
       body ??= JSON.stringify(json);
 
-      if (!options.skipRealtimeUpload) {
+      if (!options.skipRealtimeUpload && body instanceof FormData) {
+        await client.get("realtime").connect();
+
         uploadId = Math.random().toString(36).substring(7);
 
         const upload = client.get("realtime").getUpload(uploadId);

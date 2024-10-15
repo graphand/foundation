@@ -1,5 +1,11 @@
 # @graphand/client
 
+## 1.2.7
+
+### Patch Changes
+
+- minor fixes
+
 ## 1.2.6
 
 ### Patch Changes

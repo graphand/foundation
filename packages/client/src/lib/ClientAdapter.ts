@@ -22,6 +22,7 @@ import {
   controllerModelUpdate,
   controllerModelDelete,
   FieldsPathItem,
+  defineFieldsProperties,
 } from "@graphand/core";
 import { Client } from "./Client.js";
 import { Subject } from "./Subject.js";
@@ -815,5 +816,12 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     }
 
     return instance || null;
+  }
+
+  resetFieldsCache() {
+    super.resetFieldsCache();
+    for (const instance of this.#store.values()) {
+      defineFieldsProperties(instance);
+    }
   }
 }

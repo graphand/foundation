@@ -11,7 +11,7 @@ import {
 } from "@/types.js";
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.js";
 import {
-  Account,
+  type Account,
   Adapter,
   Controller,
   controllerCurrentAccount,
@@ -302,7 +302,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
         const payload = JSON.parse(atob(parts[1]));
 
         if (payload.type === IdentityTypes.ACCOUNT && payload.id) {
-          return this.getModel(Account).get(payload.id);
+          return this.getModel("accounts").get(payload.id);
         }
       } catch (e) {
         throw new Error(`Unable to decode claim access token: ${(e as Error).message}`);
@@ -313,7 +313,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     const { data } = await res.json();
 
-    return this.getModel(Account).hydrateAndCache(data);
+    return this.getModel("accounts").hydrateAndCache(data);
   }
 
   async execute<C extends Controller<ControllerInput> = Controller<ControllerInput>>(

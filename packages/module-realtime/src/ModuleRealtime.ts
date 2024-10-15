@@ -27,7 +27,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
   async [symbolModuleInit]() {
     this.#unsubscribeModels = this.#subscribedModelsSubject.subscribe(models => {
       const socket = this.getSocket(false);
-      if (socket?.connected) {
+      if (socket?.connected && models.length) {
         socket.emit("subscribeModels", models.join(","));
       }
     });
@@ -189,6 +189,10 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
   }
 
   subscribeModels(models: Array<string>) {
+    if (!models.length) {
+      return;
+    }
+
     const subscribedModels = this.#subscribedModelsSubject.getValue();
     const nextValue = Array.from(new Set([...subscribedModels, ...models]));
     this.#subscribedModelsSubject.next(nextValue);
