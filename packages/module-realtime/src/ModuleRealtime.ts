@@ -96,41 +96,62 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
       throw new Error("Access token is required to connect to the socket");
     }
 
-    if (this.#connectPromise && !force) {
-      return this.#connectPromise;
-    }
-
-    this.getSocket(false)?.close();
-
+    let socket = this.getSocket(false);
     const scheme = client.options.ssl ? "wss" : "ws";
     const url = client.getBaseUrl(scheme);
 
-    const socket = io(url, {
-      reconnectionDelayMax: this.conf.connectTimeout,
-      rejectUnauthorized: false,
-      transports: this.conf.transports,
-      auth: {
-        accessToken: client.options.accessToken,
-        project: client.options.project,
-      },
-    });
+    // Check the current socket uri
+    // @ts-expect-error - uri exists on io
+    if (force || (socket && socket.io.uri !== url)) {
+      socket && socket.close();
+      this.#connectTimeout && clearTimeout(this.#connectTimeout);
+      this.#connectPromise = undefined;
+      socket = undefined;
+    }
 
-    this.#socketSubject.next(socket);
+    if (this.#connectPromise) {
+      return this.#connectPromise;
+    }
 
-    socket.on("realtime:event", (event: ModelCrudEvent) => {
-      // The server is not supposed to send events for models that are not subscribed
-      // Just an extra check to make sure
-      if (!this.#subscribedModelsSubject.getValue().includes(event.model)) {
-        return;
-      }
+    // Trying to recycle the current socket
+    if (!socket) {
+      socket = io(url, {
+        reconnection: true,
+        reconnectionDelayMax: this.conf.connectTimeout,
+        rejectUnauthorized: false,
+        transports: this.conf.transports,
+        auth: {
+          accessToken: client.options.accessToken,
+          project: client.options.project,
+        },
+      });
 
-      const model = client.getModel(event.model);
-      const adapter = model.getAdapter() as ClientAdapter;
+      this.#socketSubject.next(socket);
 
-      Object.assign(event, { __socketId: socket.id });
+      socket.on("connect", () => {
+        const subscribedModels = this.getSubscribedModels();
+        if (subscribedModels?.length) {
+          socket?.emit("subscribeModels", subscribedModels.join(","));
+        }
+      });
 
-      adapter.dispatch(event);
-    });
+      socket.on("realtime:event", (event: ModelCrudEvent) => {
+        // The server is not supposed to send events for models that are not subscribed
+        // Just an extra check to make sure
+        if (!this.#subscribedModelsSubject.getValue().includes(event.model)) {
+          return;
+        }
+
+        const model = client.getModel(event.model);
+        const adapter = model.getAdapter() as ClientAdapter;
+
+        Object.assign(event, { __socketId: socket?.id });
+
+        adapter.dispatch(event);
+      });
+    } else if (socket.disconnected) {
+      socket.connect();
+    }
 
     this.#connectPromise = new Promise<void>((resolve, reject) => {
       this.#connectTimeout = setTimeout(() => {

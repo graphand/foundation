@@ -1,5 +1,11 @@
 # @graphand/client-module-realtime
 
+## 1.2.5
+
+### Patch Changes
+
+- auto resubscribe to subscribed models on socket reconnect
+
 ## 1.2.4
 
 ### Patch Changes

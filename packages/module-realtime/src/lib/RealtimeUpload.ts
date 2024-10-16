@@ -62,6 +62,7 @@ class RealtimeUpload extends EventTarget {
 
         if (!this.hasEnded) {
           if (type === "end") {
+            percentage = 100;
             nextState.status = "success";
           }
 

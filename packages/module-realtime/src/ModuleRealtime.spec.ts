@@ -1,16 +1,21 @@
+import { ObjectId } from "bson";
 import { vi, MockInstance } from "vitest";
 import { faker } from "@faker-js/faker";
 import { Client, ClientAdapter } from "@graphand/client";
 import ModuleRealtime from "./ModuleRealtime.js";
 import { Socket } from "socket.io-client";
-import { controllerModelCreate, ModelCrudEvent } from "@graphand/core";
+import { controllerModelCreate, ModelCrudEvent, UploadEvent } from "@graphand/core";
 import RealtimeUpload from "./lib/RealtimeUpload.js";
+import { Server } from "socket.io";
 
 describe("ModuleRealtime", () => {
   let client: Client<[typeof ModuleRealtime]>;
   let spyFetch: MockInstance;
+  let io: Server;
 
   beforeAll(() => {
+    io = new Server(3000, {});
+
     spyFetch = vi.spyOn(globalThis, "fetch").mockImplementation(async req => {
       if (!(req instanceof Request)) {
         return new Response();
@@ -22,16 +27,41 @@ describe("ModuleRealtime", () => {
         return new Response(JSON.stringify({ data: { rows: [], count: 0 } }));
       }
 
+      if (url.pathname === "/medias") {
+        const uploadId = req.headers.get("Upload-Id");
+        // emit event
+        if (uploadId) {
+          const progressEvent: UploadEvent = {
+            type: "progress",
+            uploadId,
+            receivedLength: 0,
+          };
+          io.emit("upload:event", progressEvent);
+
+          const endEvent: UploadEvent = {
+            type: "end",
+            uploadId,
+            receivedLength: 0,
+          };
+          io.emit("upload:event", endEvent);
+        }
+
+        return new Response(JSON.stringify({ data: { _id: new ObjectId().toString() } }));
+      }
+
       return new Response(JSON.stringify({ data: {} }));
     });
   });
 
   afterAll(() => {
     spyFetch.mockRestore();
+    io.close();
   });
 
   beforeEach(() => {
     client = new Client([[ModuleRealtime]], {
+      endpoint: "127.0.0.1:3000",
+      ssl: false,
       accessToken: faker.internet.password(),
       project: null,
     });
@@ -53,14 +83,14 @@ describe("ModuleRealtime", () => {
     expect(client.get("realtime").getSocket(false)).toBeInstanceOf(Socket);
   });
 
-  it.skip("should not connect automatically when autoConnect is false", async () => {
+  it("should not connect automatically when autoConnect is false", async () => {
     const _client = new Client([[ModuleRealtime, { autoConnect: false }]], client.options);
     await _client.init();
     expect(_client.get("realtime").getSocket(false)).toBeUndefined();
     _client.destroy();
   });
 
-  it.skip("should be able to connect to the socket", async () => {
+  it("should be able to connect to the socket", async () => {
     const socket = client.get("realtime").getSocket();
     expect(socket).toBeInstanceOf(Socket);
     expect(socket?.connected).toBeFalsy();
@@ -74,7 +104,7 @@ describe("ModuleRealtime", () => {
     expect(socket?.connected).toBeFalsy();
   });
 
-  it.skip("should dispatch ModelCrudEvent on realtime:event", async () => {
+  it("should dispatch ModelCrudEvent on realtime:event", async () => {
     client.get("realtime").subscribeModels(["testModel"]);
     await client.get("realtime").connect();
     const socket = client.get("realtime").getSocket();
@@ -103,7 +133,7 @@ describe("ModuleRealtime", () => {
     );
   });
 
-  it.skip("should subscribe to models", async () => {
+  it("should subscribe to models", async () => {
     let spyEmit = vi.spyOn(client.get("realtime").getSocket(false) as Socket, "emit");
 
     client.get("realtime").subscribeModels(["testModel"]);
@@ -118,14 +148,16 @@ describe("ModuleRealtime", () => {
 
     await client.get("realtime").disconnect();
 
-    spyEmit = vi.spyOn(client.get("realtime").getSocket(false) as Socket, "emit");
+    spyEmit.mockClear();
+
+    expect(spyEmit).not.toHaveBeenCalled();
 
     await client.get("realtime").connect();
 
     expect(spyEmit).toHaveBeenCalledWith("subscribeModels", "testModel,testModel2");
   });
 
-  it.skip("should be able to subscribe to upload events", async () => {
+  it("should be able to subscribe to upload events", async () => {
     await client.get("realtime").connect();
     const upload = client.get("realtime").getUpload("test");
     expect(upload).toBeInstanceOf(RealtimeUpload);
@@ -133,11 +165,8 @@ describe("ModuleRealtime", () => {
     const stateSpy = vi.fn();
     const unsub = upload.subscribe(stateSpy);
 
-    await new Promise(resolve => setTimeout(resolve, 500));
-
     const form = new FormData();
-    const array = new Array(5000).fill("a");
-    const file = new File(array, "test.txt", { type: "text/plain" });
+    const file = new File(["sample"], "test.txt", { type: "text/plain" });
     form.append("file", file);
 
     const res = await client.execute(controllerModelCreate, {
@@ -150,9 +179,9 @@ describe("ModuleRealtime", () => {
       },
     });
 
-    expect(res.ok).toBeTruthy();
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    expect(res.ok).toBeTruthy();
 
     expect(stateSpy.mock.calls.length).toBeGreaterThan(2);
 
