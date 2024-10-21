@@ -14,7 +14,7 @@ export class Settings extends Model {
       key: { type: FieldTypes.TEXT },
       data: {
         type: FieldTypes.NESTED,
-        options: { default: {}, dependsOn: "$.key" },
+        options: { default: {}, fields: {}, conditionalFields: { dependsOn: "$.key", mappings: {} } },
       },
     },
   } satisfies ModelDefinition;

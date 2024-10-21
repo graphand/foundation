@@ -67,6 +67,39 @@ export class DataModel extends Model {
                       },
                       options: {
                         type: FieldTypes.NESTED,
+                        options: {
+                          strict: true,
+                          fields: {
+                            default: { type: FieldTypes.DEFAULT },
+                            items: { type: FieldTypes.NESTED },
+                            validators: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.NESTED } } },
+                            distinct: { type: FieldTypes.BOOLEAN },
+                            enum: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
+                            strict: { type: FieldTypes.BOOLEAN },
+                            ref: { type: FieldTypes.TEXT },
+                            defaultField: { type: FieldTypes.NESTED },
+                            conditionalFields: { type: FieldTypes.NESTED },
+                            fields: { type: FieldTypes.NESTED },
+                          },
+                          conditionalFields: {
+                            dependsOn: "$.type",
+                            mappings: {
+                              [FieldTypes.ARRAY]: ["items", "validators", "distinct"],
+                              [FieldTypes.TEXT]: ["default", "enum", "strict"],
+                              [FieldTypes.RELATION]: ["ref"],
+                              [FieldTypes.NUMBER]: ["default"],
+                              [FieldTypes.NESTED]: [
+                                "default",
+                                "defaultField",
+                                "conditionalFields",
+                                "fields",
+                                "strict",
+                                "validators",
+                              ],
+                              [FieldTypes.BOOLEAN]: ["default"],
+                            },
+                          },
+                        },
                       },
                     },
                     validators: [

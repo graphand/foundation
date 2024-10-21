@@ -2053,6 +2053,9 @@ describe("Test Model", () => {
           fields: {
             field1: {
               type: FieldTypes.TEXT,
+              options: {
+                default: "defaultValue",
+              },
             },
           },
         },
@@ -2065,6 +2068,10 @@ describe("Test Model", () => {
       await TestModel.reloadModel();
 
       expect(TestModel.fieldsKeys).toContain("field1");
+
+      const i = TestModel.hydrate({});
+      // @ts-ignore
+      expect(i.field1).toEqual("defaultValue");
 
       Object.assign(dm.definition as ModelDefinition, {
         fields: {

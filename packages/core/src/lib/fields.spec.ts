@@ -8,7 +8,7 @@ import { Validator } from "@/lib/Validator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { ValidationError } from "@/lib/ValidationError.js";
 import { PromiseModel } from "@/lib/PromiseModel.js";
-import { Account, DataModel, JSONType, Model } from "@/index.js";
+import { Account, DataModel, JSONType, Model, Patterns } from "@/index.js";
 import { PromiseModelList } from "@/lib/PromiseModelList.js";
 
 describe("test fields", () => {
@@ -1104,104 +1104,150 @@ describe("test fields", () => {
       });
     });
 
-    // The option dependsOn allows to define another field of the model that value will be used to determine which sub field to use.
-    // This is useful when you have a field that can be of different types depending on another field value.
-    // This also filters the validators and serializers to only use the ones defined in the sub field.
-    describe("options.dependsOn", () => {
-      it("should use dependsOn to determine which field to use", async () => {
+    // The `conditionalFields` option allows certain fields to be included or excluded based on the value of another field.
+    // It uses `dependsOn` to specify the reference field and defines `mappings` to determine which sub-fields to activate.
+    // An optional `defaultMapping` can be provided for cases where the `dependsOn` value doesn't match any mapping.
+    // Validators and serializers are applied only to the active fields as defined by the current mapping.
+    describe("options.conditionalFields", () => {
+      it("should use conditionalFields to determine which fields to include based on a field value", async () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
           fields: {
-            type: {
+            channel: {
               type: FieldTypes.TEXT,
               options: {
-                enum: ["text", "number"],
+                enum: ["email", "slack"],
                 strict: true,
               },
             },
-            obj: {
+            options: {
               type: FieldTypes.NESTED,
               options: {
-                dependsOn: "type",
                 strict: true,
                 fields: {
-                  text: {
-                    type: FieldTypes.TEXT,
-                  },
-                  number: {
-                    type: FieldTypes.NUMBER,
+                  email: { type: FieldTypes.TEXT },
+                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                },
+                conditionalFields: {
+                  dependsOn: "channel",
+                  defaultMapping: "email",
+                  mappings: {
+                    email: ["email"],
+                    slack: ["slackWebhookUrl"],
                   },
                 },
               },
             },
           },
-        } as const).extend({ adapterClass: _adapter });
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
-        const text = faker.lorem.word();
+        const email = faker.internet.email();
 
         const i = model.hydrate({
-          type: "text",
-          obj: {
-            text,
-            number: 123,
+          channel: "email",
+          options: {
+            email,
+            slackWebhookUrl: "https://hooks.slack.com/services/...",
           },
         });
 
-        expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj?.text).toBe(text);
-        expect(i.obj?.number).toBeUndefined();
+        expect(i.options).toBeInstanceOf(Object);
+        expect(i.options?.email).toBe(email);
+        expect(i.options?.slackWebhookUrl).toBeUndefined();
       });
 
-      // $ flag allows to point to the parent nested field instead of the root schema
-      it("should work with $ flag", async () => {
+      it("should apply validators conditionally based on conditionalFields", async () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
           fields: {
-            type: {
+            channel: {
               type: FieldTypes.TEXT,
               options: {
-                enum: ["text", "number"],
+                enum: ["email", "slack"],
                 strict: true,
               },
             },
-            obj: {
+            options: {
               type: FieldTypes.NESTED,
               options: {
-                dependsOn: "$.type",
                 strict: true,
                 fields: {
-                  text: {
-                    type: FieldTypes.TEXT,
-                  },
-                  number: {
-                    type: FieldTypes.NUMBER,
+                  email: { type: FieldTypes.TEXT },
+                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                },
+                conditionalFields: {
+                  dependsOn: "channel",
+                  defaultMapping: "email",
+                  mappings: {
+                    email: ["email"],
+                    slack: ["slackWebhookUrl"],
                   },
                 },
+                validators: [
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "email" },
+                  },
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "slackWebhookUrl" },
+                  },
+                ],
               },
             },
           },
-        } as const).extend({ adapterClass: _adapter });
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
-        const text = faker.lorem.word();
+        // Should pass validation when email is provided
+        await expect(
+          model.validate([
+            {
+              channel: "email",
+              options: {
+                email: faker.internet.email(),
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
 
-        const i = model.hydrate({
-          type: "text",
-          obj: {
-            text,
-            number: 123,
-          },
-        });
+        // Should fail validation when email is missing
+        await expect(
+          model.validate([
+            {
+              channel: "email",
+              options: {},
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
 
-        expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj?.text).toBe(text);
-        expect(i.obj?.number).toBeUndefined();
+        // Should pass validation when slackWebhookUrl is provided
+        await expect(
+          model.validate([
+            {
+              channel: "slack",
+              options: {
+                slackWebhookUrl: "https://hooks.slack.com/services/...",
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        // Should fail validation when slackWebhookUrl is missing
+        await expect(
+          model.validate([
+            {
+              channel: "slack",
+              options: {},
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
       });
 
-      it("should use dependsOn to determine which field to use in json", async () => {
+      it("should apply nested validators conditionally based on conditionalFields", async () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
@@ -1209,195 +1255,159 @@ describe("test fields", () => {
             type: {
               type: FieldTypes.TEXT,
               options: {
-                enum: ["text", "number"],
+                enum: ["type1", "type2"],
                 strict: true,
               },
             },
             obj: {
               type: FieldTypes.NESTED,
               options: {
-                dependsOn: "type",
                 strict: true,
                 fields: {
-                  text: {
-                    type: FieldTypes.TEXT,
-                  },
-                  number: {
-                    type: FieldTypes.NUMBER,
-                  },
-                },
-              },
-            },
-          },
-        } as const).extend({ adapterClass: _adapter });
-        await model.initialize();
-
-        const text = faker.lorem.word();
-
-        const i = model.hydrate({
-          type: "text",
-          obj: {
-            text,
-            number: 123,
-          },
-        });
-
-        const json = i.toJSON();
-
-        expect(json.obj).toBeInstanceOf(Object);
-        expect(json.obj?.text).toBe(text);
-        expect(json.obj?.number).toBeUndefined();
-      });
-
-      it("should work with nested fields", async () => {
-        const _adapter = mockAdapter();
-
-        const model = mockModel({
-          fields: {
-            type: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: ["text", "number"],
-                strict: true,
-              },
-            },
-            obj: {
-              type: FieldTypes.NESTED,
-              options: {
-                fields: {
-                  nested: {
+                  field1: {
                     type: FieldTypes.NESTED,
                     options: {
-                      dependsOn: "type",
                       strict: true,
                       fields: {
-                        text: {
-                          type: FieldTypes.TEXT,
-                        },
-                        number: {
-                          type: FieldTypes.NUMBER,
-                        },
+                        field11: { type: FieldTypes.TEXT },
+                        field12: { type: FieldTypes.TEXT },
                       },
+                      validators: [
+                        {
+                          type: ValidatorTypes.REQUIRED,
+                          options: { field: "field12" },
+                        },
+                      ],
                     },
+                  },
+                  field2: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      strict: true,
+                      fields: {
+                        field21: { type: FieldTypes.TEXT },
+                        field22: { type: FieldTypes.TEXT },
+                      },
+                      validators: [
+                        {
+                          type: ValidatorTypes.REQUIRED,
+                          options: { field: "field22" },
+                        },
+                      ],
+                    },
+                  },
+                },
+                conditionalFields: {
+                  dependsOn: "$.type",
+                  mappings: {
+                    type1: ["field1"],
+                    type2: ["field2"],
                   },
                 },
               },
             },
           },
-        } as const).extend({ adapterClass: _adapter });
-        await model.initialize();
-
-        const text = faker.lorem.word();
-
-        const i = model.hydrate({
-          type: "text",
-          obj: {
-            nested: {
-              text,
-              number: 123,
-            },
-          },
-        });
-
-        expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj?.nested).toBeInstanceOf(Object);
-        expect(i.obj?.nested?.text).toBe(text);
-        expect(i.obj?.nested?.number).toBeUndefined();
-      });
-
-      it("should work in nested arrays", async () => {
-        const _adapter = mockAdapter();
-
-        const model = mockModel({
-          fields: {
-            type: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: ["text", "number"],
-                strict: true,
-              },
-            },
-            arr: {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.NESTED,
-                  options: {
-                    dependsOn: "type",
-                    strict: true,
-                    fields: {
-                      text: {
-                        type: FieldTypes.TEXT,
-                      },
-                      number: {
-                        type: FieldTypes.NUMBER,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        } as const).extend({ adapterClass: _adapter });
-        await model.initialize();
-
-        const i = model.hydrate({
-          type: "text",
-          arr: [
+          validators: [
             {
-              text: "text1",
-              number: 123,
+              type: ValidatorTypes.REQUIRED,
+              options: { field: "obj.field1.field11" },
             },
             {
-              text: "text2",
-              number: 123,
+              type: ValidatorTypes.REQUIRED,
+              options: { field: "obj.field2.field21" },
             },
           ],
-        });
+        }).extend({ adapterClass: _adapter });
+        await model.initialize();
 
-        expect(i.arr).toBeInstanceOf(Array);
-        expect(i.arr?.[0]).toBeInstanceOf(Object);
-        expect(i.arr?.[0]?.text).toBe("text1");
-        expect(i.arr?.[0]?.number).toBeUndefined();
-        expect(i.arr?.[1]).toBeInstanceOf(Object);
-        expect(i.arr?.[1]?.text).toBe("text2");
-        expect(i.arr?.[1]?.number).toBeUndefined();
+        await expect(
+          model.validate([
+            {
+              type: "type1",
+              obj: {
+                field1: {
+                  field11: "value",
+                  field12: "value",
+                },
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        await expect(
+          model.validate([
+            {
+              type: "type2",
+              obj: {
+                field2: {
+                  field21: "value",
+                  field22: "value",
+                },
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        await expect(model.validate([{}])).rejects.toThrow(ValidationError);
+
+        await expect(
+          model.validate([
+            {
+              type: "type1",
+              obj: {
+                field1: {
+                  field11: "value",
+                },
+              },
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+
+        await expect(
+          model.validate([
+            {
+              type: "type1",
+              obj: {
+                field2: {
+                  field21: "value",
+                  field22: "value",
+                },
+              },
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
       });
 
-      it("should work with dependsOn as a key to a nested field", async () => {
+      it("should work with nested conditionalFields", async () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
           fields: {
-            obj1: {
+            settings: {
               type: FieldTypes.NESTED,
               options: {
                 fields: {
-                  type: {
+                  mode: {
                     type: FieldTypes.TEXT,
                     options: {
-                      enum: ["text", "number"],
+                      enum: ["simple", "advanced"],
                       strict: true,
                     },
                   },
-                },
-              },
-            },
-            obj2: {
-              type: FieldTypes.NESTED,
-              options: {
-                fields: {
-                  nested: {
+                  config: {
                     type: FieldTypes.NESTED,
                     options: {
-                      dependsOn: "obj1.type",
                       strict: true,
                       fields: {
-                        text: {
-                          type: FieldTypes.TEXT,
-                        },
-                        number: {
-                          type: FieldTypes.NUMBER,
+                        simpleOption: { type: FieldTypes.TEXT },
+                        advancedOption: { type: FieldTypes.NUMBER },
+                      },
+                      conditionalFields: {
+                        dependsOn: "$.mode",
+                        defaultMapping: "simple",
+                        mappings: {
+                          simple: ["simpleOption"],
+                          advanced: ["advancedOption"],
                         },
                       },
                     },
@@ -1406,33 +1416,29 @@ describe("test fields", () => {
               },
             },
           },
-        } as const).extend({ adapterClass: _adapter });
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
-        const text = faker.lorem.word();
-
         const i = model.hydrate({
-          obj1: {
-            type: "text",
-          },
-          obj2: {
-            nested: {
-              text,
-              number: 123,
+          settings: {
+            mode: "simple",
+            config: {
+              simpleOption: "option1",
+              advancedOption: 123,
             },
           },
         });
 
-        expect(i.obj2).toBeInstanceOf(Object);
-        expect(i.obj2?.nested).toBeInstanceOf(Object);
-        expect(i.obj2?.nested?.text).toBe(text);
-        expect(i.obj2?.nested?.number).toBeUndefined();
+        expect(i.settings?.config?.simpleOption).toBe("option1");
+        expect(i.settings?.config?.advancedOption).toBeUndefined();
       });
 
-      it("should work with nested fields in array", async () => {
+      it("should work with conditionalFields in arrays", async () => {
+        const _adapter = mockAdapter();
+
         const model = mockModel({
           fields: {
-            arr: {
+            items: {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
@@ -1442,21 +1448,24 @@ describe("test fields", () => {
                       type: {
                         type: FieldTypes.TEXT,
                         options: {
-                          enum: ["text", "number"],
+                          enum: ["A", "B"],
                           strict: true,
                         },
                       },
-                      obj: {
+                      data: {
                         type: FieldTypes.NESTED,
                         options: {
-                          dependsOn: "$.type",
                           strict: true,
                           fields: {
-                            text: {
-                              type: FieldTypes.TEXT,
-                            },
-                            number: {
-                              type: FieldTypes.NUMBER,
+                            fieldA: { type: FieldTypes.TEXT },
+                            fieldB: { type: FieldTypes.NUMBER },
+                          },
+                          conditionalFields: {
+                            dependsOn: "$.type",
+                            defaultMapping: "A",
+                            mappings: {
+                              A: ["fieldA"],
+                              B: ["fieldB"],
                             },
                           },
                         },
@@ -1467,395 +1476,340 @@ describe("test fields", () => {
               },
             },
           },
-        }).extend({ adapterClass: adapter });
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const i = model.hydrate({
-          arr: [
+          items: [
             {
-              type: "text",
-              obj: {
-                text: "test",
-                number: 123,
+              type: "A",
+              data: {
+                fieldA: "valueA",
+                fieldB: 100,
               },
             },
             {
-              type: "number",
-              obj: {
-                text: "test",
-                number: 123,
+              type: "B",
+              data: {
+                fieldA: "valueB",
+                fieldB: 200,
               },
             },
           ],
-        } as object);
+        });
 
-        expect(i.arr?.[0]?.obj?.text).toBe("test");
-        expect(i.arr?.[0]?.obj?.number).toBeUndefined();
-        expect(i.arr?.[1]?.obj?.text).toBeUndefined();
-        expect(i.arr?.[1]?.obj?.number).toBe(123);
+        expect(i.items?.[0]?.data?.fieldA).toBe("valueA");
+        expect(i.items?.[0]?.data?.fieldB).toBeUndefined();
+        expect(i.items?.[1]?.data?.fieldA).toBeUndefined();
+        expect(i.items?.[1]?.data?.fieldB).toBe(200);
       });
 
-      it("should validate only the fields defined in the dependsOn field", async () => {
+      it("should validate only the fields specified in the conditionalFields mapping", async () => {
         const model = mockModel({
           fields: {
-            type: {
+            channel: {
               type: FieldTypes.TEXT,
               options: {
-                enum: ["text", "number"],
+                enum: ["email", "slack"],
                 strict: true,
               },
             },
-            obj: {
+            options: {
               type: FieldTypes.NESTED,
               options: {
-                dependsOn: "type",
                 strict: true,
                 fields: {
-                  text: {
-                    type: FieldTypes.TEXT,
-                  },
-                  number: {
-                    type: FieldTypes.NUMBER,
+                  email: { type: FieldTypes.TEXT },
+                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                },
+                conditionalFields: {
+                  dependsOn: "channel",
+                  defaultMapping: "email",
+                  mappings: {
+                    email: ["email"],
+                    slack: ["slackWebhookUrl"],
                   },
                 },
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "number" }, // This validator should be ignored as it is not in the dependsOn field
+                    options: { field: "email" },
+                  },
+                  {
+                    type: ValidatorTypes.REGEX,
+                    options: { field: "email", pattern: Patterns.EMAIL },
+                  },
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "slackWebhookUrl" },
                   },
                 ],
               },
             },
           },
-          validators: [
-            {
-              type: ValidatorTypes.REQUIRED,
-              options: { field: "obj.number" }, // This validator should be ignored
-            },
-          ],
         }).extend({ adapterClass: mockAdapter() });
         await model.initialize();
 
+        // Should pass when email is valid
         await expect(
           model.validate([
             {
-              type: "text",
-              obj: {
-                text: faker.lorem.word(),
+              channel: "email",
+              options: {
+                email: "user@example.com",
               },
             },
           ]),
         ).resolves.toBeTruthy();
 
+        // Should fail when email is invalid
         await expect(
           model.validate([
             {
-              type: "number",
-              obj: {
-                text: faker.lorem.word(),
+              channel: "email",
+              options: {
+                email: "invalid-email",
               },
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+
+        // Should fail when email is missing
+        await expect(
+          model.validate([
+            {
+              channel: "email",
+              options: {},
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+
+        // Should pass when slackWebhookUrl is provided
+        await expect(
+          model.validate([
+            {
+              channel: "slack",
+              options: {
+                slackWebhookUrl: "https://hooks.slack.com/services/...",
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        // Should fail when slackWebhookUrl is missing
+        await expect(
+          model.validate([
+            {
+              channel: "slack",
+              options: {},
             },
           ]),
         ).rejects.toThrow(ValidationError);
       });
 
-      it("should still validate the fields concerned by the dependsOn field in nested fields", async () => {
+      it("should ignore validators for fields not included in the conditionalFields mapping", async () => {
         const model = mockModel({
           fields: {
-            type: {
+            channel: {
               type: FieldTypes.TEXT,
               options: {
-                enum: ["text", "number"],
+                enum: ["email", "slack"],
                 strict: true,
               },
             },
-            obj: {
+            options: {
               type: FieldTypes.NESTED,
               options: {
-                dependsOn: "type",
                 strict: true,
                 fields: {
-                  text: {
-                    type: FieldTypes.TEXT,
-                  },
-                  number: {
-                    type: FieldTypes.NUMBER,
+                  email: { type: FieldTypes.TEXT },
+                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                },
+                conditionalFields: {
+                  dependsOn: "channel",
+                  defaultMapping: "email",
+                  mappings: {
+                    email: ["email"],
+                    slack: ["slackWebhookUrl"],
                   },
                 },
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "text" }, // This validator should be applied
+                    options: { field: "email" },
+                  },
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "slackWebhookUrl" },
                   },
                 ],
               },
             },
           },
-          validators: [
-            {
-              type: ValidatorTypes.REQUIRED,
-              options: { field: "obj.number" }, // This validator should be ignored
-            },
-          ],
         }).extend({ adapterClass: mockAdapter() });
         await model.initialize();
 
+        // Should not require slackWebhookUrl when channel is email
         await expect(
           model.validate([
             {
-              type: "text",
-              obj: {},
+              channel: "email",
+              options: {
+                email: "user@example.com",
+              },
             },
           ]),
-        ).rejects.toThrow(ValidationError);
+        ).resolves.toBeTruthy();
+
+        // Should not require email when channel is slack
+        await expect(
+          model.validate([
+            {
+              channel: "slack",
+              options: {
+                slackWebhookUrl: "https://hooks.slack.com/services/...",
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
       });
 
-      it("should validate only the fields defined in the dependsOn field in nested fields", async () => {
+      it("should default to defaultMapping when value not in mappings", async () => {
         const model = mockModel({
           fields: {
-            type: {
+            channel: {
               type: FieldTypes.TEXT,
               options: {
-                enum: ["text", "number"],
+                enum: ["email", "slack", "unknown"],
                 strict: true,
               },
             },
-            obj: {
+            options: {
+              type: FieldTypes.NESTED,
+              options: {
+                strict: true,
+                fields: {
+                  email: { type: FieldTypes.TEXT },
+                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                },
+                conditionalFields: {
+                  dependsOn: "channel",
+                  defaultMapping: "email",
+                  mappings: {
+                    email: ["email"],
+                    slack: ["slackWebhookUrl"],
+                  },
+                },
+                validators: [
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "email" },
+                  },
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "slackWebhookUrl" },
+                  },
+                ],
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        // Should use default mapping when channel is unknown
+        const i = model.hydrate({
+          channel: "unknown",
+          options: {
+            email: "user@example.com",
+            slackWebhookUrl: "https://hooks.slack.com/services/...",
+          },
+        });
+
+        expect(i.options?.email).toBe("user@example.com");
+        expect(i.options?.slackWebhookUrl).toBeUndefined();
+      });
+
+      it("should handle conditionalFields without defaultMapping", async () => {
+        const model = mockModel({
+          fields: {
+            channel: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["email", "slack", "unknown"],
+                strict: true,
+              },
+            },
+            options: {
+              type: FieldTypes.NESTED,
+              options: {
+                strict: true,
+                fields: {
+                  email: { type: FieldTypes.TEXT },
+                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                },
+                conditionalFields: {
+                  dependsOn: "channel",
+                  mappings: {
+                    email: ["email"],
+                    slack: ["slackWebhookUrl"],
+                  },
+                },
+                validators: [
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "email" },
+                  },
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "slackWebhookUrl" },
+                  },
+                ],
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        // Should include no fields when channel is unknown
+        const i = model.hydrate({
+          channel: "unknown",
+          options: {
+            email: "user@example.com",
+            slackWebhookUrl: "https://hooks.slack.com/services/...",
+          },
+        });
+
+        expect(i.options?.email).toBeUndefined();
+        expect(i.options?.slackWebhookUrl).toBeUndefined();
+      });
+
+      it("should support using '$' to reference parent fields", async () => {
+        const model = mockModel({
+          fields: {
+            settings: {
               type: FieldTypes.NESTED,
               options: {
                 fields: {
-                  nested: {
+                  mode: {
+                    type: FieldTypes.TEXT,
+                    options: {
+                      enum: ["light", "dark"],
+                      strict: true,
+                    },
+                  },
+                  theme: {
                     type: FieldTypes.NESTED,
                     options: {
-                      dependsOn: "type",
                       strict: true,
                       fields: {
-                        text: {
-                          type: FieldTypes.TEXT,
-                        },
-                        number: {
-                          type: FieldTypes.NUMBER,
-                        },
+                        lightOption: { type: FieldTypes.TEXT },
+                        darkOption: { type: FieldTypes.TEXT },
                       },
-                      validators: [
-                        {
-                          type: ValidatorTypes.REQUIRED,
-                          options: { field: "number" }, // This validator should be ignored as it is not in the dependsOn field
-                        },
-                      ],
-                    },
-                  },
-                },
-              },
-            },
-          },
-          validators: [
-            {
-              type: ValidatorTypes.REQUIRED,
-              options: { field: "obj.nested.number" }, // This validator should be ignored
-            },
-          ],
-        }).extend({ adapterClass: mockAdapter() });
-        await model.initialize();
-
-        await expect(
-          model.validate([
-            {
-              type: "text",
-              obj: {
-                nested: {
-                  text: faker.lorem.word(),
-                },
-              },
-            },
-          ]),
-        ).resolves.toBeTruthy();
-
-        await expect(
-          model.validate([
-            {
-              type: "number",
-              obj: {
-                nested: {
-                  text: faker.lorem.word(),
-                },
-              },
-            },
-          ]),
-        ).rejects.toThrow(ValidationError);
-      });
-
-      it("should validate only the fields defined in the dependsOn field in deeply nested structures", async () => {
-        const model = mockModel({
-          fields: {
-            type: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: ["text", "number"],
-                strict: true,
-              },
-            },
-            obj: {
-              type: FieldTypes.NESTED,
-              options: {
-                fields: {
-                  level1: {
-                    type: FieldTypes.NESTED,
-                    options: {
-                      dependsOn: "type",
-                      strict: true,
-                      fields: {
-                        text: {
-                          type: FieldTypes.TEXT,
-                        },
-                        number: {
-                          type: FieldTypes.NUMBER,
-                        },
-                      },
-                      validators: [
-                        {
-                          type: ValidatorTypes.REQUIRED,
-                          options: { field: "number" }, // This validator should be ignored as it is not in the dependsOn field
-                        },
-                      ],
-                    },
-                  },
-                },
-              },
-            },
-          },
-          validators: [
-            {
-              type: ValidatorTypes.REQUIRED,
-              options: { field: "obj.level1.number" }, // This validator should be ignored
-            },
-          ],
-        }).extend({ adapterClass: mockAdapter() });
-        await model.initialize();
-
-        await expect(
-          model.validate([
-            {
-              type: "text",
-              obj: {
-                level1: {
-                  text: faker.lorem.word(),
-                },
-              },
-            },
-          ]),
-        ).resolves.toBeTruthy();
-
-        await expect(
-          model.validate([
-            {
-              type: "number",
-              obj: {
-                level1: {
-                  text: faker.lorem.word(),
-                },
-              },
-            },
-          ]),
-        ).rejects.toThrow(ValidationError);
-      });
-
-      it("should ignore validators when the dependsOn value does not match", async () => {
-        const model = mockModel({
-          fields: {
-            type: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: ["text", "number"],
-                strict: true,
-              },
-            },
-            obj: {
-              type: FieldTypes.NESTED,
-              options: {
-                dependsOn: "type",
-                strict: true,
-                fields: {
-                  text: {
-                    type: FieldTypes.TEXT,
-                  },
-                  number: {
-                    type: FieldTypes.NUMBER,
-                  },
-                },
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { field: "number" }, // This validator should be ignored as it is not in the dependsOn field
-                  },
-                ],
-              },
-            },
-          },
-          validators: [
-            {
-              type: ValidatorTypes.REQUIRED,
-              options: { field: "obj.number" }, // This validator should be ignored
-            },
-          ],
-        }).extend({ adapterClass: mockAdapter() });
-        await model.initialize();
-
-        await expect(
-          model.validate([
-            {
-              type: "text",
-              obj: {
-                text: faker.lorem.word(),
-              },
-            },
-          ]),
-        ).resolves.toBeTruthy();
-
-        await expect(
-          model.validate([
-            {
-              type: "number",
-              obj: {
-                text: faker.lorem.word(),
-              },
-            },
-          ]),
-        ).rejects.toThrow(ValidationError);
-      });
-
-      it("should ignore validators in nested ignored fields", async () => {
-        const model = mockModel({
-          fields: {
-            target: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: ["nested1", "nested2"],
-                strict: true,
-              },
-            },
-            obj: {
-              type: FieldTypes.NESTED,
-              options: {
-                dependsOn: "target",
-                strict: true,
-                fields: {
-                  nested1: {
-                    type: FieldTypes.NESTED,
-                    options: {
-                      fields: {
-                        text: {
-                          type: FieldTypes.TEXT,
-                        },
-                      },
-                    },
-                  },
-                  nested2: {
-                    type: FieldTypes.NESTED,
-                    options: {
-                      fields: {
-                        number: {
-                          type: FieldTypes.NUMBER,
+                      conditionalFields: {
+                        dependsOn: "$.mode",
+                        mappings: {
+                          light: ["lightOption"],
+                          dark: ["darkOption"],
                         },
                       },
                     },
@@ -1866,78 +1820,370 @@ describe("test fields", () => {
           },
         }).extend({ adapterClass: mockAdapter() });
         await model.initialize();
-
-        const text = faker.lorem.word();
 
         const i = model.hydrate({
-          target: "nested1",
-          obj: {
-            nested1: {
-              text,
+          settings: {
+            mode: "light",
+            theme: {
+              lightOption: "bright",
+              darkOption: "dim",
             },
           },
         });
 
-        expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj?.nested1).toBeInstanceOf(Object);
-        expect(i.obj?.nested1?.text).toBe(text);
-        expect(i.obj?.nested2).toBeUndefined();
-
-        await expect(
-          model.validate([
-            {
-              target: "nested1",
-              obj: {
-                nested1: {
-                  text,
-                },
-              },
-            },
-          ]),
-        ).resolves.toBeTruthy();
+        expect(i.settings?.theme?.lightOption).toBe("bright");
+        expect(i.settings?.theme?.darkOption).toBeUndefined();
       });
 
-      it("should still validate the fields in the dependsOn field", async () => {
+      it("should work with conditionalFields in nested arrays", async () => {
         const model = mockModel({
           fields: {
-            target: {
-              type: FieldTypes.TEXT,
+            settings: {
+              type: FieldTypes.ARRAY,
               options: {
-                enum: ["nested1", "nested2"],
-                strict: true,
-              },
-            },
-            obj: {
-              type: FieldTypes.NESTED,
-              options: {
-                dependsOn: "target",
-                strict: true,
-                fields: {
-                  nested1: {
-                    type: FieldTypes.NESTED,
-                    options: {
-                      fields: {
-                        text: {
-                          type: FieldTypes.TEXT,
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      type: {
+                        type: FieldTypes.TEXT,
+                        options: {
+                          enum: ["A", "B"],
+                          strict: true,
+                        },
+                      },
+                      config: {
+                        type: FieldTypes.NESTED,
+                        options: {
+                          strict: true,
+                          fields: {
+                            optionA: { type: FieldTypes.TEXT },
+                            optionB: { type: FieldTypes.TEXT },
+                          },
+                          conditionalFields: {
+                            dependsOn: "$.type",
+                            mappings: {
+                              A: ["optionA"],
+                              B: ["optionB"],
+                            },
+                          },
                         },
                       },
                     },
                   },
-                  nested2: {
-                    type: FieldTypes.NESTED,
-                    options: {
-                      fields: {
-                        number: {
-                          type: FieldTypes.NUMBER,
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        const i = model.hydrate({
+          settings: [
+            {
+              type: "A",
+              config: {
+                optionA: "valueA",
+                optionB: "valueB",
+              },
+            },
+            {
+              type: "B",
+              config: {
+                optionA: "valueA",
+                optionB: "valueB",
+              },
+            },
+          ],
+        });
+
+        expect(i.settings?.[0]?.config?.optionA).toBe("valueA");
+        expect(i.settings?.[0]?.config?.optionB).toBeUndefined();
+        expect(i.settings?.[1]?.config?.optionA).toBeUndefined();
+        expect(i.settings?.[1]?.config?.optionB).toBe("valueB");
+      });
+
+      it("should apply validators conditionally in nested arrays", async () => {
+        const model = mockModel({
+          fields: {
+            settings: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      type: {
+                        type: FieldTypes.TEXT,
+                        options: {
+                          enum: ["A", "B"],
+                          strict: true,
+                        },
+                      },
+                      config: {
+                        type: FieldTypes.NESTED,
+                        options: {
+                          strict: true,
+                          fields: {
+                            optionA: { type: FieldTypes.TEXT },
+                            optionB: { type: FieldTypes.TEXT },
+                          },
+                          conditionalFields: {
+                            dependsOn: "$.type",
+                            mappings: {
+                              A: ["optionA"],
+                              B: ["optionB"],
+                            },
+                          },
+                          validators: [
+                            {
+                              type: ValidatorTypes.REQUIRED,
+                              options: { field: "optionA" },
+                            },
+                            {
+                              type: ValidatorTypes.REQUIRED,
+                              options: { field: "optionB" },
+                            },
+                          ],
                         },
                       },
                     },
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        // Should pass validation
+        await expect(
+          model.validate([
+            {
+              settings: [
+                {
+                  type: "A",
+                  config: {
+                    optionA: "valueA",
+                  },
+                },
+                {
+                  type: "B",
+                  config: {
+                    optionB: "valueB",
+                  },
+                },
+              ],
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        // Should fail validation when required fields are missing
+        await expect(
+          model.validate([
+            {
+              settings: [
+                {
+                  type: "A",
+                  config: {},
+                },
+              ],
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should ignore validators for unused fields in nested arrays", async () => {
+        const model = mockModel({
+          fields: {
+            settings: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      type: {
+                        type: FieldTypes.TEXT,
+                        options: {
+                          enum: ["A", "B"],
+                          strict: true,
+                        },
+                      },
+                      config: {
+                        type: FieldTypes.NESTED,
+                        options: {
+                          strict: true,
+                          fields: {
+                            optionA: { type: FieldTypes.TEXT },
+                            optionB: { type: FieldTypes.TEXT },
+                          },
+                          conditionalFields: {
+                            dependsOn: "$.type",
+                            mappings: {
+                              A: ["optionA"],
+                              B: ["optionB"],
+                            },
+                          },
+                          validators: [
+                            {
+                              type: ValidatorTypes.REQUIRED,
+                              options: { field: "optionA" },
+                            },
+                            {
+                              type: ValidatorTypes.REQUIRED,
+                              options: { field: "optionB" },
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        // Should not require optionB when type is A
+        await expect(
+          model.validate([
+            {
+              settings: [
+                {
+                  type: "A",
+                  config: {
+                    optionA: "valueA",
+                  },
+                },
+              ],
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        // Should fail when optionA is missing for type A
+        await expect(
+          model.validate([
+            {
+              settings: [
+                {
+                  type: "A",
+                  config: {},
+                },
+              ],
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should handle conditionalFields with nested dependsOn paths", async () => {
+        const model = mockModel({
+          fields: {
+            settings: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  mode: {
+                    type: FieldTypes.TEXT,
+                    options: {
+                      enum: ["simple", "complex"],
+                      strict: true,
+                    },
+                  },
+                  config: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      fields: {
+                        subMode: {
+                          type: FieldTypes.TEXT,
+                          options: {
+                            enum: ["A", "B"],
+                            strict: true,
+                          },
+                        },
+                        options: {
+                          type: FieldTypes.NESTED,
+                          options: {
+                            strict: true,
+                            fields: {
+                              optionA: { type: FieldTypes.TEXT },
+                              optionB: { type: FieldTypes.TEXT },
+                            },
+                            conditionalFields: {
+                              dependsOn: "$.subMode",
+                              mappings: {
+                                A: ["optionA"],
+                                B: ["optionB"],
+                              },
+                            },
+                          },
+                        },
+                      },
+                      conditionalFields: {
+                        dependsOn: "$.mode",
+                        mappings: {
+                          simple: ["subMode", "options"],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        const i = model.hydrate({
+          settings: {
+            mode: "simple",
+            config: {
+              subMode: "A",
+              options: {
+                optionA: "valueA",
+                optionB: "valueB",
+              },
+            },
+          },
+        });
+
+        expect(i.settings?.config?.options?.optionA).toBe("valueA");
+        expect(i.settings?.config?.options?.optionB).toBeUndefined();
+      });
+
+      it("should ignore validators in fields not included by conditionalFields", async () => {
+        const model = mockModel({
+          fields: {
+            paymentMethod: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["creditCard", "paypal"],
+                strict: true,
+              },
+            },
+            paymentDetails: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  cardNumber: { type: FieldTypes.TEXT },
+                  paypalEmail: { type: FieldTypes.TEXT },
+                },
+                conditionalFields: {
+                  dependsOn: "paymentMethod",
+                  mappings: {
+                    creditCard: ["cardNumber"],
+                    paypal: ["paypalEmail"],
                   },
                 },
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "nested1.text" },
+                    options: { field: "cardNumber" },
+                  },
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "paypalEmail" },
                   },
                 ],
               },
@@ -1946,45 +2192,198 @@ describe("test fields", () => {
         }).extend({ adapterClass: mockAdapter() });
         await model.initialize();
 
-        const text = faker.lorem.word();
-
-        const i = model.hydrate({
-          target: "nested1",
-          obj: {
-            nested1: {
-              text,
-            },
-          },
-        });
-
-        expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj?.nested1).toBeInstanceOf(Object);
-        expect(i.obj?.nested1?.text).toBe(text);
-        expect(i.obj?.nested2).toBeUndefined();
-
+        // Should pass when cardNumber is provided for creditCard
         await expect(
           model.validate([
             {
-              target: "nested1",
-              obj: {
-                nested1: {
-                  text,
-                },
+              paymentMethod: "creditCard",
+              paymentDetails: {
+                cardNumber: "4111111111111111",
               },
             },
           ]),
         ).resolves.toBeTruthy();
 
+        // Should fail when cardNumber is missing for creditCard
         await expect(
           model.validate([
             {
-              target: "nested1",
-              obj: {
-                nested1: {},
-              },
+              paymentMethod: "creditCard",
+              paymentDetails: {},
             },
           ]),
         ).rejects.toThrow(ValidationError);
+
+        // Should pass when paypalEmail is provided for paypal
+        await expect(
+          model.validate([
+            {
+              paymentMethod: "paypal",
+              paymentDetails: {
+                paypalEmail: "user@example.com",
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        // Should fail when paypalEmail is missing for paypal
+        await expect(
+          model.validate([
+            {
+              paymentMethod: "paypal",
+              paymentDetails: {},
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should work with multiple levels of conditionalFields", async () => {
+        const model = mockModel({
+          fields: {
+            level1Type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["typeA", "typeB"],
+                strict: true,
+              },
+            },
+            level1: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  level2Type: {
+                    type: FieldTypes.TEXT,
+                    options: {
+                      enum: ["subType1", "subType2"],
+                      strict: true,
+                    },
+                  },
+                  level2: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      fields: {
+                        field1: { type: FieldTypes.TEXT },
+                        field2: { type: FieldTypes.NUMBER },
+                      },
+                      conditionalFields: {
+                        dependsOn: "$.level2Type",
+                        mappings: {
+                          subType1: ["field1"],
+                          subType2: ["field2"],
+                        },
+                      },
+                    },
+                  },
+                },
+                conditionalFields: {
+                  dependsOn: "level1Type",
+                  mappings: {
+                    typeA: ["level2Type", "level2"],
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        const i = model.hydrate({
+          level1Type: "typeA",
+          level1: {
+            level2Type: "subType1",
+            level2: {
+              field1: "value1",
+              field2: 100,
+            },
+          },
+        });
+
+        expect(i.level1?.level2?.field1).toBe("value1");
+        expect(i.level1?.level2?.field2).toBeUndefined();
+      });
+
+      it("should handle missing mappings in conditionalFields", async () => {
+        const model = mockModel({
+          fields: {
+            status: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["active", "inactive", "unknown"],
+                strict: true,
+              },
+            },
+            details: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  activeField: { type: FieldTypes.TEXT },
+                  inactiveField: { type: FieldTypes.TEXT },
+                },
+                conditionalFields: {
+                  dependsOn: "status",
+                  mappings: {
+                    active: ["activeField"],
+                    inactive: ["inactiveField"],
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        const i = model.hydrate({
+          status: "unknown",
+          details: {
+            activeField: "active",
+            inactiveField: "inactive",
+          },
+        });
+
+        expect(i.details?.activeField).toBeUndefined();
+        expect(i.details?.inactiveField).toBeUndefined();
+      });
+
+      it("should not include any fields when conditionalFields has no default and value is unmapped", async () => {
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["type1", "type2", "type3"],
+                strict: true,
+              },
+            },
+            data: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  field1: { type: FieldTypes.TEXT },
+                  field2: { type: FieldTypes.TEXT },
+                },
+                conditionalFields: {
+                  dependsOn: "type",
+                  mappings: {
+                    type1: ["field1"],
+                    type2: ["field2"],
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        const i = model.hydrate({
+          type: "type3",
+          data: {
+            field1: "value1",
+            field2: "value2",
+          },
+        });
+
+        expect(i.data?.field1).toBeUndefined();
+        expect(i.data?.field2).toBeUndefined();
       });
     });
 

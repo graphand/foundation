@@ -17,7 +17,7 @@ describe("EventSubscription Model", () => {
         channels: [
           {
             channel: SubscriptionChannels.EMAIL,
-            options: { email: { value: "test@test.com" } },
+            options: { email: "test@test.com" },
           },
         ],
       }),
@@ -93,9 +93,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.EMAIL,
                 options: {
-                  email: {
-                    value: "test",
-                  },
+                  email: "test",
                 },
               },
             ],
@@ -111,9 +109,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.EMAIL,
                 options: {
-                  email: {
-                    value: faker.internet.email(),
-                  },
+                  email: faker.internet.email(),
                 },
               },
             ],
@@ -136,20 +132,6 @@ describe("EventSubscription Model", () => {
         ).rejects.toThrow(ValidationError);
       });
 
-      it("should reject when account channel is provided with empty options", async () => {
-        await expect(
-          EventSubscriptionModel.create({
-            slug: generateRandomString(),
-            channels: [
-              {
-                channel: SubscriptionChannels.ACCOUNT,
-                options: {},
-              },
-            ],
-          }),
-        ).rejects.toThrow(ValidationError);
-      });
-
       it("should reject when account ID is invalid", async () => {
         await expect(
           EventSubscriptionModel.create({
@@ -158,9 +140,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.ACCOUNT,
                 options: {
-                  account: {
-                    value: "invalid-id",
-                  },
+                  account: "invalid-id",
                 },
               },
             ],
@@ -176,9 +156,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.ACCOUNT,
                 options: {
-                  account: {
-                    value: new ObjectId().toString(),
-                  },
+                  account: new ObjectId().toString(),
                 },
               },
             ],
@@ -194,9 +172,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.ACCOUNT,
                 options: {
-                  account: {
-                    field: "account",
-                  },
+                  accountField: "account",
                 },
               },
             ],
@@ -241,9 +217,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.ROLE,
                 options: {
-                  role: {
-                    value: "invalid-id",
-                  },
+                  role: "invalid-id",
                 },
               },
             ],
@@ -259,9 +233,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.ROLE,
                 options: {
-                  role: {
-                    value: new ObjectId().toString(),
-                  },
+                  role: new ObjectId().toString(),
                 },
               },
             ],
@@ -306,9 +278,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.SLACK,
                 options: {
-                  slack: {
-                    webhookUrl: "invalid-url",
-                  },
+                  slackWebhookUrl: "invalid-url",
                 },
               },
             ],
@@ -324,9 +294,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.SLACK,
                 options: {
-                  slack: {
-                    webhookUrl: faker.internet.url(),
-                  },
+                  slackWebhookUrl: faker.internet.url(),
                 },
               },
             ],

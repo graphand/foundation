@@ -14,6 +14,12 @@ import {
   ValidatorsDefinition,
 } from "../index.js";
 
+export type ConditionalFieldsDefinition<Mappings extends Array<string> = Array<string>> = {
+  dependsOn: string;
+  mappings: Record<Mappings[number], Array<string>>;
+  defaultMapping?: Mappings[number];
+};
+
 export type FieldOptionsMap = {
   [FieldTypes.ARRAY]: {
     items: FieldDefinitions;
@@ -34,7 +40,7 @@ export type FieldOptionsMap = {
   [FieldTypes.NESTED]: {
     default?: JSONTypeObject;
     defaultField?: FieldDefinitions;
-    dependsOn?: string;
+    conditionalFields?: ConditionalFieldsDefinition;
     fields?: FieldsDefinition;
     strict?: boolean;
     validators?: ValidatorsDefinition;
@@ -69,7 +75,8 @@ export interface SystemFieldsBase {
 
 export interface SystemFieldsOverrides<M extends typeof Model> {}
 
-export type SystemFields<M extends typeof Model> = Omit<SystemFieldsBase, keyof SystemFieldsOverrides<M>> & SystemFieldsOverrides<M>;
+export type SystemFields<M extends typeof Model> = Omit<SystemFieldsBase, keyof SystemFieldsOverrides<M>> &
+  SystemFieldsOverrides<M>;
 
 export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition> {
   json: {

@@ -12,6 +12,7 @@ import { Patterns } from "../enums/patterns.js";
 export class EventSubscription extends Model {
   static __name = "EventSubscription";
   static slug = "eventSubscriptions" as const;
+
   static definition = {
     keyField: "slug",
     fields: {
@@ -34,67 +35,29 @@ export class EventSubscription extends Model {
                   type: FieldTypes.NESTED,
                   options: {
                     strict: true,
-                    dependsOn: "$.channel",
                     fields: {
-                      [SubscriptionChannels.EMAIL]: {
-                        type: FieldTypes.NESTED,
-                        options: {
-                          fields: {
-                            value: { type: FieldTypes.TEXT },
-                          },
-                        },
-                      },
-                      [SubscriptionChannels.ACCOUNT]: {
-                        type: FieldTypes.NESTED,
-                        options: {
-                          fields: {
-                            value: { type: FieldTypes.RELATION, options: { ref: Account.slug } },
-                            field: { type: FieldTypes.TEXT },
-                          },
-                        },
-                      },
-                      [SubscriptionChannels.ROLE]: {
-                        type: FieldTypes.NESTED,
-                        options: {
-                          fields: {
-                            value: { type: FieldTypes.RELATION, options: { ref: Role.slug } },
-                          },
-                        },
-                      },
-                      [SubscriptionChannels.SLACK]: {
-                        type: FieldTypes.NESTED,
-                        options: {
-                          fields: {
-                            webhookUrl: { type: FieldTypes.TEXT },
-                          },
-                        },
+                      email: { type: FieldTypes.TEXT },
+                      account: { type: FieldTypes.RELATION, options: { ref: Account.slug } },
+                      accountField: { type: FieldTypes.TEXT },
+                      role: { type: FieldTypes.RELATION, options: { ref: Role.slug } },
+                      slackWebhookUrl: { type: FieldTypes.TEXT },
+                    },
+                    conditionalFields: {
+                      dependsOn: "$.channel",
+                      defaultMapping: SubscriptionChannels.EMAIL,
+                      mappings: {
+                        [SubscriptionChannels.EMAIL]: ["email"],
+                        [SubscriptionChannels.ACCOUNT]: ["account", "accountField"],
+                        [SubscriptionChannels.ROLE]: ["role"],
+                        [SubscriptionChannels.SLACK]: ["slackWebhookUrl"],
                       },
                     },
                     validators: [
-                      { type: ValidatorTypes.REQUIRED, options: { field: SubscriptionChannels.EMAIL } },
-                      { type: ValidatorTypes.REQUIRED, options: { field: SubscriptionChannels.ACCOUNT } },
-                      { type: ValidatorTypes.REQUIRED, options: { field: SubscriptionChannels.ROLE } },
-                      { type: ValidatorTypes.REQUIRED, options: { field: SubscriptionChannels.SLACK } },
-                      {
-                        type: ValidatorTypes.REQUIRED,
-                        options: { field: [SubscriptionChannels.EMAIL, "value"].join(".") },
-                      },
-                      {
-                        type: ValidatorTypes.REGEX,
-                        options: { pattern: Patterns.EMAIL, field: [SubscriptionChannels.EMAIL, "value"].join(".") },
-                      },
-                      {
-                        type: ValidatorTypes.REQUIRED,
-                        options: { field: [SubscriptionChannels.ROLE, "value"].join(".") },
-                      },
-                      {
-                        type: ValidatorTypes.REQUIRED,
-                        options: { field: [SubscriptionChannels.SLACK, "webhookUrl"].join(".") },
-                      },
-                      {
-                        type: ValidatorTypes.REGEX,
-                        options: { pattern: Patterns.URL, field: [SubscriptionChannels.SLACK, "webhookUrl"].join(".") },
-                      },
+                      { type: ValidatorTypes.REQUIRED, options: { field: "email" } },
+                      { type: ValidatorTypes.REGEX, options: { pattern: Patterns.EMAIL, field: "email" } },
+                      { type: ValidatorTypes.REQUIRED, options: { field: "role" } },
+                      { type: ValidatorTypes.REQUIRED, options: { field: "slackWebhookUrl" } },
+                      { type: ValidatorTypes.REGEX, options: { pattern: Patterns.URL, field: "slackWebhookUrl" } },
                     ],
                   },
                 },

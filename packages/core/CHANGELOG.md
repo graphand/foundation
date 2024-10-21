@@ -1,5 +1,12 @@
 # @graphand/core
 
+## 1.3.0
+
+### Minor Changes
+
+- improve Datamodel model definition adding types for fields options Add conditrionalFields option for the Nested field
+  type
+
 ## 1.2.6
 
 ### Patch Changes

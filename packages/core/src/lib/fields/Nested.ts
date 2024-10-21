@@ -1,5 +1,5 @@
 import { FieldTypes } from "@/enums/field-types.js";
-import { FieldSerializerInput, JSONTypeObject } from "@/types/index.js";
+import { FieldSerializerInput, JSONTypeObject, ModelInstance } from "@/types/index.js";
 import { Field } from "@/lib/Field.js";
 import { getFieldFromDefinition, getNestedFieldsMap, getValidationValues } from "@/lib/utils.js";
 
@@ -34,25 +34,12 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     const model = from.model();
     const fieldsMap = getNestedFieldsMap(model, this);
     const defaults = ctx?.defaults ?? true;
-    let filterKey: string | undefined;
-
-    if (this.options.dependsOn) {
-      let dependsOnPath: string = this.options.dependsOn;
-      if (dependsOnPath.includes("$")) {
-        const parentPath = this.path.split(".").slice(0, -1).join(".");
-        dependsOnPath = dependsOnPath.replace("$", parentPath).replace(/^\./, "");
-      }
-
-      const dependsOn = from.get(dependsOnPath);
-      if (dependsOn) {
-        filterKey = dependsOn as string;
-      }
-    }
+    const conditionalKeys = this._getConditionalKeys(from);
 
     const json: JSONTypeObject = {};
 
     for (const [k, field] of fieldsMap) {
-      if (filterKey && k !== filterKey) {
+      if (conditionalKeys && !conditionalKeys.includes(k)) {
         continue;
       }
 
@@ -72,8 +59,8 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     if (this.options.defaultField) {
       let noField = Object.keys(value).filter(k => !fieldsMap.has(k));
 
-      if (filterKey) {
-        noField = noField.filter(k => k !== filterKey);
+      if (conditionalKeys) {
+        noField = noField.filter(k => !conditionalKeys.includes(k));
       }
 
       if (noField.length) {
@@ -96,6 +83,26 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     return { ...value, ...json };
   };
 
+  _getConditionalKeys = (from: ModelInstance) => {
+    let conditionalKeys: Array<string> | undefined;
+
+    if (this.options.conditionalFields) {
+      const { dependsOn, mappings, defaultMapping } = this.options.conditionalFields;
+      let dependsOnPath: string = dependsOn;
+      if (dependsOnPath.includes("$")) {
+        const parentPath = this.path.split(".").slice(0, -1).join(".");
+        dependsOnPath = dependsOnPath.replace("$", parentPath).replace(/^\./, "");
+      }
+
+      const mapping = from.get(dependsOnPath) as string;
+      conditionalKeys = mappings[mapping];
+      conditionalKeys ??= mappings[defaultMapping as string];
+      conditionalKeys ??= [];
+    }
+
+    return conditionalKeys;
+  };
+
   _sProxy = (input: FieldSerializerInput) => {
     const { from, ctx } = input;
     const value = Array.isArray(input.value) ? input.value[0] : input.value;
@@ -116,20 +123,7 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     const model = from.model();
     const adapter = model.getAdapter();
     const fieldsMap = getNestedFieldsMap(model, this);
-    let filterKey: string;
-
-    if (this.options.dependsOn) {
-      let dependsOnPath: string = this.options.dependsOn;
-      if (dependsOnPath.includes("$")) {
-        const parentPath = this.path.split(".").slice(0, -1).join(".");
-        dependsOnPath = dependsOnPath.replace("$", parentPath).replace(/^\./, "");
-      }
-
-      const dependsOn = from.get(dependsOnPath);
-      if (dependsOn) {
-        filterKey = dependsOn as string;
-      }
-    }
+    const conditionalKeys = this._getConditionalKeys(from);
 
     const _getter = (target: any, prop: string) => {
       let targetField = fieldsMap.get(prop);
@@ -177,7 +171,7 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
 
         if (prop === "__raw") {
           return (k: string) => {
-            if (filterKey && k !== filterKey) {
+            if (conditionalKeys && !conditionalKeys.includes(k)) {
               return FieldNested.symbolIgnore;
             }
 
@@ -185,7 +179,7 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
           };
         }
 
-        if (filterKey && prop !== filterKey) {
+        if (conditionalKeys && !conditionalKeys.includes(prop)) {
           return undefined;
         }
 
