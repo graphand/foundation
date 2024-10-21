@@ -626,7 +626,7 @@ export const _getter = (opts: {
   format: SerializerFormat;
   ctx: SerializerCtx;
   from: ModelInstance;
-  override?: ModelData;
+  override?: unknown;
 }): unknown => {
   let { value } = opts;
   const { fieldsPaths, noFieldSymbol, format, from, ctx } = opts;

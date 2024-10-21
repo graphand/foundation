@@ -483,7 +483,7 @@ export class Model {
     path: P,
     format: S = "object" as S,
     ctx: SerializerCtx = {},
-    override?: ModelData,
+    override?: unknown,
   ):
     | (T extends ModelInstance<infer R>
         ? P extends keyof InferModelDef<R, S>
