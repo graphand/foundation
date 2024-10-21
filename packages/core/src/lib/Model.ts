@@ -483,7 +483,7 @@ export class Model {
     path: P,
     format: S = "object" as S,
     ctx: SerializerCtx = {},
-    value?: unknown,
+    override?: ModelData,
   ):
     | (T extends ModelInstance<infer R>
         ? P extends keyof InferModelDef<R, S>
@@ -506,7 +506,7 @@ export class Model {
       }
     }
 
-    value ??= this.getData() ?? {};
+    const value = override ?? this.getData() ?? {};
 
     if (!fieldsPaths?.length) {
       if (model.freeMode) {

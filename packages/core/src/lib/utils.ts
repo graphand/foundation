@@ -626,9 +626,12 @@ export const _getter = (opts: {
   format: SerializerFormat;
   ctx: SerializerCtx;
   from: ModelInstance;
+  override?: ModelData;
 }): unknown => {
   let { value } = opts;
   const { fieldsPaths, noFieldSymbol, format, from, ctx } = opts;
+
+  opts.override ??= value;
 
   for (let i = 0; i < fieldsPaths.length; i++) {
     const fieldsPath = fieldsPaths[i];
@@ -718,7 +721,7 @@ export const _getter = (opts: {
 
     ctx.hasNext = !!restPaths?.length;
 
-    value = field.serialize(n, format, from, ctx);
+    value = field.serialize({ value: n, format, from, ctx, nextData: opts.override });
   }
 
   return value;

@@ -76,7 +76,7 @@ export class FieldArray extends Field<FieldTypes.ARRAY> {
         res = arrVal.map((v, i) => {
           const itemsField = getFieldFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
 
-          return itemsField?.serialize(v, format, from, ctx);
+          return itemsField?.serialize({ ...input, value: v });
         });
       } else {
         const ids = arrVal.map(String);
@@ -94,18 +94,18 @@ export class FieldArray extends Field<FieldTypes.ARRAY> {
 
     const fieldId = getFieldFromDefinition<FieldTypes.ID>({ type: FieldTypes.ID }, adapter, "_id");
 
-    return arrVal.map(id => fieldId?.serialize(id, format, from, ctx));
+    return arrVal.map(id => fieldId?.serialize({ ...input, value: id }));
   };
 
   _sStatic = (input: FieldSerializerInput) => {
-    const { value, format, from, ctx } = input;
+    const { value, from } = input;
     const adapter = from.model().getAdapter();
     const arrVal = Array.isArray(value) ? value : [value];
 
     return arrVal.map((v, i) => {
       const itemsField = getFieldFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
 
-      return itemsField?.serialize(v, format, from, ctx);
+      return itemsField?.serialize({ ...input, value: v });
     });
   };
 

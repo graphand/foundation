@@ -14,6 +14,26 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     return !values.some(_isInvalid);
   };
 
+  _getConditionalKeys = (from: ModelInstance, nextData?: ModelData) => {
+    let conditionalKeys: Array<string> | undefined;
+
+    if (this.options.conditionalFields) {
+      const { dependsOn, mappings, defaultMapping } = this.options.conditionalFields;
+      let dependsOnPath: string = dependsOn;
+      if (dependsOnPath.includes("$")) {
+        const parentPath = this.path.split(".").slice(0, -1).join(".");
+        dependsOnPath = dependsOnPath.replace("$", parentPath).replace(/^\./, "");
+      }
+
+      const mapping = from.get(dependsOnPath, "object", { defaults: true }, nextData) as string;
+      conditionalKeys = mappings[mapping];
+      conditionalKeys ??= mappings[defaultMapping as string];
+      conditionalKeys ??= [];
+    }
+
+    return conditionalKeys;
+  };
+
   _sStatic = (input: FieldSerializerInput) => {
     const { from, ctx } = input;
     const value = Array.isArray(input.value) ? input.value[0] : input.value;
@@ -34,7 +54,7 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     const model = from.model();
     const fieldsMap = getNestedFieldsMap(model, this);
     const defaults = ctx?.defaults ?? true;
-    const conditionalKeys = this._getConditionalKeys(from);
+    const conditionalKeys = this._getConditionalKeys(from, input.nextData);
 
     const json: JSONTypeObject = {};
 
@@ -44,11 +64,11 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
       }
 
       if (value[k] === undefined && defaults && "default" in field.options) {
-        json[k] = field.serialize(field.options.default, input.format, from, ctx);
+        json[k] = field.serialize({ ...input, value: field.options.default });
       } else if (value[k] === undefined || value[k] === null) {
         json[k] = value[k];
       } else {
-        json[k] = field.serialize(value[k], input.format, from, ctx);
+        json[k] = field.serialize({ ...input, value: value[k] });
       }
     }
 
@@ -74,33 +94,13 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
               [this.path, k].join("."),
             );
 
-            json[k] = tmpField?.serialize(value[k], input.format, from, ctx);
+            json[k] = tmpField?.serialize({ ...input, value: value[k] });
           }
         });
       }
     }
 
     return { ...value, ...json };
-  };
-
-  _getConditionalKeys = (from: ModelInstance) => {
-    let conditionalKeys: Array<string> | undefined;
-
-    if (this.options.conditionalFields) {
-      const { dependsOn, mappings, defaultMapping } = this.options.conditionalFields;
-      let dependsOnPath: string = dependsOn;
-      if (dependsOnPath.includes("$")) {
-        const parentPath = this.path.split(".").slice(0, -1).join(".");
-        dependsOnPath = dependsOnPath.replace("$", parentPath).replace(/^\./, "");
-      }
-
-      const mapping = from.get(dependsOnPath) as string;
-      conditionalKeys = mappings[mapping];
-      conditionalKeys ??= mappings[defaultMapping as string];
-      conditionalKeys ??= [];
-    }
-
-    return conditionalKeys;
   };
 
   _sProxy = (input: FieldSerializerInput) => {
@@ -123,9 +123,9 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     const model = from.model();
     const adapter = model.getAdapter();
     const fieldsMap = getNestedFieldsMap(model, this);
-    const conditionalKeys = this._getConditionalKeys(from);
+    const conditionalKeys = this._getConditionalKeys(from, input.nextData);
 
-    const _getter = (target: any, prop: string) => {
+    const _get = (target: any, prop: string) => {
       let targetField = fieldsMap.get(prop);
       let value = target[prop];
 
@@ -160,7 +160,7 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
         return value;
       }
 
-      return targetField.serialize(value, input.format, from, ctx);
+      return targetField.serialize({ ...input, value });
     };
 
     return new Proxy(value, {
@@ -183,7 +183,7 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
           return undefined;
         }
 
-        return _getter(target, prop);
+        return _get(target, prop);
       },
     });
   };

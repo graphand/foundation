@@ -52,12 +52,14 @@ export class Field<T extends FieldTypes = FieldTypes> {
 
   validate?: (_input: { list: Array<ModelInstance>; model: typeof Model; ctx?: TransactionCtx }) => Promise<boolean>;
 
-  serialize = <S extends SerializerFormat>(
-    value: unknown,
-    format: S,
-    from: ModelInstance,
-    ctx: SerializerCtx,
-  ): InferFieldType<FieldDefinition<T>, S> => {
+  serialize = <S extends SerializerFormat>(opts: {
+    value: unknown;
+    format: S;
+    from: ModelInstance;
+    ctx: SerializerCtx;
+    nextData?: ModelData;
+  }): InferFieldType<FieldDefinition<T>, S> => {
+    const { value, format } = opts;
     const s = this.serializerMap?.[format] || this.serializerMap?.[Field.defaultSymbol];
 
     if (!s) {
@@ -66,7 +68,7 @@ export class Field<T extends FieldTypes = FieldTypes> {
 
     const serializer = s as (_input: FieldSerializerInput<S>) => InferFieldType<FieldDefinition<T>, S>;
 
-    return serializer({ value, from, ctx, format });
+    return serializer(opts);
   };
 
   toJSON() {

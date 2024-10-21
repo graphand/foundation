@@ -190,4 +190,5 @@ export type FieldSerializerInput<S extends SerializerFormat = SerializerFormat> 
   from: ModelInstance;
   ctx: SerializerCtx;
   format: S;
+  nextData?: ModelData;
 };

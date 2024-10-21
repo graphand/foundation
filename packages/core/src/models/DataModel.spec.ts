@@ -23,4 +23,36 @@ describe("DataModel Model", () => {
 
     await expect(DataModelModel.validate([datamodel])).rejects.toThrow(ValidationError);
   });
+
+  it("should get nested field options (conditionalFields) with data override", async () => {
+    const datamodel = DataModelModel.hydrate({
+      slug: generateRandomString(),
+      definition: {
+        fields: {},
+      },
+    });
+
+    const payload = {
+      slug: "test",
+      definition: {
+        fields: {
+          rel: {
+            type: "relation",
+            options: {
+              ref: "medias",
+            },
+          },
+        },
+      },
+    };
+
+    const json = datamodel.get("definition", "json", { defaults: false }, payload);
+
+    expect(json?.fields?.rel).toEqual({
+      type: "relation",
+      options: {
+        ref: "medias",
+      },
+    });
+  });
 });

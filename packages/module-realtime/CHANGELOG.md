@@ -1,5 +1,14 @@
 # @graphand/client-module-realtime
 
+## 1.2.6
+
+### Patch Changes
+
+- minor fixes & clean code
+- Updated dependencies
+  - @graphand/client@1.2.8
+  - @graphand/core@1.3.1
+
 ## 1.2.5
 
 ### Patch Changes
