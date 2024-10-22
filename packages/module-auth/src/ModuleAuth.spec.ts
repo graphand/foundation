@@ -109,6 +109,16 @@ describe("ModuleAuth", () => {
         );
       }
 
+      const accessToken = req.headers.get("Authorization")?.replace("Bearer ", "");
+      if (accessToken === "expired-access-token") {
+        return new Response(JSON.stringify({ error: { code: ErrorCodes.TOKEN_EXPIRED } }), {
+          status: 401,
+          headers: {
+            "content-type": "application/json",
+          },
+        });
+      }
+
       return new Response(JSON.stringify({ data: {} }));
     });
   });
@@ -119,6 +129,7 @@ describe("ModuleAuth", () => {
 
   beforeEach(() => {
     client = new Client([[ModuleAuth]]);
+    spyFetch.mockClear();
   });
 
   afterEach(() => {
@@ -572,34 +583,53 @@ describe("ModuleAuth", () => {
   describe("autoRefreshToken", () => {
     it("should automatically refresh token on TOKEN_EXPIRED error", async () => {
       const _client = new Client([[ModuleAuth, { autoRefreshToken: true }]], {
-        accessToken: "test-access-token",
         project: null,
       });
-      const mockRefreshToken = vi.spyOn(_client.get("auth"), "refreshToken").mockResolvedValue({
-        accessToken: "new-access-token",
-        refreshToken: "new-refresh-token",
+
+      _client.get("auth").setTokens("expired-access-token", "test-refresh-token");
+
+      const spyRefreshToken = vi.spyOn(_client.get("auth"), "refreshToken");
+
+      await _client.execute(controllerModelRead);
+
+      expect(spyRefreshToken).toHaveBeenCalled();
+      expect(spyFetch).toHaveBeenCalledTimes(3); // once for the refresh token, and twice for the read request
+
+      // @ts-ignore
+      const oldToken = spyFetch.mock.calls[0][0].headers.get("Authorization").replace("Bearer ", "");
+      // @ts-ignore
+      const newToken = spyFetch.mock.calls[2][0].headers.get("Authorization").replace("Bearer ", "");
+
+      expect(oldToken).toBe("expired-access-token");
+      expect(newToken).not.toBe("expired-access-token");
+      _client.destroy();
+    });
+
+    it("should refresh token event if init headers are provided in execute", async () => {
+      const _client = new Client([[ModuleAuth, { autoRefreshToken: true }]], {
+        project: null,
       });
 
-      const mockExecute = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-        new Response(JSON.stringify({ error: { code: ErrorCodes.TOKEN_EXPIRED } }), {
-          status: 401,
-          headers: {
-            "content-type": "application/json",
-          },
-        }),
-      );
+      _client.get("auth").setTokens("expired-access-token", "test-refresh-token");
 
-      try {
-        await _client.execute(controllerModelRead);
-      } catch (error) {
-        // Ignore the error
-      }
+      const spyRefreshToken = vi.spyOn(_client.get("auth"), "refreshToken");
 
-      expect(mockRefreshToken).toHaveBeenCalled();
-      expect(mockExecute).toHaveBeenCalledTimes(2);
+      await _client.execute(controllerModelRead, {
+        init: {
+          headers: {},
+        },
+      });
 
-      mockRefreshToken.mockRestore();
-      mockExecute.mockRestore();
+      expect(spyRefreshToken).toHaveBeenCalled();
+      expect(spyFetch).toHaveBeenCalledTimes(3); // once for the refresh token, and twice for the read request
+
+      // @ts-ignore
+      const oldToken = spyFetch.mock.calls[0][0].headers.get("Authorization").replace("Bearer ", "");
+      // @ts-ignore
+      const newToken = spyFetch.mock.calls[2][0].headers.get("Authorization").replace("Bearer ", "");
+
+      expect(oldToken).toBe("expired-access-token");
+      expect(newToken).not.toBe("expired-access-token");
       _client.destroy();
     });
   });

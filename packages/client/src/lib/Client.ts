@@ -356,6 +356,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     });
 
     let init: RequestInit = Object.assign({}, opts.init);
+    init.headers = Object.assign({}, init.headers); // Clone headers
 
     if (!init.method) {
       const order = ["put", "post", "patch", "delete", "get", "options"] as Array<
@@ -367,23 +368,19 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     }
 
     if (this.options.headers) {
-      init.headers ??= {};
       Object.assign(init.headers, this.options.headers);
     }
 
     if (this.options.accessToken && (!init.headers || !("Authorization" in init.headers))) {
-      init.headers ??= {};
       Object.assign(init.headers, { Authorization: `Bearer ${this.options.accessToken}` });
     }
 
     if (this.options.environment && (!init.headers || !("Content-Environment" in init.headers))) {
-      init.headers ??= {};
       Object.assign(init.headers, { "Content-Environment": this.options.environment });
     }
 
     const _isFormData = init.body instanceof FormData || opts?.ctx?.formData;
     if (!_isFormData && (!init.headers || !("Content-Type" in init.headers))) {
-      init.headers ??= {};
       Object.assign(init.headers, { "Content-Type": "application/json" });
     }
 

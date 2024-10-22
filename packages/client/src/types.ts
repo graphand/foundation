@@ -35,11 +35,11 @@ declare module "@graphand/core" {
       this: T,
       _observer: SubjectObserver<ModelUpdaterEvent>,
       _opts?: {
-        onLoadingChange?: (_loading: boolean) => void;
-        onError?: (_error: Error) => void;
-        noReload?: boolean;
-        autoRemove?: boolean;
-        reload?: () => Promise<void>;
+        onLoadingChange?: (_loading: boolean) => void; // Handle loading state changes
+        onError?: (_error: Error) => void; // Handle errors in list reload
+        noReload?: boolean; // Do not reload the list when an item is updated or deleted. By default, the list is reloaded.
+        autoRemove?: boolean; // Automatically remove the item from the list when it is deleted in store (otherwise, the item will be deleted after a reload)
+        reload?: () => Promise<void>; // Custom reload function (by default, it calls list.reload())
       },
     ) => ReturnType<ClientAdapter<InferModelFromList<T>>["subscribe"]>;
     getKey: () => string;

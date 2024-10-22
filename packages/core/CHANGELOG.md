@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.3.3
+
+### Patch Changes
+
+- clone headers in Client.execute method
+
 ## 1.3.2
 
 ### Patch Changes

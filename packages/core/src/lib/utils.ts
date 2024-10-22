@@ -631,7 +631,7 @@ export const _getter = (opts: {
   let { value } = opts;
   const { fieldsPaths, noFieldSymbol, format, from, ctx } = opts;
 
-  opts.override ??= value;
+  opts.override ??= value; // Keep the original value for the nextData, even when _getter is called recursively
 
   for (let i = 0; i < fieldsPaths.length; i++) {
     const fieldsPath = fieldsPaths[i];

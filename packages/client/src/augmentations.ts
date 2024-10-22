@@ -62,9 +62,9 @@ ModelList.prototype.subscribe = function <T extends ModelList<typeof Model>>(
   opts?: {
     onLoadingChange?: (_loading: boolean) => void;
     onError?: (_error: Error) => void;
-    noReload?: boolean; // Do not reload the list when an item is updated or deleted
-    autoRemove?: boolean; // Automatically remove the item from the list when it is deleted (before the reload)
-    reload?: () => Promise<void>; // Custom reload function (by default, it calls list.reload())
+    noReload?: boolean;
+    autoRemove?: boolean;
+    reload?: () => Promise<void>;
   },
 ): ReturnType<ClientAdapter<InferModelFromList<T>>["subscribe"]> {
   const { onLoadingChange, onError, noReload, autoRemove } = opts ?? {};

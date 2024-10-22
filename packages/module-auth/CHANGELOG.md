@@ -1,5 +1,14 @@
 # @graphand/client-module-auth
 
+## 1.3.5
+
+### Patch Changes
+
+- clone headers in Client.execute method
+- Updated dependencies
+  - @graphand/client@1.2.9
+  - @graphand/core@1.3.3
+
 ## 1.3.4
 
 ### Patch Changes
