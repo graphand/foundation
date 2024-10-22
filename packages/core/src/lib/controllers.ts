@@ -94,8 +94,9 @@ export const controllerGdxPull: Controller<{
 export const controllerGdxPush: Controller<{
   query?: {
     clean?: boolean;
-    confirm?: boolean;
+    force?: boolean;
     ignoreHooks?: boolean;
+    confirmChecksum?: string;
   };
   data: JSONTypeObject;
 }> = {
