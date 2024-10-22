@@ -1,5 +1,5 @@
 import ModuleRealtime from "@/ModuleRealtime.js";
-import { BehaviorSubject, SubjectObserver } from "@graphand/client";
+import { BehaviorSubject, Subject, SubjectObserver } from "@graphand/client";
 import { UploadEvent } from "@graphand/core";
 
 type UploadStatus = "pending" | "uploading" | "success" | "error" | "aborted";
@@ -11,7 +11,7 @@ type UploadState = {
   contentLength?: number;
 };
 
-class RealtimeUpload extends EventTarget {
+class RealtimeUpload {
   #module: ModuleRealtime;
   #id: string;
   #unsubscribe: () => void;
@@ -20,9 +20,10 @@ class RealtimeUpload extends EventTarget {
     percentage: 0,
   });
 
-  constructor(module: ModuleRealtime, id: string) {
-    super();
+  // Create a separate subject for events
+  #eventSubject = new Subject<UploadEvent | null>(null);
 
+  constructor(module: ModuleRealtime, id: string) {
     this.#module = module;
     this.#id = id;
 
@@ -42,14 +43,10 @@ class RealtimeUpload extends EventTarget {
           return;
         }
 
-        const customEvent = new CustomEvent("event", {
-          detail: event,
-        });
-
-        this.dispatchEvent(customEvent);
+        // Emit the event through the eventSubject
+        this.#eventSubject.next(event);
 
         let { type, percentage, contentLength, receivedLength } = event;
-
         contentLength ??= 0;
         receivedLength ??= 0;
         percentage ??= 0;
@@ -65,11 +62,9 @@ class RealtimeUpload extends EventTarget {
             percentage = 100;
             nextState.status = "success";
           }
-
           if (type === "error") {
             nextState.status = "error";
           }
-
           if (type === "abort") {
             nextState.status = "aborted";
           }
@@ -78,11 +73,9 @@ class RealtimeUpload extends EventTarget {
         if (!nextState.contentLength || contentLength > nextState.contentLength) {
           nextState.contentLength = contentLength;
         }
-
         if (!nextState.receivedLength || receivedLength > nextState.receivedLength) {
           nextState.receivedLength = receivedLength;
         }
-
         if (!nextState.percentage || percentage > nextState.percentage) {
           nextState.percentage = percentage;
         }
@@ -102,6 +95,11 @@ class RealtimeUpload extends EventTarget {
 
   subscribe(observer: SubjectObserver<UploadState>) {
     return this.#stateSubject.subscribe(observer);
+  }
+
+  // Add method to subscribe to events
+  subscribeToEvents(observer: SubjectObserver<UploadEvent | null>) {
+    return this.#eventSubject.subscribe(observer);
   }
 
   get hasEnded() {
