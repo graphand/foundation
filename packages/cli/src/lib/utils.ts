@@ -262,7 +262,23 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
   ];
 
   if (realtime) {
-    modules.push([ModuleRealtime, { transports: ["websocket"], handleConnectError: (): null => null }]);
+    const handleConnectError = async (error: Error) => {
+      if (error.message.includes("expired")) {
+        await client.get("auth").refreshToken();
+        await client.get("realtime").connect(true);
+        return;
+      }
+
+      console.error("Unable to connect socket", error.message);
+    };
+
+    modules.push([
+      ModuleRealtime,
+      {
+        transports: ["websocket"],
+        handleConnectError: handleConnectError,
+      },
+    ]);
   }
 
   const client = new Client(modules, { disableCache: true, ...configClient });

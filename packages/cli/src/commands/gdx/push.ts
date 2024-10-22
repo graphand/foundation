@@ -2,32 +2,53 @@ import chalk from "chalk";
 import { getClient, loadGdx, withSpinner } from "@/lib/utils.js";
 import { controllerGdxPush, JSONTypeObject } from "@graphand/core";
 import { Command } from "commander";
+import { confirm } from "@inquirer/prompts";
+import { Ora } from "ora";
+
+type GDXData = Record<string, { create: JSONTypeObject; update: JSONTypeObject; delete: JSONTypeObject }>;
 
 export const commandGdxPush = new Command("push")
   .description("gdx push")
   .option("--clean", "Clean")
-  .option("--confirm", "Confirm")
+  .option("--force", "Force")
   .option("--skip-realtime-upload", "Skip realtime upload")
   .option("-v --verbose", "Verbose")
   .action(async options => {
-    await withSpinner(async spinner => {
-      const { json, file } = await loadGdx();
+    let data: GDXData | undefined;
+    let body: RequestInit["body"];
 
-      const client = await getClient({ realtime: true });
+    const client = await getClient({ realtime: true });
 
-      let formData: FormData | undefined;
-      let uploadId: string | undefined;
-      let uploadResolve: (typeof Promise<void>)["resolve"] | undefined;
-      let body: RequestInit["body"];
+    const _getLines = (data: GDXData, confirm?: boolean) => {
+      let lines = [];
 
-      if (file && Object.keys(file).length) {
-        formData = new FormData();
-        formData.append("_json", JSON.stringify(json));
-        Object.entries(file).forEach(([key, value]) => formData?.append(key, value));
-        body = formData;
+      for (const [key, value] of Object.entries(data)) {
+        if (key.startsWith("$")) {
+          continue;
+        }
+
+        if (value.create && Object.keys(value.create).length) {
+          const verb = confirm ? "created" : "creating";
+          lines.push(`${verb} ${Object.keys(value.create).length} ${key}`);
+        }
+
+        if (value.update && Object.keys(value.update).length) {
+          const verb = confirm ? "updated" : "updating";
+          lines.push(`${verb} ${Object.keys(value.update).length} ${key}`);
+        }
+
+        if (value.delete && Object.keys(value.delete).length) {
+          const verb = confirm ? "deleted" : "deleting";
+          lines.push(`${verb} ${Object.keys(value.delete).length} ${key}`);
+        }
       }
 
-      body ??= JSON.stringify(json);
+      return lines;
+    };
+
+    const _push = async (spinner: Ora, confirmChecksum?: string) => {
+      let uploadId: string | undefined;
+      let uploadResolve: (typeof Promise<void>)["resolve"] | undefined;
 
       if (!options.skipRealtimeUpload && body instanceof FormData) {
         await client.get("realtime").connect();
@@ -52,8 +73,9 @@ export const commandGdxPush = new Command("push")
 
       const res = await client.execute(controllerGdxPush, {
         query: {
-          confirm: options.confirm,
+          force: options.confirm,
           clean: options.clean,
+          confirmChecksum,
         },
         init: {
           body,
@@ -67,39 +89,72 @@ export const commandGdxPush = new Command("push")
 
       const resJSON = await res.json();
 
+      return resJSON.data as GDXData;
+    };
+
+    await withSpinner(async spinner => {
+      const { json, file } = await loadGdx();
+      let formData: FormData | undefined;
+
+      if (file && Object.keys(file).length) {
+        formData = new FormData();
+        formData.append("_json", JSON.stringify(json));
+        Object.entries(file).forEach(([key, value]) => formData?.append(key, value));
+        body = formData;
+      }
+
+      body ??= JSON.stringify(json);
+
+      data = await _push(spinner);
+
       if (options.verbose) {
-        return resJSON.data;
+        // This will log the data
+        return data;
       }
+    });
 
-      const data: Record<string, { create: JSONTypeObject; update: JSONTypeObject; delete: JSONTypeObject }> =
-        resJSON.data;
+    if (!data) {
+      return;
+    }
 
-      let lines = [];
+    const lines = _getLines(data, options.confirm);
 
-      for (const [key, value] of Object.entries(data)) {
-        if (value.create && Object.keys(value.create).length) {
-          const verb = options.confirm ? "created" : "creating";
-          lines.push(`${verb} ${Object.keys(value.create).length} ${key}`);
-        }
+    if (!lines.length) {
+      console.log(chalk.gray("Already up to date"));
+      return;
+    }
 
-        if (value.update && Object.keys(value.update).length) {
-          const verb = options.confirm ? "updated" : "updating";
-          lines.push(`${verb} ${Object.keys(value.update).length} ${key}`);
-        }
-
-        if (value.delete && Object.keys(value.delete).length) {
-          const verb = options.confirm ? "deleted" : "deleting";
-          lines.push(`${verb} ${Object.keys(value.delete).length} ${key}`);
-        }
-      }
-
-      if (!lines.length) {
-        console.log(chalk.gray("Already up to date"));
-        return;
-      }
-
+    if (!options.verbose) {
       console.log(chalk.gray("Use --verbose (-v) option to see the details"));
       console.log("");
+    }
+
+    lines.forEach(line => console.log(chalk.green(line)));
+
+    if (options.force || !lines.length || !data.$checksum) {
+      return;
+    }
+
+    const _confirm = await confirm({
+      message: "Do you want to confirm the changes ?",
+      default: false,
+    });
+
+    if (!_confirm) {
+      return;
+    }
+
+    await withSpinner(async spinner => {
+      // @ts-expect-error - $checksum is not typed here
+      const confirmChecksum = data.$checksum as string;
+
+      const res = await _push(spinner, confirmChecksum);
+
+      if (options.verbose) {
+        return res;
+      }
+
+      const lines = _getLines(res, true);
 
       lines.forEach(line => console.log(chalk.green(line)));
     });

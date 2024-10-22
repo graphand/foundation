@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.2.7
+
+### Patch Changes
+
+- improve gdx push command with confirmChecksum support
+
 ## 1.2.6
 
 ### Patch Changes
