@@ -1,3 +1,5 @@
+export const __CORE_VERSION__ = JSON.stringify(__INTERNAL_CORE_VERSION__).replaceAll('"', "");
+
 import "@/modules/validators";
 import "@/modules/register-models";
 

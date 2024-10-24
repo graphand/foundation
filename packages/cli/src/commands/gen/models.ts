@@ -1,5 +1,5 @@
 import { getClient, isTypescriptProject, withSpinner } from "@/lib/utils.js";
-import { DataModel } from "@graphand/core";
+import { DataModel, ModelDefinition } from "@graphand/core";
 import { Command } from "commander";
 import fs from "fs";
 import path from "path";
@@ -41,6 +41,29 @@ export const commandGenModels = new Command("models")
 
         spinner.text = `Generating ${filename} ...`;
 
+        const extendsExistingModel = datamodel.slug && client.getAdapterClass().getClosestModel(datamodel.slug);
+
+        let definition = datamodel.definition as Partial<ModelDefinition>;
+
+        if (extendsExistingModel) {
+          const model = await client.getModel(extendsExistingModel);
+          await model.initialize();
+
+          if (definition.fields && extendsExistingModel.definition.fields) {
+            Object.assign(definition, {
+              fields: {
+                ...extendsExistingModel.definition.fields,
+                ...definition.fields,
+              },
+            });
+          }
+          if (definition.validators && extendsExistingModel.definition.validators) {
+            Object.assign(definition, {
+              validators: [...extendsExistingModel.definition.validators, ...definition.validators],
+            });
+          }
+        }
+
         const lineImport = isTs
           ? `import { Model, ModelDefinition } from "@graphand/core"`
           : `import { Model } from "@graphand/core"`;
@@ -48,8 +71,8 @@ export const commandGenModels = new Command("models")
         const lineSlug = isTs ? `static slug = "${datamodel.slug}" as const` : `static slug = "${datamodel.slug}"`;
 
         const lineDefinition = isTs
-          ? `static definition = ${JSON.stringify(datamodel.definition)} satisfies ModelDefinition`
-          : `static definition = ${JSON.stringify(datamodel.definition)}`;
+          ? `static definition = ${JSON.stringify(definition)} as const satisfies ModelDefinition`
+          : `static definition = ${JSON.stringify(definition)}`;
 
         const content = `
           ${lineImport}

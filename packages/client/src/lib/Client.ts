@@ -24,11 +24,13 @@ import {
   Model,
   ModelInstance,
   TransactionCtx,
+  __CORE_VERSION__,
 } from "@graphand/core";
 import { ClientAdapter } from "./ClientAdapter.js";
 import { BehaviorSubject } from "./BehaviorSubject.js";
 import { decodeClientModule, parseErrorFromJSON } from "./utils.js";
 import { FetchError } from "./FetchError.js";
+import { __CLIENT_VERSION__ } from "@/index.js";
 
 const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   endpoint: "api.graphand.cloud",
@@ -356,7 +358,10 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     });
 
     let init: RequestInit = Object.assign({}, opts.init);
-    init.headers = Object.assign({}, init.headers); // Clone headers
+    init.headers = Object.assign({}, init.headers, {
+      "Core-Version": __CORE_VERSION__,
+      "Client-Version": __CLIENT_VERSION__,
+    }); // Cloning headers
 
     if (!init.method) {
       const order = ["put", "post", "patch", "delete", "get", "options"] as Array<

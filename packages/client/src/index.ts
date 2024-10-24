@@ -1,3 +1,5 @@
+export const __CLIENT_VERSION__ = JSON.stringify(__INTERNAL_CLIENT_VERSION__).replaceAll('"', "");
+
 import "./augmentations";
 
 export { Module, symbolModuleInit, symbolModuleDestroy } from "@/lib/Module.js";

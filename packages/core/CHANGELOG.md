@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.3.5
+
+### Patch Changes
+
+- add core version and client version in headers for content negociation
+
 ## 1.3.3
 
 ### Patch Changes
