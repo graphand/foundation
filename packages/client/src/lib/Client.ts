@@ -24,7 +24,6 @@ import {
   Model,
   ModelInstance,
   TransactionCtx,
-  __CORE_VERSION__,
 } from "@graphand/core";
 import { ClientAdapter } from "./ClientAdapter.js";
 import { BehaviorSubject } from "./BehaviorSubject.js";
@@ -359,7 +358,6 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
 
     let init: RequestInit = Object.assign({}, opts.init);
     init.headers = Object.assign({}, init.headers, {
-      "Core-Version": __CORE_VERSION__,
       "Client-Version": __CLIENT_VERSION__,
     }); // Cloning headers
 

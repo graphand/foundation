@@ -1,16 +1,7 @@
 import { vi } from "vitest";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
-import {
-  Account,
-  DataModel,
-  IdentityTypes,
-  Model,
-  ModelInstance,
-  ModelList,
-  TransactionCtx,
-  __CORE_VERSION__,
-} from "@graphand/core";
+import { Account, DataModel, IdentityTypes, Model, ModelInstance, ModelList, TransactionCtx } from "@graphand/core";
 import { Client } from "./Client.js";
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.js";
 import { ClientAdapter } from "./ClientAdapter.js";
@@ -324,14 +315,6 @@ describe("Client", () => {
       expect(mockFetch).toHaveBeenCalledWith(expect.any(Request));
       // @ts-expect-error - headers is not defined on the request object
       expect(mockFetch.mock.calls[0][0].headers.get("Client-Version")).toBe(__CLIENT_VERSION__);
-    });
-
-    it("should include core version in the request headers", async () => {
-      mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
-      await client.execute({ path: "/test", methods: ["get"], secured: false });
-      expect(mockFetch).toHaveBeenCalledWith(expect.any(Request));
-      // @ts-expect-error - headers is not defined on the request object
-      expect(mockFetch.mock.calls[0][0].headers.get("Core-Version")).toBe(__CORE_VERSION__);
     });
 
     it("should handle path parameters correctly", async () => {
