@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.3.6
+
+### Patch Changes
+
+- add INVALID_VERSION & VERSION_MISMATCH error codes
+
 ## 1.3.5
 
 ### Patch Changes
