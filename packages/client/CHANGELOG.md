@@ -1,5 +1,11 @@
 # @graphand/client
 
+## 1.2.12
+
+### Patch Changes
+
+- add Accept header in ClientAdapter
+
 ## 1.2.10
 
 ### Patch Changes

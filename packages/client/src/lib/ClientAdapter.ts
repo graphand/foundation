@@ -120,7 +120,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       const res = await this.client.execute(controllerModelCount, {
         ctx,
         params: { model: this.model.slug },
-        init: { body: JSON.stringify(query) },
+        init: { body: JSON.stringify(query), headers: { Accept: "application/json" } },
       });
 
       return Number(await res.json().then(r => r.data));
@@ -191,6 +191,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     const res = await this.client.execute(controllerModelRead, {
       ctx,
       params: { model: this.model.slug },
+      init: { headers: { Accept: "application/json" } },
     });
     const json: ModelJSON<T> = await res.json().then(r => r.data);
     await this.#initPopulatedModels(json);
@@ -206,6 +207,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     const res = await this.client.execute(controllerModelRead, {
       ctx,
       params: { id, model: this.model.slug },
+      init: { headers: { Accept: "application/json" } },
     });
     const json: ModelJSON<T> = await res.json().then(r => r.data);
     await this.#initPopulatedModels(json);
@@ -238,6 +240,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       ctx,
       params: { model: this.model.slug },
       data: query,
+      init: { headers: { Accept: "application/json" } },
     });
 
     const json: ReturnType<ModelList<T>["toJSON"]> = await res.json().then(r => r.data);
@@ -282,8 +285,10 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       }
     }
 
+    headers ??= {};
+    headers.Accept = "application/json";
+
     if (ctx.uploadId) {
-      headers ??= {};
       headers["Upload-Id"] = ctx.uploadId;
     }
 
@@ -320,8 +325,10 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       }
     }
 
+    headers ??= {};
+    headers.Accept = "application/json";
+
     if (ctx.uploadId) {
-      headers ??= {};
       headers["Upload-Id"] = ctx.uploadId;
     }
 
@@ -359,8 +366,10 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       }
     }
 
+    headers ??= {};
+    headers.Accept = "application/json";
+
     if (ctx.uploadId) {
-      headers ??= {};
       headers["Upload-Id"] = ctx.uploadId;
     }
 
@@ -406,8 +415,10 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       }
     }
 
+    headers ??= {};
+    headers.Accept = "application/json";
+
     if (ctx.uploadId) {
-      headers ??= {};
       headers["Upload-Id"] = ctx.uploadId;
     }
 
@@ -427,6 +438,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     const res = await this.client.execute(controllerModelDelete, {
       ctx,
       params: { id, model: this.model.slug },
+      init: { headers: { Accept: "application/json" } },
     });
 
     const success: boolean = await res.json().then(r => r.data);
@@ -464,8 +476,10 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       }
     }
 
+    headers ??= {};
+    headers.Accept = "application/json";
+
     if (ctx.uploadId) {
-      headers ??= {};
       headers["Upload-Id"] = ctx.uploadId;
     }
 

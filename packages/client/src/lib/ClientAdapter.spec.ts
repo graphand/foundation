@@ -6,7 +6,6 @@ import { ClientAdapter } from "./ClientAdapter.js";
 import {
   DataModel,
   FieldTypes,
-  JSONTypeObject,
   Model,
   ModelCrudEvent,
   modelDecorator,
@@ -1878,107 +1877,59 @@ describe("ClientAdapter", () => {
     });
   });
 
-  describe.skip("On server", () => {
-    let _client: Client;
-    let model: typeof Model & {
-      definition: {
-        fields: {
-          title: {
-            type: FieldTypes.TEXT;
-          };
-        };
-      };
-    };
+  describe("Accept header", () => {
+    let modelWithAcceptHeader: typeof MockModel;
 
     beforeEach(() => {
-      _client = new Client([]);
+      modelWithAcceptHeader = client.getModel(MockModel);
     });
 
-    beforeAll(async () => {
-      _client = new Client([]);
-      const datamodel = await _client.getModel(DataModel).create({
-        slug: faker.random.alphaNumeric(10),
-        definition: {
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-            },
-          },
-        },
-      });
-      model = _client.getModel(datamodel);
+    it("should be set to application/json on createOne", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      await modelWithAcceptHeader.create({ name: "Test" });
+      // @ts-expect-error - headers is not defined on the request object
+      expect(fetchMock.mock.calls[0][0].headers.get("Accept")).toBe("application/json");
     });
 
-    afterAll(() => {
-      _client.destroy();
+    it("should be set to application/json on createMultiple", async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response('{"data": [{"_id": "123", "name": "Test"}, {"_id": "456", "name": "Test2"}] }'),
+      );
+      await modelWithAcceptHeader.createMultiple([{ name: "Test" }, { name: "Test2" }]);
+      // @ts-expect-error - headers is not defined on the request object
+      expect(fetchMock.mock.calls[0][0].headers.get("Accept")).toBe("application/json");
     });
 
-    it("should createOne", async () => {
-      const title = faker.random.alphaNumeric(10);
-      const created = await model.create({ title });
-      expect(created).toBeInstanceOf(model);
-      expect(created.get("_id")).toBeDefined();
-      expect(created.get("title")).toBe(title);
+    it("should be set to application/json on updateOne", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "UpdatedTest"}}'));
+      await modelWithAcceptHeader.update("123", { $set: { name: "UpdatedTest" } });
+      // @ts-expect-error - headers is not defined on the request object
+      expect(fetchMock.mock.calls[0][0].headers.get("Accept")).toBe("application/json");
     });
 
-    it("should createMultiple", async () => {
-      const title1 = faker.random.alphaNumeric(10);
-      const title2 = faker.random.alphaNumeric(10);
-      const created = await model.createMultiple([{ title: title1 }, { title: title2 }]);
-      expect(Array.isArray(created)).toBeTruthy();
-      expect(created.length).toBe(2);
-      expect(created?.[0]?.get("_id")).toBeDefined();
-      expect(created?.[0]?.get("title")).toBe(title1);
-      expect(created?.[1]?.get("_id")).toBeDefined();
-      expect(created?.[1]?.get("title")).toBe(title2);
+    it("should be set to application/json on deleteOne", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123"}}'));
+      await modelWithAcceptHeader.delete("123");
+      // @ts-expect-error - headers is not defined on the request object
+      expect(fetchMock.mock.calls[0][0].headers.get("Accept")).toBe("application/json");
     });
 
-    it("should updateOne", async () => {
-      const i = await model.create({ title: faker.random.alphaNumeric(10) });
-
-      const newTitle = faker.random.alphaNumeric(10);
-      await i.update({ $set: { title: newTitle } });
-
-      expect(i.get("title")).toBe(newTitle);
+    it("should be set to application/json on get", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+      await modelWithAcceptHeader.get("123");
+      // @ts-expect-error - headers is not defined on the request object
+      expect(fetchMock.mock.calls[0][0].headers.get("Accept")).toBe("application/json");
     });
 
-    it("should updateMultiple", async () => {
-      const i1 = await model.create({ title: faker.random.alphaNumeric(10) });
-      const i2 = await model.create({ title: faker.random.alphaNumeric(10) });
-
-      const newTitle = faker.random.alphaNumeric(10);
-      await model.update({ ids: [i1._id as string, i2._id as string] }, { $set: { title: newTitle } });
-
-      expect(i1.get("title")).toBe(newTitle);
-      expect(i2.get("title")).toBe(newTitle);
-
-      await expect(model.get(i1._id, { disableCache: true })).resolves.toHaveProperty("title", newTitle);
-      await expect(model.get(i2._id, { disableCache: true })).resolves.toHaveProperty("title", newTitle);
-    });
-
-    it("should deleteOne", async () => {
-      const i = await model.create({ title: faker.random.alphaNumeric(10) });
-      await i.delete();
-      await expect(model.get(i._id)).rejects.toThrow("not found");
-    });
-
-    it("should deleteMultiple", async () => {
-      const i1 = await model.create({ title: faker.random.alphaNumeric(10) });
-      const i2 = await model.create({ title: faker.random.alphaNumeric(10) });
-      await model.delete({ ids: [i1._id as string, i2._id as string] });
-      await expect(model.get(i1._id)).rejects.toThrow("not found");
-      await expect(model.get(i2._id)).rejects.toThrow("not found");
-    });
-
-    it("should count", async () => {
-      const created = await model.createMultiple([
-        { title: faker.random.alphaNumeric(10) },
-        { title: faker.random.alphaNumeric(10) },
-      ]);
-      const filter = { title: { $in: [created?.[0]?.get("title"), created?.[1]?.get("title")] } } as JSONTypeObject;
-      expect(await model.count({ filter })).toBe(2);
-      await model.delete({ ids: [created?.[0]?._id as string, created?.[1]?._id as string] });
-      expect(await model.count({ filter })).toBe(0);
+    it("should be set to application/json on getList", async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response(
+          '{"data": {"rows": [{"_id": "123", "name": "Test1"}, {"_id": "456", "name": "Test2"}], "count": 2}}',
+        ),
+      );
+      await modelWithAcceptHeader.getList();
+      // @ts-expect-error - headers is not defined on the request object
+      expect(fetchMock.mock.calls[0][0].headers.get("Accept")).toBe("application/json");
     });
   });
 });
