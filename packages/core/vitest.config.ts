@@ -5,7 +5,7 @@ import packageJson from "./package.json";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   define: {
-    __CORE_VERSION__: `"${packageJson.version}"`,
+    __INTERNAL_CORE_VERSION__: `"${packageJson.version}"`,
   },
   test: {
     include: ["**/*.spec.ts"],
