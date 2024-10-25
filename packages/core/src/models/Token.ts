@@ -5,12 +5,11 @@ import { Role } from "@/models/Role.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { ModelDefinition } from "@/types/index.js";
 
-// TODO: rename Token class as TokenGenerator, TokenDefinition
-
 @modelDecorator()
 export class Token extends Model {
   static __name = "Token";
   static slug = "tokens" as const;
+  static isEnvironmentScoped = true;
   static definition = {
     keyField: "name",
     fields: {
