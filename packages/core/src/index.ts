@@ -53,7 +53,7 @@ export { MergeRequestEvent } from "@/models/MergeRequestEvent.js";
 export { Role } from "@/models/Role.js";
 export { Settings } from "@/models/Settings.js";
 export { Snapshot } from "@/models/Snapshot.js";
-export { Token } from "@/models/Token.js";
+export { TokenFactory } from "@/models/TokenFactory.js";
 export { AuthMethods } from "@/enums/auth-methods.js";
 export { AuthProviders } from "@/enums/auth-providers.js";
 export { ErrorCodes } from "@/enums/error-codes.js";

@@ -111,8 +111,8 @@ export const controllerOpenapi: Controller = {
   secured: false,
 };
 
-export const controllerGenTokenToken: Controller<{ params: { id: string } }> = {
-  path: "/tokens/:id/gen",
+export const controllerGenTokenFactoryToken: Controller<{ params: { id: string } }> = {
+  path: "/tokenFactories/:id/gen",
   methods: ["post"],
   secured: true,
 };

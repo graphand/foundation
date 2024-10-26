@@ -12,7 +12,7 @@ import type { MergeRequest } from "@/models/MergeRequest.js";
 import type { MergeRequestEvent } from "@/models/MergeRequestEvent.js";
 import type { Role } from "@/models/Role.js";
 import type { Settings } from "@/models/Settings.js";
-import type { Token } from "@/models/Token.js";
+import type { TokenFactory } from "@/models/TokenFactory.js";
 import type { Function } from "@/models/Function.js";
 import { Event } from "@/models/Event.js";
 import { Invitation } from "@/models/Invitation.js";
@@ -45,7 +45,7 @@ export interface ModelsBase {
   [Role.slug]: typeof Role;
   [Settings.slug]: typeof Settings;
   [Snapshot.slug]: typeof Snapshot;
-  [Token.slug]: typeof Token;
+  [TokenFactory.slug]: typeof TokenFactory;
 }
 
 export type Models = Omit<ModelsBase, keyof ModelsOverrides> & ModelsOverrides;

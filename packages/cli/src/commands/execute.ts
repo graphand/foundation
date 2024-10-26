@@ -16,7 +16,7 @@ import {
   controllerSubscriptionsCurrent,
   controllerJobLogs,
   controllerFunctionLogs,
-  controllerGenTokenToken,
+  controllerGenTokenFactoryToken,
   controllerSnapshotsRestore,
   controllerSubscriptionsPortal,
   controllerSubscriptionsUpgrade,
@@ -37,7 +37,7 @@ const controllers = {
   subscriptionsUpgrade: controllerSubscriptionsUpgrade,
   jobLogs: controllerJobLogs,
   functionLogs: controllerFunctionLogs,
-  genTokenToken: controllerGenTokenToken,
+  genTokenFactoryToken: controllerGenTokenFactoryToken,
   snapshotRestore: controllerSnapshotsRestore,
 };
 
