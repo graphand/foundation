@@ -1,5 +1,12 @@
 # @graphand/core
 
+## 1.3.7
+
+### Patch Changes
+
+- rename Token model with TokenFactory & set isEnvironmentScoped=true
+- add validators conditionalFields options support on DataModel
+
 ## 1.3.6
 
 ### Patch Changes

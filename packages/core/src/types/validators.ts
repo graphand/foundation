@@ -1,18 +1,18 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
 
 export type ValidatorOptionsMap = {
-  [ValidatorTypes.EXISTS]: { field: string };
   [ValidatorTypes.REQUIRED]: { field: string };
   [ValidatorTypes.UNIQUE]: { field: string };
-  [ValidatorTypes.KEY_FIELD]: { field: string };
-  [ValidatorTypes.SAMPLE]: { field: string };
-  [ValidatorTypes.LENGTH]: { field: string; min?: number; max?: number };
   [ValidatorTypes.BOUNDARIES]: { field: string; min?: number; max?: number };
+  [ValidatorTypes.LENGTH]: { field: string; min?: number; max?: number };
   [ValidatorTypes.REGEX]: {
     field: string;
     pattern: string;
     options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
   };
+  [ValidatorTypes.SAMPLE]: { field: string };
+  [ValidatorTypes.KEY_FIELD]: { field: string };
+  [ValidatorTypes.EXISTS]: { field: string };
 };
 
 export type ValidatorOptionsMapOmitField = {

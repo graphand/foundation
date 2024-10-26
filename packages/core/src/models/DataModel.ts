@@ -130,6 +130,29 @@ export class DataModel extends Model {
                       },
                       options: {
                         type: FieldTypes.NESTED,
+                        options: {
+                          strict: true,
+                          fields: {
+                            field: { type: FieldTypes.TEXT },
+                            min: { type: FieldTypes.NUMBER },
+                            max: { type: FieldTypes.NUMBER },
+                            pattern: { type: FieldTypes.TEXT },
+                            options: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
+                          },
+                          conditionalFields: {
+                            dependsOn: "$.type",
+                            mappings: {
+                              [ValidatorTypes.REQUIRED]: ["field"],
+                              [ValidatorTypes.UNIQUE]: ["field"],
+                              [ValidatorTypes.BOUNDARIES]: ["field", "min", "max"],
+                              [ValidatorTypes.LENGTH]: ["field", "min", "max"],
+                              [ValidatorTypes.REGEX]: ["field", "pattern", "options"],
+                              [ValidatorTypes.SAMPLE]: ["field"],
+                              [ValidatorTypes.KEY_FIELD]: ["field"],
+                              [ValidatorTypes.EXISTS]: ["field"],
+                            },
+                          },
+                        },
                       },
                     },
                     validators: [

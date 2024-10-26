@@ -1,6 +1,7 @@
 import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.js";
 import { DataModel } from "./DataModel.js";
 import { ValidationError } from "@/lib/ValidationError.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
 
 describe("DataModel Model", () => {
   const adapter = mockAdapter();
@@ -54,5 +55,29 @@ describe("DataModel Model", () => {
         ref: "medias",
       },
     });
+  });
+
+  it("should serialize field validators (conditionalFields)", async () => {
+    const datamodel = DataModelModel.hydrate({
+      slug: generateRandomString(),
+      definition: {
+        validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "rel", min: 1 } }],
+      },
+    });
+
+    expect(datamodel.get("definition.validators", "json")).toEqual([
+      { type: ValidatorTypes.REQUIRED, options: { field: "rel" } },
+    ]); // min field does not exist for required validator
+
+    const datamodel2 = DataModelModel.hydrate({
+      slug: generateRandomString(),
+      definition: {
+        validators: [{ type: ValidatorTypes.BOUNDARIES, options: { field: "rel", min: 1 } }],
+      },
+    });
+
+    expect(datamodel2.get("definition.validators", "json")).toEqual([
+      { type: ValidatorTypes.BOUNDARIES, options: { field: "rel", min: 1 } },
+    ]);
   });
 });
