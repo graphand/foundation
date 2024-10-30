@@ -1,4 +1,3 @@
-import { vi } from "vitest";
 import { ModelList } from "@/lib/ModelList.js";
 import { mockModel } from "@/lib/test-utils.dev.js";
 import { ModelInstance } from "../index.js";

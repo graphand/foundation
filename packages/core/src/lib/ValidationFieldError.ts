@@ -42,7 +42,7 @@ export class ValidationFieldError {
   }
 
   static fromJSON(json: ReturnType<ValidationFieldError["toJSON"]>): ValidationFieldError {
-    const { type, slug, field, validationError } = json;
+    const { type, slug, field, validationError, message } = json;
 
     if (type !== "ValidationFieldError") {
       throw new Error("Invalid JSON");
@@ -50,6 +50,7 @@ export class ValidationFieldError {
 
     return new ValidationFieldError({
       slug,
+      message,
       field: Field.fromJSON(field),
       validationError: validationError && ValidationError.fromJSON(validationError),
     });

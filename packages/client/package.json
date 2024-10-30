@@ -27,7 +27,7 @@
     "jsonwebtoken": "^9.0.2"
   },
   "peerDependencies": {
-    "@graphand/core": "^1.3.9"
+    "@graphand/core": "^1.3.10"
   },
   "files": [
     "dist",

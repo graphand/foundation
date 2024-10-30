@@ -3,6 +3,7 @@ import { ModelInstance } from "@/types/index.js";
 import type { DataModel } from "@/models/DataModel.js";
 import { Validator } from "@/lib/Validator.js";
 import { Adapter } from "../Adapter.js";
+import { ValidationValidatorError } from "../ValidationValidatorError.js";
 
 export class ValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_SLUG> {
   validate: Validator<ValidatorTypes.DATAMODEL_SLUG>["validate"] = async ({ list, model }) => {
@@ -15,7 +16,11 @@ export class ValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_S
 
     values.forEach((slug: string | undefined) => {
       if (slug && modelsMap.has(slug) && !modelsMap.get(slug)?.extensible) {
-        throw new Error(`model slug "${slug}" is reserved`);
+        throw new ValidationValidatorError({
+          validator: this,
+          message: `model slug "${slug}" is reserved`,
+          value: slug,
+        });
       }
     });
 

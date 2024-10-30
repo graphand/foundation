@@ -1,6 +1,7 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Validator } from "@/lib/Validator.js";
 import { getValidationValues } from "../utils.js";
+import { ValidationValidatorError } from "../ValidationValidatorError.js";
 
 export class ValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
   validate: Validator<ValidatorTypes.UNIQUE>["validate"] = async ({ list }) => {
@@ -13,18 +14,17 @@ export class ValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
     }
 
     const valueSet = new Set();
-    const hasTwice = values.some(v => {
+    values.forEach(v => {
       if (valueSet.has(v)) {
-        return true;
+        throw new ValidationValidatorError({
+          validator: this,
+          message: `value ${v} is duplicated`,
+          value: v,
+        });
       }
 
       valueSet.add(v);
-      return false;
     });
-
-    if (hasTwice) {
-      return false;
-    }
 
     return true;
   };

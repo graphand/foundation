@@ -1,6 +1,7 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Validator } from "@/lib/Validator.js";
 import { getValidationValues } from "../utils.js";
+import { ValidationValidatorError } from "../ValidationValidatorError.js";
 
 export class ValidatorRegex extends Validator<ValidatorTypes.REGEX> {
   validate: Validator<ValidatorTypes.REGEX>["validate"] = async ({ list }) => {
@@ -12,7 +13,11 @@ export class ValidatorRegex extends Validator<ValidatorTypes.REGEX> {
 
     values.forEach(v => {
       if (!regex.test(v as string)) {
-        throw new Error(`value does not match pattern ${this.options.pattern}`);
+        throw new ValidationValidatorError({
+          validator: this,
+          message: `value does not match pattern ${this.options.pattern}`,
+          value: v,
+        });
       }
     });
 

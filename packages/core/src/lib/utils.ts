@@ -906,12 +906,18 @@ async function validateFields<T extends typeof Model>(opts: {
         }
       }
     } catch (err) {
-      const e = new ValidationFieldError({
-        slug: field.path.split(".").pop() as string,
-        field,
-        validationError: err instanceof ValidationError ? err : undefined,
-        message: (err as Error)?.message,
-      });
+      let e: ValidationFieldError;
+
+      if (err instanceof ValidationFieldError) {
+        e = err;
+      } else {
+        e = new ValidationFieldError({
+          slug: field.path.split(".").pop() as string,
+          field,
+          validationError: err instanceof ValidationError ? err : undefined,
+          message: (err as Error)?.message,
+        });
+      }
 
       errorsFieldsSet.add(e);
     }
@@ -948,10 +954,16 @@ async function validateValidators<T extends typeof Model>({
           throw null;
         }
       } catch (err) {
-        const e = new ValidationValidatorError({
-          validator,
-          message: (err as Error)?.message,
-        });
+        let e: ValidationValidatorError;
+
+        if (err instanceof ValidationValidatorError) {
+          e = err;
+        } else {
+          e = new ValidationValidatorError({
+            validator,
+            message: (err as Error)?.message,
+          });
+        }
 
         errorsValidatorsSet.add(e);
       }
