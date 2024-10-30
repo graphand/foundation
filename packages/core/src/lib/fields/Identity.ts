@@ -5,18 +5,25 @@ import { getValidationValues, isObjectId } from "@/lib/utils.js";
 
 export class FieldIdentity extends Field<FieldTypes.IDENTITY> {
   validate: Field<FieldTypes.IDENTITY>["validate"] = async ({ list }) => {
-    const _isInvalid = (v: unknown) => {
+    const values = getValidationValues(list, this.path);
+
+    values.forEach(v => {
       if (v === null || v === undefined) {
-        return false;
+        return;
       }
 
       const [type, id] = String(v).split(":");
 
-      return !Object.values(IdentityTypes).includes(type as IdentityTypes) || !isObjectId(id);
-    };
-    const vs = getValidationValues(list, this.path);
+      if (!Object.values(IdentityTypes).includes(type as IdentityTypes)) {
+        throw new Error(`invalid identity type`);
+      }
 
-    return !vs.some(_isInvalid);
+      if (!isObjectId(id)) {
+        throw new Error(`invalid identity id`);
+      }
+    });
+
+    return true;
   };
 
   serializerMap: Field<FieldTypes.IDENTITY>["serializerMap"] = {

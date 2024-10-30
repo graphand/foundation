@@ -45,4 +45,14 @@ export class CoreError extends Error {
       message: this.message,
     };
   }
+
+  static fromJSON(json: ReturnType<CoreError["toJSON"]>) {
+    const { type, code, message } = json;
+
+    if (type !== "CoreError") {
+      throw new Error("Invalid JSON");
+    }
+
+    return new CoreError({ code, message });
+  }
 }

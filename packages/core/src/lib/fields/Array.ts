@@ -9,13 +9,15 @@ import { ModelList } from "@/lib/ModelList.js";
 
 export class FieldArray extends Field<FieldTypes.ARRAY> {
   validate: Field<FieldTypes.ARRAY>["validate"] = async ({ list }) => {
-    const _isInvalid = (v: unknown) => {
+    const values = getValidationValues(list, this.path);
+
+    values.forEach(v => {
       if (v === null || v === undefined) {
-        return false;
+        return;
       }
 
       if (!Array.isArray(v)) {
-        return true;
+        throw new Error(`value is not an array`);
       }
 
       if (this.options.distinct) {
@@ -34,16 +36,12 @@ export class FieldArray extends Field<FieldTypes.ARRAY> {
             return false;
           })
         ) {
-          return true;
+          throw new Error(`array contains duplicate values`);
         }
       }
+    });
 
-      return false;
-    };
-
-    const values = getValidationValues(list, this.path);
-
-    return !values.some(_isInvalid);
+    return true;
   };
 
   _sToRelArr = (input: FieldSerializerInput) => {

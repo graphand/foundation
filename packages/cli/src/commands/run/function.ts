@@ -12,6 +12,7 @@ export const commandRunFunction = new Command("function")
   .option("-p --params <params>", "URL encoded params options")
   .option("-q --query <query>", "URL encoded query options")
   .option("-d --data <data>", "URL encoded data options")
+  .option("-run-in-job", "Run the function in a job")
   .action(async (functionName, options) => {
     await withSpinner(async spinner => {
       const client = await getClient();

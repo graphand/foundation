@@ -1,4 +1,6 @@
 import { ValidationFieldErrorDefinition } from "@/types/index.js";
+import { Field } from "./Field.js";
+import { ValidationError } from "./ValidationError.js";
 
 export class ValidationFieldError {
   #definition: ValidationFieldErrorDefinition;
@@ -19,15 +21,37 @@ export class ValidationFieldError {
     return this.#definition.validationError;
   }
 
+  get message() {
+    return this.#definition.message;
+  }
+
   toJSON(): {
+    type: "ValidationFieldError";
     slug: string;
-    field: ReturnType<ValidationFieldError["field"]["toJSON"]>;
+    field: ReturnType<NonNullable<ValidationFieldError["field"]>["toJSON"]>;
     validationError: ReturnType<NonNullable<ValidationFieldError["validationError"]>["toJSON"]> | undefined;
+    message: string | undefined;
   } {
     return {
+      type: "ValidationFieldError",
       slug: this.slug,
-      field: this.field?.toJSON(),
+      field: this.field.toJSON(),
       validationError: this.validationError?.toJSON(),
+      message: this.message,
     };
+  }
+
+  static fromJSON(json: ReturnType<ValidationFieldError["toJSON"]>): ValidationFieldError {
+    const { type, slug, field, validationError } = json;
+
+    if (type !== "ValidationFieldError") {
+      throw new Error("Invalid JSON");
+    }
+
+    return new ValidationFieldError({
+      slug,
+      field: Field.fromJSON(field),
+      validationError: validationError && ValidationError.fromJSON(validationError),
+    });
   }
 }

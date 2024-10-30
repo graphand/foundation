@@ -8,17 +8,19 @@ import { CoreError } from "../CoreError.js";
 
 export class FieldRelation extends Field<FieldTypes.RELATION> {
   validate: Field<FieldTypes.RELATION>["validate"] = async ({ list }) => {
-    const _isInvalid = (v: unknown) => {
+    const values = getValidationValues(list, this.path);
+
+    values.forEach(v => {
       if (v === null || v === undefined) {
-        return false;
+        return;
       }
 
-      return !isObjectId(v);
-    };
+      if (!isObjectId(v)) {
+        throw new Error(`value is not an ObjectId`);
+      }
+    });
 
-    const vs = getValidationValues(list, this.path);
-
-    return !vs.some(_isInvalid);
+    return true;
   };
 
   _sString = ({ value, format }: FieldSerializerInput) => {

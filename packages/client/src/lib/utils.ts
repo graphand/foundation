@@ -1,6 +1,4 @@
 import {
-  Field,
-  FieldTypes,
   JSONQuery,
   Model,
   ModelInstance,
@@ -8,10 +6,6 @@ import {
   PromiseModel,
   PromiseModelList,
   ValidationError,
-  ValidationFieldError,
-  ValidationValidatorError,
-  Validator,
-  ValidatorTypes,
 } from "@graphand/core";
 import { ModuleConstructor, ModuleWithConfig } from "@/types.js";
 import { ClientError } from "./ClientError.js";
@@ -59,39 +53,7 @@ export const decodeClientModule = <T extends ModuleConstructor>(
 
 export const parseErrorFromJSON = (json: any, res?: Response) => {
   if (json?.type === "ValidationError") {
-    const fields = json.reason?.fields?.map((f: any) => {
-      const field = new Field(
-        {
-          type: f.field.type as FieldTypes,
-          options: f.field.options,
-        },
-        f.field.path,
-      );
-      return new ValidationFieldError({
-        slug: f.slug,
-        field,
-      });
-    });
-    const validators = json.reason?.validators?.map((v: any) => {
-      const validator = new Validator(
-        {
-          type: v.validator.type as ValidatorTypes,
-          options: v.validator.options,
-        },
-        v.validator.path,
-      );
-
-      return new ValidationValidatorError({
-        validator,
-        message: v.message,
-        value: v.value,
-      });
-    });
-    throw new ValidationError({
-      fields,
-      validators,
-      model: json.model,
-    });
+    return ValidationError.fromJSON(json);
   }
 
   if (res) {

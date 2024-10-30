@@ -49,4 +49,10 @@ export class Validator<T extends ValidatorTypes = ValidatorTypes> {
       path: this.#path,
     };
   }
+
+  static fromJSON(json: ReturnType<Validator["toJSON"]>) {
+    const { type, options, path } = json;
+    const definition = { type, options } as ValidatorDefinition;
+    return new Validator(definition, path);
+  }
 }

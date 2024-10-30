@@ -5,25 +5,23 @@ import { getValidationValues, isObjectId } from "@/lib/utils.js";
 
 export class FieldText extends Field<FieldTypes.TEXT> {
   validate: Field<FieldTypes.TEXT>["validate"] = async ({ list }) => {
-    const _isInvalid = (v: unknown) => {
+    const values = getValidationValues(list, this.path);
+
+    values.forEach(v => {
       if (v === null || v === undefined) {
-        return false;
+        return;
       }
 
-      if (this.options.enum?.length && this.options.strict) {
-        return !this.options.enum.includes(String(v));
+      if (this.options.enum?.length && this.options.strict && !this.options.enum.includes(String(v))) {
+        throw new Error(`value does not match strict enum`);
       }
 
       if (isObjectId(v)) {
-        return true;
+        throw new Error(`value is an ObjectId. Text fields do not accept ObjectId values`);
       }
+    });
 
-      return false;
-    };
-
-    const values = getValidationValues(list, this.path);
-
-    return !values.some(_isInvalid);
+    return true;
   };
 
   _sDefault = ({ value }: FieldSerializerInput) => {

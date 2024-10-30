@@ -73,7 +73,7 @@ export const commandGdxPush = new Command("push")
 
       const res = await client.execute(controllerGdxPush, {
         query: {
-          force: options.confirm,
+          force: options.force,
           clean: options.clean,
           confirmChecksum,
         },
@@ -117,7 +117,7 @@ export const commandGdxPush = new Command("push")
       return;
     }
 
-    const lines = _getLines(data, options.confirm);
+    const lines = _getLines(data, options.force);
 
     if (!lines.length) {
       console.log(chalk.gray("Already up to date"));

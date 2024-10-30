@@ -223,6 +223,7 @@ export type ValidationFieldErrorDefinition = {
   slug: string;
   field: Field;
   validationError?: ValidationError;
+  message?: string;
 };
 
 export type ValidationValidatorErrorDefinition = {

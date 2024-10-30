@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.3.8
+
+### Patch Changes
+
+- improve ValidationError class
+
 ## 1.3.7
 
 ### Patch Changes

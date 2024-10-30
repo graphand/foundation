@@ -910,6 +910,7 @@ async function validateFields<T extends typeof Model>(opts: {
         slug: field.path.split(".").pop() as string,
         field,
         validationError: err instanceof ValidationError ? err : undefined,
+        message: (err as Error)?.message,
       });
 
       errorsFieldsSet.add(e);

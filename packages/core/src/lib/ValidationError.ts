@@ -40,8 +40,12 @@ export class ValidationError extends CoreError {
   }
 
   get fieldsPaths(): Array<string> {
-    return [...this.fields.map(f => f.field?.path), ...this.validators.map(v => v.validator.getFullPath())].filter(
-      Boolean,
+    return Array.from(
+      new Set(
+        [...this.fields.map(f => f.field?.path), ...this.validators.map(v => v.validator.getFullPath())].filter(
+          Boolean,
+        ),
+      ),
     );
   }
 
@@ -50,11 +54,17 @@ export class ValidationError extends CoreError {
 
     const reasons = [];
     if (this.fields.length) {
-      reasons.push(
-        `${this.fields.length} field${this.fields.length > 1 ? "s" : ""} validators (${this.fields
-          .map(v => v.field.type)
-          .join(", ")})`,
-      );
+      let reason: string;
+
+      if (this.fields.length > 1) {
+        reason = `${this.fields.length} fields validators`;
+      } else {
+        reason = "a field validator";
+      }
+
+      reason += ` (${this.fields.map(v => v.field.type).join(", ")})`;
+
+      reasons.push(reason);
     }
 
     const paths = Array.from(new Set(this.fieldsPaths || [])).filter(Boolean);
@@ -100,16 +110,23 @@ export class ValidationError extends CoreError {
     return message;
   }
 
+  onPath(path: string) {
+    return [
+      ...this.fields.filter(f => f.field?.path === path),
+      ...this.validators.filter(v => v.validator.getFullPath() === path),
+    ];
+  }
+
   toJSON() {
     const json = {
       ...super.toJSON(),
       type: "ValidationError",
-      fieldsPaths: this.fieldsPaths,
       model: this.model,
       reason: {
         fields: this.fields.map(f => f.toJSON()),
         validators: this.validators.map(v => v.toJSON()),
       },
+      fieldsPaths: this.fieldsPaths,
     };
 
     if ("code" in json) {
@@ -118,5 +135,29 @@ export class ValidationError extends CoreError {
     }
 
     return json;
+  }
+
+  forPath(path: string) {
+    return [
+      ...this.fields.filter(f => f.field?.path === path),
+      ...this.validators.filter(v => v.validator.getFullPath() === path),
+    ];
+  }
+
+  static fromJSON(json: ReturnType<ValidationError["toJSON"]>): ValidationError {
+    if (json.type !== "ValidationError") {
+      throw new Error("Invalid JSON");
+    }
+
+    const { message, model, reason } = json;
+    const fields = reason.fields.map(f => ValidationFieldError.fromJSON(f));
+    const validators = reason.validators.map(v => ValidationValidatorError.fromJSON(v));
+
+    return new ValidationError({
+      message,
+      fields,
+      validators,
+      model,
+    });
   }
 }

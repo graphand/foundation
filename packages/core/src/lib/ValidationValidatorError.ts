@@ -1,4 +1,5 @@
 import { ValidationValidatorErrorDefinition } from "@/types/index.js";
+import { Validator } from "./Validator.js";
 
 export class ValidationValidatorError {
   #definition: ValidationValidatorErrorDefinition;
@@ -21,9 +22,20 @@ export class ValidationValidatorError {
 
   toJSON() {
     return {
+      type: "ValidationValidatorError",
       validator: this.validator.toJSON(),
       value: this.value,
       message: this.message,
     };
+  }
+
+  static fromJSON(json: ReturnType<ValidationValidatorError["toJSON"]>) {
+    const { type, validator, value, message } = json;
+
+    if (type !== "ValidationValidatorError") {
+      throw new Error("Invalid JSON");
+    }
+
+    return new ValidationValidatorError({ validator: Validator.fromJSON(validator), value, message });
   }
 }

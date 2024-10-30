@@ -78,4 +78,9 @@ export class Field<T extends FieldTypes = FieldTypes> {
       path: this.#path,
     };
   }
+
+  static fromJSON(json: ReturnType<Field["toJSON"]>) {
+    const { type, options, path } = json;
+    return new Field({ type, options }, path);
+  }
 }

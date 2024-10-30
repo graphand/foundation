@@ -4,6 +4,7 @@ import { ObjectId } from "bson";
 import { Client } from "./Client.js";
 import { ClientAdapter } from "./ClientAdapter.js";
 import {
+  createValidationError,
   DataModel,
   FieldTypes,
   Model,
@@ -15,6 +16,7 @@ import {
   PromiseModel,
   PromiseModelList,
   ValidationError,
+  ValidatorTypes,
 } from "@graphand/core";
 
 describe("ClientAdapter", () => {
@@ -157,27 +159,10 @@ describe("ClientAdapter", () => {
     fetchMock.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          error: {
-            type: "ValidationError",
-            message: "Validation failed with 1 model validator (required) on path name",
-            fieldsPaths: ["name"],
-            reason: {
-              fields: [],
-              validators: [
-                {
-                  validator: {
-                    type: "required",
-                    options: {
-                      field: "name",
-                    },
-                    path: null,
-                  },
-                },
-              ],
-            },
-            code: "VALIDATION_FAILED",
-            httpStatusCode: 400,
-          },
+          error: createValidationError({
+            type: ValidatorTypes.REQUIRED,
+            options: { field: "name" },
+          }).toJSON(),
         }),
         {
           status: 400,
@@ -187,6 +172,7 @@ describe("ClientAdapter", () => {
         },
       ),
     );
+
     const p1 = model.create({ name: "" });
     await expect(p1).rejects.toThrow(ValidationError);
     const e: ValidationError = await p1.catch(e => e);
@@ -202,6 +188,7 @@ describe("ClientAdapter", () => {
             reason: {
               fields: [
                 {
+                  type: "ValidationFieldError",
                   slug: "arr",
                   field: {
                     type: "array",
