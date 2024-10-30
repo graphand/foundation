@@ -110,7 +110,18 @@ export class ValidationError extends CoreError {
     return message;
   }
 
+  get type() {
+    return "ValidationError";
+  }
+
   onPath(path: string) {
+    return [
+      ...this.fields.filter(f => f.field?.path === path),
+      ...this.validators.filter(v => v.validator.getFullPath() === path),
+    ];
+  }
+
+  forPath(path: string) {
     return [
       ...this.fields.filter(f => f.field?.path === path),
       ...this.validators.filter(v => v.validator.getFullPath() === path),
@@ -120,7 +131,7 @@ export class ValidationError extends CoreError {
   toJSON() {
     const json = {
       ...super.toJSON(),
-      type: "ValidationError",
+      type: this.type,
       model: this.model,
       reason: {
         fields: this.fields.map(f => f.toJSON()),
@@ -129,19 +140,7 @@ export class ValidationError extends CoreError {
       fieldsPaths: this.fieldsPaths,
     };
 
-    if ("code" in json) {
-      // @ts-ignore
-      delete json.code;
-    }
-
     return json;
-  }
-
-  forPath(path: string) {
-    return [
-      ...this.fields.filter(f => f.field?.path === path),
-      ...this.validators.filter(v => v.validator.getFullPath() === path),
-    ];
   }
 
   static fromJSON(json: ReturnType<ValidationError["toJSON"]>): ValidationError {
@@ -159,5 +158,16 @@ export class ValidationError extends CoreError {
       validators,
       model,
     });
+  }
+
+  static isValidationError(error: unknown): error is ValidationError {
+    return (
+      typeof error === "object" &&
+      error !== null &&
+      "type" in error &&
+      error.type === "ValidationError" &&
+      error.constructor &&
+      Object.getPrototypeOf(error.constructor).prototype?.type === "CoreError"
+    );
   }
 }

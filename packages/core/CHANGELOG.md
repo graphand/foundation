@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.3.9
+
+### Patch Changes
+
+- add ValidationError.isValidationError method
+
 ## 1.3.8
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @graphand/client
 
+## 1.2.14
+
+### Patch Changes
+
+- add ValidationError.isValidationError method
+- Updated dependencies
+  - @graphand/core@1.3.9
+
 ## 1.2.13
 
 ### Patch Changes

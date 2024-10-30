@@ -25,5 +25,9 @@ describe("ValidationError", () => {
 
     const errorsOnPath = error.onPath("enum");
     expect(errorsOnPath).toHaveLength(2);
+
+    expect(ValidationError.isValidationError(error)).toBe(true);
+    expect(ValidationError.isValidationError(new Error())).toBe(false);
+    expect(ValidationError.isValidationError(error.toJSON())).toBe(false);
   });
 });

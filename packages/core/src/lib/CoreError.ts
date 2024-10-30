@@ -30,6 +30,10 @@ export class CoreError extends Error {
     return this.#definition.message ?? "Unknown error";
   }
 
+  get type() {
+    return "CoreError";
+  }
+
   set code(code) {
     this.#definition.code = code;
   }
@@ -40,7 +44,7 @@ export class CoreError extends Error {
 
   toJSON() {
     return {
-      type: "CoreError",
+      type: this.type,
       code: this.code,
       message: this.message,
     };
