@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.3.11
+
+### Patch Changes
+
+- fc9dbce: rename handle auth controller with callback auth & improve Authprovider model
+
 ## 1.3.10
 
 ### Patch Changes
