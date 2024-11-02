@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.3.12
+
+### Patch Changes
+
+- fix AuthProvider model
+
 ## 1.3.11
 
 ### Patch Changes

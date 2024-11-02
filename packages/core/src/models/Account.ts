@@ -4,6 +4,7 @@ import { Role } from "@/models/Role.js";
 import { modelDecorator } from "@/lib/modelDecorator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { FieldTypes } from "@/enums/field-types.js";
+import { Patterns } from "@/enums/patterns.js";
 
 @modelDecorator()
 export class Account extends Model {
@@ -26,6 +27,7 @@ export class Account extends Model {
     validators: [
       { type: ValidatorTypes.REQUIRED, options: { field: "role" } },
       { type: ValidatorTypes.UNIQUE, options: { field: "_email" } },
+      { type: ValidatorTypes.REGEX, options: { field: "_email", pattern: Patterns.EMAIL } },
     ],
   } satisfies ModelDefinition;
 }

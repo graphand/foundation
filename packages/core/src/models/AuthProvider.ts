@@ -30,12 +30,20 @@ export class AuthProvider extends Model {
           conditionalFields: {
             dependsOn: "$.type",
             mappings: {
+              [AuthProviders.GRAPHAND]: ["fieldsMap", "scopes", "autoRegister"],
               [AuthProviders.LOCAL]: ["confirmEmail", "confirmTokenLifetime", "resetTokenLifetime"],
               [AuthProviders.FACEBOOK]: ["clientId", "clientSecret", "fieldsMap", "scopes", "autoRegister"],
-              [AuthProviders.GOOGLE]: ["clientId", "clientSecret", "fieldsMap", "autoRegister"],
-              [AuthProviders.GITHUB]: ["clientId", "clientSecret", "fieldsMap", "autoRegister"],
-              [AuthProviders.APPLE]: ["clientId", "teamId", "keyId", "privateKey", "fieldsMap", "autoRegister"],
-              [AuthProviders.GRAPHAND]: ["autoRegister"],
+              [AuthProviders.GOOGLE]: ["clientId", "clientSecret", "fieldsMap", "scopes", "autoRegister"],
+              [AuthProviders.GITHUB]: ["clientId", "clientSecret", "fieldsMap", "scopes", "autoRegister"],
+              [AuthProviders.APPLE]: [
+                "clientId",
+                "teamId",
+                "keyId",
+                "privateKey",
+                "fieldsMap",
+                "scopes",
+                "autoRegister",
+              ],
             },
           },
           fields: {
