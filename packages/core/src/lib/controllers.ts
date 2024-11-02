@@ -146,8 +146,8 @@ export const controllerRegister: Controller<{ query?: { invitationToken?: string
   secured: false,
 };
 
-export const controllerHandleAuth: Controller<{ query: { error?: string; state: string } }> = {
-  path: "/auth/handle",
+export const controllerCallbackAuth: Controller<{ query: { error?: string; state: string } }> = {
+  path: "/auth/callback",
   methods: ["get"],
   secured: false,
 };
