@@ -39,6 +39,7 @@
     "packages/client",
     "packages/core",
     "packages/module-auth",
-    "packages/module-realtime"
+    "packages/module-realtime",
+    "apps/dashboard"
   ]
 }
