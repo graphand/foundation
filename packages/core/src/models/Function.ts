@@ -1,4 +1,3 @@
-import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Model } from "@/lib/Model.js";
 import { modelDecorator } from "@/lib/modelDecorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
@@ -16,7 +15,6 @@ export class Function extends Model {
     keyField: "name",
     fields: {
       name: { type: FieldTypes.TEXT },
-      code: { type: FieldTypes.TEXT }, // base64 encoded function code
       keys: {
         type: FieldTypes.ARRAY,
         options: {
@@ -54,14 +52,8 @@ export class Function extends Model {
           ref: Job.slug,
         },
       },
+      _checksum: { type: FieldTypes.TEXT },
+      _size: { type: FieldTypes.NUMBER },
     },
-    validators: [
-      {
-        type: ValidatorTypes.REQUIRED,
-        options: {
-          field: "code",
-        },
-      },
-    ],
   } satisfies ModelDefinition;
 }

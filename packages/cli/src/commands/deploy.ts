@@ -28,8 +28,8 @@ export const commandDeploy = new Command("deploy")
           throw new Error(`Code file ${codeFile} does not exist`);
         }
 
-        const codeBuffer = fs.readFileSync(codeFile);
-        const code = codeBuffer.toString("base64");
+        // const codeBuffer = fs.readFileSync(codeFile);
+        // const code = codeBuffer.toString("base64");
 
         spinner.text = `Retrieving function ${functionName} ...`;
 
@@ -46,16 +46,16 @@ export const commandDeploy = new Command("deploy")
         payload ??= {};
 
         payload.name = functionName;
-        payload.code = code;
+        // payload.code = code;
         payload.exposed ??= true;
 
         if (func) {
-          if (func.code === code && !options.force) {
-            spinner.succeed(
-              `Function ${functionName} already deployed and code is up to date. Use --force to deploy anyway`,
-            );
-            return;
-          }
+          // if (func.code === code && !options.force) {
+          //   spinner.succeed(
+          //     `Function ${functionName} already deployed and code is up to date. Use --force to deploy anyway`,
+          //   );
+          //   return;
+          // }
 
           spinner.text = `Updating function ${functionName} ...`;
 

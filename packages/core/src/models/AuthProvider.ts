@@ -50,14 +50,23 @@ export class AuthProvider extends Model {
             confirmEmail: { type: FieldTypes.BOOLEAN, options: { default: false } },
             confirmTokenLifetime: { type: FieldTypes.NUMBER, options: { default: 3600 } },
             resetTokenLifetime: { type: FieldTypes.NUMBER, options: { default: 3600 } },
-            clientId: { type: FieldTypes.TEXT },
-            clientSecret: { type: FieldTypes.TEXT },
             fieldsMap: { type: FieldTypes.NESTED, options: { defaultField: { type: FieldTypes.TEXT } } },
             scopes: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
             autoRegister: { type: FieldTypes.BOOLEAN, options: { default: true } },
             teamId: { type: FieldTypes.TEXT },
             keyId: { type: FieldTypes.TEXT },
             privateKey: { type: FieldTypes.TEXT },
+            // oauth: {
+            //   type: FieldTypes.NESTED,
+            //   options: {
+            //     fields: {
+            //       clientId: { type: FieldTypes.TEXT },
+            //       clientSecret: { type: FieldTypes.TEXT },
+            //       fieldsMap: { type: FieldTypes.NESTED, options: { defaultField: { type: FieldTypes.TEXT } } },
+            //       scopes: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
+            //     },
+            //   },
+            // },
           },
           validators: [
             { type: ValidatorTypes.REQUIRED, options: { field: "clientId" } },
