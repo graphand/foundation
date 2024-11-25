@@ -721,7 +721,7 @@ export const _getter = (opts: {
 
     ctx.hasNext = !!restPaths?.length;
 
-    value = field.serialize({ value: n, format, from, ctx, nextData: opts.override });
+    value = field.serialize({ value: n, format, from, ctx, nextData: opts.override as ModelData });
   }
 
   return value;

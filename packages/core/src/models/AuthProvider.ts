@@ -54,6 +54,8 @@ export class AuthProvider extends Model {
             scopes: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
             autoRegister: { type: FieldTypes.BOOLEAN, options: { default: true } },
             teamId: { type: FieldTypes.TEXT },
+            clientId: { type: FieldTypes.TEXT },
+            clientSecret: { type: FieldTypes.TEXT },
             keyId: { type: FieldTypes.TEXT },
             privateKey: { type: FieldTypes.TEXT },
             // oauth: {

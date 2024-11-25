@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.4.0
+
+### Minor Changes
+
+- Move Function model to environment (isEnvironmentScoped = true)
+
 ## 1.3.12
 
 ### Patch Changes

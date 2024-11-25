@@ -134,7 +134,7 @@ export class Model {
     const i = new this((data ?? {}) as ModelData) as ModelInstance<T>;
 
     // Serialize the model instance into the specified format
-    return i.serialize(format, ctx, clean) as InferModelDef<T, typeof format>;
+    return i.serialize(format, ctx, clean) as InferModelDef<T, S>;
   }
 
   /**
@@ -186,7 +186,7 @@ export class Model {
    * console.log(account._email === clonedAccount._email); // true
    */
   clone<T extends ModelInstance>(this: T): T {
-    return this.model().hydrate(this.#data) as T;
+    return this.model().hydrate(this.#data as ModelData<InferModel<T>>) as T;
   }
 
   /**
@@ -485,7 +485,7 @@ export class Model {
     ctx: SerializerCtx = {},
     override?: unknown,
   ):
-    | (T extends ModelInstance<infer R>
+    | (T extends ModelInstance<infer R extends typeof Model>
         ? P extends keyof InferModelDef<R, S>
           ? InferModelDef<R, S>[P]
           : unknown

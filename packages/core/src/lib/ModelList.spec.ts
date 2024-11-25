@@ -30,18 +30,18 @@ describe("test ModelList", () => {
     const list = new ModelList(model, [
       new model({
         _id: "a",
-        _updatedAt: new Date("2023-04-20T10:30:00"),
-        _createdAt: new Date("2023-04-19T12:00:00"),
+        _updatedAt: new Date("2023-04-20T10:30:00").toJSON(),
+        _createdAt: new Date("2023-04-19T12:00:00").toJSON(),
       }),
       new model({
         _id: "b",
-        _updatedAt: new Date("2023-04-20T11:00:00"),
-        _createdAt: new Date("2023-04-19T11:00:00"),
+        _updatedAt: new Date("2023-04-20T11:00:00").toJSON(),
+        _createdAt: new Date("2023-04-19T11:00:00").toJSON(),
       }),
       new model({
         _id: "c",
-        _updatedAt: new Date("2023-04-20T12:00:00"),
-        _createdAt: new Date("2023-04-19T10:00:00"),
+        _updatedAt: new Date("2023-04-20T12:00:00").toJSON(),
+        _createdAt: new Date("2023-04-19T10:00:00").toJSON(),
       }),
     ]);
 
@@ -57,18 +57,18 @@ describe("test ModelList", () => {
     const _list = new ModelList(model, [
       new model({
         _id: "a",
-        _updatedAt: new Date("2023-04-20T10:30:00"),
-        _createdAt: new Date("2023-04-19T12:00:00"),
+        _updatedAt: new Date("2023-04-20T10:30:00").toJSON(),
+        _createdAt: new Date("2023-04-19T12:00:00").toJSON(),
       }),
       new model({
         _id: "b",
-        _updatedAt: new Date("2023-04-20T12:00:00"),
-        _createdAt: new Date("2023-04-19T11:00:00"),
+        _updatedAt: new Date("2023-04-20T12:00:00").toJSON(),
+        _createdAt: new Date("2023-04-19T11:00:00").toJSON(),
       }),
       new model({
         _id: "c",
-        _updatedAt: new Date("2023-04-20T12:00:00"),
-        _createdAt: new Date("2023-04-19T10:00:00"),
+        _updatedAt: new Date("2023-04-20T12:00:00").toJSON(),
+        _createdAt: new Date("2023-04-19T10:00:00").toJSON(),
       }),
     ]);
 
@@ -80,18 +80,18 @@ describe("test ModelList", () => {
     const _list = new ModelList(model, [
       new model({
         _id: "a",
-        _updatedAt: new Date("2023-04-20T10:30:00"),
-        _createdAt: new Date("2023-04-19T12:00:00"),
+        _updatedAt: new Date("2023-04-20T10:30:00").toJSON(),
+        _createdAt: new Date("2023-04-19T12:00:00").toJSON(),
       }),
       new model({
         _id: "b",
-        _updatedAt: null,
-        _createdAt: new Date("2023-04-20T12:00:00"),
+        _updatedAt: undefined,
+        _createdAt: new Date("2023-04-20T12:00:00").toJSON(),
       }),
       new model({
         _id: "c",
-        _updatedAt: new Date("2023-04-20T12:00:00"),
-        _createdAt: new Date("2023-04-19T10:00:00"),
+        _updatedAt: new Date("2023-04-20T12:00:00").toJSON(),
+        _createdAt: new Date("2023-04-19T10:00:00").toJSON(),
       }),
     ]);
 
@@ -104,18 +104,18 @@ describe("test ModelList", () => {
     const _list = new ModelList(model, [
       new model({
         _id: "a",
-        _updatedAt: new Date("2023-04-20T10:30:00"),
-        _createdAt: new Date("2023-04-19T12:00:00"),
+        _updatedAt: new Date("2023-04-20T10:30:00").toJSON(),
+        _createdAt: new Date("2023-04-19T12:00:00").toJSON(),
       }),
       new model({
         _id: "b",
-        _updatedAt: new Date("2023-04-20T11:00:00"),
-        _createdAt: new Date("2023-04-19T11:00:00"),
+        _updatedAt: new Date("2023-04-20T11:00:00").toJSON(),
+        _createdAt: new Date("2023-04-19T11:00:00").toJSON(),
       }),
       new model({
         _id: "c",
-        _updatedAt: new Date("2023-04-20T12:00:00"),
-        _createdAt: new Date("2023-04-19T10:00:00"),
+        _updatedAt: new Date("2023-04-20T12:00:00").toJSON(),
+        _createdAt: new Date("2023-04-19T10:00:00").toJSON(),
       }),
     ]);
 
@@ -131,8 +131,8 @@ describe("test ModelList", () => {
         [
           new model({
             _id: "d",
-            _updatedAt: new Date("2023-05-01T10:00:00"),
-            _createdAt: new Date("2023-04-30T10:00:00"),
+            _updatedAt: new Date("2023-05-01T10:00:00").toJSON(),
+            _createdAt: new Date("2023-04-30T10:00:00").toJSON(),
           }),
         ],
         {},
@@ -161,8 +161,8 @@ describe("test ModelList", () => {
   it("toArray should return a native array", () => {
     const instance = new model({
       _id: "a",
-      _updatedAt: new Date("2023-04-20T10:30:00"),
-      _createdAt: new Date("2023-04-19T12:00:00"),
+      _updatedAt: new Date("2023-04-20T10:30:00").toJSON(),
+      _createdAt: new Date("2023-04-19T12:00:00").toJSON(),
     });
     const list = new ModelList(model, [instance]);
 
@@ -174,8 +174,8 @@ describe("test ModelList", () => {
   it("toJSON should return a JSON representation of the list", () => {
     const instance = new model({
       _id: "a",
-      _updatedAt: new Date("2023-04-20T10:30:00"),
-      _createdAt: new Date("2023-04-19T12:00:00"),
+      _updatedAt: new Date("2023-04-20T10:30:00").toJSON(),
+      _createdAt: new Date("2023-04-19T12:00:00").toJSON(),
     });
     const list = new ModelList(model, [instance], {}, 1);
 
@@ -189,8 +189,8 @@ describe("test ModelList", () => {
   it("should return the correct count when no count is provided", () => {
     const instance = new model({
       _id: "a",
-      _updatedAt: new Date("2023-04-20T10:30:00"),
-      _createdAt: new Date("2023-04-19T12:00:00"),
+      _updatedAt: new Date("2023-04-20T10:30:00").toJSON(),
+      _createdAt: new Date("2023-04-19T12:00:00").toJSON(),
     });
     const list = new ModelList(model, [instance]);
 

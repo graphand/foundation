@@ -5,6 +5,7 @@ import "@/modules/register-models";
 
 export * from "@/types/index.js";
 export * from "@/lib/controllers.js";
+export * from "@/global.js";
 
 export { modelDecorator } from "@/lib/modelDecorator.js";
 export { Adapter } from "@/lib/Adapter.js";

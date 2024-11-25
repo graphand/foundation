@@ -1,6 +1,6 @@
 {
   "name": "@graphand/core",
-  "version": "1.3.12",
+  "version": "1.4.0",
   "private": false,
   "type": "module",
   "exports": {
@@ -20,6 +20,7 @@
     "build:watch": "vite build --watch",
     "dev": "vite",
     "build:types": "tsc --emitDeclarationOnly",
+    "check:types": "npm run lint && npm run build:types && deno check dist/index.d.ts --unstable-sloppy-imports",
     "test": "vitest run"
   },
   "devDependencies": {
