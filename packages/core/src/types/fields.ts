@@ -185,6 +185,8 @@ export type ModelObject<M extends typeof Model = typeof Model> = InferModelDef<M
 
 export type ModelJSON<M extends typeof Model = typeof Model> = InferModelDef<M, "json">;
 
+export interface ModelData<M extends typeof Model = typeof Model> {}
+
 export type FieldSerializerInput<S extends SerializerFormat = SerializerFormat> = {
   value: unknown;
   from: ModelInstance;

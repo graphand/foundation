@@ -17,7 +17,6 @@ describe("DataModel Model", () => {
     const datamodel = DataModelModel.hydrate({
       slug: generateRandomString(),
       hooks: {
-        // @ts-expect-error test
         before_createOne: true,
       },
     });

@@ -1,5 +1,5 @@
 import { Adapter } from "@/lib/Adapter.js";
-import { AdapterFetcher, ModelDefinition, ModelInstance } from "@/types/index.js";
+import { AdapterFetcher, ModelData, ModelDefinition, ModelInstance } from "@/types/index.js";
 import { ModelList } from "@/lib/ModelList.js";
 import { Model } from "@/lib/Model.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
@@ -120,7 +120,7 @@ export const mockAdapter = ({
             const filterEntries = Object.entries(query.filter);
             found = cache.find(r =>
               filterEntries.every(
-                ([key, value]) => r.getData()[key as unknown as keyof ModelData<typeof Model>] === value,
+                ([key, value]) => (r.getData() as any)[key as unknown as keyof ModelData<typeof Model>] === value,
               ),
             );
           }
@@ -130,7 +130,7 @@ export const mockAdapter = ({
           return Promise.resolve(null);
         }
 
-        const data = { ...found.getData() };
+        const data = { ...(found.getData() as any) };
 
         if (update.$set) {
           Object.assign(data, update.$set);
@@ -154,7 +154,7 @@ export const mockAdapter = ({
         const list = Array.from(this.thisCache);
 
         list.forEach(i => {
-          const data = { ...i.getData() };
+          const data = { ...(i.getData() as any) };
 
           if (update.$set) {
             Object.assign(data, update.$set);

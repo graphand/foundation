@@ -1,5 +1,5 @@
 import { FieldTypes } from "@/enums/field-types.js";
-import { FieldSerializerInput, JSONTypeObject, ModelInstance } from "@/types/index.js";
+import { FieldSerializerInput, JSONTypeObject, ModelData, ModelInstance } from "@/types/index.js";
 import { Field } from "@/lib/Field.js";
 import { getFieldFromDefinition, getNestedFieldsMap, getValidationValues } from "@/lib/utils.js";
 

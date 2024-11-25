@@ -16,6 +16,8 @@ import {
   TransactionCtx,
   FieldsDefinition,
   Transaction,
+  ModelJSON,
+  ModelData,
 } from "@/types/index.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Field } from "@/lib/Field.js";
@@ -1092,7 +1094,8 @@ export const assignDatamodel = async <T extends typeof Model>(model: T, datamode
 
   const baseClass = model.getBaseClass();
 
-  const definition = datamodel?.getData()?.definition;
+  const data = datamodel?.getData() as ModelJSON<typeof DataModel>;
+  const definition = data?.definition;
   const baseDefinition = (baseClass.definition ?? {}) as ModelDefinition;
 
   const fields = {};

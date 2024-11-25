@@ -10,6 +10,7 @@ export default defineConfig({
     dts({
       insertTypesEntry: true,
       outDir: "dist",
+      exclude: ["src/**/*.spec.ts"],
     }),
   ],
   define: {

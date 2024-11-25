@@ -10,6 +10,7 @@ import {
   TransactionCtx,
   SerializerFieldsMap,
   FieldSerializerInput,
+  ModelData,
 } from "@/types/index.js";
 
 export class Field<T extends FieldTypes = FieldTypes> {

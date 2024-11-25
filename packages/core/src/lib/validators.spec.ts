@@ -162,7 +162,7 @@ describe("test validators", () => {
 
         const updateTitle = faker.lorem.word();
         await i.update({ $set: { title: updateTitle } });
-        expect(i.getData().title).toBe(updateTitle);
+        expect((i.getData() as any).title).toBe(updateTitle);
       });
     });
 

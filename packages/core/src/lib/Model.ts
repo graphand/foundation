@@ -23,6 +23,7 @@ import {
   ModelJSON,
   ModelObject,
   InferModel,
+  ModelData,
 } from "@/types/index.js";
 import { Adapter } from "@/lib/Adapter.js";
 import { Validator } from "@/lib/Validator.js";
@@ -79,9 +80,9 @@ export class Model {
     _updatedBy: { type: FieldTypes.IDENTITY },
   };
 
-  #data: ModelData; // The document
+  #data: unknown; // The document
 
-  constructor(data: ModelData = {}) {
+  constructor(data: unknown = {}) {
     if (!data || typeof data !== "object") {
       throw new CoreError({
         message: `Invalid document: ${data}`,
@@ -165,7 +166,7 @@ export class Model {
    * Set the current instance data
    * @param data
    */
-  setData(data: ModelData) {
+  setData<T extends ModelInstance>(this: T, data: ModelData<InferModel<T>>) {
     if (!data || typeof data !== "object") {
       throw new CoreError({
         message: `Invalid data: ${data}`,

@@ -3587,7 +3587,6 @@ describe("test fields", () => {
         const date1 = new Date("2023-06-01");
         const date2 = new Date("2023-06-02");
 
-        // @ts-expect-error dates are not json serialized
         await expect(model.validate([{ arr: [date1, date2, date1] }])).rejects.toThrow(ValidationError);
       });
 
@@ -3608,7 +3607,6 @@ describe("test fields", () => {
 
         await model.initialize();
 
-        // @ts-expect-error dates are not json serialized
         await expect(model.validate([{ arr: ["test", 123, true, "test"] }])).rejects.toThrow(ValidationError);
       });
     });
@@ -3638,9 +3636,7 @@ describe("test fields", () => {
         await model.initialize();
 
         await expect(model.validate([{ arr: [{ title: "test" }, { title: "test" }] }])).resolves.toBeTruthy();
-        // @ts-expect-error test
         await expect(model.validate([{ arr: true }])).rejects.toThrow(ValidationError);
-        // @ts-expect-error test
         await expect(model.validate([{ arr: [true] }])).rejects.toThrow(ValidationError);
       });
     });

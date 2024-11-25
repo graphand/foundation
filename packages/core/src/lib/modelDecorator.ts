@@ -1,3 +1,4 @@
+import { ModelData } from "@/index.js";
 import { Model } from "@/lib/Model.js";
 import { defineFieldsProperties } from "@/lib/utils.js";
 

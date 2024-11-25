@@ -1058,7 +1058,7 @@ describe("Test Model", () => {
       const created = await model.create(create);
       const v = created.get(field);
 
-      const data = { ...created.getData() } as any;
+      const data = { ...(created.getData() as any) };
       data[field] = v;
       created.setData(data);
 

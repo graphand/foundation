@@ -1,3 +1,7 @@
+declare global {
+  const __INTERNAL_CORE_VERSION__: string;
+}
+
 export const __CORE_VERSION__ = JSON.stringify(__INTERNAL_CORE_VERSION__).replaceAll('"', "");
 
 import "@/modules/validators";
@@ -5,7 +9,6 @@ import "@/modules/register-models";
 
 export * from "@/types/index.js";
 export * from "@/lib/controllers.js";
-export * from "@/global.js";
 
 export { modelDecorator } from "@/lib/modelDecorator.js";
 export { Adapter } from "@/lib/Adapter.js";
