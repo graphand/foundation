@@ -1185,7 +1185,7 @@ describe("ClientAdapter", () => {
 
       expect(result).toBeInstanceOf(MockModelWithRelation);
       expect(result.get("name")).toBe("Test");
-      expect(result.getData().nested.related).toBe(nestedRelatedId);
+      expect(result.getData().nested!.related).toBe(nestedRelatedId);
       expect(adapterRelated.store.get(nestedRelatedId)).toBeInstanceOf(RelatedModel);
       expect(result.nested?.related).toBeInstanceOf(PromiseModel);
       expect(result.nested?.related?.cached).toBeInstanceOf(RelatedModel);
@@ -1211,7 +1211,7 @@ describe("ClientAdapter", () => {
 
       expect(result).toBeInstanceOf(MockModelWithRelation);
       expect(result.get("name")).toBe("Test");
-      expect(result.getData().nested.multiRelated).toEqual([nestedRelatedId1, nestedRelatedId2]);
+      expect(result.getData().nested!.multiRelated).toEqual([nestedRelatedId1, nestedRelatedId2]);
       expect(adapterRelated.store.get(nestedRelatedId1)).toBeInstanceOf(RelatedModel);
       expect(adapterRelated.store.get(nestedRelatedId2)).toBeInstanceOf(RelatedModel);
       expect(result.nested?.multiRelated).toBeInstanceOf(PromiseModelList);
@@ -1237,8 +1237,8 @@ describe("ClientAdapter", () => {
 
       expect(result).toBeInstanceOf(MockModelWithRelation);
       expect(result.get("name")).toBe("Test");
-      expect(result.getData().nestedArr[0].related).toBe(nestedArrRelatedId1);
-      expect(result.getData().nestedArr[1].related).toBe(nestedArrRelatedId2);
+      expect(result.getData().nestedArr![0]!.related).toBe(nestedArrRelatedId1);
+      expect(result.getData().nestedArr![1]!.related).toBe(nestedArrRelatedId2);
       expect(adapterRelated.store.get(nestedArrRelatedId1)).toBeInstanceOf(RelatedModel);
       expect(adapterRelated.store.get(nestedArrRelatedId2)).toBeInstanceOf(RelatedModel);
       expect(result.nestedArr?.[0]?.related).toBeInstanceOf(PromiseModel);
@@ -1293,11 +1293,11 @@ describe("ClientAdapter", () => {
 
       const result = await modelWithRelation.get("123");
 
-      expect(result.getData().nested.related).toBe(relatedId1);
-      expect(result.getData().nested.multiRelated).toEqual([relatedId2]);
-      expect(result.getData().nested.circular).toBe(relatedId1);
-      expect(result.getData().nestedArr[0].related).toBe(relatedId2);
-      expect(result.getData().nestedArr[0].multiRelated).toEqual([relatedId1]);
+      expect(result.getData().nested!.related).toBe(relatedId1);
+      expect(result.getData().nested!.multiRelated).toEqual([relatedId2]);
+      expect(result.getData().nested!.circular).toBe(relatedId1);
+      expect(result.getData().nestedArr![0]!.related).toBe(relatedId2);
+      expect(result.getData().nestedArr![0]!.multiRelated).toEqual([relatedId1]);
     });
 
     it("should handle multiple levels of nested populated data", async () => {
@@ -1322,7 +1322,7 @@ describe("ClientAdapter", () => {
 
       const result = await modelWithRelation.get("123");
 
-      expect(result.getData().nested.related).toBe(relatedId1);
+      expect(result.getData()!.nested!.related).toBe(relatedId1);
 
       expect(adapterRelated.store.get(relatedId1)).toBeInstanceOf(RelatedModel);
       expect(adapterOtherRelated.store.get(relatedId2)).toBeInstanceOf(OtherRelatedModel);
@@ -1408,7 +1408,7 @@ describe("ClientAdapter", () => {
             otherRelated: {
               type: FieldTypes.RELATION,
               options: {
-                ref: dmOtherRelated.slug,
+                ref: dmOtherRelated.slug!,
               },
             },
           },
@@ -1426,7 +1426,7 @@ describe("ClientAdapter", () => {
             related: {
               type: FieldTypes.RELATION,
               options: {
-                ref: dmRelated.slug,
+                ref: dmRelated.slug!,
               },
             },
           },
@@ -1652,7 +1652,7 @@ describe("ClientAdapter", () => {
             title: { type: FieldTypes.TEXT },
             level2: {
               type: FieldTypes.RELATION,
-              options: { ref: dmDeep2.slug },
+              options: { ref: dmDeep2.slug! },
             },
           },
         },
@@ -1667,7 +1667,7 @@ describe("ClientAdapter", () => {
             title: { type: FieldTypes.TEXT },
             level1: {
               type: FieldTypes.RELATION,
-              options: { ref: dmDeep1.slug },
+              options: { ref: dmDeep1.slug! },
             },
           },
         },

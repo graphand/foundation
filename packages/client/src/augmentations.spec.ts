@@ -360,6 +360,7 @@ describe("augmentations", () => {
       const otherAdapter = otherModel.getAdapter() as unknown as ClientAdapter;
 
       const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
+      // @ts-expect-error
       const instance2 = OtherModel.hydrate({ _id: "2", someField: "value2" });
       adapter.store.set("1", instance1);
       otherAdapter.store.set("2", instance2);

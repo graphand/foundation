@@ -20,7 +20,7 @@ Model.prototype.subscribe = function <T extends ModelInstance>(
 
   return this.model().subscribe(event => {
     if (this._id && event.ids.includes(this._id) && ["update", "delete"].includes(event.operation)) {
-      observer.call(this, previousData, event);
+      observer.call(this, previousData as ReturnType<T["getData"]>, event);
       previousData = this.getData();
     }
   });

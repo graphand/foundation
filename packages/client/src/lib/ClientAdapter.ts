@@ -23,6 +23,7 @@ import {
   controllerModelDelete,
   FieldsPathItem,
   defineFieldsProperties,
+  ModelData,
 } from "@graphand/core";
 import { Client } from "./Client.js";
 import { Subject } from "./Subject.js";
@@ -601,7 +602,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     }
 
     if (!this.#isStoreEnabled()) {
-      const instance = this.model.hydrate(payload);
+      const instance = this.model.hydrate(payload as ModelData<T>);
       return { instance, updated: true };
     }
 
@@ -617,7 +618,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         updated = true;
       }
     } else if (payload._id) {
-      instance = this.model.hydrate(payload);
+      instance = this.model.hydrate(payload as ModelData<T>);
       this.#store.set(payload._id, instance);
       updated = true;
     }

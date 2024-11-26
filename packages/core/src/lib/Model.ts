@@ -166,7 +166,7 @@ export class Model {
    * Set the current instance data
    * @param data
    */
-  setData<T extends ModelInstance>(this: T, data: ModelData<InferModel<T>>) {
+  setData<T extends ModelInstance>(this: T, data: ModelData) {
     if (!data || typeof data !== "object") {
       throw new CoreError({
         message: `Invalid data: ${data}`,
@@ -543,7 +543,7 @@ export class Model {
       });
     }
 
-    this.setData(newData.getData() as ModelData<InferModel<T>>);
+    this.setData(newData.getData());
     return this;
   }
 
@@ -754,7 +754,7 @@ export class Model {
       });
     }
 
-    this.setData(res.getData() as ModelData<InferModel<T>>);
+    this.setData(res.getData());
 
     return this;
   }

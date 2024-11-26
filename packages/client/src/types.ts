@@ -1,9 +1,22 @@
-import { CoreErrorDefinition, InferModel, ModelInstance, ModelJSON, ModelList, Model } from "@graphand/core";
+import {
+  CoreErrorDefinition,
+  InferModel,
+  ModelInstance,
+  ModelJSON,
+  ModelList,
+  Model,
+  FieldDefinition,
+  FieldTypes,
+} from "@graphand/core";
 import { Module } from "./lib/Module.js";
 import { Client } from "./lib/Client.js";
 import { ClientAdapter } from "./lib/ClientAdapter.js";
 
 declare module "@graphand/core" {
+  export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
+    data: SerializerFieldsMap<F>["json"];
+  }
+
   export interface TransactionCtx {
     disableCache?: boolean;
     formData?: FormData;
@@ -14,7 +27,7 @@ declare module "@graphand/core" {
   export interface Model {
     subscribe: <T extends ModelInstance>(
       this: T,
-      _observer: SubjectObserver<ModelUpdaterEvent>,
+      _observer: (_previousData: ReturnType<T["getData"]>, _event: ModelUpdaterEvent) => void,
     ) => ReturnType<ClientAdapter<InferModel<T>>["subscribe"]>;
     __fetchedAt?: Date;
     __getAge: () => number;
