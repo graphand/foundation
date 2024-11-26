@@ -90,14 +90,14 @@ export const mockAdapter = ({
       },
       createOne: async ([payload]) => {
         payload._id ??= String(new ObjectId());
-        const i = this.model.hydrate(payload);
+        const i = this.model.hydrate(payload as ModelData<T>);
         this.thisCache.add(i as ModelInstance<T>);
         return Promise.resolve(i);
       },
       createMultiple: ([payload]) => {
         const created = payload.map(p => {
           p._id ??= String(new ObjectId());
-          return this.model.hydrate(p);
+          return this.model.hydrate(p as ModelData<T>);
         });
         created.forEach(i => this.thisCache.add(i as ModelInstance<T>));
         return Promise.resolve(created);

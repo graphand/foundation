@@ -141,8 +141,8 @@ export class Model {
   /**
    * Returns the current instance doc (raw data)
    */
-  getData<T extends ModelInstance>(this: T): Readonly<ModelData<InferModel<T>>> {
-    return this.#data as Readonly<ModelData<InferModel<T>>>;
+  getData<T extends ModelInstance>(this: T): ModelData<InferModel<T>> {
+    return this.#data as ModelData<InferModel<T>>;
   }
 
   getKey<T extends ModelInstance<typeof Model>>(this: T, format?: SerializerFormat): string {
@@ -543,7 +543,7 @@ export class Model {
       });
     }
 
-    this.setData(newData.getData());
+    this.setData(newData.getData() as ModelData<InferModel<T>>);
     return this;
   }
 
@@ -754,7 +754,7 @@ export class Model {
       });
     }
 
-    this.setData(res.getData());
+    this.setData(res.getData() as ModelData<InferModel<T>>);
 
     return this;
   }

@@ -26,7 +26,7 @@ export * from "./models.js";
 
 export type Rule = NonNullable<ModelInstance<typeof Role>["rules"]>[number];
 export type FieldsRestriction = NonNullable<ModelInstance<typeof Role>["fieldsRestrictions"]>[number];
-export type SerializerFormat = keyof SerializerFieldsMap<FieldDefinition>;
+export type SerializerFormat = keyof SerializerFieldsMap<FieldDefinition> | "data";
 export type FieldsDefinition = Record<string, FieldDefinition>;
 export type ValidatorsDefinition = Array<ValidatorDefinition>;
 
