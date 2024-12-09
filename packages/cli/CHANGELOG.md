@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.2.10
+
+### Patch Changes
+
+- fixes & improvements
+
 ## 1.2.9
 
 ### Patch Changes

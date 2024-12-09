@@ -4,7 +4,7 @@ import { UserConfig } from "@/types.js";
 import path from "path";
 import fs from "fs";
 import Conf from "conf";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { transformSync } from "esbuild";
 import { program } from "commander";
 import { Client, ClientModules, ClientOptions } from "@graphand/client";
@@ -13,6 +13,7 @@ import { ModuleRealtime } from "@graphand/client-module-realtime";
 import open from "open";
 import ModuleCli from "./ModuleCli.js";
 import ora, { Ora } from "ora";
+import Table from "cli-table3";
 import {
   AuthMethods,
   controllerJobLogs,
@@ -179,12 +180,15 @@ export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<st
     const transpiledCode = result.code;
 
     // Use dynamic import to load the transpiled code
-    const tempFilePath = fileURLToPath(new URL(`file://${process.cwd()}/.tmp-gdx.mjs`));
+
+    const tempFileName = "temp-config.mjs";
+    const tempFilePath = path.join(process.cwd(), tempFileName);
     await fs.promises.writeFile(tempFilePath, transpiledCode);
 
     try {
       // Load the transpiled code
-      const importedConfig = await import(tempFilePath);
+      const fileUrl = pathToFileURL(tempFilePath).href;
+      const importedConfig = await import(fileUrl);
 
       if (importedConfig.default) {
         json = importedConfig.default as JSONTypeObject;
@@ -897,4 +901,143 @@ export const isTypescriptProject = () => {
   }
 
   return false;
+};
+
+export const getTable = <Fields extends string[], Item extends any>(options: {
+  fields: Fields;
+  list: Array<Item>;
+  getter: (_item: Item, _field: Fields[number]) => unknown;
+  getNaturalWidth?: (_field: Fields[number]) => number;
+  isImportantField?: (_field: Fields[number]) => boolean;
+  maxWidth?: number;
+}) => {
+  const fields = options.fields;
+  const list = options.list;
+  const getter = options.getter;
+  const getNaturalWidth = options.getNaturalWidth;
+  const isImportantField = options.isImportantField;
+  const maxWidth = Number(options.maxWidth || 70);
+
+  // Calculate natural widths for each column based on maximum cell content width
+  const naturalWidths = fields.map(field => {
+    if (typeof getNaturalWidth === "function") {
+      return getNaturalWidth(field);
+    }
+
+    const values = list.map(item => String(getter(item, field)));
+    const maxContentWidth = Math.max(...values.map(value => value.length), field.length);
+    return maxContentWidth;
+  });
+
+  // Copy naturalWidths for adjustment
+  let columnWidths = [...naturalWidths];
+
+  const totalNaturalWidth = naturalWidths.reduce((sum, width) => sum + width, 0);
+
+  if (totalNaturalWidth > maxWidth) {
+    // Calculate required width reduction
+    const widthToReduce = totalNaturalWidth - maxWidth;
+
+    // Column indices sorted by descending natural width
+    const sortedIndices = naturalWidths
+      .map((width, index) => ({ width, index }))
+      .sort((a, b) => b.width - a.width)
+      .map(obj => obj.index);
+
+    // Distribute reduction among the widest columns
+    let remainingReduction = widthToReduce;
+
+    for (const idx of sortedIndices) {
+      if (remainingReduction <= 0) {
+        break;
+      }
+
+      if (!fields[idx]) {
+        continue;
+      }
+
+      if (typeof isImportantField === "function" && isImportantField(fields[idx])) {
+        continue;
+      }
+
+      columnWidths[idx] ??= 0;
+
+      // Set minimum column width
+      const minColWidth = naturalWidths[idx] ? Math.max(5, naturalWidths[idx] * 0.3) : 5;
+      const maxReduction = columnWidths[idx] - minColWidth;
+
+      if (maxReduction > 0) {
+        const reduction = Math.min(maxReduction, remainingReduction);
+        columnWidths[idx] -= reduction;
+        remainingReduction -= reduction;
+      }
+    }
+
+    // If additional reduction is needed, proportionally reduce remaining columns
+    if (remainingReduction > 0) {
+      const totalAdjustableWidth = columnWidths.reduce(
+        (sum, width, idx) => sum + (fields[idx] && isImportantField?.(fields[idx]) ? 0 : width),
+        0,
+      );
+      const scalingFactor = (totalAdjustableWidth - remainingReduction) / totalAdjustableWidth;
+
+      columnWidths = columnWidths.map((width, idx) => {
+        if (fields[idx] && isImportantField?.(fields[idx])) {
+          return width; // Preserve fixed width for important fields
+        } else {
+          return Math.max(5, Math.floor(width * scalingFactor));
+        }
+      });
+    }
+  }
+
+  // Ensure column widths are integers
+  columnWidths = columnWidths.map(Math.floor);
+
+  const table = new Table({
+    chars: {
+      top: "",
+      "top-mid": "",
+      "top-left": "",
+      "top-right": "",
+      bottom: "",
+      "bottom-mid": "",
+      "bottom-left": "",
+      "bottom-right": "",
+      left: "",
+      "left-mid": "",
+      mid: "",
+      "mid-mid": "",
+      right: "",
+      "right-mid": "",
+      middle: "  ",
+    },
+    style: { "padding-left": 0, "padding-right": 0 },
+    colWidths: columnWidths,
+    head: fields,
+  });
+
+  list.forEach(item => {
+    const row = fields.map(field => {
+      let value = getter(item, field);
+
+      if (typeof value === "object") {
+        value = JSON.stringify(value);
+      }
+
+      if (isObjectId(value)) {
+        value = chalk.bold(String(value));
+      }
+
+      if (value === undefined) {
+        value = chalk.gray("undefined");
+      }
+
+      return String(value);
+    });
+
+    table.push(row);
+  });
+
+  return table.toString();
 };

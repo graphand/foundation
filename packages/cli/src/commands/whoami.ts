@@ -6,7 +6,7 @@ export const commandWhoami = new Command("whoami")
   .description("Get the current account")
   .action(async () => {
     await withSpinner(async spinner => {
-      const client = await getClient({ realtime: true });
+      const client = await getClient();
 
       spinner.text = "Fetching current account...";
 

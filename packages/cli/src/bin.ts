@@ -20,7 +20,7 @@ import { commandDeploy } from "./commands/deploy.js";
 import { commandRun } from "./commands/run/index.js";
 import { commandLogs } from "./commands/logs/index.js";
 import { commandSrc } from "./commands/src.js";
-import { commandModel } from "./commands/model.js";
+import { commandModels } from "./commands/models.js";
 import { commandGdx } from "./commands/gdx/index.js";
 import { commandGen } from "./commands/gen/index.js";
 
@@ -47,7 +47,7 @@ program.addCommand(commandDeploy);
 program.addCommand(commandRun);
 program.addCommand(commandLogs);
 program.addCommand(commandSrc);
-program.addCommand(commandModel);
+program.addCommand(commandModels);
 program.addCommand(commandGdx);
 program.addCommand(commandGen);
 

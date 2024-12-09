@@ -10,8 +10,9 @@ export const commandLogin = new Command("login")
   .option("-p --provider <provider>", "Authentication provider")
   .option("-m --method <method>", "Authentication method")
   .option("-t --tokens <tokens>", "URL encoded access & refresh tokens")
+  .option("-d --credentials <credentials>", "URL encoded credentials")
   .option("--set-access-token <accessToken>", "Set access token")
-  .action(async function ({ provider, method, tokens, setAccessToken }) {
+  .action(async function ({ provider, method, tokens, credentials: _credentials, setAccessToken }) {
     const client = await getClient();
 
     if (setAccessToken) {
@@ -22,7 +23,7 @@ export const commandLogin = new Command("login")
 
     provider ??= AuthProviders.LOCAL;
     method ??= AuthMethods.CODE;
-    let credentials: Record<string, string> = {};
+    let credentials = qs.parse(_credentials || "") as Record<string, string>;
 
     if (tokens) {
       const { accessToken, refreshToken } = qs.parse(tokens);

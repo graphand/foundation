@@ -1,7 +1,6 @@
 import { Command } from "commander";
-import { colorizeJson, getClient, withSpinner } from "@/lib/utils.js";
+import { colorizeJson, getClient, getTable, withSpinner } from "@/lib/utils.js";
 import qs from "qs";
-import Table from "cli-table3";
 import {
   getFieldsPathsFromPath,
   getRelationModelsFromPath,
@@ -10,7 +9,6 @@ import {
   FieldTypes,
   Populate,
   PopulateOption,
-  isObjectId,
 } from "@graphand/core";
 import chalk from "chalk";
 
@@ -134,138 +132,29 @@ export const commandGet = new Command("get")
       }
 
       if (output === "table") {
-        const maxWidth = Number(options.maxWidth || 70);
+        const table = getTable({
+          maxWidth: options.maxWidth,
+          fields,
+          list,
+          getter: (item, field) => item.get(field, "json"),
+          isImportantField: field => getFieldsPathsFromPath(model, field).pop()?.field?.type === FieldTypes.ID,
+          getNaturalWidth: path => {
+            const field = getFieldsPathsFromPath(model, String(path)).pop()?.field;
+            const isIdField = field && field.type === FieldTypes.ID;
 
-        // Calcul des largeurs naturelles pour chaque colonne en fonction de la largeur maximale du contenu des cellules
-        const naturalWidths = fields.map(fieldPath => {
-          const field = getFieldsPathsFromPath(model, String(fieldPath)).pop()?.field;
-          const isIdField = field && field.type === FieldTypes.ID;
-
-          if (isIdField) {
-            // Pour les champs de type ID, fixer la largeur à 24
-            return 24;
-          } else {
-            const values = list.map(item => String(item.get(fieldPath, "json")));
-            const maxContentWidth = Math.max(...values.map(value => value.length), fieldPath.length);
-            return maxContentWidth;
-          }
-        });
-
-        // Tableau pour suivre quels champs sont de type ID
-        const isIdFieldArray = fields.map(fieldPath => {
-          const field = getFieldsPathsFromPath(model, String(fieldPath)).pop()?.field;
-          return field && field.type === FieldTypes.ID;
-        });
-
-        // Copie de naturalWidths pour ajustement
-        let columnWidths = [...naturalWidths];
-
-        const totalNaturalWidth = naturalWidths.reduce((sum, width) => sum + width, 0);
-
-        if (totalNaturalWidth > maxWidth) {
-          // Calcul de la réduction nécessaire des largeurs
-          const widthToReduce = totalNaturalWidth - maxWidth;
-
-          // Indices des colonnes triés par largeur naturelle décroissante
-          const sortedIndices = naturalWidths
-            .map((width, index) => ({ width, index }))
-            .sort((a, b) => b.width - a.width)
-            .map(obj => obj.index);
-
-          // Distribution de la réduction parmi les colonnes les plus larges
-          let remainingReduction = widthToReduce;
-
-          for (const idx of sortedIndices) {
-            if (remainingReduction <= 0) {
-              break;
+            if (isIdField) {
+              // Pour les champs de type ID, fixer la largeur à 24
+              return 24;
+            } else {
+              const values = list.map(item => String(item.get(path, "json")));
+              const maxContentWidth = Math.max(...values.map(value => value.length), path.length);
+              return maxContentWidth;
             }
-
-            if (isIdFieldArray[idx]) {
-              // Ignorer les champs de type ID
-              continue;
-            }
-
-            columnWidths[idx] ??= 0;
-
-            // Définir une largeur minimale pour la colonne
-            const minColWidth = naturalWidths[idx] ? Math.max(5, naturalWidths[idx] * 0.3) : 5;
-            const maxReduction = columnWidths[idx] - minColWidth;
-
-            if (maxReduction > 0) {
-              const reduction = Math.min(maxReduction, remainingReduction);
-              columnWidths[idx] -= reduction;
-              remainingReduction -= reduction;
-            }
-          }
-
-          // Si une réduction supplémentaire est nécessaire, réduire proportionnellement les colonnes restantes
-          if (remainingReduction > 0) {
-            const totalAdjustableWidth = columnWidths.reduce(
-              (sum, width, idx) => sum + (isIdFieldArray[idx] ? 0 : width),
-              0,
-            );
-            const scalingFactor = (totalAdjustableWidth - remainingReduction) / totalAdjustableWidth;
-
-            columnWidths = columnWidths.map((width, idx) => {
-              if (isIdFieldArray[idx]) {
-                return width; // Conserver la largeur fixe pour les champs ID
-              } else {
-                return Math.max(5, Math.floor(width * scalingFactor));
-              }
-            });
-          }
-        }
-
-        // S'assurer que les largeurs de colonnes sont des entiers
-        columnWidths = columnWidths.map(Math.floor);
-
-        const table = new Table({
-          chars: {
-            top: "",
-            "top-mid": "",
-            "top-left": "",
-            "top-right": "",
-            bottom: "",
-            "bottom-mid": "",
-            "bottom-left": "",
-            "bottom-right": "",
-            left: "",
-            "left-mid": "",
-            mid: "",
-            "mid-mid": "",
-            right: "",
-            "right-mid": "",
-            middle: "  ",
           },
-          style: { "padding-left": 0, "padding-right": 0 },
-          colWidths: columnWidths,
-          head: fields,
-        });
-
-        list.forEach(item => {
-          const row = fields.map(field => {
-            let value = item.get(field, "json");
-
-            if (typeof value === "object") {
-              value = JSON.stringify(value);
-            }
-
-            if (isObjectId(value)) {
-              value = chalk.bold(String(value));
-            }
-
-            if (value === undefined) {
-              value = chalk.gray("undefined");
-            }
-
-            return String(value);
-          });
-
-          table.push(row);
         });
 
         console.log("");
-        console.log(table.toString());
+        console.log(table);
         return;
       }
 
