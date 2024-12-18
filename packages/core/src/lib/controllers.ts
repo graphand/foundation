@@ -112,24 +112,24 @@ export const controllerOpenapi: Controller = {
 };
 
 export const controllerGenTokenIssuerToken: Controller<{ params: { id: string } }> = {
-  path: "/tokenFactories/:id/gen",
+  path: "/tokenIssuers/:id/gen",
   methods: ["post"],
   secured: true,
 };
 
-export const controllerGenKeyToken: Controller<{
+export const controllerGenSecretToken: Controller<{
   params: { id: string };
   data: {
-    claimToken: string; // The identity self-signed token that is supposed to be encoded with the key value as the private key
+    claimToken: string; // The identity self-signed token that is supposed to be encoded with the secret value as the private key
   };
 }> = {
-  path: "/keys/:id/gen",
+  path: "/secrets/:id/gen",
   methods: ["post"],
   secured: false,
 };
 
-export const controllerGenKeyPair: Controller<{ data: { name: string } }> = {
-  path: "/keys/gen-key-pair",
+export const controllerGenSecretKeyPair: Controller<{ data: { name: string } }> = {
+  path: "/secrets/gen-key-pair",
   methods: ["post"],
   secured: true,
 };

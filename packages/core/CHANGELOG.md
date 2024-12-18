@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.4.7
+
+### Patch Changes
+
+- update controllers
+
 ## 1.4.6
 
 ### Patch Changes
