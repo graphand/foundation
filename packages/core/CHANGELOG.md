@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.4.4
+
+### Patch Changes
+
+- add REMOVE_ENVIRONMENT job type
+
 ## 1.4.3
 
 ### Patch Changes

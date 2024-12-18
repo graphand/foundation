@@ -12,6 +12,7 @@ export enum JobTypes {
   MIGRATE_PROJECT = "migrateProject",
   REMOVE_PROJECT = "removeProject",
   REMOVE_FUNCTION = "removeFunction",
+  REMOVE_ENVIRONMENT = "removeEnvironment",
   DEPLOY_FUNCTION = "deployFunction",
   RUN_FUNCTION = "runFunction",
 }
