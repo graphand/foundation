@@ -1,4 +1,4 @@
-export enum MergeRequestEventTypes {
+export enum MergeRequestActionTypes {
   COMMENT = "comment",
   APPROVE = "approve",
   REJECT = "reject",

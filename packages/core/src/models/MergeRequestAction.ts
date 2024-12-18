@@ -3,24 +3,23 @@ import { modelDecorator } from "@/lib/modelDecorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Job } from "@/models/Job.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { MergeRequestTypes } from "@/enums/merge-request-types.js";
-import { MergeRequestEventTypes } from "@/enums/merge-request-event-types.js";
+import { MergeRequestActionTypes } from "@/enums/merge-request-action-types.js";
 import { MergeRequest } from "@/models/MergeRequest.js";
 import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
-export class MergeRequestEvent extends Model {
-  static __name = "MergeRequestEvent";
+export class MergeRequestAction extends Model {
+  static __name = "MergeRequestAction";
   static allowMultipleOperations = false;
-  static slug = "mergeRequestEvents" as const;
+  static slug = "mergeRequestActions" as const;
   static definition = {
     fields: {
       type: {
         type: FieldTypes.TEXT,
         options: {
-          enum: Object.values(MergeRequestEventTypes),
+          enum: Object.values(MergeRequestActionTypes),
           strict: true,
-          default: MergeRequestTypes.STATIC,
+          default: MergeRequestActionTypes.PATCH,
         },
       },
       data: {

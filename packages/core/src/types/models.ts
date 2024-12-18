@@ -8,7 +8,7 @@ import type { Environment } from "@/models/Environment.js";
 import type { Job } from "@/models/Job.js";
 import type { Media } from "@/models/Media.js";
 import type { MergeRequest } from "@/models/MergeRequest.js";
-import type { MergeRequestEvent } from "@/models/MergeRequestEvent.js";
+import type { MergeRequestAction } from "@/models/MergeRequestAction.js";
 import type { Role } from "@/models/Role.js";
 import type { Secret } from "@/models/Secret.js";
 import type { Settings } from "@/models/Settings.js";
@@ -40,7 +40,7 @@ export interface ModelsBase {
   [Job.slug]: typeof Job;
   [Media.slug]: typeof Media;
   [MergeRequest.slug]: typeof MergeRequest;
-  [MergeRequestEvent.slug]: typeof MergeRequestEvent;
+  [MergeRequestAction.slug]: typeof MergeRequestAction;
   [Role.slug]: typeof Role;
   [Secret.slug]: typeof Secret;
   [Settings.slug]: typeof Settings;

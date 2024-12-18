@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.4.8
+
+### Patch Changes
+
+- Rename MergeRequestEvent model to MergeRequestAction
+
 ## 1.4.7
 
 ### Patch Changes

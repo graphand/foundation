@@ -8,7 +8,7 @@ import type { ValidationError } from "@/lib/ValidationError.js";
 import type { AuthProviders } from "@/enums/auth-providers.js";
 import type { AuthMethods } from "@/enums/auth-methods.js";
 import type { MergeRequestTypes } from "@/enums/merge-request-types.js";
-import type { MergeRequestEventTypes } from "@/enums/merge-request-event-types.js";
+import type { MergeRequestActionTypes } from "@/enums/merge-request-action-types.js";
 import type { FieldDefinition, InferModelDef, ModelJSON, SerializerFieldsMap } from "@/types/fields.js";
 import type { ValidatorDefinition } from "@/types/validators.js";
 import type { TransactionCtx } from "./ctx.js";
@@ -299,26 +299,26 @@ export type MergeRequestOptionsMap = {
 export type MergeRequestOptions<T extends MergeRequestTypes = keyof MergeRequestOptionsMap | MergeRequestTypes> =
   T extends keyof MergeRequestOptionsMap ? MergeRequestOptionsMap[T] : Record<string, never>;
 
-export type MergeRequestEventDataMap = {
-  [MergeRequestEventTypes.COMMENT]: {
+export type MergeRequestActionDataMap = {
+  [MergeRequestActionTypes.COMMENT]: {
     comment: string;
   };
-  [MergeRequestEventTypes.PATCH]: {
+  [MergeRequestActionTypes.PATCH]: {
     apply: JSONTypeObject;
     comment?: string;
   };
-  [MergeRequestEventTypes.APPROVE]: {
+  [MergeRequestActionTypes.APPROVE]: {
     close?: boolean;
   };
-  [MergeRequestEventTypes.REJECT]: {
+  [MergeRequestActionTypes.REJECT]: {
     comment?: string;
     close?: boolean;
   };
 };
 
-export type MergeRequestEventData<
-  T extends MergeRequestEventTypes = keyof MergeRequestEventDataMap | MergeRequestEventTypes,
-> = T extends keyof MergeRequestEventDataMap ? MergeRequestEventDataMap[T] : Record<string, never>;
+export type MergeRequestActionData<
+  T extends MergeRequestActionTypes = keyof MergeRequestActionDataMap | MergeRequestActionTypes,
+> = T extends keyof MergeRequestActionDataMap ? MergeRequestActionDataMap[T] : Record<string, never>;
 
 export type AuthProviderCredentialsMap = {
   [AuthProviders.LOCAL]: {
