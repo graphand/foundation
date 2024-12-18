@@ -5,9 +5,9 @@ import { ValidatorTypes } from "@/enums/validator-types.js";
 import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
-export class Key extends Model {
-  static __name = "Key";
-  static slug = "keys" as const;
+export class Secret extends Model {
+  static __name = "Secret";
+  static slug = "secrets" as const;
   static definition = {
     keyField: "name",
     fields: {

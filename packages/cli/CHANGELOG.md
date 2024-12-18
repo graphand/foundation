@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.2.12
+
+### Patch Changes
+
+- Rename Key model to Secret and TokenFactory to TokenIssuer
+
 ## 1.2.11
 
 ### Patch Changes

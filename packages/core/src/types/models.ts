@@ -6,13 +6,13 @@ import type { Connector } from "@/models/Connector.js";
 import type { DataModel } from "@/models/DataModel.js";
 import type { Environment } from "@/models/Environment.js";
 import type { Job } from "@/models/Job.js";
-import type { Key } from "@/models/Key.js";
 import type { Media } from "@/models/Media.js";
 import type { MergeRequest } from "@/models/MergeRequest.js";
 import type { MergeRequestEvent } from "@/models/MergeRequestEvent.js";
 import type { Role } from "@/models/Role.js";
+import type { Secret } from "@/models/Secret.js";
 import type { Settings } from "@/models/Settings.js";
-import type { TokenFactory } from "@/models/TokenFactory.js";
+import type { TokenIssuer } from "@/models/TokenIssuer.js";
 import type { Function } from "@/models/Function.js";
 import { Event } from "@/models/Event.js";
 import { Invitation } from "@/models/Invitation.js";
@@ -38,14 +38,14 @@ export interface ModelsBase {
   [Function.slug]: typeof Function;
   [Invitation.slug]: typeof Invitation;
   [Job.slug]: typeof Job;
-  [Key.slug]: typeof Key;
   [Media.slug]: typeof Media;
   [MergeRequest.slug]: typeof MergeRequest;
   [MergeRequestEvent.slug]: typeof MergeRequestEvent;
   [Role.slug]: typeof Role;
+  [Secret.slug]: typeof Secret;
   [Settings.slug]: typeof Settings;
   [Snapshot.slug]: typeof Snapshot;
-  [TokenFactory.slug]: typeof TokenFactory;
+  [TokenIssuer.slug]: typeof TokenIssuer;
 }
 
 export type Models = Omit<ModelsBase, keyof ModelsOverrides> & ModelsOverrides;

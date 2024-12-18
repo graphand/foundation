@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.4.6
+
+### Patch Changes
+
+- Rename Key model to Secret and TokenFactory to TokenIssuer
+
 ## 1.4.5
 
 ### Patch Changes
@@ -70,7 +76,7 @@
 
 ### Patch Changes
 
-- rename Token model with TokenFactory & set isEnvironmentScoped=true
+- rename Token model with TokenIssuer & set isEnvironmentScoped=true
 - add validators conditionalFields options support on DataModel
 
 ## 1.3.6

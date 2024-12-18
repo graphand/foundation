@@ -6,9 +6,9 @@ import { ValidatorTypes } from "@/enums/validator-types.js";
 import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
-export class TokenFactory extends Model {
-  static __name = "TokenFactory";
-  static slug = "tokenFactories" as const;
+export class TokenIssuer extends Model {
+  static __name = "TokenIssuer";
+  static slug = "tokenIssuers" as const;
   static isEnvironmentScoped = true;
   static definition = {
     keyField: "name",
