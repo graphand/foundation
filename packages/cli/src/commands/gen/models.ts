@@ -9,7 +9,7 @@ export const commandGenModels = new Command("models")
   .description("Gen models")
   .option("-o --out-dir <outDir>", "The output directory for the generated files")
   .action(async options => {
-    await withSpinner(async spinner => {
+    await withSpinner(async () => {
       const client = await getClient();
 
       const datamodels = await client.getModel(DataModel).getList();

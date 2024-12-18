@@ -3,7 +3,6 @@ import { getClient, loadGdx, withSpinner } from "@/lib/utils.js";
 import { controllerGdxPush, JSONTypeObject } from "@graphand/core";
 import { Command } from "commander";
 import { confirm } from "@inquirer/prompts";
-import { Ora } from "ora";
 
 type GDXData = Record<string, { create: JSONTypeObject; update: JSONTypeObject; delete: JSONTypeObject }>;
 
