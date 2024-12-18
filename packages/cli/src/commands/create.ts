@@ -8,7 +8,7 @@ export const _create = async (options: {
   modelName: string;
   client?: Awaited<ReturnType<typeof getClient>>;
   set?: ReturnType<typeof collectSetter>;
-  file?: Record<string, File>;
+  file?: Record<string, Promise<File>>;
   multiple?: boolean;
   formData?: boolean;
   spinner: Ora;
@@ -34,7 +34,9 @@ export const _create = async (options: {
   if (useFormData) {
     formData = new FormData();
     if (options.file) {
-      Object.entries(options.file).forEach(([key, value]) => formData?.append(key, value));
+      for (const [key, value] of Object.entries(options.file)) {
+        formData?.append(key, await value);
+      }
     }
 
     if (!skipRealtimeUpload) {

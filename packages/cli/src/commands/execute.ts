@@ -87,7 +87,7 @@ export const commandExecute = new Command("execute")
         }
       };
 
-      spinner.text = `Fetching ${controllerName} ...`;
+      console.info(`Fetching ${controllerName} ...`);
 
       try {
         const r = await client.execute(controller, {

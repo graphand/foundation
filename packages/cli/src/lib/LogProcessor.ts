@@ -6,39 +6,80 @@ class LogProcessor {
   #abortController: AbortController;
   #spinner?: Ora;
   #endAction?: string;
+  #logQueue: Array<{ timestamp: string; jsonStr: string }> = [];
+  #processingTimeout: NodeJS.Timeout | null = null;
+  #debounceTime: number;
 
-  constructor(opts: { spinner?: Ora; abortController?: AbortController; endAction?: string } = {}) {
+  constructor(
+    opts: {
+      spinner?: Ora;
+      abortController?: AbortController;
+      endAction?: string;
+      debounceTime?: number;
+    } = {},
+  ) {
     this.#abortController = opts.abortController ?? new AbortController();
     this.#spinner = opts.spinner;
     this.#endAction = opts.endAction;
+    this.#debounceTime = opts.debounceTime ?? 100;
   }
 
-  processLogEntry = (jsonStr: string) => {
+  #processQueuedLogs = () => {
     if (this.#spinner) {
       this.#spinner.stop();
     }
 
-    const logEntry = JSON.parse(jsonStr);
+    // Sort logs by timestamp
+    this.#logQueue.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
-    const _timestamp = chalk.gray(`[${logEntry["@timestamp"]}]`);
-    const level = logEntry.log?.level ?? "info";
-    const _level = chalk[this.#getColorForLogLevel(level)](`(${level})`);
+    // Process all queued logs
+    for (const { jsonStr } of this.#logQueue) {
+      try {
+        const logEntry = JSON.parse(jsonStr);
+        const timestamp = logEntry["@timestamp"];
+        const _timestamp = chalk.gray(`[${timestamp}]`);
+        const level = logEntry.log?.level ?? "info";
+        const _level = chalk[this.#getColorForLogLevel(level)](`(${level})`);
 
-    let _log = `${_timestamp} ${_level}: ${logEntry.message}`;
+        let _log = `${_timestamp} ${_level}: ${logEntry.message}`;
 
-    if (logEntry.event?.action) {
-      _log += chalk.bold(` (${logEntry.event.action})`);
+        if (logEntry.event?.action) {
+          _log += chalk.bold(` (${logEntry.event.action})`);
+        }
+
+        console.log(_log);
+
+        if (this.#endAction && logEntry.event?.action === this.#endAction) {
+          this.#abortController.abort();
+        }
+      } catch (error) {
+        console.error("Error processing log entry:", error);
+      }
     }
 
-    console.log(_log);
+    // Clear the queue
+    this.#logQueue = [];
 
     if (this.#spinner) {
       this.#spinner.start();
     }
+  };
 
-    if (this.#endAction && logEntry.event?.action === this.#endAction) {
-      this.#abortController.abort();
-      return;
+  processLogEntry = (jsonStr: string) => {
+    try {
+      const logEntry = JSON.parse(jsonStr);
+      this.#logQueue.push({
+        timestamp: logEntry["@timestamp"],
+        jsonStr,
+      });
+
+      // Debounce the processing
+      if (this.#processingTimeout) {
+        clearTimeout(this.#processingTimeout);
+      }
+      this.#processingTimeout = setTimeout(this.#processQueuedLogs, this.#debounceTime);
+    } catch (error) {
+      console.error("Error queuing log entry:", error);
     }
   };
 
@@ -74,23 +115,16 @@ class LogProcessor {
         while ((newlineIndex = this.#buffer.indexOf("\n")) !== -1) {
           const line = this.#buffer.slice(0, newlineIndex).trim();
           if (line) {
-            try {
-              // Check if the line starts and ends with curly braces
-              if (line.startsWith("{") && line.endsWith("}")) {
-                this.processLogEntry(line);
-              } else {
-                console.warn("Skipping invalid JSON:", line);
-              }
-            } catch (error) {
-              console.error("Error processing log entry:", error);
+            if (line.startsWith("{") && line.endsWith("}")) {
+              this.processLogEntry(line);
+            } else {
+              console.warn("Skipping invalid JSON:", line);
             }
           }
           this.#buffer = this.#buffer.slice(newlineIndex + 1);
         }
 
-        // If the buffer is getting too large, trim it
         if (this.#buffer.length > 1000000) {
-          // 1MB limit
           console.warn("Buffer exceeds 1MB. Trimming...");
           this.#buffer = this.#buffer.slice(-1000000);
         }
@@ -98,15 +132,16 @@ class LogProcessor {
 
       // Process any remaining complete log entry in the buffer
       if (this.#buffer.trim()) {
-        try {
-          const line = this.#buffer.trim();
-          if (line.startsWith("{") && line.endsWith("}")) {
-            this.processLogEntry(line);
-          } else {
-            console.warn("Skipping invalid final JSON:", line);
+        const line = this.#buffer.trim();
+        if (line.startsWith("{") && line.endsWith("}")) {
+          this.processLogEntry(line);
+          // Ensure the final batch is processed
+          if (this.#processingTimeout) {
+            clearTimeout(this.#processingTimeout);
+            this.#processQueuedLogs();
           }
-        } catch (error) {
-          console.error("Error processing final log entry:", error);
+        } else {
+          console.warn("Skipping invalid final JSON:", line);
         }
       }
     } catch (error) {
@@ -121,6 +156,10 @@ class LogProcessor {
   };
 
   abort = () => {
+    if (this.#processingTimeout) {
+      clearTimeout(this.#processingTimeout);
+      this.#processQueuedLogs(); // Process any remaining logs
+    }
     this.#abortController.abort();
   };
 }

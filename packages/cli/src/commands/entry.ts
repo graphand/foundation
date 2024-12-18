@@ -9,7 +9,7 @@ export const commandEntry = new Command("entry")
     await withSpinner(async spinner => {
       const client = await getClient();
 
-      spinner.text = "Fetching entry point: " + chalk.cyan(client.getBaseUrl());
+      console.info("Fetching entry point: " + chalk.cyan(client.getBaseUrl()));
 
       const res = await client.execute(controllerEntry);
       const json = await res.json();

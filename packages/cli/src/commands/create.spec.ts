@@ -257,7 +257,7 @@ describe("Create Command", () => {
       set: { title },
       spinner,
       file: {
-        file: new File(["test"], "test.txt", { type: "text/plain" }),
+        file: Promise.resolve(new File(["test"], "test.txt", { type: "text/plain" })),
       },
     });
 
@@ -288,8 +288,8 @@ describe("Create Command", () => {
       set: { title: faker.lorem.word() },
       spinner,
       file: {
-        file1: new File(["test1"], "test1.txt", { type: "text/plain" }),
-        file2: new File(["test2"], "test2.txt", { type: "text/plain" }),
+        file1: Promise.resolve(new File(["test1"], "test1.txt", { type: "text/plain" })),
+        file2: Promise.resolve(new File(["test2"], "test2.txt", { type: "text/plain" })),
       },
     });
 

@@ -12,11 +12,11 @@ export const commandCount = new Command("count")
       const client = await getClient();
       const model = client.getModel(String(modelName));
 
-      spinner.text = `Initializing model ${model.slug} ...`;
+      console.info(`Initializing model ${model.slug} ...`);
 
       await model.initialize();
 
-      spinner.text = `Counting ${model.slug} ...`;
+      console.info(`Counting ${model.slug} ...`);
 
       // const start = Date.now();
 

@@ -13,7 +13,7 @@ export const commandUpdate = new Command("update")
       const client = await getClient({ realtime: true });
       const model = client.getModel(String(modelName));
 
-      spinner.text = `Initializing model ${model.slug} ...`;
+      console.info(`Initializing model ${model.slug} ...`);
 
       await model.initialize();
 
@@ -33,7 +33,7 @@ export const commandUpdate = new Command("update")
         throw new Error(`No instance found to update`);
       }
 
-      spinner.text = `Updating ${list.length} instance(s) of ${model.slug} ...`;
+      console.info(`Updating ${list.length} instance(s) of ${model.slug} ...`);
 
       let updated: Array<ModelInstance<typeof model>>;
 

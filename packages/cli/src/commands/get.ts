@@ -29,7 +29,7 @@ export const commandGet = new Command("get")
       const model = client.getModel(String(modelName));
       let list: ModelList<typeof model> | null;
 
-      spinner.text = `Initializing model ${model.slug} ...`;
+      console.info(`Initializing model ${model.slug} ...`);
 
       await model.initialize();
 
@@ -47,7 +47,7 @@ export const commandGet = new Command("get")
 
       const nestedFields = fields.filter(f => f.includes("."));
       if (nestedFields.length) {
-        spinner.text = `Decoding populated fields ...`;
+        console.info(`Decoding populated fields ...`);
 
         for (const field of nestedFields) {
           const models = await getRelationModelsFromPath(model, field);
@@ -70,7 +70,7 @@ export const commandGet = new Command("get")
         }
       }
 
-      spinner.text = `Fetching ${model.slug} ${key ? `with key ${key}` : "list"} ...`;
+      console.info(`Fetching ${model.slug} ${key ? `with key ${key}` : "list"} ...`);
 
       const start = Date.now();
 

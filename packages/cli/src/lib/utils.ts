@@ -17,6 +17,7 @@ import Table from "cli-table3";
 import {
   AuthMethods,
   controllerJobLogs,
+  Function,
   isObjectId,
   Job,
   JobStatus,
@@ -24,9 +25,13 @@ import {
   JSONType,
   JSONTypeObject,
   ModelInstance,
+  ModelJSON,
 } from "@graphand/core";
 import LogProcessor from "./LogProcessor.js";
 import mime from "mime";
+import archiver from "archiver";
+import { ReadableStream } from "stream/web";
+import crypto from "crypto";
 
 export const defineConfig = (config: UserConfig): UserConfig => {
   return config;
@@ -157,7 +162,7 @@ export const getGdxPath = async (): Promise<string | null> => {
   return null;
 };
 
-export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<string, File> | undefined }> => {
+export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<string, Promise<File>> | undefined }> => {
   const configPath = await getGdxPath();
   if (!configPath) {
     throw new Error("No gdx file found");
@@ -166,7 +171,7 @@ export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<st
   const configContent = await fs.promises.readFile(configPath, "utf8");
 
   let json: JSONTypeObject | undefined;
-  let file: Record<string, File> | undefined;
+  let file: Record<string, Promise<File>> | undefined;
 
   if (path.extname(configPath) === ".json") {
     json = JSON.parse(configContent);
@@ -201,18 +206,42 @@ export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<st
 
   if (json && "$cli.set" in json && Object.keys(json["$cli.set"] as object).length) {
     const set = json["$cli.set"] as JSONTypeObject;
-    const assign = Object.entries(set).reduce((acc, [key, value]) => {
-      return collectSetter(`${key}=${value}`, acc);
-    }, {});
+    const assign = Object.entries(set).reduce((acc, [key, value]) => collectSetter(`${key}=${value}`, acc), {});
 
     mergeDeep(json, assign);
   }
 
   if (json && "$cli.file" in json && Object.keys(json["$cli.file"] as object).length) {
     const _file = json["$cli.file"] as JSONTypeObject;
-    file = Object.entries(_file).reduce((acc, [key, value]) => {
-      return collectFiles(`${key}=${value}`, acc);
-    }, {});
+    file = Object.entries(_file).reduce((acc, [key, value]) => collectFiles(`${key}=${value}`, acc), {});
+  }
+
+  if (json && "$cli.function" in json && Object.keys(json["$cli.function"] as object).length) {
+    const _functions = json["$cli.function"] as Record<string, string>;
+    const client = await getClient();
+    json.functions ??= {};
+    const functions = json.functions as Record<string, ModelJSON<typeof Function>>;
+    for (const [key, value] of Object.entries(_functions)) {
+      functions[key] ??= {};
+      functions[key].exposed ??= true;
+
+      const functionPath = path.join(process.cwd(), value);
+      const checksum = await checksumDirectory(functionPath);
+      const func = await client
+        .getModel(Function)
+        .get(key)
+        .catch(() => null);
+
+      const bind = func ? func._checksum !== checksum : true;
+
+      if (bind) {
+        const zip = await decodeZip(value);
+        file ??= {};
+        file[`functions[${key}][file]`] = Promise.resolve(zip);
+        // @ts-ignore
+        functions[key].$force = true;
+      }
+    }
   }
 
   if (!json) {
@@ -221,6 +250,7 @@ export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<st
 
   delete json["$cli.set"];
   delete json["$cli.file"];
+  delete json["$cli.function"];
 
   return { json, file };
 };
@@ -467,6 +497,7 @@ export const withSpinner = async <T = any>(
   let e: Error | undefined;
 
   // Store original console methods
+  const originalInfo = console.info;
   const originalLog = console.log;
   const originalTable = console.table;
 
@@ -487,6 +518,14 @@ export const withSpinner = async <T = any>(
     }
 
     logs.push({ type: "table", args });
+  };
+
+  console.info = (...args: any[]) => {
+    if (!spinner.isSpinning) {
+      return;
+    }
+
+    spinner.text = args[0];
   };
 
   try {
@@ -535,6 +574,7 @@ export const withSpinner = async <T = any>(
     // Restore original console methods
     console.log = originalLog;
     console.table = originalTable;
+    console.info = originalInfo;
 
     // Log all stored logs
     logs.forEach(({ type, args }) => {
@@ -631,6 +671,67 @@ const decodeFile = (value: string): File => {
   });
 };
 
+export const decodeZip = async (value: string): Promise<File> => {
+  const functionDirectory = path.resolve(String(value));
+  if (!fs.existsSync(functionDirectory)) {
+    throw new Error(`Function directory ${functionDirectory} not found`);
+  }
+
+  // Creating a zip from the file
+  const zip = archiver("zip");
+  zip.directory(functionDirectory, false);
+  await zip.finalize();
+
+  const buffer = await ReadableStream.from(zip).getReader().read();
+
+  return new File([buffer.value], "function.zip", {
+    type: "application/zip",
+    lastModified: Date.now(),
+  });
+};
+
+export const calculateChecksum = async (file: File): Promise<string> => {
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  return crypto.createHash("sha256").update(buffer).digest("hex");
+};
+
+export const getAllFilePaths = async (dir: string): Promise<string[]> => {
+  const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async entry => {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        return await getAllFilePaths(fullPath);
+      } else {
+        return fullPath;
+      }
+    }),
+  );
+
+  return Array.prototype.concat(...files);
+};
+
+export const checksumDirectory = async (dir: string): Promise<string> => {
+  const filePaths = await getAllFilePaths(dir);
+  // Sort file paths to ensure consistent order
+  filePaths.sort();
+
+  const hash = crypto.createHash("md5");
+
+  for await (const filePath of filePaths) {
+    // Include the relative file path in the hash
+    const relativePath = path.relative(dir, filePath);
+    hash.update(relativePath);
+
+    const fileData = await fs.promises.readFile(filePath);
+    hash.update(fileData);
+  }
+
+  const digest = hash.digest("hex");
+  return digest;
+};
+
 export const collectSetter = (
   value: string,
   previous?: JSONTypeObject | JSONSubtypeArray,
@@ -666,12 +767,15 @@ export const collectSetter = (
       if (!type) throw new Error(`Invalid type ${value}`);
 
       switch (type.replace("@", "")) {
-        case "fileBase64":
+        case "fileBase64": {
           return decodeFileBase64(v || "");
-        case "fileText":
+        }
+        case "fileText": {
           return decodeFileText(v || "");
-        case "stdin":
+        }
+        case "stdin": {
           return process.stdin.read() || "";
+        }
         default:
           break;
       }
@@ -683,20 +787,46 @@ export const collectSetter = (
   return replaceAllStrings(result, _processValue);
 };
 
-export const collectFiles = (value: string, previous?: Record<string, File>): Record<string, File> => {
+export const collectFiles = (
+  value: string,
+  previous?: Record<string, Promise<File>>,
+): Record<string, Promise<File>> => {
   let field: string;
   let path: string;
 
   if (value.includes("=")) {
-    // @ts-expect-error - assume that the value is a string
-    [field, path] = value.split("=");
+    [field, path] = value.split("=") as [string, string];
   } else {
     field = "file";
     path = value;
   }
 
+  const _getFile = async (value: string): Promise<File> => {
+    const types = ["zip", "file"];
+    let type = "file";
+    let v = value;
+
+    if (new RegExp(`^@(${types.join("|")}):?`).test(value)) {
+      [type, v] = value.replace(/^@/, "").split(":") as [string, string];
+    }
+
+    if (!type || !types.includes(type)) {
+      throw new Error(`Invalid type ${type}`);
+    }
+
+    switch (type) {
+      case "zip": {
+        return decodeZip(v || "");
+      }
+      case "file":
+      default: {
+        return decodeFile(v || "");
+      }
+    }
+  };
+
   previous ??= {};
-  previous[field] = decodeFile(path);
+  previous[field] = _getFile(path);
 
   return previous;
 };

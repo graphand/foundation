@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
+import packageJson from "../package.json" assert { type: "json" };
 import { program } from "commander";
-import { version } from "../package.json";
 import { commandInit } from "./commands/init.js";
 import { commandEntry } from "./commands/entry.js";
 import { commandRegister } from "./commands/register.js";
@@ -25,7 +25,7 @@ import { commandGdx } from "./commands/gdx/index.js";
 import { commandGen } from "./commands/gen/index.js";
 
 program
-  .version(version)
+  .version(packageJson.version)
   .description("Graphand CLI !")
   .option("-c --config <config>", "Path to the graphand configuration file");
 

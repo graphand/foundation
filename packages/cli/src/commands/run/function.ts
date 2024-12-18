@@ -57,7 +57,7 @@ export const commandRunFunction = new Command("function")
         console.warn(`Unknown content type ${contentType}`);
       };
 
-      spinner.text = `Executing function ${chalk.cyan(func.name)} (${chalk.bold(func._id)}) ...`;
+      console.info(`Executing function ${chalk.cyan(func.name)} (${chalk.bold(func._id)}) ...`);
 
       const params = options.params ? (qs.parse(options.params) as Record<string, string>) : undefined;
 

@@ -8,7 +8,7 @@ export const commandWhoami = new Command("whoami")
     await withSpinner(async spinner => {
       const client = await getClient();
 
-      spinner.text = "Fetching current account...";
+      console.info("Fetching current account...");
 
       const account = await client.me();
 

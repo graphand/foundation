@@ -17,11 +17,11 @@ export const commandDelete = new Command("delete")
       const model = client.getModel(String(modelName));
       let deleted: Array<string> = [];
 
-      spinner.text = `Initializing model ${model.slug} ...`;
+      console.info(`Initializing model ${model.slug} ...`);
 
       await model.initialize();
 
-      spinner.text = `Deleting ${model.slug} ${key ? `with key ${key}` : "list"} ...`;
+      console.info(`Deleting ${model.slug} ${key ? `with key ${key}` : "list"} ...`);
 
       const start = Date.now();
 

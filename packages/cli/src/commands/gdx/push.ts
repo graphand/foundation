@@ -46,7 +46,7 @@ export const commandGdxPush = new Command("push")
       return lines;
     };
 
-    const _push = async (spinner: Ora, confirmChecksum?: string) => {
+    const _push = async (confirmChecksum?: string) => {
       let uploadId: string | undefined;
       let uploadResolve: (typeof Promise<void>)["resolve"] | undefined;
 
@@ -60,7 +60,7 @@ export const commandGdxPush = new Command("push")
         new Promise<void>(resolve => {
           uploadResolve = resolve as (typeof Promise<void>)["resolve"];
           unsubscribe = upload.subscribe(async state => {
-            spinner.text = `Uploading data ... ${state.percentage}%`;
+            console.info(`Uploading data ... ${state.percentage}%`);
 
             if (!["uploading", "pending"].includes(state.status)) {
               resolve();
@@ -92,20 +92,24 @@ export const commandGdxPush = new Command("push")
       return resJSON.data as GDXData;
     };
 
-    await withSpinner(async spinner => {
+    await withSpinner(async () => {
       const { json, file } = await loadGdx();
       let formData: FormData | undefined;
 
       if (file && Object.keys(file).length) {
         formData = new FormData();
         formData.append("_json", JSON.stringify(json));
-        Object.entries(file).forEach(([key, value]) => formData?.append(key, value));
+
+        for (const [key, value] of Object.entries(file)) {
+          formData?.append(key, await value);
+        }
+
         body = formData;
       }
 
       body ??= JSON.stringify(json);
 
-      data = await _push(spinner);
+      data = await _push();
 
       if (options.verbose) {
         // This will log the data
@@ -144,11 +148,11 @@ export const commandGdxPush = new Command("push")
       return;
     }
 
-    await withSpinner(async spinner => {
+    await withSpinner(async () => {
       // @ts-expect-error - $checksum is not typed here
       const confirmChecksum = data.$checksum as string;
 
-      const res = await _push(spinner, confirmChecksum);
+      const res = await _push(confirmChecksum);
 
       if (options.verbose) {
         return res;

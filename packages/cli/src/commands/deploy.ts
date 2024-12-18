@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { collectSetter, getClient, waitJob, withSpinner } from "@/lib/utils.js";
+import { checksumDirectory, collectSetter, decodeZip, getClient, waitJob, withSpinner } from "@/lib/utils.js";
 import path from "path";
 import fs from "fs";
 import { Function, ModelInstance, ModelJSON } from "@graphand/core";
@@ -8,10 +8,10 @@ import { Client } from "@graphand/client";
 
 export const commandDeploy = new Command("deploy")
   .description("Deploy a function")
-  .arguments("<functionName> <codePath>")
+  .arguments("<functionName> <functionPath>")
   .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", collectSetter)
   .option("-f --force", "Force deployment")
-  .action(async (functionName, codePath, options) => {
+  .action(async (functionName, functionPath, options) => {
     let func: ModelInstance<typeof Function> | null | undefined;
     let updated = false;
     let client: Client;
@@ -22,16 +22,11 @@ export const commandDeploy = new Command("deploy")
 
         const model = client.getModel(Function);
 
-        const codeFile = path.resolve(codePath);
-
-        if (!fs.existsSync(codeFile)) {
-          throw new Error(`Code file ${codeFile} does not exist`);
+        if (!fs.existsSync(path.resolve(functionPath))) {
+          throw new Error(`Function path ${functionPath} does not exist`);
         }
 
-        // const codeBuffer = fs.readFileSync(codeFile);
-        // const code = codeBuffer.toString("base64");
-
-        spinner.text = `Retrieving function ${functionName} ...`;
+        console.info(`Retrieving function ${functionName} ...`);
 
         func = await model.get(functionName).catch(() => null);
 
@@ -46,29 +41,34 @@ export const commandDeploy = new Command("deploy")
         payload ??= {};
 
         payload.name = functionName;
-        // payload.code = code;
         payload.exposed ??= true;
 
+        const checksum = await checksumDirectory(functionPath);
+
+        if (func?._checksum === checksum && !options.force) {
+          spinner.succeed(
+            `Function ${functionName} already deployed and code is up to date. Use --force to deploy anyway`,
+          );
+          return;
+        }
+
+        const formData = new FormData();
+        const zip = await decodeZip(functionPath);
+        formData.append("file", zip, "function.zip");
+
         if (func) {
-          // if (func.code === code && !options.force) {
-          //   spinner.succeed(
-          //     `Function ${functionName} already deployed and code is up to date. Use --force to deploy anyway`,
-          //   );
-          //   return;
-          // }
+          console.info(`Updating function ${functionName} ...`);
 
-          spinner.text = `Updating function ${functionName} ...`;
-
-          await func.update({ $set: payload });
+          await func.update({ $set: payload }, { formData });
 
           spinner.succeed(`Updated function ${functionName} successfully`);
 
           updated = true;
           return;
         } else {
-          spinner.text = `Creating function ${functionName} ...`;
+          console.info(`Creating function ${functionName} ...`);
 
-          func = await model.create(payload);
+          func = await model.create(payload, { formData });
 
           spinner.succeed(`Created function ${functionName} successfully with _id ${chalk.cyan(func._id)}`);
 

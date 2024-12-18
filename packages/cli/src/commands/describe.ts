@@ -17,7 +17,7 @@ export const commandDescribe = new Command("describe")
 
       await model.initialize();
 
-      spinner.text = `Fetching ${chalk.cyan(model.slug)} ${key ? `with key ${chalk.bold(key)}` : "list"} ...`;
+      console.info(`Fetching ${chalk.cyan(model.slug)} ${key ? `with key ${chalk.bold(key)}` : "list"} ...`);
 
       if (key) {
         instance = await model.get(key);

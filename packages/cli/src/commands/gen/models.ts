@@ -39,7 +39,7 @@ export const commandGenModels = new Command("models")
 
         const filename = datamodel.name + "." + extension;
 
-        spinner.text = `Generating ${filename} ...`;
+        console.info(`Generating ${filename} ...`);
 
         const extendsExistingModel = datamodel.slug && client.getAdapterClass().getClosestModel(datamodel.slug);
 
@@ -92,6 +92,6 @@ export const commandGenModels = new Command("models")
         execSync(`npx prettier --write ${filePath}`);
       }
 
-      spinner.text = `Generation successful`;
+      console.info(`Generation successful`);
     });
   });
