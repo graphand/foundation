@@ -203,7 +203,7 @@ describe("Create Command", () => {
     expect(opts.set).toBeUndefined();
     expect(opts).toMatchObject({
       file: {
-        file: expect.any(File),
+        file: expect.any(Promise),
       },
     });
 

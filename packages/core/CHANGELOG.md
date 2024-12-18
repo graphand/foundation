@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.4.5
+
+### Patch Changes
+
+- upgrade version
+
 ## 1.4.4
 
 ### Patch Changes

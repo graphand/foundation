@@ -659,16 +659,18 @@ const decodeFileText = (value: string) => {
   return fileContent.toString();
 };
 
-const decodeFile = (value: string): File => {
+const decodeFile = (value: string): Promise<File> => {
   const filePath = path.resolve(String(value));
   if (!fs.existsSync(filePath)) {
     throw new Error(`File ${filePath} not found`);
   }
 
-  return new File([fs.readFileSync(filePath)], path.basename(filePath), {
+  const file = new File([fs.readFileSync(filePath)], path.basename(filePath), {
     type: mime.getType(filePath) ?? "application/octet-stream",
     lastModified: fs.statSync(filePath)?.mtime?.getTime(),
   });
+
+  return Promise.resolve(file);
 };
 
 export const decodeZip = async (value: string): Promise<File> => {
@@ -801,7 +803,7 @@ export const collectFiles = (
     path = value;
   }
 
-  const _getFile = async (value: string): Promise<File> => {
+  const _getFile = (value: string): Promise<File> => {
     const types = ["zip", "file"];
     let type = "file";
     let v = value;
