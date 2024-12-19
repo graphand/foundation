@@ -140,4 +140,12 @@ describe("Subject", () => {
     expect(observer1).toHaveBeenCalledWith(10, 0);
     expect(observer2).toHaveBeenCalledWith(20, 0);
   });
+
+  it("should call observers with current value when triggered", () => {
+    const observer: SubjectObserver<number> = vi.fn();
+    subject.subscribe(observer);
+    subject.next(10);
+    subject.trigger();
+    expect(observer).toHaveBeenLastCalledWith(10, 10);
+  });
 });

@@ -1,5 +1,11 @@
 # @graphand/client
 
+## 1.2.17
+
+### Patch Changes
+
+- handle not found error (404) in ClientAdapter fetcher.get and add tests
+
 ## 1.2.16
 
 ### Patch Changes

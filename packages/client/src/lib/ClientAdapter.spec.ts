@@ -18,6 +18,7 @@ import {
   ValidationError,
   ValidatorTypes,
 } from "@graphand/core";
+import { FetchError } from "./FetchError.js";
 
 describe("ClientAdapter", () => {
   @modelDecorator()
@@ -596,6 +597,26 @@ describe("ClientAdapter", () => {
       await model.delete({ ids: ["123", "456"] });
 
       expect(adapter.store.size).toBe(0);
+    });
+
+    it("should return null when server responds with 404", async () => {
+      fetchMock.mockImplementationOnce(() =>
+        Promise.reject(new FetchError({ res: new Response(null, { status: 404 }) })),
+      );
+      const result = await model.get("123");
+      expect(result).toBeNull();
+    });
+
+    it("should throw error for non-404 error responses", async () => {
+      const error = new FetchError({ res: new Response(null, { status: 500 }) });
+      fetchMock.mockImplementationOnce(() => Promise.reject(error));
+      await expect(model.get("123")).rejects.toThrow(error);
+    });
+
+    it("should throw original error for non-FetchError exceptions", async () => {
+      const error = new Error("Network error");
+      fetchMock.mockImplementationOnce(() => Promise.reject(error));
+      await expect(model.get("123")).rejects.toThrow(error);
     });
   });
 
@@ -1917,6 +1938,165 @@ describe("ClientAdapter", () => {
       await modelWithAcceptHeader.getList();
       // @ts-expect-error - headers is not defined on the request object
       expect(fetchMock.mock.calls[0][0].headers.get("Accept")).toBe("application/json");
+    });
+  });
+
+  describe("FormData handling", () => {
+    let formData: FormData;
+
+    // Store original Request constructor
+    const originalRequest = global.Request;
+
+    beforeEach(() => {
+      formData = new FormData();
+      formData.append("file", new Blob(["test"]), "test.txt");
+
+      // Mock Request constructor to store original FormData
+      global.Request = vi.fn().mockImplementation(function (url, init) {
+        const request = new originalRequest(url, init);
+        // Store the original body for testing
+        (request as any)._originalBody = init?.body;
+        return request;
+      }) as unknown as typeof Request;
+    });
+
+    const getLastCall = () => {
+      return fetchMock.mock!.calls![0]![0];
+    };
+
+    const getLastCallBody = (): Request["body"] => {
+      return getLastCall()._originalBody;
+    };
+
+    it("should handle FormData in createOne", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+
+      await model.create({ name: "Test" }, { formData });
+
+      const body = getLastCallBody();
+      expect(body instanceof FormData).toBeTruthy();
+      const form = body as unknown as FormData;
+      expect(form.has("_json")).toBeTruthy();
+      expect(form.has("file")).toBeTruthy();
+      expect(JSON.parse(form.get("_json") as string)).toEqual({ name: "Test" });
+    });
+
+    it("should handle FormData in createMultiple", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": [{"_id": "123", "name": "Test"}]}'));
+
+      await model.createMultiple([{ name: "Test" }], { formData });
+
+      const body = getLastCallBody();
+      expect(body instanceof FormData).toBeTruthy();
+      const form = body as unknown as FormData;
+      expect(form.has("_json")).toBeTruthy();
+      expect(form.has("file")).toBeTruthy();
+      expect(JSON.parse(form.get("_json") as string)).toEqual([{ name: "Test" }]);
+    });
+
+    it("should handle FormData in updateOne", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "UpdatedTest"}}'));
+
+      await model.update("123", { $set: { name: "UpdatedTest" } }, { formData });
+
+      const body = getLastCallBody();
+      expect(body instanceof FormData).toBeTruthy();
+      const form = body as unknown as FormData;
+      expect(form.has("_json")).toBeTruthy();
+      expect(form.has("file")).toBeTruthy();
+      expect(JSON.parse(form.get("_json") as string)).toEqual({ update: { $set: { name: "UpdatedTest" } } });
+    });
+
+    it("should handle FormData in updateMultiple", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": [{"_id": "123", "name": "UpdatedTest"}]}'));
+
+      await model.update({ ids: ["123"] }, { $set: { name: "UpdatedTest" } }, { formData });
+
+      const body = getLastCallBody();
+      expect(body instanceof FormData).toBeTruthy();
+      const form = body as unknown as FormData;
+      expect(form.has("_json")).toBeTruthy();
+      expect(form.has("file")).toBeTruthy();
+      expect(JSON.parse(form.get("_json") as string)).toEqual({
+        ids: ["123"],
+        update: { $set: { name: "UpdatedTest" } },
+      });
+    });
+
+    it("should handle FormData with uploadId", async () => {
+      global.Request = originalRequest;
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+
+      const uploadId = "test-upload-id";
+      await model.create({ name: "Test" }, { formData, uploadId });
+
+      const lastCall = getLastCall();
+      expect(lastCall.headers.get("Upload-Id")).toBe(uploadId);
+    });
+
+    it("should not modify FormData if _json already exists", async () => {
+      const existingJson = JSON.stringify({ existing: true });
+      formData.append("_json", existingJson);
+
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+
+      await model.create({ name: "Test" }, { formData });
+
+      const body = getLastCallBody();
+      const form = body as unknown as FormData;
+      expect(JSON.parse(form.get("_json") as string)).toEqual({ existing: true });
+    });
+
+    it("should handle empty FormData", async () => {
+      const emptyFormData = new FormData();
+
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+
+      await model.create({ name: "Test" }, { formData: emptyFormData });
+
+      const body = getLastCallBody();
+      expect(body instanceof FormData).toBeTruthy();
+      const form = body as unknown as FormData;
+      expect(JSON.parse(form.get("_json") as string)).toEqual({ name: "Test" });
+    });
+
+    it("should preserve all FormData entries when adding _json", async () => {
+      formData.append("field1", "value1");
+      formData.append("field2", "value2");
+
+      fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
+
+      await model.create({ name: "Test" }, { formData });
+
+      const body = getLastCallBody();
+      const form = body as unknown as FormData;
+      expect(form.get("field1")).toBe("value1");
+      expect(form.get("field2")).toBe("value2");
+      expect(form.get("file")).toBeTruthy();
+      expect(form.get("_json")).toBeTruthy();
+    });
+
+    it("should handle FormData in deleteMultiple", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": ["123", "456"]}'));
+
+      await model.delete({ ids: ["123", "456"] }, { formData });
+
+      const body = getLastCallBody();
+      expect(body instanceof FormData).toBeTruthy();
+      const form = body as unknown as FormData;
+      expect(form.has("_json")).toBeTruthy();
+      expect(form.has("file")).toBeTruthy();
+      expect(JSON.parse(form.get("_json") as string)).toEqual({ ids: ["123", "456"] });
+    });
+
+    it("should handle FormData with uploadId in deleteMultiple", async () => {
+      fetchMock.mockResolvedValueOnce(new Response('{"data": ["123"]}'));
+
+      const uploadId = "test-upload-id";
+      await model.delete({ ids: ["123"] }, { formData, uploadId });
+
+      const lastCall = getLastCall();
+      expect(lastCall.headers.get("Upload-Id")).toBe(uploadId);
     });
   });
 });

@@ -32,6 +32,7 @@ import { ModelUpdaterEvent, SubjectObserver } from "@/types.js";
 import { ClientError } from "./ClientError.js";
 import FieldRelation from "./fields/Relation.js";
 import FieldArray from "./fields/Array.js";
+import { FetchError } from "./FetchError.js";
 
 export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   static client: Client;
@@ -205,14 +206,23 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       return cachedInstance;
     }
 
-    const res = await this.client.execute(controllerModelRead, {
-      ctx,
-      params: { id, model: this.model.slug },
-      init: { headers: { Accept: "application/json" } },
-    });
-    const json: ModelJSON<T> = await res.json().then(r => r.data);
-    await this.#initPopulatedModels(json);
-    return this.processAndCacheInstance(json);
+    try {
+      const res = await this.client.execute(controllerModelRead, {
+        ctx,
+        params: { id, model: this.model.slug },
+        init: { headers: { Accept: "application/json" } },
+      });
+      const json: ModelJSON<T> = await res.json().then(r => r.data);
+      if (!json._id) return null;
+      await this.#initPopulatedModels(json);
+      return this.processAndCacheInstance(json);
+    } catch (e) {
+      if (e instanceof FetchError && e.res?.status === 404) {
+        return null;
+      }
+
+      throw e;
+    }
   }
 
   async #getByQuery(query: JSONQuery, ctx: TransactionCtx): Promise<ModelInstance<T> | null> {
