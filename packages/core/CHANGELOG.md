@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.4.9
+
+### Patch Changes
+
+- remove default value for Function runtime
+
 ## 1.4.8
 
 ### Patch Changes

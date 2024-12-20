@@ -4,6 +4,7 @@ import { FieldTypes } from "@/enums/field-types.js";
 import { ModelDefinition } from "@/types/index.js";
 import { Job } from "./Job.js";
 import { Role } from "./Role.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
 
 @modelDecorator()
 export class Function extends Model {
@@ -39,7 +40,7 @@ export class Function extends Model {
         type: FieldTypes.TEXT,
         options: {
           enum: ["deno"],
-          default: "deno",
+          strict: true,
         },
       },
       _job: {
@@ -51,5 +52,11 @@ export class Function extends Model {
       _checksum: { type: FieldTypes.TEXT },
       _size: { type: FieldTypes.NUMBER },
     },
+    validators: [
+      {
+        type: ValidatorTypes.REQUIRED,
+        options: { field: "name" },
+      },
+    ],
   } satisfies ModelDefinition;
 }
