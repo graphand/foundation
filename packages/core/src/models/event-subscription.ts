@@ -1,10 +1,10 @@
 import { FieldTypes } from "@/enums/field-types.js";
 import { SubscriptionChannels } from "@/enums/subscription-channels.js";
-import { Model } from "@/lib/Model.js";
-import { modelDecorator } from "@/lib/modelDecorator.js";
+import { Model } from "@/lib/model.js";
+import { modelDecorator } from "@/lib/model-decorator.js";
 import { ModelDefinition } from "@/types/index.js";
-import { Account } from "./Account.js";
-import { Role } from "./Role.js";
+import { Account } from "./account.js";
+import { Role } from "./role.js";
 import { ValidatorTypes } from "../enums/validator-types.js";
 import { Patterns } from "../enums/patterns.js";
 

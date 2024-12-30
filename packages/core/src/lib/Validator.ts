@@ -1,6 +1,6 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { ModelInstance, TransactionCtx, ValidatorDefinition, ValidatorHook, ValidatorOptions } from "@/types/index.js";
-import { Model } from "@/lib/Model.js";
+import { Model } from "@/lib/model.js";
 import { getDefaultValidatorOptions } from "@/lib/utils.js";
 
 export class Validator<T extends ValidatorTypes = ValidatorTypes> {

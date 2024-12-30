@@ -1,11 +1,11 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { ValidationError } from "@/lib/ValidationError.js";
+import { ValidationError } from "@/lib/validation-error.js";
 import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.js";
-import { DataModel } from "@/models/DataModel.js";
-import { Environment } from "@/models/Environment.js";
-import { Media } from "@/models/Media.js";
-import { Model } from "@/lib/Model.js";
+import { DataModel } from "@/models/data-model.js";
+import { Environment } from "@/models/environment.js";
+import { Media } from "@/models/media.js";
+import { Model } from "@/lib/model.js";
 import { Adapter, Field, FieldObject, ModelDefinition } from "./index.js";
 
 describe("Global tests", () => {

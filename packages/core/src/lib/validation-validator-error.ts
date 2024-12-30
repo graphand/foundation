@@ -1,5 +1,5 @@
 import { ValidationValidatorErrorDefinition } from "@/types/index.js";
-import { Validator } from "./Validator.js";
+import { Validator } from "./validator.js";
 
 export class ValidationValidatorError {
   #definition: ValidationValidatorErrorDefinition;

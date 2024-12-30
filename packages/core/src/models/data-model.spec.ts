@@ -1,6 +1,6 @@
 import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.js";
-import { DataModel } from "./DataModel.js";
-import { ValidationError } from "@/lib/ValidationError.js";
+import { DataModel } from "./data-model.js";
+import { ValidationError } from "@/lib/validation-error.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 
 describe("DataModel Model", () => {

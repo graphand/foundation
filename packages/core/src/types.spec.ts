@@ -1,9 +1,9 @@
-import { Model } from "@/lib/Model.js";
+import { Model } from "@/lib/model.js";
 import { FieldTypes } from "./enums/field-types.js";
 import { HookData, JSONSubtype, ModelDefinition, ModelJSON } from "@/types/index.js";
-import { PromiseModel } from "./lib/PromiseModel.js";
-import { Account } from "./models/Account.js";
-import { Role } from "./models/Role.js";
+import { PromiseModel } from "./lib/promise-model.js";
+import { Account } from "./models/account.js";
+import { Role } from "./models/role.js";
 
 class CustomModel extends Model {
   static slug = "customModel" as const;

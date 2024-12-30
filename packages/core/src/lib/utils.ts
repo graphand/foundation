@@ -1,4 +1,4 @@
-import { Model } from "@/lib/Model.js";
+import { Model } from "@/lib/model.js";
 import {
   AdapterFetcher,
   FieldDefinition,
@@ -20,16 +20,16 @@ import {
   ModelData,
 } from "@/types/index.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { Field } from "@/lib/Field.js";
+import { Field } from "@/lib/field.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { Validator } from "@/lib/Validator.js";
-import { Adapter } from "@/lib/Adapter.js";
-import { ValidationValidatorError } from "@/lib/ValidationValidatorError.js";
-import { ValidationFieldError } from "@/lib/ValidationFieldError.js";
-import { ValidationError } from "@/lib/ValidationError.js";
-import type { DataModel } from "@/models/DataModel.js";
+import { Validator } from "@/lib/validator.js";
+import { Adapter } from "@/lib/adapter.js";
+import { ValidationValidatorError } from "@/lib/validation-validator-error.js";
+import { ValidationFieldError } from "@/lib/validation-field-error.js";
+import { ValidationError } from "@/lib/validation-error.js";
+import type { DataModel } from "@/models/data-model.js";
 import { Patterns } from "@/enums/patterns.js";
-import { FieldObject } from "./fields/Object.js";
+import { FieldObject } from "./fields/object.js";
 
 export const crossModelTree = (_model: typeof Model, cb: (_model: typeof Model) => void) => {
   let model = _model;

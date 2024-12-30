@@ -1,5 +1,5 @@
-import { Model } from "@/lib/Model.js";
-import { modelDecorator } from "@/lib/modelDecorator.js";
+import { Model } from "@/lib/model.js";
+import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { FieldsRestriction, ModelInstance, Rule } from "@/types/index.js";
 import { RuleActions } from "@/enums/rule-actions.js";

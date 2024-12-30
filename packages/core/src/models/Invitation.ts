@@ -1,9 +1,9 @@
 import { ModelDefinition } from "@/types/index.js";
-import { Model } from "@/lib/Model.js";
-import { modelDecorator } from "@/lib/modelDecorator.js";
+import { Model } from "@/lib/model.js";
+import { modelDecorator } from "@/lib/model-decorator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { Account } from "@/models/Account.js";
+import { Account } from "@/models/account.js";
 import { Patterns } from "@/enums/patterns.js";
 
 @modelDecorator()

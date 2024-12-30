@@ -3,13 +3,13 @@ import { ObjectId } from "bson";
 import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { faker } from "@faker-js/faker";
-import { Field } from "@/lib/Field.js";
-import { Validator } from "@/lib/Validator.js";
+import { Field } from "@/lib/field.js";
+import { Validator } from "@/lib/validator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { ValidationError } from "@/lib/ValidationError.js";
-import { PromiseModel } from "@/lib/PromiseModel.js";
+import { ValidationError } from "@/lib/validation-error.js";
+import { PromiseModel } from "@/lib/promise-model.js";
 import { Account, DataModel, JSONType, Model, Patterns } from "@/index.js";
-import { PromiseModelList } from "@/lib/PromiseModelList.js";
+import { PromiseModelList } from "@/lib/promise-model-list.js";
 
 describe("test fields", () => {
   const adapter = mockAdapter({});

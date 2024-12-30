@@ -1,5 +1,5 @@
 import { FieldTypes } from "@/enums/field-types.js";
-import { Field } from "@/lib/Field.js";
+import { Field } from "@/lib/field.js";
 
 const toDate = (value: unknown) => {
   if (value instanceof Date) {

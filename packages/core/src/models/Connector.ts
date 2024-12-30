@@ -1,10 +1,10 @@
-import { Model } from "@/lib/Model.js";
-import { modelDecorator } from "@/lib/modelDecorator.js";
+import { Model } from "@/lib/model.js";
+import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { ModelDefinition } from "@/types/index.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { Function } from "./Function.js";
-import { Job } from "./Job.js";
+import { Function } from "./function.js";
+import { Job } from "./job.js";
 
 @modelDecorator()
 export class Connector extends Model {
@@ -43,9 +43,9 @@ export class Connector extends Model {
         options: {
           default: {},
           fields: {
-            maxRetries: { type: FieldTypes.NUMBER, options: { default: 3 } },
-            initialDelay: { type: FieldTypes.NUMBER, options: { default: 1000 } },
-            backoffFactor: { type: FieldTypes.NUMBER, options: { default: 2 } },
+            maxRetries: { type: FieldTypes.INTEGER, options: { default: 3 } },
+            initialDelay: { type: FieldTypes.INTEGER, options: { default: 1000 } },
+            backoffFactor: { type: FieldTypes.INTEGER, options: { default: 2 } },
             strategyType: {
               type: FieldTypes.ENUM,
               options: {

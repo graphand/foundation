@@ -1,10 +1,10 @@
-import { Adapter } from "@/lib/Adapter.js";
+import { Adapter } from "@/lib/adapter.js";
 import { AdapterFetcher, ModelData, ModelDefinition, ModelInstance } from "@/types/index.js";
-import { ModelList } from "@/lib/ModelList.js";
-import { Model } from "@/lib/Model.js";
+import { ModelList } from "@/lib/model-list.js";
+import { Model } from "@/lib/model.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { defineFieldsProperties, isObjectId } from "@/lib/utils.js";
-import { Validator } from "@/lib/Validator.js";
+import { Validator } from "@/lib/validator.js";
 import { ObjectId } from "bson";
 
 const cache: Map<typeof Model, Set<ModelInstance<typeof Model>>> = new Map();

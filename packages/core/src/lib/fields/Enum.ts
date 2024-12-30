@@ -1,6 +1,6 @@
 import { FieldTypes } from "@/enums/field-types.js";
 import { FieldSerializerInput } from "@/index.js";
-import { Field } from "@/lib/Field.js";
+import { Field } from "@/lib/field.js";
 import { getValidationValues, isObjectId } from "@/lib/utils.js";
 
 export class FieldEnum extends Field<FieldTypes.ENUM> {

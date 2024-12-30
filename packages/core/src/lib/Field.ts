@@ -1,5 +1,5 @@
 import { FieldTypes } from "@/enums/field-types.js";
-import { Model } from "@/lib/Model.js";
+import { Model } from "@/lib/model.js";
 import {
   FieldDefinition,
   FieldOptions,

@@ -1,7 +1,7 @@
-import { Model } from "@/lib/Model.js";
-import { modelDecorator } from "@/lib/modelDecorator.js";
+import { Model } from "@/lib/model.js";
+import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { Role } from "@/models/Role.js";
+import { Role } from "@/models/role.js";
 import { ModelDefinition } from "@/types/index.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { AuthProviders } from "@/enums/auth-providers.js";
@@ -47,8 +47,8 @@ export class AuthProvider extends Model {
           },
           fields: {
             confirmEmail: { type: FieldTypes.BOOLEAN, options: { default: false } },
-            confirmTokenLifetime: { type: FieldTypes.NUMBER, options: { default: 3600 } },
-            resetTokenLifetime: { type: FieldTypes.NUMBER, options: { default: 3600 } },
+            confirmTokenLifetime: { type: FieldTypes.INTEGER, options: { default: 3600 } },
+            resetTokenLifetime: { type: FieldTypes.INTEGER, options: { default: 3600 } },
             fieldsMap: { type: FieldTypes.OBJECT, options: { defaultField: { type: FieldTypes.TEXT } } },
             scopes: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
             autoRegister: { type: FieldTypes.BOOLEAN, options: { default: true } },

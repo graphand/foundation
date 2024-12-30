@@ -1,5 +1,5 @@
 import { JSONQuery, ModelInstance } from "@/types/index.js";
-import { Model } from "@/lib/Model.js";
+import { Model } from "@/lib/model.js";
 
 /**
  * ModelList is a class that extends the native Array class.

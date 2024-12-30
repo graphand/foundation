@@ -1,8 +1,8 @@
-import { ValidationError } from "./ValidationError.js";
-import { ValidationFieldError } from "./ValidationFieldError.js";
-import { ValidationValidatorError } from "./ValidationValidatorError.js";
-import { Field } from "./Field.js";
-import { Validator } from "./Validator.js";
+import { ValidationError } from "./validation-error.js";
+import { ValidationFieldError } from "./validation-field-error.js";
+import { ValidationValidatorError } from "./validation-validator-error.js";
+import { Field } from "./field.js";
+import { Validator } from "./validator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { mockAdapter, mockModel } from "./test-utils.dev.js";

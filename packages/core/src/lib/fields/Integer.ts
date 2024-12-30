@@ -1,5 +1,5 @@
 import { FieldTypes } from "@/enums/field-types.js";
-import { Field } from "@/lib/Field.js";
+import { Field } from "@/lib/field.js";
 
 export class FieldInteger extends Field<FieldTypes.INTEGER> {
   serializerMap: Field<FieldTypes.INTEGER>["serializerMap"] = {

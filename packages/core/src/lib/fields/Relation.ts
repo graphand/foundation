@@ -1,10 +1,10 @@
 import { FieldTypes } from "@/enums/field-types.js";
-import { Field } from "@/lib/Field.js";
-import { Model } from "@/lib/Model.js";
+import { Field } from "@/lib/field.js";
+import { Model } from "@/lib/model.js";
 import { getValidationValues, isObjectId } from "@/lib/utils.js";
-import { PromiseModel } from "@/lib/PromiseModel.js";
+import { PromiseModel } from "@/lib/promise-model.js";
 import { FieldSerializerInput } from "@/types/index.js";
-import { CoreError } from "../CoreError.js";
+import { CoreError } from "../core-error.js";
 
 export class FieldRelation extends Field<FieldTypes.RELATION> {
   validate: Field<FieldTypes.RELATION>["validate"] = async ({ list }) => {

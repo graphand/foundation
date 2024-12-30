@@ -1,4 +1,4 @@
-import { ModelList } from "@/lib/ModelList.js";
+import { ModelList } from "@/lib/model-list.js";
 import { mockModel } from "@/lib/test-utils.dev.js";
 import { ModelInstance } from "../index.js";
 

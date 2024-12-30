@@ -1,6 +1,6 @@
-import { Field } from "@/lib/Field.js";
-import { PromiseModel } from "@/lib/PromiseModel.js";
-import { PromiseModelList } from "@/lib/PromiseModelList.js";
+import { Field } from "@/lib/field.js";
+import { PromiseModel } from "@/lib/promise-model.js";
+import { PromiseModelList } from "@/lib/promise-model-list.js";
 import {
   AdapterFetcher,
   FieldsPathItem,
@@ -25,8 +25,8 @@ import {
   InferModel,
   ModelData,
 } from "@/types/index.js";
-import { Adapter } from "@/lib/Adapter.js";
-import { Validator } from "@/lib/Validator.js";
+import { Adapter } from "@/lib/adapter.js";
+import { Validator } from "@/lib/validator.js";
 import {
   createFieldsMap,
   createValidatorsArray,
@@ -38,10 +38,10 @@ import {
   getModelInitPromise,
   defineFieldsProperties,
 } from "@/lib/utils.js";
-import { CoreError } from "@/lib/CoreError.js";
+import { CoreError } from "@/lib/core-error.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
-import type { DataModel } from "@/models/DataModel.js";
-import { ModelList } from "./ModelList.js";
+import type { DataModel } from "@/models/data-model.js";
+import { ModelList } from "./model-list.js";
 import { FieldTypes } from "@/enums/field-types.js";
 
 const noFieldSymbol = Symbol("noField");

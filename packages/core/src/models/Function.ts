@@ -1,9 +1,9 @@
-import { Model } from "@/lib/Model.js";
-import { modelDecorator } from "@/lib/modelDecorator.js";
+import { Model } from "@/lib/model.js";
+import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { ModelDefinition } from "@/types/index.js";
-import { Job } from "./Job.js";
-import { Role } from "./Role.js";
+import { Job } from "./job.js";
+import { Role } from "./role.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 
 @modelDecorator()
@@ -49,7 +49,7 @@ export class Function extends Model {
         },
       },
       _checksum: { type: FieldTypes.TEXT },
-      _size: { type: FieldTypes.NUMBER },
+      _size: { type: FieldTypes.INTEGER },
     },
     validators: [
       {

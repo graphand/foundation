@@ -1,6 +1,6 @@
 import { ValidationFieldErrorDefinition } from "@/types/index.js";
-import { Field } from "./Field.js";
-import { ValidationError } from "./ValidationError.js";
+import { Field } from "./field.js";
+import { ValidationError } from "./validation-error.js";
 
 export class ValidationFieldError {
   #definition: ValidationFieldErrorDefinition;

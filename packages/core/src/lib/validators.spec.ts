@@ -1,12 +1,12 @@
 import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { ValidationError } from "@/lib/ValidationError.js";
+import { ValidationError } from "@/lib/validation-error.js";
 import { faker } from "@faker-js/faker";
 import { FieldTypes } from "@/enums/field-types.js";
-import { Model } from "@/lib/Model.js";
-import { Validator } from "@/lib/Validator.js";
+import { Model } from "@/lib/model.js";
+import { Validator } from "@/lib/validator.js";
 import { ValidatorOptions, FieldDefinition, ModelDefinition } from "@/types/index.js";
-import { DataModel } from "@/models/DataModel.js";
+import { DataModel } from "@/models/data-model.js";
 
 describe("test validators", () => {
   const adapter = mockAdapter();

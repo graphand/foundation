@@ -1,8 +1,8 @@
 import { ValidatorDefinitionOmitField } from "@/types/validators.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { Model } from "@/lib/Model.js";
-import { PromiseModel } from "@/lib/PromiseModel.js";
-import { PromiseModelList } from "@/lib/PromiseModelList.js";
+import { Model } from "@/lib/model.js";
+import { PromiseModel } from "@/lib/promise-model.js";
+import { PromiseModelList } from "@/lib/promise-model-list.js";
 import {
   JSONTypeObject,
   ModelInstance,

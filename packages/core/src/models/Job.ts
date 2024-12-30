@@ -1,5 +1,5 @@
-import { Model } from "@/lib/Model.js";
-import { modelDecorator } from "@/lib/modelDecorator.js";
+import { Model } from "@/lib/model.js";
+import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { JobTypes } from "@/enums/job-types.js";
 import { JobStatus } from "@/enums/job-status.js";

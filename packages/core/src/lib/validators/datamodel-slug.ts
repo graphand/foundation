@@ -1,9 +1,9 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { ModelInstance } from "@/types/index.js";
-import type { DataModel } from "@/models/DataModel.js";
-import { Validator } from "@/lib/Validator.js";
-import { Adapter } from "../Adapter.js";
-import { ValidationValidatorError } from "../ValidationValidatorError.js";
+import type { DataModel } from "@/models/data-model.js";
+import { Validator } from "@/lib/validator.js";
+import { Adapter } from "@/lib/adapter.js";
+import { ValidationValidatorError } from "../validation-validator-error.js";
 
 export class ValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_SLUG> {
   validate: Validator<ValidatorTypes.DATAMODEL_SLUG>["validate"] = async ({ list, model }) => {

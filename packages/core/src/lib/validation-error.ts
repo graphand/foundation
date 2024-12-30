@@ -1,6 +1,6 @@
-import { CoreError } from "@/lib/CoreError.js";
-import { ValidationFieldError } from "@/lib/ValidationFieldError.js";
-import { ValidationValidatorError } from "@/lib/ValidationValidatorError.js";
+import { CoreError } from "@/lib/core-error.js";
+import { ValidationFieldError } from "@/lib/validation-field-error.js";
+import { ValidationValidatorError } from "@/lib/validation-validator-error.js";
 import { CoreErrorDefinition } from "@/types/index.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
 

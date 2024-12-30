@@ -1,5 +1,5 @@
-import { Model } from "@/lib/Model.js";
-import { modelDecorator } from "@/lib/modelDecorator.js";
+import { Model } from "@/lib/model.js";
+import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { ModelDefinition } from "@/types/index.js";
 
@@ -16,7 +16,7 @@ export class Media extends Model {
       private: { type: FieldTypes.BOOLEAN, options: { default: false } },
       _mimetype: { type: FieldTypes.TEXT },
       _originalname: { type: FieldTypes.TEXT },
-      _size: { type: FieldTypes.NUMBER },
+      _size: { type: FieldTypes.INTEGER },
     },
   } satisfies ModelDefinition;
 }

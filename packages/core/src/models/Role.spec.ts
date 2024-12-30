@@ -1,4 +1,4 @@
-import { Role } from "@/models/Role.js";
+import { Role } from "@/models/role.js";
 import { RuleActions } from "@/enums/rule-actions.js";
 import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.js";
 

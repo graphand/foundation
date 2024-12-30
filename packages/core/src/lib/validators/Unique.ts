@@ -1,7 +1,7 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { Validator } from "@/lib/Validator.js";
+import { Validator } from "@/lib/validator.js";
 import { getValidationValues } from "../utils.js";
-import { ValidationValidatorError } from "../ValidationValidatorError.js";
+import { ValidationValidatorError } from "../validation-validator-error.js";
 
 export class ValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
   validate: Validator<ValidatorTypes.UNIQUE>["validate"] = async ({ list }) => {

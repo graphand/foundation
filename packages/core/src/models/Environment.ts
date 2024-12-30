@@ -1,9 +1,9 @@
-import { Model } from "@/lib/Model.js";
-import { modelDecorator } from "@/lib/modelDecorator.js";
+import { Model } from "@/lib/model.js";
+import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { Job } from "@/models/Job.js";
-import { MergeRequest } from "@/models/MergeRequest.js";
+import { Job } from "@/models/job.js";
+import { MergeRequest } from "@/models/merge-request.js";
 import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()

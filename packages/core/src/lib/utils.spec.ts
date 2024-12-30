@@ -1,5 +1,5 @@
 import { crossModelTree, getFieldsPathsFromPath, getRelationModelsFromPath } from "@/lib/utils.js";
-import { Model } from "@/lib/Model.js";
+import { Model } from "@/lib/model.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { ModelDefinition } from "@/types/index.js";
 import { mockAdapter, mockModel } from "@/lib/test-utils.dev.js";

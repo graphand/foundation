@@ -1,20 +1,20 @@
 import { vi } from "vitest";
 import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev.js";
-import { Field } from "@/lib/Field.js";
-import { Model } from "@/lib/Model.js";
+import { Field } from "@/lib/field.js";
+import { Model } from "@/lib/model.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { Validator } from "@/lib/Validator.js";
+import { Validator } from "@/lib/validator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { Account } from "@/models/Account.js";
-import { CoreError } from "@/lib/CoreError.js";
-import { DataModel } from "@/models/DataModel.js";
+import { Account } from "@/models/account.js";
+import { CoreError } from "@/lib/core-error.js";
+import { DataModel } from "@/models/data-model.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
-import { Media } from "@/models/Media.js";
+import { Media } from "@/models/media.js";
 import { ModelDefinition, ModelInstance, SerializerFieldsMap } from "@/types/index.js";
-import { PromiseModelList } from "@/lib/PromiseModelList.js";
-import { PromiseModel } from "@/lib/PromiseModel.js";
+import { PromiseModelList } from "@/lib/promise-model-list.js";
+import { PromiseModel } from "@/lib/promise-model.js";
 import { faker } from "@faker-js/faker";
-import { Adapter } from "@/lib/Adapter.js";
+import { Adapter } from "@/lib/adapter.js";
 import { ObjectId } from "bson";
 
 describe("Test Model", () => {

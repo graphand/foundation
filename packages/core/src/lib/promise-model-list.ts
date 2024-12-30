@@ -1,7 +1,7 @@
-import { Model } from "@/lib/Model.js";
-import { ModelList } from "@/lib/ModelList.js";
+import { Model } from "@/lib/model.js";
+import { ModelList } from "@/lib/model-list.js";
 import { JSONQuery } from "@/types/index.js";
-import { Thenable } from "@/lib/Thenable.js";
+import { Thenable } from "@/lib/thenable.js";
 
 /**
  * PromiseModelList is a class that extends the native Promise class.

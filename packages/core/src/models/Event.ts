@@ -1,5 +1,5 @@
-import { Model } from "@/lib/Model.js";
-import { modelDecorator } from "@/lib/modelDecorator.js";
+import { Model } from "@/lib/model.js";
+import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { ModelDefinition } from "@/types/index.js";
 import { EventSources } from "@/enums/event-sources.js";
@@ -17,7 +17,7 @@ export class Event extends Model {
       tags: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
       payload: { type: FieldTypes.OBJECT },
       mute: { type: FieldTypes.BOOLEAN, options: { default: false } },
-      severity: { type: FieldTypes.NUMBER, options: { default: EventSeverities.DEBUG } }, // Syslog protocol severity levels (0-7)
+      severity: { type: FieldTypes.INTEGER, options: { default: EventSeverities.DEBUG } }, // Syslog protocol severity levels (0-7)
       _source: {
         type: FieldTypes.ENUM,
         options: { enum: Object.values(EventSources), default: EventSources.USER },

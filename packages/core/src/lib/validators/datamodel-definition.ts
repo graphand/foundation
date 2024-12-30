@@ -1,6 +1,6 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { Validator } from "@/lib/Validator.js";
-import { DataModel } from "@/models/DataModel.js";
+import { Validator } from "@/lib/validator.js";
+import { DataModel } from "@/models/data-model.js";
 import { ModelInstance } from "@/types/index.js";
 import { validateDefinition } from "../utils.js";
 

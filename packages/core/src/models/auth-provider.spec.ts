@@ -1,5 +1,5 @@
 import { AuthProviders } from "@/enums/auth-providers.js";
-import { AuthProvider } from "./AuthProvider.js";
+import { AuthProvider } from "./auth-provider.js";
 import { mockAdapter } from "@/lib/test-utils.dev.js";
 
 describe("EventSubscription Model", () => {

@@ -1,6 +1,6 @@
-import { Model } from "@/lib/Model.js";
+import { Model } from "@/lib/model.js";
 import { JSONQuery, ModelInstance } from "@/types/index.js";
-import { Thenable } from "@/lib/Thenable.js";
+import { Thenable } from "@/lib/thenable.js";
 import { isObjectId } from "@/lib/utils.js";
 
 /**

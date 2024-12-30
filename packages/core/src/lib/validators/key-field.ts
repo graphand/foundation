@@ -1,5 +1,5 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { Validator } from "@/lib/Validator.js";
+import { Validator } from "@/lib/validator.js";
 import { Patterns } from "@/enums/patterns.js";
 import { getValidatorClass } from "../utils.js";
 
