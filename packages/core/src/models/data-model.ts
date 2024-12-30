@@ -41,6 +41,7 @@ const functionRelationField = {
 export class DataModel extends Model {
   static __name = "DataModel";
   static isEnvironmentScoped = true;
+  static realtime = true;
   static slug = "datamodels" as const;
   static definition = {
     keyField: "slug",
@@ -218,6 +219,12 @@ export class DataModel extends Model {
             { type: ValidatorTypes.LENGTH, options: { field: "before_deleteMultiple", max: 100 } },
             { type: ValidatorTypes.LENGTH, options: { field: "after_deleteMultiple", max: 100 } },
           ],
+        },
+      },
+      realtime: {
+        type: FieldTypes.BOOLEAN,
+        options: {
+          default: false,
         },
       },
       _doc: { type: FieldTypes.OBJECT },

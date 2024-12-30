@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.5.3
+
+### Patch Changes
+
+- add realtime flag on Model class
+
 ## 1.5.2
 
 ### Patch Changes

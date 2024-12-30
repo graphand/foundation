@@ -9,6 +9,7 @@ import { ModelDefinition } from "@/types/index.js";
 export class Job extends Model {
   static __name = "Job";
   static slug = "jobs" as const;
+  static realtime = true;
   static definition = {
     fields: {
       _type: {

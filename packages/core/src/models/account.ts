@@ -11,6 +11,7 @@ export class Account extends Model {
   static __name = "Account";
   static connectable = true;
   static extensible = true;
+  static realtime = true;
   static isEnvironmentScoped = true;
   static slug = "accounts" as const;
   static definition = {

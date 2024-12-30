@@ -10,6 +10,7 @@ import { ModelDefinition } from "@/types/index.js";
 export class MergeRequest extends Model {
   static __name = "MergeRequest";
   static allowMultipleOperations = false;
+  static realtime = true;
   static slug = "mergeRequests" as const;
   static definition = {
     keyField: "slug",

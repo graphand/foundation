@@ -11,6 +11,7 @@ import { ModelDefinition } from "@/types/index.js";
 export class Role extends Model {
   static __name = "Role";
   static isEnvironmentScoped = true;
+  static realtime = true;
   static slug = "roles" as const;
   static definition = {
     keyField: "slug",

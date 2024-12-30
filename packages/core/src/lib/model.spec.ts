@@ -2801,4 +2801,74 @@ describe("Test Model", () => {
     expect(model2.fieldsMap.has("subtitle")).toBeTruthy();
     expect(model2.fieldsMap.has("title")).toBeFalsy();
   });
+
+  describe("Model realtime", () => {
+    it("should keep realtime flag when getting class from slug", () => {
+      const adapter = mockAdapter();
+      const TestModel = class extends Model {
+        static slug = generateRandomString();
+        static realtime = true;
+      }.extend({ adapterClass: adapter });
+
+      const ModelFromSlug = Model.getClass(TestModel.slug, adapter);
+      expect(ModelFromSlug.realtime).toBe(true);
+    });
+
+    it("should keep realtime flag when getting class from model", () => {
+      const adapter = mockAdapter();
+      const TestModel = class extends Model {
+        static slug = generateRandomString();
+        static realtime = true;
+      }.extend({ adapterClass: adapter });
+
+      const ModelFromClass = Model.getClass(TestModel, adapter);
+      expect(ModelFromClass.realtime).toBe(true);
+    });
+
+    it("should get realtime flag from datamodel", async () => {
+      const adapter = mockAdapter();
+      const slug = generateRandomString();
+
+      await DataModel.extend({ adapterClass: adapter }).create({
+        slug,
+        realtime: true,
+        definition: {
+          fields: {
+            test: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        },
+      });
+
+      const ModelFromDatamodel = Model.getClass(slug, adapter);
+      expect(ModelFromDatamodel.realtime).toBe(false);
+      await ModelFromDatamodel.initialize();
+      expect(ModelFromDatamodel.realtime).toBe(true);
+    });
+
+    it("should not override realtime flag from datamodel if defined in class", async () => {
+      const adapter = mockAdapter();
+      const TestModel = class extends Model {
+        static slug = generateRandomString();
+        static realtime = false;
+        static extensible = true;
+      }.extend({ adapterClass: adapter });
+
+      await DataModel.extend({ adapterClass: adapter }).create({
+        slug: TestModel.slug,
+        realtime: true,
+        definition: {
+          fields: {
+            test: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        },
+      });
+
+      const ModelFromDatamodel = Model.getClass(TestModel.slug, adapter);
+      expect(ModelFromDatamodel.realtime).toBe(false);
+    });
+  });
 });

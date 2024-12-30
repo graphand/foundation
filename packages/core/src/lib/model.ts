@@ -50,6 +50,7 @@ export class Model {
   static extensible: boolean = false; // Whether the model can be extended with a DataModel with its slug
   static connectable: boolean = false; // Whether the model is able to be used as a connector source
   static exposed: boolean = true; // Whether the model is exposed in the API or not
+  static realtime: boolean = false; // Whether the model is realtime enabled
   static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
   static slug: string; // The slug of the model used to identify it
   static freeMode: boolean = false; // Whether the model is free
@@ -398,16 +399,19 @@ export class Model {
     // If no adapter class is provided, get the base adapter of the current model
     adapterClass ??= this.getAdapter(false)?.base;
     let slug: string | undefined;
+    let realtime: boolean = false;
     let model: typeof Model | undefined;
 
     // If the input is a model class, get its slug and assign it to the model
     if (typeof input === "function" && "prototype" in input && input.prototype instanceof Model) {
       slug = input.slug;
+      realtime = input.realtime;
       model = input;
     }
 
     // If the slug is not defined, get it from the input if it's a string or a datamodel instance
     slug ??= typeof input === "string" ? input : (input as ModelInstance<typeof DataModel>).slug;
+    realtime ??= typeof input === "string" ? false : Boolean((input as ModelInstance<typeof DataModel>).realtime);
     const dm: ModelInstance<typeof DataModel> | undefined = input instanceof Model && slug ? input : undefined;
 
     // If no adapter class is provided and the input is a datamodel instance, get its base adapter
@@ -441,6 +445,7 @@ export class Model {
     model ??= class extends Model {
       static __name = `Data<${slug}>`;
       static slug = slug as string;
+      static realtime = realtime as boolean;
       static connectable = true;
       static extensible = true; // A data class is extensible as it should be linked to a datamodel with the same slug
       static isEnvironmentScoped = true;

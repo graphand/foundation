@@ -8,6 +8,7 @@ export class Media extends Model {
   static __name = "Media";
   static extensible = true;
   static connectable = true;
+  static realtime = true;
   static slug = "medias" as const;
   static definition = {
     keyField: "name",
