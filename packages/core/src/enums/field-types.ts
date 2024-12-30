@@ -3,10 +3,12 @@ export enum FieldTypes {
   ID = "id",
   ARRAY = "array",
   TEXT = "text",
+  ENUM = "enum",
   NUMBER = "number",
+  INTEGER = "integer",
   BOOLEAN = "boolean",
   RELATION = "relation",
   DATE = "date",
-  NESTED = "nested",
+  OBJECT = "object",
   IDENTITY = "identity",
 }

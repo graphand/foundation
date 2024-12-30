@@ -15,12 +15,12 @@ export class Event extends Model {
       type: { type: FieldTypes.TEXT },
       message: { type: FieldTypes.TEXT },
       tags: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
-      payload: { type: FieldTypes.NESTED },
+      payload: { type: FieldTypes.OBJECT },
       mute: { type: FieldTypes.BOOLEAN, options: { default: false } },
       severity: { type: FieldTypes.NUMBER, options: { default: EventSeverities.DEBUG } }, // Syslog protocol severity levels (0-7)
       _source: {
-        type: FieldTypes.TEXT,
-        options: { enum: Object.values(EventSources), default: EventSources.USER, strict: true },
+        type: FieldTypes.ENUM,
+        options: { enum: Object.values(EventSources), default: EventSources.USER },
       },
     },
     validators: [

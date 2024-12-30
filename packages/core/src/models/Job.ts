@@ -12,17 +12,15 @@ export class Job extends Model {
   static definition = {
     fields: {
       _type: {
-        type: FieldTypes.TEXT,
+        type: FieldTypes.ENUM,
         options: {
           enum: Object.values(JobTypes),
-          strict: true,
         },
       },
       _status: {
-        type: FieldTypes.TEXT,
+        type: FieldTypes.ENUM,
         options: {
           enum: Object.values(JobStatus),
-          strict: true,
           default: JobStatus.QUEUED,
         },
       },
@@ -41,7 +39,7 @@ export class Job extends Model {
         type: FieldTypes.DATE,
       },
       _result: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
       },
     },
   } satisfies ModelDefinition;

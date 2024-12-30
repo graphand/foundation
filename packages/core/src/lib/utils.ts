@@ -29,7 +29,7 @@ import { ValidationFieldError } from "@/lib/ValidationFieldError.js";
 import { ValidationError } from "@/lib/ValidationError.js";
 import type { DataModel } from "@/models/DataModel.js";
 import { Patterns } from "@/enums/patterns.js";
-import { FieldNested } from "./fields/Nested.js";
+import { FieldObject } from "./fields/Object.js";
 
 export const crossModelTree = (_model: typeof Model, cb: (_model: typeof Model) => void) => {
   let model = _model;
@@ -145,8 +145,8 @@ export const getFieldsPathsFromPath = (
 
       if (matchIndex) continue;
 
-      if (itemsField?.type === FieldTypes.NESTED) {
-        const nestedOptions = itemsField.options as FieldOptions<FieldTypes.NESTED>;
+      if (itemsField?.type === FieldTypes.OBJECT) {
+        const nestedOptions = itemsField.options as FieldOptions<FieldTypes.OBJECT>;
         const nextFieldDef = nestedOptions?.fields?.[key];
         if (!nextFieldDef) {
           result.push(null);
@@ -161,8 +161,8 @@ export const getFieldsPathsFromPath = (
       }
     }
 
-    if (prevField?.type === FieldTypes.NESTED) {
-      const options = prevField.options as FieldOptions<FieldTypes.NESTED>;
+    if (prevField?.type === FieldTypes.OBJECT) {
+      const options = prevField.options as FieldOptions<FieldTypes.OBJECT>;
       let nextFieldDef = options.fields?.[key] || options.defaultField;
       if (nextFieldDef === undefined && !options.strict) {
         nextFieldDef = {
@@ -271,11 +271,11 @@ export const getRecursiveHooksFromModel = <A extends keyof AdapterFetcher, T ext
  * the nested fields within the given field.
  * @param model - The `model` parameter is the type of the model that contains the nested field. It is
  * of type `typeof Model`.
- * @param nestedField - The `nestedField` parameter is of type `Field<FieldTypes.NESTED>`. It
+ * @param nestedField - The `nestedField` parameter is of type `Field<FieldTypes.OBJECT>`. It
  * represents a nested field in a model.
  * @returns The function `getNestedFieldsMap` returns a `Map` object.
  */
-export const getNestedFieldsMap = (model: typeof Model, nestedField: Field<FieldTypes.NESTED>) => {
+export const getNestedFieldsMap = (model: typeof Model, nestedField: Field<FieldTypes.OBJECT>) => {
   const adapter = model.getAdapter(false);
   const map = new Map<string, Field>();
 
@@ -295,11 +295,11 @@ export const getNestedFieldsMap = (model: typeof Model, nestedField: Field<Field
  * model.
  * @param model - The `model` parameter is the type of the model that contains the nested field. It is
  * of type `typeof Model`.
- * @param nestedField - The `nestedField` parameter is of type `Field<FieldTypes.NESTED>`. It
+ * @param nestedField - The `nestedField` parameter is of type `Field<FieldTypes.OBJECT>`. It
  * represents a nested field in a model.
  * @returns an array of validators.
  */
-export const getNestedValidatorsArray = (model: typeof Model, nestedField: Field<FieldTypes.NESTED>) => {
+export const getNestedValidatorsArray = (model: typeof Model, nestedField: Field<FieldTypes.OBJECT>) => {
   const adapter = model.getAdapter(false);
   const validators: Array<Validator> = [];
 
@@ -713,8 +713,8 @@ export const _getter = (opts: {
       n = field.options.default as typeof n;
     }
 
-    if (n === undefined || n === null || n === FieldNested.symbolIgnore) {
-      if (n === FieldNested.symbolIgnore && format !== "validation") {
+    if (n === undefined || n === null || n === FieldObject.symbolIgnore) {
+      if (n === FieldObject.symbolIgnore && format !== "validation") {
         return undefined;
       }
 
@@ -775,14 +775,14 @@ async function validateFields<T extends typeof Model>(opts: {
         }
       }
 
-      if (type === FieldTypes.NESTED) {
+      if (type === FieldTypes.OBJECT) {
         const values = on
           .map(i => i.get(path, "validation"))
           .flat(Infinity)
           .filter(Boolean);
 
         if (values?.length) {
-          const _field = field as Field<FieldTypes.NESTED>;
+          const _field = field as Field<FieldTypes.OBJECT>;
           const o = _field.options || {};
           if (o.defaultField) {
             const noField = values
@@ -812,8 +812,8 @@ async function validateFields<T extends typeof Model>(opts: {
                   }),
                 ];
 
-                if (tmpField?.type === FieldTypes.NESTED) {
-                  const fields = getNestedFieldsMap(model, tmpField as Field<FieldTypes.NESTED>);
+                if (tmpField?.type === FieldTypes.OBJECT) {
+                  const fields = getNestedFieldsMap(model, tmpField as Field<FieldTypes.OBJECT>);
 
                   promises.push(
                     validateFields({
@@ -1075,11 +1075,11 @@ export const crossFields = (
         },
         cb,
       );
-    } else if (field.type === FieldTypes.NESTED) {
+    } else if (field.type === FieldTypes.OBJECT) {
       crossFields(
         {
           model,
-          fieldsMap: getNestedFieldsMap(model, field as Field<FieldTypes.NESTED>),
+          fieldsMap: getNestedFieldsMap(model, field as Field<FieldTypes.OBJECT>),
         },
         cb,
       );
@@ -1260,7 +1260,7 @@ export const getValidationValues = (list: Array<ModelInstance<typeof Model>>, pa
     values = values.flat(level);
   }
 
-  values = values.filter(v => v !== FieldNested.symbolIgnore);
+  values = values.filter(v => v !== FieldObject.symbolIgnore);
 
   return values;
 };

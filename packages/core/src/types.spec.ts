@@ -138,7 +138,7 @@ describe("test types", () => {
             static definition = {
               fields: {
                 field: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       title: {
@@ -162,7 +162,7 @@ describe("test types", () => {
             static definition = {
               fields: {
                 field: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       title: {
@@ -187,7 +187,7 @@ describe("test types", () => {
             static definition = {
               fields: {
                 field: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   _ts: undefined as unknown as {
                     subfield: string;
                   },
@@ -239,6 +239,55 @@ describe("test types", () => {
           const i = CustomModel.hydrate();
 
           simulateTypeCheck<Date | undefined>(i.field); // Check the field is a Date
+        });
+      });
+
+      describe("integer field", () => {
+        it("should validate integer field", () => {
+          class CustomModel extends Model {
+            static definition = {
+              fields: {
+                field: {
+                  type: FieldTypes.INTEGER,
+                },
+              },
+            } satisfies ModelDefinition;
+          }
+
+          const i = CustomModel.hydrate();
+
+          simulateTypeCheck<number | undefined>(i.field); // Check the field is a number
+
+          const json = i.toJSON();
+
+          simulateTypeCheck<number | undefined>(json.field); // Check the field is a number
+          simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
+        });
+      });
+
+      describe("enum field", () => {
+        it("should validate enum field", () => {
+          class CustomModel extends Model {
+            static definition = {
+              fields: {
+                field: {
+                  type: FieldTypes.ENUM,
+                  options: {
+                    enum: ["a", "b", "c"] as const,
+                  },
+                },
+              },
+            } satisfies ModelDefinition;
+          }
+
+          const i = CustomModel.hydrate();
+
+          simulateTypeCheck<string | undefined>(i.field); // Check the field is a string
+
+          const json = i.toJSON();
+
+          simulateTypeCheck<string | undefined>(json.field); // Check the field is a string
+          simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
         });
       });
     });

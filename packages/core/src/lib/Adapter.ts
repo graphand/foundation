@@ -11,7 +11,7 @@ import { FieldBoolean } from "./fields/Boolean.js";
 import { FieldDate } from "./fields/Date.js";
 import { FieldText } from "./fields/Text.js";
 import { FieldRelation } from "./fields/Relation.js";
-import { FieldNested } from "./fields/Nested.js";
+import { FieldObject } from "./fields/Object.js";
 import { FieldIdentity } from "./fields/Identity.js";
 import { FieldArray } from "./fields/Array.js";
 import { ValidatorUnique } from "./validators/Unique.js";
@@ -22,6 +22,8 @@ import { ValidatorDatamodelDefinition } from "./validators/DatamodelDefinition.j
 import { ValidatorLength } from "./validators/Length.js";
 import { ValidatorBoundaries } from "./validators/Boundaries.js";
 import { ValidatorRequired } from "./validators/Required.js";
+import { FieldInteger } from "./fields/Integer.js";
+import { FieldEnum } from "./fields/Enum.js";
 
 export class Adapter<T extends typeof Model = typeof Model> {
   static __name = "Adapter";
@@ -29,11 +31,13 @@ export class Adapter<T extends typeof Model = typeof Model> {
   static fieldsMap: { [T in FieldTypes]?: typeof Field<T> } = {
     [FieldTypes.ID]: FieldId,
     [FieldTypes.NUMBER]: FieldNumber,
+    [FieldTypes.INTEGER]: FieldInteger,
     [FieldTypes.BOOLEAN]: FieldBoolean,
     [FieldTypes.DATE]: FieldDate,
     [FieldTypes.TEXT]: FieldText,
+    [FieldTypes.ENUM]: FieldEnum,
     [FieldTypes.RELATION]: FieldRelation,
-    [FieldTypes.NESTED]: FieldNested,
+    [FieldTypes.OBJECT]: FieldObject,
     [FieldTypes.IDENTITY]: FieldIdentity,
     [FieldTypes.ARRAY]: FieldArray,
   };

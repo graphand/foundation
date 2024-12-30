@@ -18,21 +18,21 @@ export class EventSubscription extends Model {
     fields: {
       slug: { type: FieldTypes.TEXT },
       enabled: { type: FieldTypes.BOOLEAN, options: { default: true } },
-      filter: { type: FieldTypes.NESTED }, // Filter to limit the subscription to specific events
+      filter: { type: FieldTypes.OBJECT }, // Filter to limit the subscription to specific events
       channels: {
         type: FieldTypes.ARRAY,
         options: {
           items: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               strict: true,
               fields: {
                 channel: {
-                  type: FieldTypes.TEXT,
-                  options: { enum: Object.values(SubscriptionChannels), strict: true },
+                  type: FieldTypes.ENUM,
+                  options: { enum: Object.values(SubscriptionChannels) },
                 },
                 options: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     strict: true,
                     fields: {

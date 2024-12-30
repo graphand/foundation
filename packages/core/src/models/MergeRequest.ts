@@ -16,25 +16,24 @@ export class MergeRequest extends Model {
     fields: {
       slug: { type: FieldTypes.TEXT },
       type: {
-        type: FieldTypes.TEXT,
+        type: FieldTypes.ENUM,
         options: {
           enum: Object.values(MergeRequestTypes),
-          strict: true,
           default: MergeRequestTypes.STATIC,
         },
       },
       options: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: {
           fields: {
             source: {
               type: FieldTypes.TEXT,
             },
             query: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
             },
             gdx: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
             },
           },
         },

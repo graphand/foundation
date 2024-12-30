@@ -35,7 +35,7 @@ export class Role extends Model {
         type: FieldTypes.ARRAY,
         options: {
           items: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               strict: true,
               fields: {
@@ -46,16 +46,15 @@ export class Role extends Model {
                   type: FieldTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.TEXT,
+                      type: FieldTypes.ENUM,
                       options: {
                         enum: Object.values(RuleActions),
-                        strict: true,
                       },
                     },
                   },
                 },
                 filter: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                 },
                 prohibition: {
                   type: FieldTypes.BOOLEAN,
@@ -69,7 +68,7 @@ export class Role extends Model {
         type: FieldTypes.ARRAY,
         options: {
           items: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               strict: true,
               fields: {
@@ -80,16 +79,15 @@ export class Role extends Model {
                   type: FieldTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.TEXT,
+                      type: FieldTypes.ENUM,
                       options: {
                         enum: Object.values(RuleActions),
-                        strict: true,
                       },
                     },
                   },
                 },
                 filter: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                 },
                 fields: {
                   type: FieldTypes.ARRAY,

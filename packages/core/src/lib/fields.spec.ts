@@ -236,7 +236,7 @@ describe("test fields", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               default: defaultJSON,
             },
@@ -253,7 +253,7 @@ describe("test fields", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -269,7 +269,7 @@ describe("test fields", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -290,7 +290,7 @@ describe("test fields", () => {
         definition: {
           fields: {
             test: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
             },
           },
         },
@@ -302,7 +302,7 @@ describe("test fields", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               default: { test: 1 },
             },
@@ -321,7 +321,7 @@ describe("test fields", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 foo: {
@@ -349,7 +349,7 @@ describe("test fields", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 field1: {
@@ -388,7 +388,7 @@ describe("test fields", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 field1: {
@@ -427,7 +427,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   title: {
@@ -448,7 +448,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 defaultField: {
                   type: FieldTypes.ARRAY,
@@ -475,7 +475,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   title: {
@@ -523,7 +523,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   title: {
@@ -583,11 +583,11 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   subObj: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       fields: {
                         title: {
@@ -662,7 +662,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       title: {
@@ -706,7 +706,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 strict: true,
                 fields: {
@@ -753,7 +753,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   title: {
@@ -791,7 +791,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   title: {
@@ -837,11 +837,11 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   nested: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       fields: {
                         title: {
@@ -891,11 +891,11 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   nested: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       fields: {
                         title: {
@@ -944,7 +944,7 @@ describe("test fields", () => {
           validators: [],
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 validators: [
                   {
@@ -983,7 +983,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 validators: [
                   {
@@ -1024,11 +1024,11 @@ describe("test fields", () => {
           validators: [],
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   nested: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       validators: [
                         {
@@ -1071,11 +1071,11 @@ describe("test fields", () => {
           validators: [],
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   nested: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       validators: [
                         {
@@ -1122,7 +1122,7 @@ describe("test fields", () => {
               },
             },
             options: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 strict: true,
                 fields: {
@@ -1171,7 +1171,7 @@ describe("test fields", () => {
               },
             },
             options: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 strict: true,
                 fields: {
@@ -1260,12 +1260,12 @@ describe("test fields", () => {
               },
             },
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 strict: true,
                 fields: {
                   field1: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       strict: true,
                       fields: {
@@ -1281,7 +1281,7 @@ describe("test fields", () => {
                     },
                   },
                   field2: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       strict: true,
                       fields: {
@@ -1384,7 +1384,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             settings: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   mode: {
@@ -1395,7 +1395,7 @@ describe("test fields", () => {
                     },
                   },
                   config: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       strict: true,
                       fields: {
@@ -1442,7 +1442,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       type: {
@@ -1453,7 +1453,7 @@ describe("test fields", () => {
                         },
                       },
                       data: {
-                        type: FieldTypes.NESTED,
+                        type: FieldTypes.OBJECT,
                         options: {
                           strict: true,
                           fields: {
@@ -1515,7 +1515,7 @@ describe("test fields", () => {
               },
             },
             options: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 strict: true,
                 fields: {
@@ -1618,7 +1618,7 @@ describe("test fields", () => {
               },
             },
             options: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 strict: true,
                 fields: {
@@ -1685,7 +1685,7 @@ describe("test fields", () => {
               },
             },
             options: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 strict: true,
                 fields: {
@@ -1740,7 +1740,7 @@ describe("test fields", () => {
               },
             },
             options: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 strict: true,
                 fields: {
@@ -1787,7 +1787,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             settings: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   mode: {
@@ -1798,7 +1798,7 @@ describe("test fields", () => {
                     },
                   },
                   theme: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       strict: true,
                       fields: {
@@ -1842,7 +1842,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       type: {
@@ -1853,7 +1853,7 @@ describe("test fields", () => {
                         },
                       },
                       config: {
-                        type: FieldTypes.NESTED,
+                        type: FieldTypes.OBJECT,
                         options: {
                           strict: true,
                           fields: {
@@ -1910,7 +1910,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       type: {
@@ -1921,7 +1921,7 @@ describe("test fields", () => {
                         },
                       },
                       config: {
-                        type: FieldTypes.NESTED,
+                        type: FieldTypes.OBJECT,
                         options: {
                           strict: true,
                           fields: {
@@ -2000,7 +2000,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       type: {
@@ -2011,7 +2011,7 @@ describe("test fields", () => {
                         },
                       },
                       config: {
-                        type: FieldTypes.NESTED,
+                        type: FieldTypes.OBJECT,
                         options: {
                           strict: true,
                           fields: {
@@ -2081,7 +2081,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             settings: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   mode: {
@@ -2092,7 +2092,7 @@ describe("test fields", () => {
                     },
                   },
                   config: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       fields: {
                         subMode: {
@@ -2103,7 +2103,7 @@ describe("test fields", () => {
                           },
                         },
                         options: {
-                          type: FieldTypes.NESTED,
+                          type: FieldTypes.OBJECT,
                           options: {
                             strict: true,
                             fields: {
@@ -2163,7 +2163,7 @@ describe("test fields", () => {
               },
             },
             paymentDetails: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   cardNumber: { type: FieldTypes.TEXT },
@@ -2248,7 +2248,7 @@ describe("test fields", () => {
               },
             },
             level1: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   level2Type: {
@@ -2259,7 +2259,7 @@ describe("test fields", () => {
                     },
                   },
                   level2: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       fields: {
                         field1: { type: FieldTypes.TEXT },
@@ -2313,7 +2313,7 @@ describe("test fields", () => {
               },
             },
             details: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   activeField: { type: FieldTypes.TEXT },
@@ -2355,7 +2355,7 @@ describe("test fields", () => {
               },
             },
             data: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   field1: { type: FieldTypes.TEXT },
@@ -2405,7 +2405,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 defaultField: {
                   type: FieldTypes.TEXT,
@@ -2441,7 +2441,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 defaultField: {
                   type: FieldTypes.TEXT,
@@ -2477,7 +2477,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 defaultField: {
                   type: FieldTypes.TEXT,
@@ -2520,7 +2520,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 defaultField: {
                   type: FieldTypes.TEXT,
@@ -2564,7 +2564,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   title: {
@@ -2586,7 +2586,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   value: {
@@ -2608,7 +2608,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   value: {
@@ -2630,7 +2630,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   value: {
@@ -2652,7 +2652,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   value: {
@@ -2674,7 +2674,7 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   value: {
@@ -2702,7 +2702,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       value: {
@@ -2728,14 +2728,14 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   arr: {
                     type: FieldTypes.ARRAY,
                     options: {
                       items: {
-                        type: FieldTypes.NESTED,
+                        type: FieldTypes.OBJECT,
                         options: {
                           fields: {
                             value: {
@@ -2769,7 +2769,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       arr: {
@@ -3029,7 +3029,7 @@ describe("test fields", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               strict: false, // Default value
             },
@@ -3090,7 +3090,7 @@ describe("test fields", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.NESTED,
+                type: FieldTypes.OBJECT,
               },
             },
           },
@@ -3113,7 +3113,7 @@ describe("test fields", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.NESTED,
+                type: FieldTypes.OBJECT,
               },
             },
           },
@@ -3136,7 +3136,7 @@ describe("test fields", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.NESTED,
+                type: FieldTypes.OBJECT,
                 options: {
                   strict: true,
                   fields: {
@@ -3350,7 +3350,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       arr: {
@@ -3388,7 +3388,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       arr: {
@@ -3489,7 +3489,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       title: {
@@ -3619,7 +3619,7 @@ describe("test fields", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       title: {
@@ -3639,6 +3639,177 @@ describe("test fields", () => {
         await expect(model.validate([{ arr: true }])).rejects.toThrow(ValidationError);
         await expect(model.validate([{ arr: [true] }])).rejects.toThrow(ValidationError);
       });
+    });
+  });
+
+  describe("Integer field", () => {
+    it("should return default value if undefined", async () => {
+      const defaultValue = parseInt(faker.random.numeric(), 10);
+
+      const model = mockModel({
+        fields: {
+          value: {
+            type: FieldTypes.INTEGER,
+            options: {
+              default: defaultValue,
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const i = model.hydrate({});
+      expect(i.value).toEqual(defaultValue);
+    });
+
+    it("should parse string value to integer", async () => {
+      const model = mockModel({
+        fields: {
+          value: {
+            type: FieldTypes.INTEGER,
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const value = "123";
+      const i = model.hydrate({ value });
+      expect(i.value).toEqual(123);
+    });
+
+    it("should parse float value to integer", async () => {
+      const model = mockModel({
+        fields: {
+          value: {
+            type: FieldTypes.INTEGER,
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const value = 123.45;
+      const i = model.hydrate({ value });
+      expect(i.value).toEqual(123);
+    });
+  });
+
+  describe("Enum field", () => {
+    it("should return default value if undefined", async () => {
+      const enumValues = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+      const defaultValue = enumValues[0];
+
+      const model = mockModel({
+        fields: {
+          status: {
+            type: FieldTypes.ENUM,
+            options: {
+              enum: enumValues,
+              default: defaultValue,
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const i = model.hydrate({});
+      expect(i.status).toEqual(defaultValue);
+    });
+
+    it("should return value if it matches enum", async () => {
+      const enumValues = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+      const value = enumValues[1];
+
+      const model = mockModel({
+        fields: {
+          status: {
+            type: FieldTypes.ENUM,
+            options: {
+              enum: enumValues,
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const i = model.hydrate({ status: value });
+      expect(i.status).toEqual(value);
+    });
+
+    it("should return undefined if value does not match enum", async () => {
+      const enumValues = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+
+      const model = mockModel({
+        fields: {
+          status: {
+            type: FieldTypes.ENUM,
+            options: {
+              enum: enumValues,
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const i = model.hydrate({ status: "invalid" });
+      expect(i.status).toBeUndefined();
+    });
+
+    it("should throw validation error if value does not match enum", async () => {
+      const enumValues = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+
+      const model = mockModel({
+        fields: {
+          status: {
+            type: FieldTypes.ENUM,
+            options: {
+              enum: enumValues,
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const i = model.hydrate({ status: "invalid" });
+      await expect(model.validate([i.getData()])).rejects.toThrow(ValidationError);
+    });
+
+    it("should throw validation error if value is an ObjectId", async () => {
+      const enumValues = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+
+      const model = mockModel({
+        fields: {
+          status: {
+            type: FieldTypes.ENUM,
+            options: {
+              enum: enumValues,
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const i = model.hydrate({ status: String(new ObjectId()) });
+      await expect(model.validate([i.getData()])).rejects.toThrow(ValidationError);
+    });
+
+    it("should convert array value to string", async () => {
+      const enumValues = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+      const value = enumValues[0];
+
+      const model = mockModel({
+        fields: {
+          status: {
+            type: FieldTypes.ENUM,
+            options: {
+              enum: enumValues,
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const i = model.hydrate({ status: [value] });
+      expect(i.status).toEqual(value);
     });
   });
 });

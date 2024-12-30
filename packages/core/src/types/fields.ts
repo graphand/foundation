@@ -37,7 +37,10 @@ export type FieldOptionsMap = {
   [FieldTypes.NUMBER]: {
     default?: number;
   };
-  [FieldTypes.NESTED]: {
+  [FieldTypes.INTEGER]: {
+    default?: number;
+  };
+  [FieldTypes.OBJECT]: {
     default?: JSONTypeObject;
     defaultField?: FieldDefinitions;
     conditionalFields?: ConditionalFieldsDefinition;
@@ -47,6 +50,10 @@ export type FieldOptionsMap = {
   };
   [FieldTypes.BOOLEAN]: {
     default?: boolean;
+  };
+  [FieldTypes.ENUM]: {
+    default?: string;
+    enum: string[];
   };
 };
 
@@ -84,6 +91,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
     [FieldTypes.IDENTITY]: string;
     [FieldTypes.BOOLEAN]: boolean;
     [FieldTypes.NUMBER]: number;
+    [FieldTypes.INTEGER]: number;
     [FieldTypes.DATE]: string;
     [FieldTypes.TEXT]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
       ? F["options"]["enum"] extends Array<string>
@@ -92,7 +100,8 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
           : F["options"]["enum"][number] | string
         : string
       : string;
-    [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
+    [FieldTypes.ENUM]: F["options"] extends FieldOptionsMap[FieldTypes.ENUM] ? F["options"]["enum"][number] : never;
+    [FieldTypes.OBJECT]: F["options"] extends FieldOptionsMap[FieldTypes.OBJECT]
       ? (F["options"]["fields"] extends FieldsDefinition
           ? Partial<{
               [K in keyof F["options"]["fields"]]: InferFieldType<F["options"]["fields"][K], "json">;
@@ -115,6 +124,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
     [FieldTypes.IDENTITY]: string;
     [FieldTypes.BOOLEAN]: boolean;
     [FieldTypes.NUMBER]: number;
+    [FieldTypes.INTEGER]: number;
     [FieldTypes.DATE]: Date;
     [FieldTypes.TEXT]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
       ? F["options"]["enum"] extends Array<string>
@@ -123,7 +133,8 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
           : F["options"]["enum"][number] | string
         : string
       : string;
-    [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
+    [FieldTypes.ENUM]: F["options"] extends FieldOptionsMap[FieldTypes.ENUM] ? F["options"]["enum"][number] : never;
+    [FieldTypes.OBJECT]: F["options"] extends FieldOptionsMap[FieldTypes.OBJECT]
       ? (F["options"]["fields"] extends FieldsDefinition
           ? Partial<{
               [K in keyof F["options"]["fields"]]: InferFieldType<F["options"]["fields"][K], "object">;

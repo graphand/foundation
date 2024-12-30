@@ -18,12 +18,12 @@ export class Aggregation extends Model {
         type: FieldTypes.ARRAY,
         options: {
           items: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
           },
         },
       },
       let: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
       },
     },
     validators: [

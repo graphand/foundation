@@ -6,7 +6,7 @@ import { DataModel } from "@/models/DataModel.js";
 import { Environment } from "@/models/Environment.js";
 import { Media } from "@/models/Media.js";
 import { Model } from "@/lib/Model.js";
-import { Adapter, Field, FieldNested, ModelDefinition } from "./index.js";
+import { Adapter, Field, FieldObject, ModelDefinition } from "./index.js";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {
@@ -178,7 +178,7 @@ describe("Global tests", () => {
                 },
               },
               obj: {
-                type: FieldTypes.NESTED,
+                type: FieldTypes.OBJECT,
                 options: {
                   fields: {
                     relSingle: {
@@ -205,7 +205,7 @@ describe("Global tests", () => {
                 type: FieldTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       fields: {
                         relSingle: {
@@ -244,10 +244,10 @@ describe("Global tests", () => {
       static definition = {
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               defaultField: {
-                type: FieldTypes.NESTED,
+                type: FieldTypes.OBJECT,
                 options: {
                   fields: {
                     title: {
@@ -309,14 +309,14 @@ describe("Global tests", () => {
       static definition = {
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 arr: {
                   type: FieldTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.NESTED,
+                      type: FieldTypes.OBJECT,
                       options: {
                         fields: {
                           title: {
@@ -381,27 +381,27 @@ describe("Global tests", () => {
       static definition = {
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 arr: {
                   type: FieldTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.NESTED,
+                      type: FieldTypes.OBJECT,
                       options: {
                         defaultField: {
-                          type: FieldTypes.NESTED,
+                          type: FieldTypes.OBJECT,
                           options: {
                             fields: {
                               nestedArr: {
                                 type: FieldTypes.ARRAY,
                                 options: {
                                   items: {
-                                    type: FieldTypes.NESTED,
+                                    type: FieldTypes.OBJECT,
                                     options: {
                                       defaultField: {
-                                        type: FieldTypes.NESTED,
+                                        type: FieldTypes.OBJECT,
                                         options: {
                                           fields: {
                                             title: {
@@ -575,24 +575,24 @@ describe("Global tests", () => {
       static definition = {
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 arr: {
                   type: FieldTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.NESTED,
+                      type: FieldTypes.OBJECT,
                       options: {
                         defaultField: {
-                          type: FieldTypes.NESTED,
+                          type: FieldTypes.OBJECT,
                           options: {
                             fields: {
                               nestedArr: {
                                 type: FieldTypes.ARRAY,
                                 options: {
                                   items: {
-                                    type: FieldTypes.NESTED,
+                                    type: FieldTypes.OBJECT,
                                     options: {
                                       fields: {
                                         label: {
@@ -701,24 +701,24 @@ describe("Global tests", () => {
   //   const model = mockModel({
   //     fields: {
   //       obj: {
-  //         type: FieldTypes.NESTED,
+  //         type: FieldTypes.OBJECT,
   //         options: {
   //           fields: {
   //             arr: {
   //               type: FieldTypes.ARRAY,
   //               options: {
   //                 items: {
-  //                   type: FieldTypes.NESTED,
+  //                   type: FieldTypes.OBJECT,
   //                   options: {
   //                     defaultField: {
-  //                       type: FieldTypes.NESTED,
+  //                       type: FieldTypes.OBJECT,
   //                       options: {
   //                         fields: {
   //                           nestedArr: {
   //                             type: FieldTypes.ARRAY,
   //                             options: {
   //                               items: {
-  //                                 type: FieldTypes.NESTED,
+  //                                 type: FieldTypes.OBJECT,
   //                                 options: {
   //                                   fields: {
   //                                     label: {
@@ -1023,8 +1023,8 @@ describe("Global tests", () => {
   it("should be able to extend a field type", async () => {
     const adapter = mockAdapter();
 
-    class CustomFieldNested extends FieldNested {
-      serializerMap: Field<FieldTypes.NESTED>["serializerMap"] = {
+    class CustomFieldObject extends FieldObject {
+      serializerMap: Field<FieldTypes.OBJECT>["serializerMap"] = {
         json: this._sStatic,
         [Field.defaultSymbol]: this._sProxy,
         // @ts-expect-error test is not defined globally
@@ -1032,14 +1032,14 @@ describe("Global tests", () => {
       };
     }
 
-    adapter.fieldsMap = { ...adapter.fieldsMap, [FieldTypes.NESTED]: CustomFieldNested };
+    adapter.fieldsMap = { ...adapter.fieldsMap, [FieldTypes.OBJECT]: CustomFieldObject };
 
     const CustomModel = class extends Model {
       static slug = generateRandomString();
       static definition = {
         fields: {
           title: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 a: {

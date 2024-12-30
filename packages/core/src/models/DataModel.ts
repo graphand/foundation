@@ -9,7 +9,7 @@ const functionRelationField = {
   type: FieldTypes.ARRAY,
   options: {
     items: {
-      type: FieldTypes.NESTED,
+      type: FieldTypes.OBJECT,
       options: {
         strict: true,
         fields: {
@@ -48,38 +48,37 @@ export class DataModel extends Model {
       name: { type: FieldTypes.TEXT },
       slug: { type: FieldTypes.TEXT },
       definition: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: {
           fields: {
             fields: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 defaultField: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       type: {
-                        type: FieldTypes.TEXT,
+                        type: FieldTypes.ENUM,
                         options: {
                           enum: Object.values(FieldTypes),
-                          strict: true,
                         },
                       },
                       options: {
-                        type: FieldTypes.NESTED,
+                        type: FieldTypes.OBJECT,
                         options: {
                           strict: true,
                           fields: {
                             default: { type: FieldTypes.DEFAULT },
-                            items: { type: FieldTypes.NESTED },
-                            validators: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.NESTED } } },
+                            items: { type: FieldTypes.OBJECT },
+                            validators: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.OBJECT } } },
                             distinct: { type: FieldTypes.BOOLEAN },
                             enum: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
                             strict: { type: FieldTypes.BOOLEAN },
                             ref: { type: FieldTypes.TEXT },
-                            defaultField: { type: FieldTypes.NESTED },
-                            conditionalFields: { type: FieldTypes.NESTED },
-                            fields: { type: FieldTypes.NESTED },
+                            defaultField: { type: FieldTypes.OBJECT },
+                            conditionalFields: { type: FieldTypes.OBJECT },
+                            fields: { type: FieldTypes.OBJECT },
                           },
                           conditionalFields: {
                             dependsOn: "$.type",
@@ -88,7 +87,9 @@ export class DataModel extends Model {
                               [FieldTypes.TEXT]: ["default", "enum", "strict"],
                               [FieldTypes.RELATION]: ["ref"],
                               [FieldTypes.NUMBER]: ["default"],
-                              [FieldTypes.NESTED]: [
+                              [FieldTypes.INTEGER]: ["default"],
+                              [FieldTypes.ENUM]: ["default", "enum"],
+                              [FieldTypes.OBJECT]: [
                                 "default",
                                 "defaultField",
                                 "conditionalFields",
@@ -118,18 +119,17 @@ export class DataModel extends Model {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       type: {
-                        type: FieldTypes.TEXT,
+                        type: FieldTypes.ENUM,
                         options: {
                           enum: Object.values(ValidatorTypes),
-                          strict: true,
                         },
                       },
                       options: {
-                        type: FieldTypes.NESTED,
+                        type: FieldTypes.OBJECT,
                         options: {
                           strict: true,
                           fields: {
@@ -181,7 +181,7 @@ export class DataModel extends Model {
         _ts: undefined as unknown as ModelDefinition,
       },
       hooks: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: {
           strict: true,
           fields: {
@@ -220,7 +220,7 @@ export class DataModel extends Model {
           ],
         },
       },
-      _doc: { type: FieldTypes.NESTED },
+      _doc: { type: FieldTypes.OBJECT },
     } as const,
     validators: [{ type: ValidatorTypes.DATAMODEL_SLUG }, { type: ValidatorTypes.DATAMODEL_DEFINITION }],
   } satisfies ModelDefinition;

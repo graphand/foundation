@@ -3,10 +3,10 @@ import { FieldSerializerInput, JSONTypeObject, ModelData, ModelInstance } from "
 import { Field } from "@/lib/Field.js";
 import { getFieldFromDefinition, getNestedFieldsMap, getValidationValues } from "@/lib/utils.js";
 
-export class FieldNested extends Field<FieldTypes.NESTED> {
+export class FieldObject extends Field<FieldTypes.OBJECT> {
   static symbolIgnore = Symbol("ignore");
 
-  validate: Field<FieldTypes.NESTED>["validate"] = async ({ list }) => {
+  validate: Field<FieldTypes.OBJECT>["validate"] = async ({ list }) => {
     const _isInvalid = (v: unknown) => v !== null && v !== undefined && typeof v !== "object";
 
     const values = getValidationValues(list, this.path);
@@ -172,7 +172,7 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
         if (prop === "__raw") {
           return (k: string) => {
             if (conditionalKeys && !conditionalKeys.includes(k)) {
-              return FieldNested.symbolIgnore;
+              return FieldObject.symbolIgnore;
             }
 
             return target[k];
@@ -188,7 +188,7 @@ export class FieldNested extends Field<FieldTypes.NESTED> {
     });
   };
 
-  serializerMap: Field<FieldTypes.NESTED>["serializerMap"] = {
+  serializerMap: Field<FieldTypes.OBJECT>["serializerMap"] = {
     json: this._sStatic,
     [Field.defaultSymbol]: this._sProxy,
   };

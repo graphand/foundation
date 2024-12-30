@@ -664,7 +664,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
                     collectModels(item, refModel);
                   }
                 });
-              } else if (arrayOptions?.items?.type === FieldTypes.NESTED) {
+              } else if (arrayOptions?.items?.type === FieldTypes.OBJECT) {
                 current[key].forEach((item: any) => {
                   collectModels(item, model);
                 });
@@ -678,7 +678,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
               collectModels(current[key], refModel);
             }
             break;
-          } else if (currentField.type === FieldTypes.NESTED) {
+          } else if (currentField.type === FieldTypes.OBJECT) {
             if (typeof current[key] === "object" && current[key] !== null) {
               collectModels(current[key], model);
             }
@@ -723,8 +723,8 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
               current[key] = current[key].map((item: any) =>
                 typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance?._id : item,
               );
-            } else if (arrayOptions?.items?.type === FieldTypes.NESTED) {
-              const nestedOptions = arrayOptions.items.options as FieldOptionsMap[FieldTypes.NESTED];
+            } else if (arrayOptions?.items?.type === FieldTypes.OBJECT) {
+              const nestedOptions = arrayOptions.items.options as FieldOptionsMap[FieldTypes.OBJECT];
               current[key] = current[key].map((item: any) => this.#processNestedObject(item, nestedOptions?.fields));
             }
           }
@@ -736,8 +736,8 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
             current[key] = adapter.processInstancePayload(current[key]).instance?._id;
           }
           break;
-        } else if (currentField.type === FieldTypes.NESTED) {
-          const nestedOptions = currentField.options as FieldOptionsMap[FieldTypes.NESTED];
+        } else if (currentField.type === FieldTypes.OBJECT) {
+          const nestedOptions = currentField.options as FieldOptionsMap[FieldTypes.OBJECT];
           if (typeof current[key] === "object" && current[key] !== null) {
             current[key] = this.#processNestedObject(current[key], nestedOptions?.fields);
           }
@@ -794,16 +794,16 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
             processedObj[key] = processedObj[key].map((item: any) =>
               typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance?._id : item,
             );
-          } else if (arrayOptions?.items?.type === FieldTypes.NESTED) {
-            const nestedOptions = arrayOptions.items.options as FieldOptionsMap[FieldTypes.NESTED];
+          } else if (arrayOptions?.items?.type === FieldTypes.OBJECT) {
+            const nestedOptions = arrayOptions.items.options as FieldOptionsMap[FieldTypes.OBJECT];
             processedObj[key] = processedObj[key].map((item: any) =>
               this.#processNestedObject(item, nestedOptions?.fields),
             );
           }
         }
-      } else if (field.type === FieldTypes.NESTED) {
+      } else if (field.type === FieldTypes.OBJECT) {
         if (typeof processedObj[key] === "object" && processedObj[key] !== null) {
-          const nestedOptions = field.options as FieldOptionsMap[FieldTypes.NESTED];
+          const nestedOptions = field.options as FieldOptionsMap[FieldTypes.OBJECT];
           processedObj[key] = this.#processNestedObject(processedObj[key], nestedOptions?.fields);
         }
       }

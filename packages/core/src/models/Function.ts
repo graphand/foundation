@@ -17,7 +17,7 @@ export class Function extends Model {
     fields: {
       name: { type: FieldTypes.TEXT },
       labels: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: {
           defaultField: {
             type: FieldTypes.TEXT,
@@ -37,10 +37,9 @@ export class Function extends Model {
         },
       },
       runtime: {
-        type: FieldTypes.TEXT,
+        type: FieldTypes.ENUM,
         options: {
-          enum: ["deno"],
-          strict: true,
+          enum: ["deno"] as const,
         },
       },
       _job: {

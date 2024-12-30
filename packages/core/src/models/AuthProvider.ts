@@ -15,15 +15,14 @@ export class AuthProvider extends Model {
     keyField: "type",
     fields: {
       type: {
-        type: FieldTypes.TEXT,
+        type: FieldTypes.ENUM,
         options: {
           enum: Object.values(AuthProviders),
-          strict: true,
           default: AuthProviders.LOCAL,
         },
       },
       options: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: {
           strict: true,
           default: {},
@@ -50,7 +49,7 @@ export class AuthProvider extends Model {
             confirmEmail: { type: FieldTypes.BOOLEAN, options: { default: false } },
             confirmTokenLifetime: { type: FieldTypes.NUMBER, options: { default: 3600 } },
             resetTokenLifetime: { type: FieldTypes.NUMBER, options: { default: 3600 } },
-            fieldsMap: { type: FieldTypes.NESTED, options: { defaultField: { type: FieldTypes.TEXT } } },
+            fieldsMap: { type: FieldTypes.OBJECT, options: { defaultField: { type: FieldTypes.TEXT } } },
             scopes: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
             autoRegister: { type: FieldTypes.BOOLEAN, options: { default: true } },
             teamId: { type: FieldTypes.TEXT },
@@ -59,12 +58,12 @@ export class AuthProvider extends Model {
             keyId: { type: FieldTypes.TEXT },
             privateKey: { type: FieldTypes.TEXT },
             // oauth: {
-            //   type: FieldTypes.NESTED,
+            //   type: FieldTypes.OBJECT,
             //   options: {
             //     fields: {
             //       clientId: { type: FieldTypes.TEXT },
             //       clientSecret: { type: FieldTypes.TEXT },
-            //       fieldsMap: { type: FieldTypes.NESTED, options: { defaultField: { type: FieldTypes.TEXT } } },
+            //       fieldsMap: { type: FieldTypes.OBJECT, options: { defaultField: { type: FieldTypes.TEXT } } },
             //       scopes: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
             //     },
             //   },
@@ -81,7 +80,7 @@ export class AuthProvider extends Model {
       },
       enabled: { type: FieldTypes.BOOLEAN, options: { default: true } },
       register: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: {
           fields: {
             enabled: { type: FieldTypes.BOOLEAN, options: { default: true } },

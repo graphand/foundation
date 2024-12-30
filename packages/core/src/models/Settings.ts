@@ -13,7 +13,7 @@ export class Settings extends Model {
     fields: {
       key: { type: FieldTypes.TEXT },
       data: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: { default: {}, fields: {}, conditionalFields: { dependsOn: "$.key", mappings: {} } },
       },
     },

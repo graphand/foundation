@@ -1,5 +1,16 @@
 # @graphand/cli
 
+## 1.3.0
+
+### Minor Changes
+
+- Rename Nested field to Object and add Integer + Enum fields
+
+### Patch Changes
+
+- Updated dependencies
+  - @graphand/client@1.3.0
+
 ## 1.2.12
 
 ### Patch Changes

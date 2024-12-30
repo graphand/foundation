@@ -15,15 +15,14 @@ export class MergeRequestAction extends Model {
   static definition = {
     fields: {
       type: {
-        type: FieldTypes.TEXT,
+        type: FieldTypes.ENUM,
         options: {
           enum: Object.values(MergeRequestActionTypes),
-          strict: true,
           default: MergeRequestActionTypes.PATCH,
         },
       },
       data: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: {
           fields: {
             close: {
@@ -33,7 +32,7 @@ export class MergeRequestAction extends Model {
               type: FieldTypes.TEXT,
             },
             apply: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
             },
           },
         },

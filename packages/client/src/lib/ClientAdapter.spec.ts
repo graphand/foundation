@@ -1043,7 +1043,7 @@ describe("ClientAdapter", () => {
             },
           },
           nested: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 related: {
@@ -1080,7 +1080,7 @@ describe("ClientAdapter", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.NESTED,
+                type: FieldTypes.OBJECT,
                 options: {
                   fields: {
                     related: {
@@ -1576,7 +1576,7 @@ describe("ClientAdapter", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       name: { type: FieldTypes.TEXT },
@@ -1641,7 +1641,7 @@ describe("ClientAdapter", () => {
               items: {
                 type: FieldTypes.ARRAY;
                 options: {
-                  items: { type: FieldTypes.NESTED; options: { fields: { subItem: { type: FieldTypes.RELATION } } } };
+                  items: { type: FieldTypes.OBJECT; options: { fields: { subItem: { type: FieldTypes.RELATION } } } };
                 };
               };
             };

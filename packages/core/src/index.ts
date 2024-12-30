@@ -19,7 +19,7 @@ export { FieldBoolean } from "@/lib/fields/Boolean.js";
 export { FieldDate } from "@/lib/fields/Date.js";
 export { FieldId } from "@/lib/fields/Id.js";
 export { FieldIdentity } from "@/lib/fields/Identity.js";
-export { FieldNested } from "@/lib/fields/Nested.js";
+export { FieldObject } from "@/lib/fields/Object.js";
 export { FieldNumber } from "@/lib/fields/Number.js";
 export { FieldRelation } from "@/lib/fields/Relation.js";
 export { FieldText } from "@/lib/fields/Text.js";

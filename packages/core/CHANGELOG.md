@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.5.0
+
+### Minor Changes
+
+- Rename Nested field to Object and add Integer + Enum fields
+
 ## 1.4.9
 
 ### Patch Changes

@@ -66,7 +66,7 @@ describe("test utils", () => {
                   type: FieldTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.NESTED,
+                      type: FieldTypes.OBJECT,
                       options: {
                         fields: {
                           field2: {
@@ -190,7 +190,7 @@ describe("test utils", () => {
         static definition: ModelDefinition = {
           fields: {
             field1: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   field2: {
@@ -213,7 +213,7 @@ describe("test utils", () => {
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(2);
-      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
       expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath[1]?.field).toHaveProperty("options.__label", "field2");
@@ -227,7 +227,7 @@ describe("test utils", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       field2: {
@@ -256,7 +256,7 @@ describe("test utils", () => {
       expect(fPath.length).toEqual(3);
       expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath[1]?.field).toHaveProperty("options.__label", "field1bis");
       expect(fPath[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath[2]?.field).toHaveProperty("options.__label", "field2");
@@ -267,7 +267,7 @@ describe("test utils", () => {
       expect(fPath2.length).toEqual(3);
       expect(fPath2[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath2[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath2[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath2[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath2[1]?.field).toHaveProperty("options.__label", "field1bis");
       expect(fPath2[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath2[2]?.field).toHaveProperty("options.__label", "field2");
@@ -281,7 +281,7 @@ describe("test utils", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     strict: true,
                     fields: {
@@ -339,7 +339,7 @@ describe("test utils", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       field2: {
@@ -382,7 +382,7 @@ describe("test utils", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       field2: {
@@ -393,7 +393,7 @@ describe("test utils", () => {
                         type: FieldTypes.ARRAY,
                         options: {
                           items: {
-                            type: FieldTypes.NESTED,
+                            type: FieldTypes.OBJECT,
                             options: {
                               fields: {
                                 field4: {
@@ -441,7 +441,7 @@ describe("test utils", () => {
       expect(fPath2.length).toEqual(3);
       expect(fPath2[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath2[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath2[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath2[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath2[1]?.field).toHaveProperty("options.__label", "field1bis");
       expect(fPath2[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath2[2]?.field).toHaveProperty("options.__label", "field2");
@@ -452,7 +452,7 @@ describe("test utils", () => {
       expect(fPath3.length).toEqual(3);
       expect(fPath3[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath3[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath3[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath3[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath3[1]?.field).toHaveProperty("options.__label", "field1bis");
       expect(fPath3[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath3[2]?.field).toHaveProperty("options.__label", "field3");
@@ -463,11 +463,11 @@ describe("test utils", () => {
       expect(fPath4.length).toEqual(5);
       expect(fPath4[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath4[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath4[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath4[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath4[1]?.field).toHaveProperty("options.__label", "field1bis");
       expect(fPath4[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath4[2]?.field).toHaveProperty("options.__label", "field3");
-      expect(fPath4[3]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath4[3]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath4[3]?.field).toHaveProperty("options.__label", "field3bis");
       expect(fPath4[4]?.field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath4[4]?.field).toHaveProperty("options.__label", "field4");
@@ -478,7 +478,7 @@ describe("test utils", () => {
       expect(fPath5.length).toEqual(3);
       expect(fPath5[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath5[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath5[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath5[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath5[1]?.field).toHaveProperty("options.__label", "field1bis");
       expect(fPath5[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath5[2]?.field).toHaveProperty("options.__label", "field2");
@@ -489,7 +489,7 @@ describe("test utils", () => {
       expect(fPath6.length).toEqual(3);
       expect(fPath6[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath6[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath6[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath6[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath6[1]?.field).toHaveProperty("options.__label", "field1bis");
       expect(fPath6[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath6[2]?.field).toHaveProperty("options.__label", "field3");
@@ -500,11 +500,11 @@ describe("test utils", () => {
       expect(fPath7.length).toEqual(5);
       expect(fPath7[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath7[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath7[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath7[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath7[1]?.field).toHaveProperty("options.__label", "field1bis");
       expect(fPath7[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath7[2]?.field).toHaveProperty("options.__label", "field3");
-      expect(fPath7[3]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath7[3]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath7[3]?.field).toHaveProperty("options.__label", "field3bis");
       expect(fPath7[4]?.field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath7[4]?.field).toHaveProperty("options.__label", "field4");
@@ -515,11 +515,11 @@ describe("test utils", () => {
       expect(fPath8.length).toEqual(6);
       expect(fPath8[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath8[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath8[1]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath8[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath8[1]?.field).toHaveProperty("options.__label", "field1bis");
       expect(fPath8[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath8[2]?.field).toHaveProperty("options.__label", "field3");
-      expect(fPath8[3]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath8[3]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath8[3]?.field).toHaveProperty("options.__label", "field3bis");
       expect(fPath8[4]?.field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath8[4]?.field).toHaveProperty("options.__label", "field4");
@@ -561,7 +561,7 @@ describe("test utils", () => {
       const model3 = mockModel({
         fields: {
           nested: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 rel: {
@@ -590,7 +590,7 @@ describe("test utils", () => {
       const fPath = getFieldsPathsFromPath(model3, "nested.rel.rel.title");
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(4);
-      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.NESTED);
+      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.OBJECT);
       expect(fPath[0]?.field).toHaveProperty("path", "nested");
       expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.RELATION);
       expect(fPath[1]?.field).toHaveProperty("path", "nested.rel");
@@ -688,7 +688,7 @@ describe("test utils", () => {
         static definition: ModelDefinition = {
           fields: {
             nested: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   rel: {
@@ -722,7 +722,7 @@ describe("test utils", () => {
               type: FieldTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NESTED,
+                  type: FieldTypes.OBJECT,
                   options: {
                     fields: {
                       rel: {
@@ -745,14 +745,14 @@ describe("test utils", () => {
         static definition: ModelDefinition = {
           fields: {
             nested: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   arr: {
                     type: FieldTypes.ARRAY,
                     options: {
                       items: {
-                        type: FieldTypes.NESTED,
+                        type: FieldTypes.OBJECT,
                         options: {
                           fields: {
                             rel: {
@@ -786,7 +786,7 @@ describe("test utils", () => {
         static definition: ModelDefinition = {
           fields: {
             nested: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
             },
           },
         };
@@ -804,7 +804,7 @@ describe("test utils", () => {
         static definition: ModelDefinition = {
           fields: {
             nested: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
             },
           },
         };

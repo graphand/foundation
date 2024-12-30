@@ -230,7 +230,7 @@ describe("ValidationError", () => {
     const model = mockModel({
       fields: {
         obj: {
-          type: FieldTypes.NESTED,
+          type: FieldTypes.OBJECT,
           options: {
             fields: {
               enum: {
@@ -270,14 +270,14 @@ describe("ValidationError", () => {
     const model = mockModel({
       fields: {
         obj: {
-          type: FieldTypes.NESTED,
+          type: FieldTypes.OBJECT,
           options: {
             fields: {
               array: {
                 type: FieldTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       fields: {
                         enum: {

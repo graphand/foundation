@@ -19,7 +19,7 @@ describe("test validators", () => {
           type: FieldTypes.TEXT,
         },
         obj: {
-          type: FieldTypes.NESTED,
+          type: FieldTypes.OBJECT,
           options: {
             fields: {
               title: {
@@ -852,7 +852,7 @@ describe("test validators", () => {
                 type: FieldTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       fields: {
                         nested: {
@@ -1087,7 +1087,7 @@ describe("test validators", () => {
                   type: FieldTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.NESTED,
+                      type: FieldTypes.OBJECT,
                       options: {
                         fields: {
                           nested: {
@@ -1310,7 +1310,7 @@ describe("test validators", () => {
           type: FieldTypes.ARRAY,
           options: {
             items: {
-              type: FieldTypes.NESTED,
+              type: FieldTypes.OBJECT,
               options: {
                 fields: {
                   label: {

@@ -224,6 +224,7 @@ export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<st
     for (const [key, value] of Object.entries(_functions)) {
       functions[key] ??= {};
       functions[key].exposed ??= true;
+      functions[key].runtime ??= "deno";
 
       const functionPath = path.join(process.cwd(), value);
       const checksum = await checksumDirectory(functionPath);
@@ -405,7 +406,8 @@ export const waitJob = async ({
     })
     .then(r => r.body?.getReader());
 
-  const logsPromise = processLogs({ stream, spinner: spin?.spinner, endAction: "end-job" });
+  const abortController = new AbortController();
+  const logsPromise = processLogs({ stream, spinner: spin?.spinner, endAction: "end-job", abortController });
 
   let unsubscribe: undefined | (() => void);
 
@@ -428,6 +430,7 @@ export const waitJob = async ({
           job = (await _fetch()) as ModelInstance<typeof Job>;
           await new Promise(resolve => setTimeout(resolve, pollInterval));
         }
+
         resolve();
       } catch (e) {
         reject(e);
@@ -439,7 +442,9 @@ export const waitJob = async ({
     racePromise = endPromise;
   }
 
-  await Promise.all([logsPromise, racePromise]);
+  await Promise.race([logsPromise, racePromise]);
+
+  abortController.abort();
 
   unsubscribe?.();
 
@@ -555,7 +560,7 @@ export const withSpinner = async <T = any>(
     delete globalThis.spinner;
 
     if (globalThis.jobs?.length && globalThis.client && !opts?.skipJobs) {
-      for (const jobId of globalThis.jobs) {
+      for await (const jobId of globalThis.jobs) {
         console.log("");
 
         await withSpinner(

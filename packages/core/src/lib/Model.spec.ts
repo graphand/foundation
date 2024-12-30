@@ -400,7 +400,7 @@ describe("Test Model", () => {
       const _model = mockModel({
         fields: {
           test: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 nested: {
@@ -418,7 +418,7 @@ describe("Test Model", () => {
           definition: {
             fields: {
               test: {
-                type: FieldTypes.NESTED;
+                type: FieldTypes.OBJECT;
                 options: {
                   fields: {
                     nested: {
@@ -506,7 +506,7 @@ describe("Test Model", () => {
                 type: FieldTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       fields: {
                         nested: {
@@ -604,7 +604,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.NESTED,
+                type: FieldTypes.OBJECT,
                 options: {
                   fields: {
                     nested: {
@@ -662,7 +662,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.NESTED,
+                type: FieldTypes.OBJECT,
                 options: {
                   fields: {
                     field2: {
@@ -672,7 +672,7 @@ describe("Test Model", () => {
                       type: FieldTypes.ARRAY,
                       options: {
                         items: {
-                          type: FieldTypes.NESTED,
+                          type: FieldTypes.OBJECT,
                           options: {
                             fields: {
                               field4: {
@@ -815,7 +815,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.NESTED,
+                type: FieldTypes.OBJECT,
                 options: {
                   fields: {
                     arrRel: {
@@ -872,7 +872,7 @@ describe("Test Model", () => {
       const model = mockModel({
         fields: {
           test: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 test: {
@@ -897,7 +897,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.NESTED,
+                type: FieldTypes.OBJECT,
                 options: {
                   fields: {
                     test: {
@@ -942,7 +942,7 @@ describe("Test Model", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.NESTED,
+            type: FieldTypes.OBJECT,
             options: {
               fields: {
                 field1: {
@@ -984,7 +984,7 @@ describe("Test Model", () => {
           type: FieldTypes.TEXT,
         },
         obj: {
-          type: FieldTypes.NESTED,
+          type: FieldTypes.OBJECT,
           options: {
             fields: {
               nested: {
@@ -1019,14 +1019,14 @@ describe("Test Model", () => {
           },
         },
         complex: {
-          type: FieldTypes.NESTED,
+          type: FieldTypes.OBJECT,
           options: {
             fields: {
               nestedArr: {
                 type: FieldTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.NESTED,
+                    type: FieldTypes.OBJECT,
                     options: {
                       fields: {
                         nested: {
@@ -1617,7 +1617,7 @@ describe("Test Model", () => {
           },
         },
         nested: {
-          type: FieldTypes.NESTED,
+          type: FieldTypes.OBJECT,
           options: {
             fields: {
               subtitle: {

@@ -17,7 +17,7 @@ export class Connector extends Model {
     fields: {
       slug: { type: FieldTypes.TEXT },
       options: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: { default: {} },
       },
       function: {
@@ -27,7 +27,7 @@ export class Connector extends Model {
         },
       },
       query: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: {
           default: {},
           fields: {
@@ -37,9 +37,9 @@ export class Connector extends Model {
         },
       },
       source: { type: FieldTypes.TEXT },
-      filter: { type: FieldTypes.NESTED },
+      filter: { type: FieldTypes.OBJECT },
       retryStrategy: {
-        type: FieldTypes.NESTED,
+        type: FieldTypes.OBJECT,
         options: {
           default: {},
           fields: {
@@ -47,7 +47,7 @@ export class Connector extends Model {
             initialDelay: { type: FieldTypes.NUMBER, options: { default: 1000 } },
             backoffFactor: { type: FieldTypes.NUMBER, options: { default: 2 } },
             strategyType: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["fixed", "exponential", "exponentialWithJitter"],
                 default: "exponential",
