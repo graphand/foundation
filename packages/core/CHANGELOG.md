@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.5.2
+
+### Patch Changes
+
+- clean code
+
 ## 1.5.1
 
 ### Patch Changes
