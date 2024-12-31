@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.5.4
+
+### Patch Changes
+
+- fix realtime flag in assignDatamodel
+
 ## 1.5.3
 
 ### Patch Changes

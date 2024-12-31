@@ -7,9 +7,9 @@ import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Job extends Model {
-  static __name = "Job";
+  static __name = "Job" as const;
   static slug = "jobs" as const;
-  static realtime = true;
+  static realtime = true as const;
   static definition = {
     fields: {
       _type: {

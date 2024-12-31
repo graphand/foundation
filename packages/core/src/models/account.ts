@@ -8,11 +8,11 @@ import { Patterns } from "@/enums/patterns.js";
 
 @modelDecorator()
 export class Account extends Model {
-  static __name = "Account";
-  static connectable = true;
-  static extensible = true;
-  static realtime = true;
-  static isEnvironmentScoped = true;
+  static __name = "Account" as const;
+  static connectable = true as const;
+  static extensible = true as const;
+  static realtime = true as const;
+  static isEnvironmentScoped = true as const;
   static slug = "accounts" as const;
   static definition = {
     fields: {

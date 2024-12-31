@@ -1094,7 +1094,7 @@ export const assignDatamodel = async <T extends typeof Model>(model: T, datamode
 
   const baseClass = model.getBaseClass();
 
-  baseClass.realtime = datamodel?.realtime ?? false;
+  model.realtime = baseClass.realtime || datamodel?.realtime || false;
 
   const data = datamodel?.getData() as ModelJSON<typeof DataModel>;
   const definition = data?.definition;

@@ -39,9 +39,9 @@ const functionRelationField = {
 
 @modelDecorator()
 export class DataModel extends Model {
-  static __name = "DataModel";
-  static isEnvironmentScoped = true;
-  static realtime = true;
+  static __name = "DataModel" as const;
+  static isEnvironmentScoped = true as const;
+  static realtime = true as const;
   static slug = "datamodels" as const;
   static definition = {
     keyField: "slug",

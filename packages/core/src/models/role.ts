@@ -9,9 +9,9 @@ import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Role extends Model {
-  static __name = "Role";
-  static isEnvironmentScoped = true;
-  static realtime = true;
+  static __name = "Role" as const;
+  static isEnvironmentScoped = true as const;
+  static realtime = true as const;
   static slug = "roles" as const;
   static definition = {
     keyField: "slug",

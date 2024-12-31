@@ -6,7 +6,7 @@ import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Secret extends Model {
-  static __name = "Secret";
+  static __name = "Secret" as const;
   static slug = "secrets" as const;
   static definition = {
     keyField: "name",

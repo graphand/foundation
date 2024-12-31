@@ -8,7 +8,7 @@ import { EventSeverities } from "@/enums/event-severities.js";
 
 @modelDecorator()
 export class Event extends Model {
-  static __name = "Event";
+  static __name = "Event" as const;
   static slug = "events" as const;
   static definition = {
     fields: {

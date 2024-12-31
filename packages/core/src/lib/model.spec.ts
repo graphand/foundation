@@ -2870,5 +2870,12 @@ describe("Test Model", () => {
       const ModelFromDatamodel = Model.getClass(TestModel.slug, adapter);
       expect(ModelFromDatamodel.realtime).toBe(false);
     });
+
+    it("should keep realtime for account model", async () => {
+      const adapter = mockAdapter();
+      const accountModel = Model.getClass("accounts", adapter);
+      await accountModel.initialize();
+      expect(accountModel.realtime).toBe(true);
+    });
   });
 });

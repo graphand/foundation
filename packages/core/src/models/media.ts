@@ -5,10 +5,10 @@ import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Media extends Model {
-  static __name = "Media";
-  static extensible = true;
-  static connectable = true;
-  static realtime = true;
+  static __name = "Media" as const;
+  static extensible = true as const;
+  static connectable = true as const;
+  static realtime = true as const;
   static slug = "medias" as const;
   static definition = {
     keyField: "name",

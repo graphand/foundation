@@ -8,10 +8,10 @@ import { ValidatorTypes } from "@/enums/validator-types.js";
 
 @modelDecorator()
 export class Function extends Model {
-  static __name = "Function";
-  static realtime = true;
-  static isEnvironmentScoped = true;
-  static allowMultipleOperations = false;
+  static __name = "Function" as const;
+  static realtime = true as const;
+  static isEnvironmentScoped = true as const;
+  static allowMultipleOperations = false as const;
   static slug = "functions" as const;
   static definition = {
     keyField: "name",

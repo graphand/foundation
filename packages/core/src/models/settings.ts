@@ -5,8 +5,8 @@ import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Settings extends Model {
-  static __name = "Settings";
-  static allowMultipleOperations = false;
+  static __name = "Settings" as const;
+  static allowMultipleOperations = false as const;
   static slug = "settings" as const;
   static definition = {
     keyField: "key",

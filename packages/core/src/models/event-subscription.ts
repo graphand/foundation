@@ -10,9 +10,8 @@ import { Patterns } from "../enums/patterns.js";
 
 @modelDecorator()
 export class EventSubscription extends Model {
-  static __name = "EventSubscription";
+  static __name = "EventSubscription" as const;
   static slug = "eventSubscriptions" as const;
-
   static definition = {
     keyField: "slug",
     fields: {

@@ -6,8 +6,8 @@ import { Job } from "./job.js";
 
 @modelDecorator()
 export class Snapshot extends Model {
-  static __name = "Snapshot";
-  static allowMultipleOperations = false;
+  static __name = "Snapshot" as const;
+  static allowMultipleOperations = false as const;
   static slug = "snapshots" as const;
   static definition = {
     fields: {

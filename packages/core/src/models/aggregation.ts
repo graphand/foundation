@@ -6,8 +6,8 @@ import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Aggregation extends Model {
-  static __name = "Aggregation";
-  static isEnvironmentScoped = true;
+  static __name = "Aggregation" as const;
+  static isEnvironmentScoped = true as const;
   static slug = "aggregations" as const;
   static definition = {
     keyField: "slug",

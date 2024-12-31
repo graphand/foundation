@@ -8,9 +8,9 @@ import { AuthProviders } from "@/enums/auth-providers.js";
 
 @modelDecorator()
 export class AuthProvider extends Model {
-  static __name = "AuthProvider";
+  static __name = "AuthProvider" as const;
   static slug = "authProviders" as const;
-  static isEnvironmentScoped = true;
+  static isEnvironmentScoped = true as const;
   static definition = {
     keyField: "type",
     fields: {
