@@ -429,12 +429,17 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       if (!res.ok) {
         const type = res.headers.get("content-type");
         if (type?.includes("application/json")) {
-          const { error } = await res.json();
+          const { error, exceptions } = await res.json();
+
           if (error) {
             throw parseErrorFromJSON(error, res);
           }
 
-          throw new FetchError({ message: "Unknown error", res });
+          if (exceptions?.length) {
+            throw parseErrorFromJSON(exceptions[0], res);
+          }
+
+          throw new FetchError({ message: "Unknown fetch error", res });
         }
 
         if (type?.includes("text/plain")) {
@@ -442,7 +447,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
           throw new FetchError({ message: data, res });
         }
 
-        throw new FetchError({ message: "Unknown error", res });
+        throw new FetchError({ message: "Unknown fetch error", res });
       }
     } catch (e) {
       payloadBefore.err ??= [];

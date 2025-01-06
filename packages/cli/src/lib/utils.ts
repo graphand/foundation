@@ -4,7 +4,6 @@ import { UserConfig } from "@/types.js";
 import path from "path";
 import fs from "fs";
 import Conf from "conf";
-import { fileURLToPath, pathToFileURL } from "url";
 import { transformSync } from "esbuild";
 import { program } from "commander";
 import { Client, ClientModules, ClientOptions } from "@graphand/client";
@@ -111,7 +110,8 @@ export const loadConfig = async (): Promise<UserConfig> => {
     const transpiledCode = result.code;
 
     // Use dynamic import to load the transpiled code
-    const tempFilePath = fileURLToPath(new URL(`file://${process.cwd()}/temp-config.mjs`));
+    const tempFileName = "." + Date.now() + ".config.mjs";
+    const tempFilePath = path.join(process.cwd(), tempFileName);
     await fs.promises.writeFile(tempFilePath, transpiledCode);
 
     try {
@@ -186,14 +186,13 @@ export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<st
 
     // Use dynamic import to load the transpiled code
 
-    const tempFileName = "temp-config.mjs";
+    const tempFileName = "." + Date.now() + ".gdx.mjs";
     const tempFilePath = path.join(process.cwd(), tempFileName);
     await fs.promises.writeFile(tempFilePath, transpiledCode);
 
     try {
       // Load the transpiled code
-      const fileUrl = pathToFileURL(tempFilePath).href;
-      const importedConfig = await import(fileUrl);
+      const importedConfig = await import(tempFilePath);
 
       if (importedConfig.default) {
         json = importedConfig.default as JSONTypeObject;
@@ -214,6 +213,10 @@ export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<st
   if (json && "$cli.file" in json && Object.keys(json["$cli.file"] as object).length) {
     const _file = json["$cli.file"] as JSONTypeObject;
     file = Object.entries(_file).reduce((acc, [key, value]) => collectFiles(`${key}=${value}`, acc), {});
+
+    const assign = Object.entries(_file).reduce((acc, [key]) => collectSetter(key, acc), {});
+
+    mergeDeep(json, assign);
   }
 
   if (json && "$cli.function" in json && Object.keys(json["$cli.function"] as object).length) {
