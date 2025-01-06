@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.3.2
+
+### Patch Changes
+
+- improve gdx push command
+
 ## 1.3.1
 
 ### Patch Changes

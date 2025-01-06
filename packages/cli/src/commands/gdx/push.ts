@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { getClient, loadGdx, withSpinner } from "@/lib/utils.js";
-import { controllerGdxPush, JSONTypeObject } from "@graphand/core";
+import { controllerGdxPush, JSONTypeObject, ModelJSON } from "@graphand/core";
 import { Command } from "commander";
 import { confirm } from "@inquirer/prompts";
 
@@ -14,7 +14,6 @@ export const commandGdxPush = new Command("push")
   .option("-v --verbose", "Verbose")
   .action(async options => {
     let data: GDXData | undefined;
-    let body: RequestInit["body"];
 
     const client = await getClient({ realtime: true });
 
@@ -45,9 +44,27 @@ export const commandGdxPush = new Command("push")
       return lines;
     };
 
-    const _push = async (confirmChecksum?: string) => {
+    const _push = async (
+      input: { json: JSONTypeObject; file?: Record<string, Promise<File>> },
+      confirmChecksum?: string,
+    ) => {
       let uploadId: string | undefined;
       let uploadResolve: (typeof Promise<void>)["resolve"] | undefined;
+      let body: RequestInit["body"];
+      let formData: FormData | undefined;
+
+      if (input.file && Object.keys(input.file).length) {
+        formData = new FormData();
+        formData.append("_json", JSON.stringify(input.json));
+
+        for (const [key, value] of Object.entries(input.file)) {
+          formData?.append(key, await value);
+        }
+
+        body = formData;
+      }
+
+      body ??= JSON.stringify(input.json);
 
       if (!options.skipRealtimeUpload && body instanceof FormData) {
         await client.get("realtime").connect();
@@ -91,24 +108,10 @@ export const commandGdxPush = new Command("push")
       return resJSON.data as GDXData;
     };
 
+    const { json, file } = await loadGdx();
+
     await withSpinner(async () => {
-      const { json, file } = await loadGdx();
-      let formData: FormData | undefined;
-
-      if (file && Object.keys(file).length) {
-        formData = new FormData();
-        formData.append("_json", JSON.stringify(json));
-
-        for (const [key, value] of Object.entries(file)) {
-          formData?.append(key, await value);
-        }
-
-        body = formData;
-      }
-
-      body ??= JSON.stringify(json);
-
-      data = await _push();
+      data = await _push({ json, file });
 
       if (options.verbose) {
         // This will log the data
@@ -148,10 +151,41 @@ export const commandGdxPush = new Command("push")
     }
 
     await withSpinner(async () => {
-      // @ts-expect-error - $checksum is not typed here
-      const confirmChecksum = data.$checksum as string;
+      let confirmChecksum: string | undefined;
 
-      const res = await _push(confirmChecksum);
+      if (data?.$checksum) {
+        confirmChecksum = data.$checksum as unknown as string;
+
+        Object.keys(data).forEach(model => {
+          if (!data || !data[model]) {
+            return;
+          }
+
+          const { create } = data[model];
+
+          if (!create) {
+            return;
+          }
+
+          Object.keys(create).forEach(key => {
+            const created = create[key] as ModelJSON;
+            const createdId = created?._id;
+
+            if (!createdId) {
+              return;
+            }
+
+            // @ts-ignore
+            const obj = json[model][key];
+
+            if (obj) {
+              obj._id = createdId;
+            }
+          });
+        });
+      }
+
+      const res = await _push({ json, file }, confirmChecksum);
 
       if (options.verbose) {
         return res;
