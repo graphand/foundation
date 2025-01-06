@@ -180,15 +180,22 @@ utiles telles que :
 `fieldsMap` est un objet qui lie chaque type champ existant sur graphand à la classe de son type. Les types de champs
 sont tous définis par l'enum `FieldTypes` et sont les suivants :
 
-- _FieldTypes.ID_
-- _FieldTypes.ARRAY_
-- _FieldTypes.TEXT_
-- _FieldTypes.NUMBER_
-- _FieldTypes.BOOLEAN_
-- _FieldTypes.RELATION_
-- _FieldTypes.DATE_
-- _FieldTypes.OBJECT_
-- _FieldTypes.IDENTITY_
+```ts
+enum FieldTypes {
+  DEFAULT = "default",
+  ID = "id",
+  ARRAY = "array",
+  TEXT = "text",
+  ENUM = "enum",
+  NUMBER = "number",
+  INTEGER = "integer",
+  BOOLEAN = "boolean",
+  RELATION = "relation",
+  DATE = "date",
+  OBJECT = "object",
+  IDENTITY = "identity",
+}
+```
 
 Chaque champ est donc une classe qui étend la classe de base `Field` et qui décrit la manière dont le type de champ en
 question encode et décode les données dans le contexte courant. Par exemple le champ \_id est de type différent sur le
@@ -214,15 +221,20 @@ MyAdapter.prototype.fieldsMap = {
 De la même manière que pour les champs, les validateurs sont définis dans le `validatorsMap`. Les types de champs sont
 tous dans l'enum `ValidatorTypes` :
 
-- _ValidatorTypes.REQUIRED_
-- _ValidatorTypes.UNIQUE_
-- _ValidatorTypes.BOUNDARIES_
-- _ValidatorTypes.LENGTH_
-- _ValidatorTypes.REGEX_
-- _ValidatorTypes.SAMPLE_
-- _ValidatorTypes.KEY_FIELD_
-- _ValidatorTypes.DATAMODEL_SLUG_
-- _ValidatorTypes.DATAMODEL_DEFINITION_
+```ts
+enum ValidatorTypes {
+  REQUIRED = "required",
+  UNIQUE = "unique",
+  BOUNDARIES = "boundaries",
+  LENGTH = "length",
+  REGEX = "regex",
+  SAMPLE = "sample",
+  KEY_FIELD = "keyField",
+  DATAMODEL_SLUG = "datamodelSlug",
+  DATAMODEL_DEFINITION = "datamodelDefinition",
+  EXISTS = "exists",
+}
+```
 
 Les validateurs `DATAMODEL_SLUG` et `DATAMODEL_DEFINITION_` sont des validateurs spéciaux qui sont utilisés seulement
 par le modèle `DataModel` pour vérifier que les champs `slug` et `definition` sont valides.
