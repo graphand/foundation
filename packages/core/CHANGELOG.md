@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.5.5
+
+### Patch Changes
+
+- add allowResetPassword field on AuthProvider model
+
 ## 1.5.4
 
 ### Patch Changes

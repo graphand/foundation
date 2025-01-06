@@ -326,7 +326,7 @@ export type AuthProviderCredentialsMap = {
     password: string;
   };
   [AuthProviders.GRAPHAND]: {
-    reset?: boolean;
+    resetAccount?: boolean;
   };
 };
 
@@ -349,11 +349,11 @@ export type AuthProviderConfigurePayloadMap = {
     sendConfirmationEmail?: boolean;
     confirmEmailToken?: string;
     resetPasswordToken?: string;
-    resetPassword?: true;
+    resetPassword?: boolean;
   };
   [AuthProviders.GRAPHAND]: {
     graphandToken?: string;
-    unlink?: true;
+    unlink?: boolean;
   };
 };
 

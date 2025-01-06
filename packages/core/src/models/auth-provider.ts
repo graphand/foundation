@@ -30,7 +30,12 @@ export class AuthProvider extends Model {
             dependsOn: "$.type",
             mappings: {
               [AuthProviders.GRAPHAND]: ["fieldsMap", "scopes", "autoRegister"],
-              [AuthProviders.LOCAL]: ["confirmEmail", "confirmTokenLifetime", "resetTokenLifetime"],
+              [AuthProviders.LOCAL]: [
+                "confirmEmail",
+                "confirmTokenLifetime",
+                "resetTokenLifetime",
+                "allowResetPassword",
+              ],
               [AuthProviders.FACEBOOK]: ["clientId", "clientSecret", "fieldsMap", "scopes", "autoRegister"],
               [AuthProviders.GOOGLE]: ["clientId", "clientSecret", "fieldsMap", "scopes", "autoRegister"],
               [AuthProviders.GITHUB]: ["clientId", "clientSecret", "fieldsMap", "scopes", "autoRegister"],
@@ -49,6 +54,7 @@ export class AuthProvider extends Model {
             confirmEmail: { type: FieldTypes.BOOLEAN, options: { default: false } },
             confirmTokenLifetime: { type: FieldTypes.INTEGER, options: { default: 3600 } },
             resetTokenLifetime: { type: FieldTypes.INTEGER, options: { default: 3600 } },
+            allowResetPassword: { type: FieldTypes.BOOLEAN, options: { default: false } },
             fieldsMap: { type: FieldTypes.OBJECT, options: { defaultField: { type: FieldTypes.TEXT } } },
             scopes: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
             autoRegister: { type: FieldTypes.BOOLEAN, options: { default: true } },
