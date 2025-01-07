@@ -1,7 +1,6 @@
 import { Command } from "commander";
-import { getClient } from "@/lib/utils.js";
+import { getClient, withSpinner } from "@/lib/utils.js";
 import { password, input } from "@inquirer/prompts";
-import chalk from "chalk";
 
 export const commandRegister = new Command("register")
   .option("-i --invitation-token <invitationToken>", "Invitation token")
@@ -19,16 +18,17 @@ export const commandRegister = new Command("register")
       mask: "*",
     });
 
-    if (pwd !== confirmPwd) {
-      console.log(chalk.red("Passwords do not match"));
-      return;
-    }
+    await withSpinner(async spinner => {
+      if (pwd !== confirmPwd) {
+        throw new Error("Passwords do not match");
+      }
 
-    const client = await getClient();
+      const client = await getClient();
 
-    await client.get("auth").register({ configuration: { email, password: pwd } }, undefined, undefined, {
-      invitationToken: options.invitationToken,
+      await client.get("auth").register({ configuration: { email, password: pwd } }, undefined, undefined, {
+        invitationToken: options.invitationToken,
+      });
+
+      spinner.succeed("Registration successful");
     });
-
-    console.log(chalk.green("Registration successful"));
   });

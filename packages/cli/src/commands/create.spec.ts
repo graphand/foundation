@@ -8,17 +8,18 @@ import { controllerModelCreate, FieldTypes } from "@graphand/core";
 import { Subject } from "@graphand/client";
 import fs from "fs";
 import path from "path";
+import { Config } from "@/lib/Config.js";
 
 vi.mock("fs");
 vi.mock("path");
 
 describe("Create Command", () => {
-  globalThis.userConfig = {
+  globalThis.userConfig = new Config({
     client: {
       accessToken: faker.internet.password(),
       project: faker.internet.password(),
     },
-  };
+  });
 
   const datamodel = {
     _id: new ObjectId().toString(),

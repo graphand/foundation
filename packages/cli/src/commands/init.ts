@@ -1,11 +1,10 @@
 import { Command } from "commander";
-import { UserConfig } from "@/types.js";
 import fs from "fs";
 import path from "path";
-import { loadConfig, getConfigPath, rmConfigFile } from "@/lib/utils.js";
 import { isObjectId } from "@graphand/core";
 import chalk from "chalk";
 import { confirm, input } from "@inquirer/prompts";
+import { Config } from "@/lib/Config.js";
 
 export const commandInit = new Command("init").description("Initialize a new Graphand project").action(async () => {
   const hasPackageJson = fs.existsSync(path.join(process.cwd(), "package.json"));
@@ -23,8 +22,8 @@ export const commandInit = new Command("init").description("Initialize a new Gra
     }
   }
 
-  let config: Partial<UserConfig> = {};
-  const configPath = getConfigPath();
+  const configPath = Config.getPath();
+  let config: Config;
 
   if (configPath) {
     const filename = path.basename(configPath);
@@ -38,11 +37,13 @@ export const commandInit = new Command("init").description("Initialize a new Gra
     }
 
     try {
-      config = await loadConfig();
+      config = await new Config().load();
     } catch (e) {
       console.log(chalk.yellow("Failed to load configuration file"));
     }
   }
+
+  config ??= new Config();
 
   const project = await input({
     message: "What is your project id?",
@@ -61,26 +62,23 @@ export const commandInit = new Command("init").description("Initialize a new Gra
 
   const environment = await input({
     message: "Which environment do you want to start with?",
-    default: config?.client?.environment ?? "master",
+    default: config?.client?.environment ?? "main",
   });
 
-  if (config.client) {
-    config.client.project = project;
-    config.client.environment = environment;
+  const userConfig = config.get();
+
+  if (userConfig) {
+    userConfig.client ??= { project, environment };
+    userConfig.client.project = project;
+    userConfig.client.environment = environment;
   } else {
-    config.client = { project, environment };
+    config.setConfig({
+      client: {
+        project,
+        environment,
+      },
+    });
   }
 
-  const content = `
-      import { defineConfig } from "@graphand/cli.js";
-
-      export default defineConfig($CONFIG);
-    `
-    .replaceAll("  ", "")
-    .replaceAll("$CONFIG", JSON.stringify(config, null, 2))
-    .trim();
-
-  rmConfigFile();
-
-  fs.writeFileSync(path.join(process.cwd(), "graphand.config.js"), content);
+  await config.save();
 });

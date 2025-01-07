@@ -1,11 +1,9 @@
 import qs from "qs";
 import chalk from "chalk";
-import { UserConfig } from "@/types.js";
 import path from "path";
 import fs from "fs";
 import Conf from "conf";
 import { transformSync } from "esbuild";
-import { program } from "commander";
 import { Client, ClientModules, ClientOptions } from "@graphand/client";
 import { ModuleAuth } from "@graphand/client-module-auth";
 import { ModuleRealtime } from "@graphand/client-module-realtime";
@@ -31,117 +29,11 @@ import mime from "mime";
 import archiver from "archiver";
 import { ReadableStream } from "stream/web";
 import crypto from "crypto";
-
-export const defineConfig = (config: UserConfig): UserConfig => {
-  return config;
-};
-
-export const getConfigPath = (): string | null => {
-  const { config } = program.opts() || {};
-  if (config) {
-    const configPath = path.resolve(config);
-    if (fs.existsSync(configPath)) {
-      return configPath;
-    }
-
-    return null;
-  }
-
-  try {
-    const packageJSON = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8"));
-    if (packageJSON.graphand?.config) {
-      return path.resolve(packageJSON.graphand.config);
-    }
-  } catch (e) {
-    return null;
-  }
-
-  const configFiles = [
-    "graphand.config.ts",
-    "graphand.config.js",
-    "graphand.config.mjs",
-    "graphand.config.cjs",
-    "graphand.config.json",
-  ];
-
-  for (const file of configFiles) {
-    const configPath = path.join(process.cwd(), file);
-    if (fs.existsSync(configPath)) {
-      return configPath;
-    }
-  }
-
-  return null;
-};
-
-export const rmConfigFile = () => {
-  const configPath = getConfigPath();
-  if (configPath) {
-    fs.rmSync(configPath);
-  }
-};
-
-export const loadConf = (project: string): Conf => {
-  return new Conf({ projectName: `@graphand/cli:${project}` });
-};
-
-export const loadConfig = async (): Promise<UserConfig> => {
-  const configPath = getConfigPath();
-  if (!configPath) {
-    throw new Error("Configuration file not found. Run `graphand init` to create a configuration file");
-  }
-
-  let config: UserConfig | undefined;
-
-  try {
-    const configContent = await fs.promises.readFile(configPath, "utf8");
-
-    if (path.extname(configPath) === ".json") {
-      config = JSON.parse(configContent);
-      return config as UserConfig;
-    }
-
-    const result = transformSync(configContent, {
-      loader: path.extname(configPath) === ".ts" ? "ts" : "js",
-      format: "esm",
-      target: "es2020",
-    });
-
-    const transpiledCode = result.code;
-
-    // Use dynamic import to load the transpiled code
-    const tempFileName = "." + Date.now() + ".config.mjs";
-    const tempFilePath = path.join(process.cwd(), tempFileName);
-    await fs.promises.writeFile(tempFilePath, transpiledCode);
-
-    try {
-      const importedConfig = await import(tempFilePath);
-
-      if (importedConfig.default) {
-        config = importedConfig.default as UserConfig;
-      }
-    } finally {
-      // Ensure temp file is deleted even if an error occurs
-      fs.promises.unlink(tempFilePath).catch(() => {});
-    }
-  } catch (error) {
-    console.error("Error loading configuration:", error);
-    throw new Error("Failed to load configuration file");
-  }
-
-  if (!config) {
-    throw new Error("No valid configuration found in file");
-  }
-
-  if (!config.client?.project) {
-    throw new Error("No project found in configuration (client.project is undefined)");
-  }
-
-  return config;
-};
+import { pathToFileURL } from "url";
+import { Config } from "./Config.js";
 
 export const getGdxPath = async (): Promise<string | null> => {
-  const config = await loadConfig();
+  const config = await new Config().load();
 
   if (config.gdx?.path) {
     const configPath = path.join(process.cwd(), config.gdx.path);
@@ -192,7 +84,7 @@ export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<st
 
     try {
       // Load the transpiled code
-      const importedConfig = await import(tempFilePath);
+      const importedConfig = await import(pathToFileURL(tempFilePath).href);
 
       if (importedConfig.default) {
         json = importedConfig.default as JSONTypeObject;
@@ -267,9 +159,9 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
     globalThis.spinner.text = "Initializing client ...";
   }
 
-  const config: UserConfig = globalThis.userConfig ?? (await loadConfig());
+  const config: Config = globalThis.userConfig ?? (await new Config().load());
   const configClient = (config.client || {}) as ClientOptions;
-  const conf = loadConf(configClient.project || "");
+  const conf = new Conf({ projectName: `graphandcli-${configClient.project || "head"}` });
 
   // @ts-ignore
   const modules: ClientModules<[typeof ModuleAuth, typeof ModuleCli, typeof ModuleRealtime]> = [
