@@ -491,12 +491,12 @@ export const withSpinner = async <T = any>(
   opts?: {
     spinner?: Ora;
     start?: string;
-    succeed?: string | ((_r: any) => string);
+    succeed?: string | ((_r: T) => string);
     fail?: string | ((_e: Error) => string);
     throw?: boolean;
     skipJobs?: boolean;
   },
-): Promise<void> => {
+): Promise<[T | undefined, Error | undefined]> => {
   const spinner = globalThis.spinner || (opts?.spinner ?? ora(opts?.start ?? "Loading ...").start());
   globalThis.spinner = spinner;
   globalThis.jobs = [];
@@ -536,8 +536,10 @@ export const withSpinner = async <T = any>(
     spinner.text = args[0];
   };
 
+  let res: T | undefined;
+
   try {
-    const res = await fn(spinner);
+    res = await fn(spinner);
     if (spinner.isSpinning) {
       const succeed = typeof opts?.succeed === "function" ? opts?.succeed(res) : opts?.succeed || "Success";
       spinner.succeed(succeed);
@@ -599,6 +601,8 @@ export const withSpinner = async <T = any>(
   if (opts?.throw && e) {
     throw e;
   }
+
+  return [res, e];
 };
 
 export const processLogs = async ({

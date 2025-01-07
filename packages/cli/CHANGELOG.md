@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.3.3
+
+### Patch Changes
+
+- improve login command
+
 ## 1.3.2
 
 ### Patch Changes

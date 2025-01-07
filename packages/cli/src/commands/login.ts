@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { getClient } from "@/lib/utils.js";
+import { getClient, withSpinner } from "@/lib/utils.js";
 import { password, input } from "@inquirer/prompts";
 import chalk from "chalk";
 import { AuthMethods, AuthProviders } from "@graphand/core";
@@ -50,10 +50,24 @@ export const commandLogin = new Command("login")
       });
     }
 
-    const res = await client.get("auth").login({ credentials, provider, method });
+    let isLogged = false;
 
-    if (res) {
-      console.log(chalk.green("Login successful"));
+    await withSpinner(async spinner => {
+      try {
+        const res = await client.get("auth").login({ credentials, provider, method });
+
+        if (res) {
+          spinner.succeed(`Login successful for ${res._email}`);
+          isLogged = true;
+        } else {
+          spinner.succeed("Logging in...");
+        }
+      } catch (e) {
+        spinner.fail(`Login failed: ${(e as Error).message}`);
+      }
+    });
+
+    if (isLogged) {
       return;
     }
 
@@ -61,7 +75,17 @@ export const commandLogin = new Command("login")
       message: "Enter the code",
     });
 
-    await client.get("auth").handleCode(code);
+    await withSpinner(async spinner => {
+      try {
+        const res = await client.get("auth").handleCode(code);
 
-    console.log(chalk.green("Login successful"));
+        if (!res) {
+          throw new Error("Login failed with empty response");
+        }
+
+        spinner.succeed(`Login successful for ${res._email}`);
+      } catch (e) {
+        spinner.fail(`Login failed: ${(e as Error).message}`);
+      }
+    });
   });
