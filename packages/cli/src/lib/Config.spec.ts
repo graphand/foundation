@@ -60,8 +60,8 @@ describe("Config", () => {
     });
 
     it("should initialize with null", () => {
-      const config = new Config(null);
-      expect(config.get()).toBeNull();
+      const config = new Config();
+      expect(config.get()).toBeUndefined();
       expect(config.getPath()).toBeUndefined();
     });
   });
@@ -81,7 +81,7 @@ describe("Config", () => {
       vi.mocked(fs.existsSync).mockReturnValue(false);
 
       const result = Config.getPath();
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
 
     it("should return path from package.json if exists", () => {
@@ -118,7 +118,7 @@ describe("Config", () => {
       vi.mocked(fs.existsSync).mockReturnValue(false);
 
       const result = Config.getPath();
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
   });
 

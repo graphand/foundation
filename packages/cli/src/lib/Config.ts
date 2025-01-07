@@ -9,15 +9,17 @@ export class Config {
   #config: UserConfig | undefined;
   #path: string | undefined;
 
-  constructor(configOrPath: UserConfig | string | null = null) {
+  constructor(configOrPath: UserConfig | string | undefined = undefined) {
     if (typeof configOrPath === "string") {
       this.#path = configOrPath as string;
-    } else {
+    } else if (typeof configOrPath === "object") {
       this.#config = configOrPath as UserConfig;
+    } else {
+      this.#path = Config.getPath();
     }
   }
 
-  static getPath(): string | null {
+  static getPath(): string | undefined {
     const { config } = program.opts() || {};
     if (config) {
       const configPath = path.resolve(config);
@@ -25,7 +27,7 @@ export class Config {
         return configPath;
       }
 
-      return null;
+      return undefined;
     }
 
     const packageJsonPath = path.join(process.cwd(), "package.json");
@@ -51,7 +53,7 @@ export class Config {
       }
     }
 
-    return null;
+    return undefined;
   }
 
   getPath(): string | undefined {
