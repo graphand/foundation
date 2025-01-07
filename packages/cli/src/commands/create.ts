@@ -117,5 +117,5 @@ export const commandCreate = new Command("create")
   .option("--skip-realtime-upload", "Skip realtime upload")
   .option("--form-data", "Use form data instead of JSON body. Default true if file is provided")
   .action(async (modelName, options) => {
-    return withSpinner(spinner => _create({ modelName, spinner, ...options }));
+    await withSpinner(spinner => _create({ modelName, spinner, ...options }));
   });
