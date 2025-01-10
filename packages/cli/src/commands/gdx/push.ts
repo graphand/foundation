@@ -6,13 +6,22 @@ import { confirm } from "@inquirer/prompts";
 
 type GDXData = Record<string, { create: JSONTypeObject; update: JSONTypeObject; delete: JSONTypeObject }>;
 
+type GdxPushOptions = {
+  clean: boolean;
+  force: boolean;
+  skipRealtimeUpload: boolean;
+  ignoreProjectData: boolean;
+  verbose: boolean;
+};
+
 export const commandGdxPush = new Command("push")
   .description("gdx push")
   .option("--clean", "Clean")
   .option("--force", "Force")
   .option("--skip-realtime-upload", "Skip realtime upload")
+  .option("--ignore-project-data", "Ignore project data. All data on project-scope models will be ignored")
   .option("-v --verbose", "Verbose")
-  .action(async options => {
+  .action(async (options: GdxPushOptions) => {
     let data: GDXData | undefined;
 
     const client = await getClient({ realtime: true });
@@ -108,7 +117,7 @@ export const commandGdxPush = new Command("push")
       return resJSON.data as GDXData;
     };
 
-    const { json, file } = await loadGdx();
+    const { json, file } = await loadGdx({ ignoreProjectData: options.ignoreProjectData, client });
 
     await withSpinner(async () => {
       data = await _push({ json, file });

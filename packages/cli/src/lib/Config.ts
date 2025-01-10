@@ -1,9 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { program } from "commander";
-import { transformSync } from "esbuild";
+import { build } from "esbuild";
 import { pathToFileURL } from "url";
 import { UserConfig } from "@/types.js";
+import { loadPackageJson } from "./utils.js";
+import { JSONTypeObject } from "@graphand/core";
 
 export class Config {
   #config: UserConfig | undefined;
@@ -30,12 +32,10 @@ export class Config {
       return undefined;
     }
 
-    const packageJsonPath = path.join(process.cwd(), "package.json");
-    if (fs.existsSync(packageJsonPath)) {
-      const packageJSON = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-      if (packageJSON.graphand?.config) {
-        return path.resolve(packageJSON.graphand.config);
-      }
+    const packageJsonObject = loadPackageJson();
+    const graphand = packageJsonObject?.graphand as JSONTypeObject;
+    if (graphand?.config) {
+      return path.resolve(graphand.config as string);
     }
 
     const configFiles = [
@@ -84,18 +84,21 @@ export class Config {
       if (extension === "json") {
         this.#config = JSON.parse(configContent) as UserConfig;
       } else {
-        const result = transformSync(configContent, {
-          loader: extension === "ts" ? "ts" : "js",
-          format: "esm",
-          target: "es2020",
-        });
-
-        const transpiledCode = result.code;
-
-        // Use dynamic import to load the transpiled code
         const tempFileName = "." + Date.now() + ".config.mjs";
         const tempFilePath = path.join(process.cwd(), tempFileName);
-        await fs.promises.writeFile(tempFilePath, transpiledCode);
+        const packageJsonObject = loadPackageJson();
+        await build({
+          entryPoints: [this.#path],
+          outfile: tempFilePath,
+          bundle: true,
+          platform: "node",
+          format: "esm",
+          target: "esnext",
+          external: [
+            ...Object.keys(packageJsonObject?.dependencies || {}),
+            ...Object.keys(packageJsonObject?.devDependencies || {}),
+          ],
+        });
 
         try {
           const importedConfig = await import(pathToFileURL(tempFilePath).href);

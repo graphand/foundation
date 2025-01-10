@@ -3,7 +3,7 @@ import chalk from "chalk";
 import path from "path";
 import fs from "fs";
 import Conf from "conf";
-import { transformSync } from "esbuild";
+import { build } from "esbuild";
 import { Client, ClientModules, ClientOptions } from "@graphand/client";
 import { ModuleAuth } from "@graphand/client-module-auth";
 import { ModuleRealtime } from "@graphand/client-module-realtime";
@@ -54,33 +54,49 @@ export const getGdxPath = async (): Promise<string | null> => {
   return null;
 };
 
-export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<string, Promise<File>> | undefined }> => {
+export const loadPackageJson = (): JSONTypeObject | null => {
+  const packageJsonPath = path.join(process.cwd(), "package.json");
+  if (!fs.existsSync(packageJsonPath)) {
+    return null;
+  }
+
+  const packageJson = fs.readFileSync(packageJsonPath, "utf8");
+  return JSON.parse(packageJson);
+};
+
+export const loadGdx = async (
+  opts: {
+    ignoreProjectData?: boolean;
+    client?: Client;
+  } = {},
+): Promise<{ json: JSONTypeObject; file: Record<string, Promise<File>> | undefined }> => {
   const configPath = await getGdxPath();
   if (!configPath) {
     throw new Error("No gdx file found");
   }
 
-  const configContent = await fs.promises.readFile(configPath, "utf8");
-
   let json: JSONTypeObject | undefined;
   let file: Record<string, Promise<File>> | undefined;
 
   if (path.extname(configPath) === ".json") {
+    const configContent = await fs.promises.readFile(configPath, "utf8");
     json = JSON.parse(configContent);
   } else {
-    const result = transformSync(configContent, {
-      loader: path.extname(configPath) === ".ts" ? "ts" : "js",
-      format: "esm",
-      target: "es2020",
-    });
-
-    const transpiledCode = result.code;
-
-    // Use dynamic import to load the transpiled code
-
     const tempFileName = "." + Date.now() + ".gdx.mjs";
     const tempFilePath = path.join(process.cwd(), tempFileName);
-    await fs.promises.writeFile(tempFilePath, transpiledCode);
+    const packageJsonObject = loadPackageJson();
+    await build({
+      entryPoints: [configPath],
+      outfile: tempFilePath,
+      bundle: true,
+      platform: "node",
+      format: "esm",
+      target: "esnext",
+      external: [
+        ...Object.keys(packageJsonObject?.dependencies || {}),
+        ...Object.keys(packageJsonObject?.devDependencies || {}),
+      ],
+    });
 
     try {
       // Load the transpiled code
@@ -138,6 +154,22 @@ export const loadGdx = async (): Promise<{ json: JSONTypeObject; file: Record<st
         functions[key].$force = true;
       }
     }
+  }
+
+  if (opts.ignoreProjectData && json) {
+    const client = opts.client ?? (await getClient());
+    Object.keys(json).forEach(key => {
+      if (key.startsWith("$")) {
+        return;
+      }
+
+      const model = client.getModel(key);
+      const isProjectScoped = !model.isEnvironmentScoped && !model.extensible;
+
+      if (isProjectScoped) {
+        delete json[key];
+      }
+    });
   }
 
   if (!json) {

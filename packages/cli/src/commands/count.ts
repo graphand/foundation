@@ -8,7 +8,7 @@ export const commandCount = new Command("count")
   .arguments("<modelName>]")
   .option("-q --query <query>", "URL encoded JSONQuery object")
   .action(async (modelName, options) => {
-    await withSpinner(async spinner => {
+    await withSpinner(async () => {
       const client = await getClient();
       const model = client.getModel(String(modelName));
 
@@ -18,18 +18,12 @@ export const commandCount = new Command("count")
 
       console.info(`Counting ${model.slug} ...`);
 
-      // const start = Date.now();
-
       let count: number;
 
       const query: JSONQuery = options.query ? qs.parse(options.query) : {};
       query.limit = Number(query.limit) || undefined;
       query.pageSize = Number(query.pageSize) || undefined;
       count = await model.count(query);
-
-      // const end = Date.now();
-
-      spinner.succeed();
 
       console.log(count);
     });
