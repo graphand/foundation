@@ -1,4 +1,3 @@
-import qs from "qs";
 import chalk from "chalk";
 import path from "path";
 import fs from "fs";
@@ -11,26 +10,13 @@ import open from "open";
 import ModuleCli from "./ModuleCli.js";
 import ora, { Ora } from "ora";
 import Table from "cli-table3";
-import {
-  AuthMethods,
-  controllerJobLogs,
-  Function,
-  isObjectId,
-  Job,
-  JobStatus,
-  JSONSubtypeArray,
-  JSONType,
-  JSONTypeObject,
-  ModelInstance,
-  ModelJSON,
-} from "@graphand/core";
+import { AuthMethods, Function, isObjectId, JSONType, JSONTypeObject, ModelJSON } from "@graphand/core";
 import LogProcessor from "./LogProcessor.js";
-import mime from "mime";
-import archiver from "archiver";
-import { ReadableStream } from "stream/web";
 import crypto from "crypto";
 import { pathToFileURL } from "url";
 import { Config } from "./Config.js";
+import JobHandler from "./JobHandler.js";
+import Collector from "./Collector.js";
 
 export const getGdxPath = async (): Promise<string | null> => {
   const config = await new Config().load();
@@ -113,16 +99,16 @@ export const loadGdx = async (
 
   if (json && "$cli.set" in json && Object.keys(json["$cli.set"] as object).length) {
     const set = json["$cli.set"] as JSONTypeObject;
-    const assign = Object.entries(set).reduce((acc, [key, value]) => collectSetter(`${key}=${value}`, acc), {});
+    const assign = Object.entries(set).reduce((acc, [key, value]) => Collector.setter(`${key}=${value}`, acc), {});
 
     mergeDeep(json, assign);
   }
 
   if (json && "$cli.file" in json && Object.keys(json["$cli.file"] as object).length) {
     const _file = json["$cli.file"] as JSONTypeObject;
-    file = Object.entries(_file).reduce((acc, [key, value]) => collectFiles(`${key}=${value}`, acc), {});
+    file = Object.entries(_file).reduce((acc, [key, value]) => Collector.file(`${key}=${value}`, acc), {});
 
-    const assign = Object.entries(_file).reduce((acc, [key]) => collectSetter(key, acc), {});
+    const assign = Object.entries(_file).reduce((acc, [key]) => Collector.setter(key, acc), {});
 
     mergeDeep(json, assign);
   }
@@ -134,8 +120,9 @@ export const loadGdx = async (
     const functions = json.functions as Record<string, ModelJSON<typeof Function>>;
     for (const [key, value] of Object.entries(_functions)) {
       functions[key] ??= {};
-      functions[key].exposed ??= true;
-      functions[key].runtime ??= "deno";
+      const f = functions[key]!;
+      f.exposed ??= true;
+      f.runtime ??= "deno";
 
       const functionPath = path.join(process.cwd(), value);
       const checksum = await checksumDirectory(functionPath);
@@ -147,7 +134,7 @@ export const loadGdx = async (
       const bind = func ? func._checksum !== checksum : true;
 
       if (bind) {
-        const zip = await decodeZip(value);
+        const zip = await Collector.decodeZip(value);
         file ??= {};
         file[`functions[${key}][file]`] = Promise.resolve(zip);
         // @ts-ignore
@@ -167,7 +154,7 @@ export const loadGdx = async (
       const isProjectScoped = !model.isEnvironmentScoped && !model.extensible;
 
       if (isProjectScoped) {
-        delete json[key];
+        delete json![key];
       }
     });
   }
@@ -256,160 +243,6 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
   return client;
 };
 
-export const waitJob = async ({
-  client,
-  jobId,
-  onChange,
-  onSuccess,
-  onFail,
-  pollInterval,
-  spin,
-}: {
-  client: Client;
-  jobId: string;
-  onChange?: (_job: ModelInstance<typeof Job>) => void;
-  onSuccess?: (_job: ModelInstance<typeof Job>) => void;
-  onFail?: (_job: ModelInstance<typeof Job>) => void;
-  pollInterval?: number;
-  spin?: {
-    spinner: Ora;
-    message?: string | ((_job: ModelInstance<typeof Job>) => string);
-    messageSuccess?: string | ((_job: ModelInstance<typeof Job>) => string);
-    messageFail?: string | ((_job: ModelInstance<typeof Job>) => string);
-  };
-}) => {
-  const _getColorForJobStatus = (status: JobStatus) => {
-    switch (status) {
-      case JobStatus.COMPLETED:
-        return "green";
-      case JobStatus.FAILED:
-        return "red";
-      default:
-        return "cyan";
-    }
-  };
-
-  const _handleJob = async (job: ModelInstance<typeof Job>) => {
-    if (spin) {
-      let message: string;
-      if (spin?.message) {
-        message = typeof spin.message === "function" ? spin.message(job) : spin.message;
-      }
-      message ??= `Job ${job._type} (${chalk.bold(job._id)}) is: ${chalk[_getColorForJobStatus(job._status || JobStatus.FAILED)](job._status || "unknown")} ...`;
-
-      spin.spinner.text = message;
-    }
-
-    await onChange?.(job);
-  };
-
-  const _fetch = async () => {
-    const job = await client
-      .getModel(Job)
-      .get(jobId)
-      .catch(() => null);
-
-    if (job) {
-      await _handleJob(job);
-    }
-
-    return job;
-  };
-
-  let job: ModelInstance<typeof Job> = (await _fetch()) as ModelInstance<typeof Job>;
-
-  if (!job) {
-    throw new Error("Job not found");
-  }
-
-  job = job as ModelInstance<typeof Job>;
-
-  await _fetch();
-
-  const stream = await client
-    .execute(controllerJobLogs, {
-      params: { id: jobId },
-      query: { stream: "1" },
-    })
-    .then(r => r.body?.getReader());
-
-  const abortController = new AbortController();
-  const logsPromise = processLogs({ stream, spinner: spin?.spinner, endAction: "end-job", abortController });
-
-  let unsubscribe: undefined | (() => void);
-
-  const endPromise = new Promise<void>(resolve => {
-    unsubscribe = job.subscribe(() => {
-      _handleJob(job);
-      if (job._status && [JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status)) {
-        resolve();
-      }
-    });
-  });
-
-  let racePromise: Promise<void>;
-
-  pollInterval ??= 2000;
-  if (pollInterval) {
-    const pollPromise = new Promise<void>(async (resolve, reject) => {
-      try {
-        while (job._status && ![JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status)) {
-          job = (await _fetch()) as ModelInstance<typeof Job>;
-          await new Promise(resolve => setTimeout(resolve, pollInterval));
-        }
-
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    });
-
-    racePromise = Promise.race([endPromise, pollPromise]);
-  } else {
-    racePromise = endPromise;
-  }
-
-  await Promise.race([logsPromise, racePromise]);
-
-  abortController.abort();
-
-  unsubscribe?.();
-
-  if (job._status === JobStatus.FAILED) {
-    if (spin) {
-      let message: string;
-      if (spin?.messageFail !== undefined) {
-        message = typeof spin.messageFail === "function" ? spin.messageFail(job) : spin.messageFail;
-      }
-      message ??= `${chalk[_getColorForJobStatus(job._status)](job._status)}: Job ${job._type} (${chalk.bold(job._id)}) has failed with error: ${chalk.bold(String(job._result?.error ?? "Unknown error"))}`;
-
-      if (message) {
-        spin.spinner.fail(message);
-      }
-    }
-
-    await onFail?.(job);
-  }
-
-  if (job._status === JobStatus.COMPLETED) {
-    if (spin) {
-      let message: string;
-      if (spin?.messageSuccess !== undefined) {
-        message = typeof spin.messageSuccess === "function" ? spin.messageSuccess(job) : spin.messageSuccess;
-      }
-      message ??= `${chalk[_getColorForJobStatus(job._status)](job._status)}: Job ${job._type} (${chalk.bold(job._id)}) has finished successfully`;
-
-      if (message) {
-        spin.spinner.succeed(message);
-      }
-    }
-
-    await onSuccess?.(job);
-  }
-
-  return job;
-};
-
 export const withSpinner = async <T = any>(
   fn: (_spinner: Ora) => Promise<T> | T,
   opts?: {
@@ -494,11 +327,11 @@ export const withSpinner = async <T = any>(
 
         await withSpinner(
           async spinner => {
-            await waitJob({
-              client: globalThis.client as Client,
-              jobId,
+            const jobHandler = new JobHandler(jobId, {
               spin: { spinner },
             });
+
+            await jobHandler.wait();
           },
           { spinner: ora(`Waiting for job ${jobId} to finish...`).start() },
         );
@@ -574,60 +407,6 @@ export const processLogs = async ({
   }
 };
 
-const decodeFileBase64 = (value: string) => {
-  const filePath = path.resolve(String(value));
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`File ${filePath} not found`);
-  }
-
-  const fileContent = fs.readFileSync(filePath);
-  const file = Buffer.from(fileContent);
-  return file.toString("base64");
-};
-
-const decodeFileText = (value: string) => {
-  const filePath = path.resolve(String(value));
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`File ${filePath} not found`);
-  }
-
-  const fileContent = fs.readFileSync(filePath);
-  return fileContent.toString();
-};
-
-const decodeFile = (value: string): Promise<File> => {
-  const filePath = path.resolve(String(value));
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`File ${filePath} not found`);
-  }
-
-  const file = new File([fs.readFileSync(filePath)], path.basename(filePath), {
-    type: mime.getType(filePath) ?? "application/octet-stream",
-    lastModified: fs.statSync(filePath)?.mtime?.getTime(),
-  });
-
-  return Promise.resolve(file);
-};
-
-export const decodeZip = async (value: string): Promise<File> => {
-  const functionDirectory = path.resolve(String(value));
-  if (!fs.existsSync(functionDirectory)) {
-    throw new Error(`Function directory ${functionDirectory} not found`);
-  }
-
-  // Creating a zip from the file
-  const zip = archiver("zip");
-  zip.directory(functionDirectory, false);
-  await zip.finalize();
-
-  const buffer = await ReadableStream.from(zip).getReader().read();
-
-  return new File([buffer.value], "function.zip", {
-    type: "application/zip",
-    lastModified: Date.now(),
-  });
-};
-
 export const calculateChecksum = async (file: File): Promise<string> => {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
@@ -668,105 +447,6 @@ export const checksumDirectory = async (dir: string): Promise<string> => {
 
   const digest = hash.digest("hex");
   return digest;
-};
-
-export const collectSetter = (
-  value: string,
-  previous?: JSONTypeObject | JSONSubtypeArray,
-): JSONTypeObject | JSONSubtypeArray => {
-  previous ??= {};
-
-  if (Array.isArray(previous)) {
-    previous = previous.reduce((acc, item, index) => {
-      Object.assign(acc as JSONTypeObject, { [index]: item });
-      return acc;
-    }, {}) as JSONTypeObject;
-  }
-
-  const obj = qs.parse(value);
-
-  mergeDeep(previous as any, obj);
-
-  let result: JSONTypeObject | JSONSubtypeArray = previous;
-
-  const keys = Object.keys(previous || {});
-  if (keys.length && keys.every(isIntegerOrIntString)) {
-    const set = [];
-    for (const key of keys) {
-      set[parseInt(key)] = previous[key as keyof typeof previous];
-    }
-    result = set as JSONSubtypeArray;
-  }
-
-  const _processValue = (value: string) => {
-    const operators = ["fileBase64", "fileText", "stdin"];
-    if (new RegExp(`^@(${operators.join("|")}):?`).test(value)) {
-      const [type, v] = value.split(":");
-      if (!type) throw new Error(`Invalid type ${value}`);
-
-      switch (type.replace("@", "")) {
-        case "fileBase64": {
-          return decodeFileBase64(v || "");
-        }
-        case "fileText": {
-          return decodeFileText(v || "");
-        }
-        case "stdin": {
-          return process.stdin.read() || "";
-        }
-        default:
-          break;
-      }
-    }
-
-    return value;
-  };
-
-  return replaceAllStrings(result, _processValue);
-};
-
-export const collectFiles = (
-  value: string,
-  previous?: Record<string, Promise<File>>,
-): Record<string, Promise<File>> => {
-  let field: string;
-  let path: string;
-
-  if (value.includes("=")) {
-    [field, path] = value.split("=") as [string, string];
-  } else {
-    field = "file";
-    path = value;
-  }
-
-  const _getFile = (value: string): Promise<File> => {
-    const types = ["zip", "file"];
-    let type = "file";
-    let v = value;
-
-    if (new RegExp(`^@(${types.join("|")}):?`).test(value)) {
-      [type, v] = value.replace(/^@/, "").split(":") as [string, string];
-    }
-
-    if (!type || !types.includes(type)) {
-      throw new Error(`Invalid type ${type}`);
-    }
-
-    switch (type) {
-      case "zip": {
-        return decodeZip(v || "");
-      }
-      case "file":
-      default: {
-        return decodeFile(v || "");
-      }
-    }
-  };
-
-  previous ??= {};
-  previous[field] = _getFile(path);
-
-  return previous;
 };
 
 /**
@@ -995,7 +675,7 @@ export const getTable = <Fields extends string[], Item extends any>(options: {
     const values = list.map(item => String(getter(item, field)));
     const maxContentWidth = Math.max(...values.map(value => value.length), field.length);
     return maxContentWidth;
-  });
+  }) as number[];
 
   // Copy naturalWidths for adjustment
   let columnWidths = [...naturalWidths];
@@ -1020,19 +700,22 @@ export const getTable = <Fields extends string[], Item extends any>(options: {
         break;
       }
 
-      if (!fields[idx]) {
+      const field = fields[idx];
+
+      if (!field) {
         continue;
       }
 
-      if (typeof isImportantField === "function" && isImportantField(fields[idx])) {
+      if (typeof isImportantField === "function" && isImportantField(field)) {
         continue;
       }
 
       columnWidths[idx] ??= 0;
+      const width = columnWidths[idx] as number;
 
       // Set minimum column width
-      const minColWidth = naturalWidths[idx] ? Math.max(5, naturalWidths[idx] * 0.3) : 5;
-      const maxReduction = columnWidths[idx] - minColWidth;
+      const minColWidth = naturalWidths[idx] ? Math.max(5, (naturalWidths[idx] || 0) * 0.3) : 5;
+      const maxReduction = width - minColWidth;
 
       if (maxReduction > 0) {
         const reduction = Math.min(maxReduction, remainingReduction);
@@ -1044,13 +727,14 @@ export const getTable = <Fields extends string[], Item extends any>(options: {
     // If additional reduction is needed, proportionally reduce remaining columns
     if (remainingReduction > 0) {
       const totalAdjustableWidth = columnWidths.reduce(
-        (sum, width, idx) => sum + (fields[idx] && isImportantField?.(fields[idx]) ? 0 : width),
+        (sum, width, idx) => sum + (fields[idx] && isImportantField?.(fields[idx]!) ? 0 : width),
         0,
       );
       const scalingFactor = (totalAdjustableWidth - remainingReduction) / totalAdjustableWidth;
 
       columnWidths = columnWidths.map((width, idx) => {
-        if (fields[idx] && isImportantField?.(fields[idx])) {
+        const field = fields[idx];
+        if (field && isImportantField?.(field)) {
           return width; // Preserve fixed width for important fields
         } else {
           return Math.max(5, Math.floor(width * scalingFactor));

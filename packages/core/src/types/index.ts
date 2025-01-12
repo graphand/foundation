@@ -78,6 +78,8 @@ export type Sort =
   | [string, SortDirection][]
   | [string, SortDirection];
 
+export type Update = JSONTypeObject;
+
 export type Filter = string | JSONTypeObject;
 
 export type PopulateOption = {
@@ -100,6 +102,8 @@ export type JSONQuery = Partial<{
   page: number;
   pageSize: number;
   populate: Populate;
+  socket: string;
+  update: Update;
 }>;
 
 export type UpdateObject = {

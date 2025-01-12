@@ -1,14 +1,15 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { collectFiles, collectSetter, getClient, withSpinner } from "@/lib/utils.js";
+import { getClient, withSpinner } from "@/lib/utils.js";
 import { ModelInstance, ModelJSON } from "@graphand/core";
 import { Ora } from "ora";
+import Collector from "@/lib/Collector.js";
 
 export const _create = async (options: {
   modelName: string;
   client?: Awaited<ReturnType<typeof getClient>>;
-  set?: ReturnType<typeof collectSetter>;
-  file?: Record<string, Promise<File>>;
+  set?: ReturnType<typeof Collector.setter>;
+  file?: ReturnType<typeof Collector.file>;
   multiple?: boolean;
   formData?: boolean;
   spinner: Ora;
@@ -111,8 +112,8 @@ export const commandCreate = new Command("create")
   .alias("new")
   .description("Create a new instance")
   .arguments("<modelName>")
-  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", collectSetter)
-  .option("-f --file <file>", "File path to add", collectFiles)
+  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", Collector.setter)
+  .option("-f --file <file>", "File path to add", Collector.file)
   .option("-m --multiple", "Create multiple instances")
   .option("--skip-realtime-upload", "Skip realtime upload")
   .option("--form-data", "Use form data instead of JSON body. Default true if file is provided")

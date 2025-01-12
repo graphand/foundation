@@ -146,7 +146,7 @@ export const commandGet = new Command("get")
               // Pour les champs de type ID, fixer la largeur à 24
               return 24;
             } else {
-              const values = list.map(item => String(item.get(path, "json")));
+              const values = list?.map(item => String(item.get(path, "json"))) || [];
               const maxContentWidth = Math.max(...values.map(value => value.length), path.length);
               return maxContentWidth;
             }

@@ -1,15 +1,17 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { checksumDirectory, collectSetter, decodeZip, getClient, waitJob, withSpinner } from "@/lib/utils.js";
+import { checksumDirectory, getClient, withSpinner } from "@/lib/utils.js";
 import path from "path";
 import fs from "fs";
 import { Function, ModelInstance, ModelJSON } from "@graphand/core";
 import { Client } from "@graphand/client";
+import JobHandler from "@/lib/JobHandler.js";
+import Collector from "@/lib/Collector.js";
 
 export const commandDeploy = new Command("deploy")
   .description("Deploy a function")
   .arguments("<functionName> <functionPath>")
-  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", collectSetter)
+  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", Collector.setter)
   .option("-f --force", "Force deployment")
   .action(async (functionName, functionPath, options) => {
     let func: ModelInstance<typeof Function> | null | undefined;
@@ -53,7 +55,7 @@ export const commandDeploy = new Command("deploy")
         }
 
         const formData = new FormData();
-        const zip = await decodeZip(functionPath);
+        const zip = await Collector.decodeZip(functionPath);
         formData.append("file", zip, "function.zip");
 
         if (func) {
@@ -87,9 +89,8 @@ export const commandDeploy = new Command("deploy")
 
     const jobId = func.get("_job", "json") as string;
     await withSpinner(async spinner => {
-      await waitJob({
+      const jobHandler = new JobHandler(jobId, {
         client,
-        jobId,
         onFail: job => {
           const err = String(job._result?.error ?? "Unknown error");
           throw new Error(`Deployment job failed with error: ${chalk.bold(err)}`);
@@ -101,5 +102,7 @@ export const commandDeploy = new Command("deploy")
           messageFail: "",
         },
       });
+
+      await jobHandler.wait();
     });
   });

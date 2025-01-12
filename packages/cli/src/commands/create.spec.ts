@@ -33,7 +33,7 @@ describe("Create Command", () => {
     },
   };
 
-  const spyConsole = vi.spyOn(console, "log").mockImplementation(() => {});
+  const spyConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
   const _fetch = globalThis.fetch;
   const routerSubject = new Subject<Request>();
   const spyFetch = vi.spyOn(globalThis, "fetch").mockImplementation(async _req => {
@@ -53,7 +53,7 @@ describe("Create Command", () => {
   });
 
   beforeEach(() => {
-    spyConsole.mockClear();
+    spyConsoleLog.mockClear();
     spyFetch.mockClear();
 
     // Clear options

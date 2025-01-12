@@ -170,7 +170,7 @@ export const commandGdxPush = new Command("push")
             return;
           }
 
-          const { create } = data[model];
+          const { create } = data[model]!;
 
           if (!create) {
             return;

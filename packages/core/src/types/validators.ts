@@ -1,26 +1,26 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
 
 export type ValidatorOptionsMap = {
-  [ValidatorTypes.REQUIRED]: { field: string };
-  [ValidatorTypes.UNIQUE]: { field: string };
-  [ValidatorTypes.BOUNDARIES]: { field: string; min?: number; max?: number };
-  [ValidatorTypes.LENGTH]: { field: string; min?: number; max?: number };
+  [ValidatorTypes.REQUIRED]: { field: Readonly<string> };
+  [ValidatorTypes.UNIQUE]: { field: Readonly<string> };
+  [ValidatorTypes.BOUNDARIES]: { field: Readonly<string>; min?: Readonly<number>; max?: Readonly<number> };
+  [ValidatorTypes.LENGTH]: { field: Readonly<string>; min?: Readonly<number>; max?: Readonly<number> };
   [ValidatorTypes.REGEX]: {
-    field: string;
-    pattern: string;
-    options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
+    field: Readonly<string>;
+    pattern: Readonly<string>;
+    options?: Readonly<Partial<Array<"i" | "m" | "s" | "u" | "y">>>;
   };
-  [ValidatorTypes.SAMPLE]: { field: string };
-  [ValidatorTypes.KEY_FIELD]: { field: string };
-  [ValidatorTypes.EXISTS]: { field: string };
+  [ValidatorTypes.SAMPLE]: { field: Readonly<string> };
+  [ValidatorTypes.KEY_FIELD]: { field: Readonly<string> };
+  [ValidatorTypes.EXISTS]: { field: Readonly<string> };
 };
 
 export type ValidatorOptionsMapOmitField = {
-  [ValidatorTypes.LENGTH]: { min?: number; max?: number };
-  [ValidatorTypes.BOUNDARIES]: { min?: number; max?: number };
+  [ValidatorTypes.LENGTH]: { min?: Readonly<number>; max?: Readonly<number> };
+  [ValidatorTypes.BOUNDARIES]: { min?: Readonly<number>; max?: Readonly<number> };
   [ValidatorTypes.REGEX]: {
-    pattern: string;
-    options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
+    pattern: Readonly<string>;
+    options?: Readonly<Partial<Array<"i" | "m" | "s" | "u" | "y">>>;
   };
 };
 

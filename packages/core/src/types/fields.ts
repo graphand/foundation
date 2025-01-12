@@ -22,43 +22,43 @@ export type ConditionalFieldsDefinition<Mappings extends Array<string> = Array<s
 
 export type FieldOptionsMap = {
   [FieldTypes.ARRAY]: {
-    items: FieldDefinitions;
-    validators?: Array<ValidatorDefinitionOmitField>;
-    distinct?: boolean;
+    items: Readonly<FieldDefinitions>;
+    validators?: Readonly<Array<ValidatorDefinitionOmitField>>;
+    distinct?: Readonly<boolean>;
   };
   [FieldTypes.TEXT]: {
-    default?: string;
-    enum?: string[];
-    strict?: boolean;
+    default?: Readonly<string>;
+    enum?: Readonly<string[]>;
+    strict?: Readonly<boolean>;
   };
   [FieldTypes.RELATION]: {
-    ref: string;
+    ref: Readonly<string>;
   };
   [FieldTypes.NUMBER]: {
-    default?: number;
+    default?: Readonly<number>;
   };
   [FieldTypes.INTEGER]: {
-    default?: number;
+    default?: Readonly<number>;
   };
   [FieldTypes.OBJECT]: {
-    default?: JSONTypeObject;
-    defaultField?: FieldDefinitions;
-    conditionalFields?: ConditionalFieldsDefinition;
-    fields?: FieldsDefinition;
-    strict?: boolean;
-    validators?: ValidatorsDefinition;
+    default?: Readonly<JSONTypeObject>;
+    defaultField?: Readonly<FieldDefinitions>;
+    conditionalFields?: Readonly<ConditionalFieldsDefinition>;
+    fields?: Readonly<FieldsDefinition>;
+    strict?: Readonly<boolean>;
+    validators?: Readonly<ValidatorsDefinition>;
   };
   [FieldTypes.BOOLEAN]: {
-    default?: boolean;
+    default?: Readonly<boolean>;
   };
   [FieldTypes.ENUM]: {
-    default?: string;
-    enum: string[];
+    default?: Readonly<string>;
+    enum: Readonly<string[]>;
   };
 };
 
 export type FieldOptions<T extends FieldTypes = FieldTypes> = T extends keyof FieldOptionsMap
-  ? FieldOptionsMap[T]
+  ? Readonly<FieldOptionsMap[T]>
   : never;
 
 export type FieldDefinitions = {

@@ -1,13 +1,14 @@
 import qs from "qs";
 import { Command } from "commander";
-import { collectSetter, getClient, withSpinner } from "@/lib/utils.js";
+import { getClient, withSpinner } from "@/lib/utils.js";
 import { JSONQuery, ModelInstance, ModelList } from "@graphand/core";
+import Collector from "@/lib/Collector.js";
 
 export const commandUpdate = new Command("update")
   .description("Update a list of instances")
   .arguments("<modelName> [key]")
   .option("-q --query <query>", "URL encoded JSONQuery object")
-  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", collectSetter)
+  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", Collector.setter)
   .action(async (modelName, key, options) => {
     await withSpinner(async spinner => {
       const client = await getClient({ realtime: true });
