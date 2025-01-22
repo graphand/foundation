@@ -1,5 +1,11 @@
 # @graphand/client-module-auth
 
+## 1.3.6
+
+### Patch Changes
+
+- add autoSetTokens option
+
 ## 1.3.5
 
 ### Patch Changes

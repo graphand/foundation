@@ -167,14 +167,18 @@ describe("ModuleAuth", () => {
 
       // Register
       const resRegister = await client.get("auth").register({ configuration: { email, password } });
-      expect(resRegister).toHaveProperty("_id");
+      expect(resRegister).toHaveProperty("account._id");
+      expect(resRegister).toHaveProperty("accessToken");
+      expect(resRegister).toHaveProperty("refreshToken");
       expect(spySetTokens).toHaveBeenCalledTimes(1);
       expect(client.options.accessToken).not.toEqual("test-access-token");
 
       // Login
       client.setOptions({ accessToken: "test-access-token" });
       const resLogin = await client.get("auth").login({ credentials: { email, password } });
-      expect(resLogin).toHaveProperty("_id");
+      expect(resLogin).toHaveProperty("account._id");
+      expect(resLogin).toHaveProperty("accessToken");
+      expect(resLogin).toHaveProperty("refreshToken");
       expect(spySetTokens).toHaveBeenCalledTimes(2);
       expect(client.options.accessToken).not.toEqual("test-access-token");
 
@@ -232,7 +236,9 @@ describe("ModuleAuth", () => {
 
       const resRegister = await _client.get("auth").register({ configuration: { email, password } });
 
-      expect(resRegister).toHaveProperty("_id");
+      expect(resRegister).toHaveProperty("account._id");
+      expect(resRegister).toHaveProperty("accessToken");
+      expect(resRegister).toHaveProperty("refreshToken");
       expect(spySetTokens).toHaveBeenCalledTimes(1);
       expect(_client.options.accessToken).not.toEqual("test-access-token");
       expect(spySetItem).toHaveBeenCalled();
@@ -479,7 +485,9 @@ describe("ModuleAuth", () => {
 
       const resLogin = await _client.get("auth").login({ credentials: { email, password } });
 
-      expect(resLogin).toHaveProperty("_id");
+      expect(resLogin).toHaveProperty("account._id");
+      expect(resLogin).toHaveProperty("accessToken");
+      expect(resLogin).toHaveProperty("refreshToken");
       expect(handleAccessToken).toHaveBeenCalledWith(_client.options.accessToken);
 
       _client.destroy();
@@ -540,7 +548,9 @@ describe("ModuleAuth", () => {
       };
 
       const result = await _client.get("auth").handleAuthResult(authResult as any, AuthMethods.WINDOW);
-      expect(result).toHaveProperty("_id");
+      expect(result).toHaveProperty("account._id");
+      expect(result).toHaveProperty("accessToken");
+      expect(result).toHaveProperty("refreshToken");
       expect(_client.options.accessToken).toBe("test-access-token");
       _client.destroy();
     });
@@ -586,7 +596,7 @@ describe("ModuleAuth", () => {
         project: null,
       });
 
-      _client.get("auth").setTokens("expired-access-token", "test-refresh-token");
+      _client.get("auth").setTokens({ accessToken: "expired-access-token", refreshToken: "test-refresh-token" });
 
       const spyRefreshToken = vi.spyOn(_client.get("auth"), "refreshToken");
 
@@ -610,7 +620,7 @@ describe("ModuleAuth", () => {
         project: null,
       });
 
-      _client.get("auth").setTokens("expired-access-token", "test-refresh-token");
+      _client.get("auth").setTokens({ accessToken: "expired-access-token", refreshToken: "test-refresh-token" });
 
       const spyRefreshToken = vi.spyOn(_client.get("auth"), "refreshToken");
 
@@ -630,6 +640,61 @@ describe("ModuleAuth", () => {
 
       expect(oldToken).toBe("expired-access-token");
       expect(newToken).not.toBe("expired-access-token");
+      _client.destroy();
+    });
+  });
+
+  describe("autoSetTokens", () => {
+    it("should not automatically set tokens after login when autoSetTokens is false", async () => {
+      const _client = new Client([[ModuleAuth, { autoSetTokens: false }]]);
+      const email = faker.internet.email();
+      const password = faker.internet.password();
+
+      const spySetTokens = vi.spyOn(_client.get("auth"), "setTokens");
+
+      const resLogin = await _client.get("auth").login({ credentials: { email, password } });
+
+      expect(resLogin).toHaveProperty("accessToken");
+      expect(resLogin).toHaveProperty("refreshToken");
+      expect(spySetTokens).not.toHaveBeenCalled();
+      expect(_client.options.accessToken).toBeUndefined();
+
+      _client.destroy();
+    });
+
+    it("should not automatically set tokens after register when autoSetTokens is false", async () => {
+      const _client = new Client([[ModuleAuth, { autoSetTokens: false }]]);
+      const email = faker.internet.email();
+      const password = faker.internet.password();
+
+      const spySetTokens = vi.spyOn(_client.get("auth"), "setTokens");
+
+      const resRegister = await _client.get("auth").register({ configuration: { email, password } });
+
+      expect(resRegister).toHaveProperty("accessToken");
+      expect(resRegister).toHaveProperty("refreshToken");
+      expect(spySetTokens).not.toHaveBeenCalled();
+      expect(_client.options.accessToken).toBeUndefined();
+
+      _client.destroy();
+    });
+
+    it("should allow manual token setting after login when autoSetTokens is false", async () => {
+      const _client = new Client([[ModuleAuth, { autoSetTokens: false }]]);
+      const email = faker.internet.email();
+      const password = faker.internet.password();
+
+      expect(_client.options.accessToken).toBeUndefined();
+
+      const result = await _client
+        .get("auth")
+        .login({ credentials: { email, password } })
+        .then(_client.get("auth").setTokens);
+
+      expect(result).toHaveProperty("accessToken");
+      expect(result).toHaveProperty("refreshToken");
+      expect(_client.options.accessToken).toBe(result?.accessToken);
+
       _client.destroy();
     });
   });

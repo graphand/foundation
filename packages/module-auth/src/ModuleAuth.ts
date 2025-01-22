@@ -7,59 +7,18 @@ import {
   controllerLogin,
   controllerRegister,
   ErrorCodes,
-  ModelJSON,
   LoginData,
   RegisterData,
   controllerRefreshToken,
   controllerCodeAuth,
   InferControllerInput,
 } from "@graphand/core";
-import { AuthCallbackHandler, AuthStorage } from "./types.js";
-
-class MemoryStorage implements AuthStorage {
-  private store: Record<string, string> = {};
-
-  setItem(key: string, value: string) {
-    this.store[key] = value;
-  }
-
-  getItem(key: string) {
-    return this.store[key] || null;
-  }
-
-  removeItem(key: string) {
-    delete this.store[key];
-  }
-}
-
-type ModuleAuthOptions = {
-  autoRefreshToken?: boolean;
-  storage?: AuthStorage;
-  storagePrefix?: string;
-  getRedirectUrl?: () => string | URL | Promise<string | URL>;
-  handleCallback?: AuthCallbackHandler; // { window: ..., redirect: ..., code: ... }
-  handleAccessToken?: (_accessToken: string | undefined) => void;
-  handleRedirectUrl?: {
-    url: string | URL | Promise<string | URL>;
-    onSuccess?: (_url: URL) => void;
-    onError?: (_error: Error) => void;
-  };
-};
-
-type AuthResult =
-  | {
-      action: "login" | "register";
-      account: ModelJSON<typeof Account>;
-      accessToken: string;
-      refreshToken: string;
-    }
-  | {
-      url: string;
-    };
+import { ModuleAuthOptions, AuthResult, ParsedAuthResult } from "./types.js";
+import MemoryStorage from "./MemoryStorage.js";
 
 class ModuleAuth extends Module<ModuleAuthOptions> {
   static moduleName = "auth" as const;
-  defaults = { storage: new MemoryStorage(), autoRefreshToken: true };
+  defaults = { storage: new MemoryStorage(), autoRefreshToken: true, autoSetTokens: true };
 
   get storage() {
     return this.conf.storage;
@@ -122,21 +81,28 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     return `${prefix}:${key}`;
   }
 
-  async setTokens(accessToken: string, refreshToken: string) {
+  setTokens = async <T extends undefined | { accessToken: string; refreshToken: string }>(input?: T) => {
+    if (!input) return;
+
+    const { accessToken, refreshToken } = input;
     this.#setClientToken(accessToken);
 
     if (this.storage) {
-      await this.storage.setItem(this.getStorageKey("accessToken"), accessToken);
-      await this.storage.setItem(this.getStorageKey("refreshToken"), refreshToken);
+      await Promise.all([
+        this.storage.setItem(this.getStorageKey("accessToken"), accessToken),
+        this.storage.setItem(this.getStorageKey("refreshToken"), refreshToken),
+      ]);
     }
-  }
+
+    return input;
+  };
 
   async login<P extends AuthProviders = AuthProviders.LOCAL, M extends AuthMethods = AuthMethods.WINDOW>(
     providerOrData: LoginData<P, M> | P,
     methodOrData?: Omit<LoginData<P, M>, "provider"> | M,
     _data?: Omit<LoginData<P, M>, "provider" | "method">,
     _query?: Record<string, string>,
-  ) {
+  ): Promise<ParsedAuthResult | undefined> {
     let data: LoginData<P, M>;
 
     if (_data && typeof _data === "object") {
@@ -183,7 +149,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     methodOrData?: Omit<RegisterData<P, M>, "provider"> | M,
     _data?: Omit<RegisterData<P, M>, "provider" | "method">,
     query?: NonNullable<InferControllerInput<typeof controllerRegister>>["query"],
-  ) {
+  ): Promise<ParsedAuthResult | undefined> {
     let data: RegisterData<P, M>;
 
     if (_data && typeof _data === "object") {
@@ -246,12 +212,16 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
 
     const json = await res.json();
 
-    await this.setTokens(json.data.accessToken, json.data.refreshToken);
+    await this.setTokens({ accessToken: json.data.accessToken, refreshToken: json.data.refreshToken });
 
     return json.data;
   }
 
-  async handleAuthResult<M extends AuthMethods>(result: AuthResult, method: M, options?: AuthMethodOptions<M>) {
+  async handleAuthResult<M extends AuthMethods>(
+    result: AuthResult,
+    method: M,
+    options?: AuthMethodOptions<M>,
+  ): Promise<ParsedAuthResult | undefined> {
     if ("url" in result) {
       if (!this.conf.handleCallback) {
         throw new Error(`handleCallback option must be defined to handle the callback url for method ${method}`);
@@ -270,11 +240,15 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
 
     const { accessToken, refreshToken, account } = result;
 
-    const instance = this.client().getModel(Account).hydrateAndCache(account);
+    if (this.conf.autoSetTokens) {
+      await this.setTokens({ accessToken, refreshToken });
+    }
 
-    await this.setTokens(accessToken, refreshToken);
-
-    return instance;
+    return {
+      account: this.client().getModel(Account).hydrateAndCache(account),
+      accessToken,
+      refreshToken,
+    };
   }
 
   async handleRedirectUrl(url: string | URL): Promise<URL> {
@@ -287,7 +261,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
 
     const { accessToken, refreshToken } = JSON.parse(authResult);
 
-    await this.setTokens(accessToken, refreshToken);
+    await this.setTokens({ accessToken, refreshToken });
 
     url.searchParams.delete("authResult");
 
