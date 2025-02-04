@@ -67,5 +67,5 @@ export class Connector extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "function" } },
       { type: ValidatorTypes.REQUIRED, options: { field: "source" } },
     ],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

@@ -268,7 +268,7 @@ describe("Global tests", () => {
             },
           },
         },
-      } satisfies ModelDefinition;
+      } as const satisfies ModelDefinition;
     }.extend({ adapterClass: adapter });
 
     await expect(
@@ -340,7 +340,7 @@ describe("Global tests", () => {
             },
           },
         },
-      } satisfies ModelDefinition;
+      } as const satisfies ModelDefinition;
     }.extend({ adapterClass: adapter });
 
     await expect(
@@ -434,7 +434,7 @@ describe("Global tests", () => {
             },
           },
         },
-      } satisfies ModelDefinition;
+      } as const satisfies ModelDefinition;
     }.extend({ adapterClass: adapter });
 
     await expect(
@@ -623,7 +623,7 @@ describe("Global tests", () => {
             },
           },
         },
-      } satisfies ModelDefinition;
+      } as const satisfies ModelDefinition;
     }.extend({ adapterClass: adapter });
 
     await expect(
@@ -1049,7 +1049,7 @@ describe("Global tests", () => {
             },
           },
         },
-      } satisfies ModelDefinition;
+      } as const satisfies ModelDefinition;
     }.extend({ adapterClass: adapter });
 
     const i = CustomModel.hydrate({

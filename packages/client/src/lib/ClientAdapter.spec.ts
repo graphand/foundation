@@ -993,7 +993,7 @@ describe("ClientAdapter", () => {
             type: FieldTypes.TEXT,
           },
         },
-      } satisfies ModelDefinition;
+      } as const satisfies ModelDefinition;
     }
 
     @modelDecorator()
@@ -1012,7 +1012,7 @@ describe("ClientAdapter", () => {
             _tsModel: undefined as unknown as typeof OtherRelatedModel,
           },
         },
-      } satisfies ModelDefinition;
+      } as const satisfies ModelDefinition;
     }
 
     @modelDecorator()
@@ -1116,7 +1116,7 @@ describe("ClientAdapter", () => {
             },
           },
         },
-      } satisfies ModelDefinition;
+      } as const satisfies ModelDefinition;
     }
 
     let modelRelated: typeof RelatedModel;

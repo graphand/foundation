@@ -42,8 +42,11 @@ export const commandDeploy = new Command("deploy")
 
         payload ??= {};
 
-        payload.name = functionName;
-        payload.exposed ??= true;
+        Object.assign(payload, {
+          name: payload.name ?? functionName,
+          exposed: payload.exposed ?? true,
+          runtime: payload.runtime ?? "deno",
+        });
 
         const checksum = await checksumDirectory(functionPath);
 

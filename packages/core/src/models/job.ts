@@ -43,5 +43,5 @@ export class Job extends Model {
         type: FieldTypes.OBJECT,
       },
     },
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

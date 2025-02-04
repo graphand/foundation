@@ -20,7 +20,7 @@ import {
   ErrorCodes,
   IdentityTypes,
   InferControllerInput,
-  JSONTypeObject,
+  JSONObject,
   Model,
   ModelInstance,
   TransactionCtx,
@@ -181,7 +181,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return `${scheme}://${project}.${endpoint}`;
   }
 
-  buildUrl(controller: Controller, opts: { params?: Record<string, string>; query?: JSONTypeObject }) {
+  buildUrl(controller: Controller, opts: { params?: Record<string, string>; query?: JSONObject }) {
     let path: string = controller.path;
 
     if (opts.params) {

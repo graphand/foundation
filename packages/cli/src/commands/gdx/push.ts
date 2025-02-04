@@ -1,10 +1,10 @@
 import chalk from "chalk";
 import { getClient, loadGdx, withSpinner } from "@/lib/utils.js";
-import { controllerGdxPush, JSONTypeObject, ModelJSON } from "@graphand/core";
+import { controllerGdxPush, JSONObject, ModelJSON } from "@graphand/core";
 import { Command } from "commander";
 import { confirm } from "@inquirer/prompts";
 
-type GDXData = Record<string, { create: JSONTypeObject; update: JSONTypeObject; delete: JSONTypeObject }>;
+type GDXData = Record<string, { create: JSONObject; update: JSONObject; delete: JSONObject }>;
 
 type GdxPushOptions = {
   clean: boolean;
@@ -12,12 +12,14 @@ type GdxPushOptions = {
   skipRealtimeUpload: boolean;
   ignoreProjectData: boolean;
   verbose: boolean;
+  models: string;
 };
 
 export const commandGdxPush = new Command("push")
   .description("gdx push")
   .option("--clean", "Clean")
   .option("--force", "Force")
+  .option("-m --models <models>", "List of models to push separated by comma")
   .option("--skip-realtime-upload", "Skip realtime upload")
   .option("--ignore-project-data", "Ignore project data. All data on project-scope models will be ignored")
   .option("-v --verbose", "Verbose")
@@ -54,7 +56,7 @@ export const commandGdxPush = new Command("push")
     };
 
     const _push = async (
-      input: { json: JSONTypeObject; file?: Record<string, Promise<File>> },
+      input: { json: JSONObject; file?: Record<string, Promise<File>> },
       confirmChecksum?: string,
     ) => {
       let uploadId: string | undefined;
@@ -117,7 +119,8 @@ export const commandGdxPush = new Command("push")
       return resJSON.data as GDXData;
     };
 
-    const { json, file } = await loadGdx({ ignoreProjectData: options.ignoreProjectData, client });
+    const models = options.models ? options.models.split(",").filter(Boolean) : undefined;
+    const { json, file } = await loadGdx({ ignoreProjectData: options.ignoreProjectData, client, models });
 
     await withSpinner(async () => {
       data = await _push({ json, file });

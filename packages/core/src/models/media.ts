@@ -19,5 +19,5 @@ export class Media extends Model {
       _originalname: { type: FieldTypes.TEXT },
       _size: { type: FieldTypes.INTEGER },
     },
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

@@ -26,5 +26,5 @@ export class Invitation extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "account" } },
       { type: ValidatorTypes.REGEX, options: { field: "email", pattern: Patterns.EMAIL } },
     ],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

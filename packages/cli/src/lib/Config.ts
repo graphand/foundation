@@ -5,7 +5,7 @@ import { build } from "esbuild";
 import { pathToFileURL } from "url";
 import { UserConfig } from "@/types.js";
 import { loadPackageJson } from "./utils.js";
-import { JSONTypeObject } from "@graphand/core";
+import { JSONObject } from "@graphand/core";
 
 export class Config {
   #config: UserConfig | undefined;
@@ -33,7 +33,7 @@ export class Config {
     }
 
     const packageJsonObject = loadPackageJson();
-    const graphand = packageJsonObject?.graphand as JSONTypeObject;
+    const graphand = packageJsonObject?.graphand as JSONObject;
     if (graphand?.config) {
       return path.resolve(graphand.config as string);
     }

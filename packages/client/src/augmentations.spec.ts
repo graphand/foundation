@@ -1406,7 +1406,7 @@ describe("augmentations", () => {
               _tsModel: undefined as unknown as typeof TestModel,
             },
           },
-        } satisfies ModelDefinition;
+        } as const satisfies ModelDefinition;
       }
 
       const instance = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value" });
@@ -1442,7 +1442,7 @@ describe("augmentations", () => {
               },
             },
           },
-        } satisfies ModelDefinition;
+        } as const satisfies ModelDefinition;
       }
 
       const instance1 = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value1" });

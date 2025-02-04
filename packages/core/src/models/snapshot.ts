@@ -21,5 +21,5 @@ export class Snapshot extends Model {
         },
       },
     },
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

@@ -36,5 +36,5 @@ export class TokenIssuer extends Model {
       { type: ValidatorTypes.BOUNDARIES, options: { field: "lifetime", min: 0 } },
       { type: ValidatorTypes.BOUNDARIES, options: { field: "maxGen", min: 0 } },
     ],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

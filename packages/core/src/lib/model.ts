@@ -14,7 +14,7 @@ import {
   UpdateObject,
   Models,
   InferModelDef,
-  JSONTypeObject,
+  JSONObject,
   SerializerFormat,
   TransactionCtx,
   SerializerCtx,
@@ -569,7 +569,7 @@ export class Model {
     fieldsKeys?: Array<string>,
   ) {
     const keys = fieldsKeys ?? this.model().fieldsKeys;
-    const res: JSONTypeObject = {};
+    const res: JSONObject = {};
 
     keys.forEach(slug => {
       const v = this.get(slug, format, bindCtx);
@@ -578,7 +578,7 @@ export class Model {
       }
     });
 
-    return res as T extends ModelInstance<infer M> ? InferModelDef<M, S> : JSONTypeObject;
+    return res as T extends ModelInstance<infer M> ? InferModelDef<M, S> : JSONObject;
   }
 
   /**

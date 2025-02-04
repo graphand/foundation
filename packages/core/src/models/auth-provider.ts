@@ -104,5 +104,5 @@ export class AuthProvider extends Model {
         },
       },
     },
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

@@ -1,7 +1,7 @@
 import fs from "fs";
 import qs from "qs";
 import { colorizeJson, getClient, getGdxPath, withSpinner } from "@/lib/utils.js";
-import { controllerGdxPull, JSONQuery, JSONTypeObject } from "@graphand/core";
+import { controllerGdxPull, JSONQuery, JSONObject } from "@graphand/core";
 import { Command } from "commander";
 
 export const commandGdxPull = new Command("pull")
@@ -14,7 +14,7 @@ export const commandGdxPull = new Command("pull")
     await withSpinner(async () => {
       const client = await getClient();
 
-      let query = qs.parse(options.query || "") as JSONTypeObject;
+      let query = qs.parse(options.query || "") as JSONObject;
 
       if (options.models) {
         const models = String(options.models).split(",");

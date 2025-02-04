@@ -33,5 +33,5 @@ export class Event extends Model {
         options: { field: "severity", min: 0, max: 7 },
       },
     ],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

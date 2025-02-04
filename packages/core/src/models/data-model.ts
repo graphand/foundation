@@ -2,7 +2,7 @@ import { Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { ModelDefinition } from "@/types/index.js";
+import { FieldDefinition, ModelDefinition } from "@/types/index.js";
 import { Function } from "./function.js";
 
 const functionRelationField = {
@@ -35,7 +35,7 @@ const functionRelationField = {
       },
     },
   },
-} as const;
+} as const satisfies FieldDefinition;
 
 @modelDecorator()
 export class DataModel extends Model {
@@ -228,7 +228,7 @@ export class DataModel extends Model {
         },
       },
       _doc: { type: FieldTypes.OBJECT },
-    } as const,
+    },
     validators: [{ type: ValidatorTypes.DATAMODEL_SLUG }, { type: ValidatorTypes.DATAMODEL_DEFINITION }],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

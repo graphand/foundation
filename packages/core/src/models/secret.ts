@@ -15,5 +15,5 @@ export class Secret extends Model {
       value: { type: FieldTypes.TEXT },
     },
     validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "value" } }],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

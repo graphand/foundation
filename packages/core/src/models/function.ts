@@ -40,7 +40,7 @@ export class Function extends Model {
       runtime: {
         type: FieldTypes.ENUM,
         options: {
-          enum: ["deno"] as const,
+          enum: ["deno"],
         },
       },
       _job: {
@@ -58,5 +58,5 @@ export class Function extends Model {
         options: { field: "name" },
       },
     ],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

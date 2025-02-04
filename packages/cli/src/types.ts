@@ -1,6 +1,7 @@
 import { Client, ClientOptions } from "@graphand/client";
 import { Ora } from "ora";
 import { Config } from "./lib/Config.js";
+import { GDXDatamodels, GDXType, JSONPrimitive } from "@graphand/core";
 
 declare global {
   export var client: Client | undefined;
@@ -15,3 +16,9 @@ export type UserConfig = {
     path: string;
   };
 };
+
+export type GDXCli<D extends GDXDatamodels = GDXDatamodels> = {
+  "$cli.set"?: Record<string, JSONPrimitive>;
+  "$cli.file"?: Record<string, string>;
+  "$cli.function"?: Record<string, string>;
+} & GDXType<D>;

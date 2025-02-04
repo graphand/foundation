@@ -71,5 +71,5 @@ export class EventSubscription extends Model {
       },
     },
     validators: [{ type: ValidatorTypes.BOUNDARIES, options: { field: "channels", min: 1 } }],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

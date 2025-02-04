@@ -17,7 +17,7 @@ export const commandLogin = new Command("login")
 
     if (setAccessToken) {
       const refreshToken = await client.get("auth").storage?.getItem("refreshToken");
-      client.get("auth").setTokens(String(setAccessToken), String(refreshToken));
+      client.get("auth").setTokens({ accessToken: String(setAccessToken), refreshToken: String(refreshToken) });
       return;
     }
 
@@ -31,7 +31,7 @@ export const commandLogin = new Command("login")
         throw new Error("Access & refresh tokens are required");
       }
 
-      client.get("auth").setTokens(String(accessToken), String(refreshToken));
+      client.get("auth").setTokens({ accessToken: String(accessToken), refreshToken: String(refreshToken) });
       console.log(chalk.green("Tokens set successfully"));
       return;
     }
@@ -57,7 +57,7 @@ export const commandLogin = new Command("login")
         const res = await client.get("auth").login({ credentials, provider, method });
 
         if (res) {
-          spinner.succeed(`Login successful for ${res._email}`);
+          spinner.succeed(`Login successful for ${res.account._email}`);
           isLogged = true;
         } else {
           spinner.succeed("Logging in...");
@@ -83,7 +83,7 @@ export const commandLogin = new Command("login")
           throw new Error("Login failed with empty response");
         }
 
-        spinner.succeed(`Login successful for ${res._email}`);
+        spinner.succeed(`Login successful for ${res.account._email}`);
       } catch (e) {
         spinner.fail(`Login failed: ${(e as Error).message}`);
       }

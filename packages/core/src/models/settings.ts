@@ -17,5 +17,5 @@ export class Settings extends Model {
         options: { default: {}, fields: {}, conditionalFields: { dependsOn: "$.key", mappings: {} } },
       },
     },
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

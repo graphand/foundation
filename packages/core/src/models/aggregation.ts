@@ -30,5 +30,5 @@ export class Aggregation extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "source" } },
       { type: ValidatorTypes.REQUIRED, options: { field: "pipeline" } },
     ],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

@@ -17,12 +17,13 @@ import type { Connector } from "@/models/connector.js";
 import type { DataModel } from "@/models/data-model.js";
 import type { Role } from "@/models/role.js";
 import type { PromiseModelList } from "@/lib/promise-model-list.js";
-import { ModelInstance } from "@/index.js";
+import type { ModelInstance } from "./models.js";
 export * from "./helpers.js";
 export * from "./fields.js";
 export * from "./validators.js";
 export * from "./ctx.js";
 export * from "./models.js";
+export * from "./gdx.js";
 
 export type Rule = NonNullable<ModelInstance<typeof Role>["rules"]>[number];
 export type FieldsRestriction = NonNullable<ModelInstance<typeof Role>["fieldsRestrictions"]>[number];
@@ -30,13 +31,10 @@ export type SerializerFormat = keyof SerializerFieldsMap<FieldDefinition> | "dat
 export type FieldsDefinition = Record<string, FieldDefinition>;
 export type ValidatorsDefinition = Array<ValidatorDefinition>;
 
-export type JSONSubtype = null | string | number | Date | boolean | JSONSubtypeArray | { [key: string]: JSONSubtype };
-
-export type JSONSubtypeArray = Array<JSONSubtype>;
-
-export type JSONTypeObject = Record<string, JSONSubtype>;
-
-export type JSONType = JSONTypeObject | JSONSubtypeArray;
+export type JSONPrimitive = null | string | number | Date | boolean | JSONArray | { [key: string]: JSONPrimitive };
+export type JSONArray = Array<JSONPrimitive>;
+export type JSONObject = Record<string, JSONPrimitive>;
+export type JSONType = JSONObject | JSONArray;
 
 export type Transaction<
   M extends typeof Model = typeof Model,
@@ -78,9 +76,9 @@ export type Sort =
   | [string, SortDirection][]
   | [string, SortDirection];
 
-export type Update = JSONTypeObject;
+export type Update = JSONObject;
 
-export type Filter = string | JSONTypeObject;
+export type Filter = string | JSONObject;
 
 export type PopulateOption = {
   path: string;
@@ -107,21 +105,21 @@ export type JSONQuery = Partial<{
 }>;
 
 export type UpdateObject = {
-  $currentDate?: JSONTypeObject;
-  $inc?: JSONTypeObject;
-  $min?: JSONTypeObject;
-  $max?: JSONTypeObject;
-  $mul?: JSONTypeObject;
-  $rename?: JSONTypeObject;
-  $set?: JSONTypeObject;
-  $setOnInsert?: JSONTypeObject;
-  $unset?: JSONTypeObject;
-  $addToSet?: JSONTypeObject;
-  $pop?: JSONTypeObject;
-  $pull?: JSONTypeObject;
-  $push?: JSONTypeObject;
-  $pullAll?: JSONTypeObject;
-  $bit?: JSONTypeObject;
+  $currentDate?: JSONObject;
+  $inc?: JSONObject;
+  $min?: JSONObject;
+  $max?: JSONObject;
+  $mul?: JSONObject;
+  $rename?: JSONObject;
+  $set?: JSONObject;
+  $setOnInsert?: JSONObject;
+  $unset?: JSONObject;
+  $addToSet?: JSONObject;
+  $pop?: JSONObject;
+  $pull?: JSONObject;
+  $push?: JSONObject;
+  $pullAll?: JSONObject;
+  $bit?: JSONObject;
 };
 
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
@@ -209,7 +207,7 @@ export type HookData<
   args: Jsonified<HookCallbackArgs<P, A, T>["args"]>;
   err: Jsonified<HookCallbackArgs<P, A, T>["err"]>;
   res?: P extends "before" ? undefined : Jsonified<HookCallbackArgs<"after", A, T>["res"]>;
-  ctx: JSONTypeObject;
+  ctx: JSONObject;
 };
 
 export type ValidatorHook<
@@ -237,8 +235,8 @@ export type ValidationValidatorErrorDefinition = {
 };
 
 export type ControllerInput = {
-  params?: JSONTypeObject;
-  query?: JSONTypeObject;
+  params?: JSONObject;
+  query?: JSONObject;
   data?: unknown;
 };
 
@@ -292,7 +290,7 @@ export type FieldsPathItem = { key: string; field: Field };
 
 export type MergeRequestOptionsMap = {
   [MergeRequestTypes.STATIC]: {
-    gdx: JSONTypeObject;
+    gdx: JSONObject;
   };
   [MergeRequestTypes.QUERY]: {
     source: string;
@@ -308,7 +306,7 @@ export type MergeRequestActionDataMap = {
     comment: string;
   };
   [MergeRequestActionTypes.PATCH]: {
-    apply: JSONTypeObject;
+    apply: JSONObject;
     comment?: string;
   };
   [MergeRequestActionTypes.APPROVE]: {

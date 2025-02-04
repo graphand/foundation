@@ -1,6 +1,7 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
+    "strict": true,
     "baseUrl": ".",
     "outDir": "dist",
     "paths": {

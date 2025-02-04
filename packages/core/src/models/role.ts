@@ -114,7 +114,7 @@ export class Role extends Model {
         options: { field: "slug", pattern: Patterns.SLUG },
       },
     ],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 
   async getRulesInherited(): Promise<Array<Rule>> {
     const i = this as ModelInstance<typeof Role>;

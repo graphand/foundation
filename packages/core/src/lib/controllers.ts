@@ -2,7 +2,7 @@ import {
   ConfigureData,
   Controller,
   JSONQuery,
-  JSONTypeObject,
+  JSONObject,
   LoginData,
   MediaTransformOptions,
   ModelJSON,
@@ -42,7 +42,7 @@ export const controllerModelRead: Controller<{ params: { model: string; id?: str
 export const controllerModelUpdate: Controller<{
   params: { model: string; id?: string };
   query?: JSONQuery;
-  data: { update: JSONTypeObject } & JSONQuery;
+  data: { update: JSONObject } & JSONQuery;
 }> = {
   path: "/:model/:id?",
   methods: ["patch"],
@@ -98,7 +98,7 @@ export const controllerGdxPush: Controller<{
     ignoreHooks?: boolean;
     confirmChecksum?: string;
   };
-  data: JSONTypeObject;
+  data: JSONObject;
 }> = {
   path: "/gdx/push",
   methods: ["post"],
@@ -295,7 +295,7 @@ export const controllerFunctionRun: Controller<{
 
 export const controllerAggregationRun: Controller<{
   params: { id: string };
-  data?: { let: JSONTypeObject };
+  data?: { let: JSONObject };
 }> = {
   path: "/aggregations/:id/run",
   methods: ["post"],

@@ -4,7 +4,7 @@ import { Model } from "@/lib/model.js";
 import { PromiseModel } from "@/lib/promise-model.js";
 import { PromiseModelList } from "@/lib/promise-model-list.js";
 import {
-  JSONTypeObject,
+  JSONObject,
   ModelInstance,
   SerializerCtx,
   SerializerFormat,
@@ -41,7 +41,7 @@ export type FieldOptionsMap = {
     default?: Readonly<number>;
   };
   [FieldTypes.OBJECT]: {
-    default?: Readonly<JSONTypeObject>;
+    default?: Readonly<JSONObject>;
     defaultField?: Readonly<FieldDefinitions>;
     conditionalFields?: Readonly<ConditionalFieldsDefinition>;
     fields?: Readonly<FieldsDefinition>;
@@ -112,8 +112,8 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
                 [x: string]: InferFieldType<F["options"]["defaultField"], "json">;
               }
             : {}) &
-          (F["options"]["strict"] extends true ? {} : JSONTypeObject)
-      : JSONTypeObject;
+          (F["options"]["strict"] extends true ? {} : JSONObject)
+      : JSONObject;
     [FieldTypes.RELATION]: string;
     [FieldTypes.ARRAY]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
       ? Array<InferFieldType<F["options"]["items"], "json">>
@@ -145,8 +145,8 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
                 [x: string]: InferFieldType<F["options"]["defaultField"], "object">;
               }
             : {}) &
-          (F["options"]["strict"] extends true ? {} : JSONTypeObject)
-      : JSONTypeObject;
+          (F["options"]["strict"] extends true ? {} : JSONObject)
+      : JSONObject;
     [FieldTypes.RELATION]: F["options"] extends FieldOptionsMap[FieldTypes.RELATION]
       ? F["options"]["ref"] extends string
         ? PromiseModel<F["_tsModel"] extends typeof Model ? F["_tsModel"] : DecodeRefModel<F["options"]["ref"]>>
@@ -163,7 +163,6 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
   validation: {};
 }
 
-// type EnumLiteralType<T> = T extends { [k: string]: infer U } ? U : never;
 type StringToFieldType<T extends string> = T extends `${infer U extends FieldTypes}` ? U : never;
 
 export type InferFieldType<D extends FieldDefinition, F extends SerializerFormat> = "_ts" extends keyof D
@@ -182,15 +181,11 @@ export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "
   definition: { fields: infer R };
 }
   ? R extends ModelDefinition["fields"]
-    ? Partial<{
-        [F in keyof R]: R[F] extends FieldDefinition<FieldTypes> ? InferFieldType<R[F], S> : never;
-      }> &
-        unknown
-    : unknown
-  : unknown) &
-  Partial<{
-    [F in keyof SystemFields<M>]: InferFieldType<SystemFields<M>[F], S>;
-  }>;
+    ? { [F in keyof R]?: R[F] extends FieldDefinition<FieldTypes> ? InferFieldType<R[F], S> : never }
+    : never
+  : unknown) & {
+  [F in keyof SystemFields<M>]?: Readonly<InferFieldType<SystemFields<M>[F], S>>;
+};
 
 export type ModelObject<M extends typeof Model = typeof Model> = InferModelDef<M, "object">;
 

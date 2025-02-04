@@ -1,5 +1,5 @@
 import { FieldTypes } from "@/enums/field-types.js";
-import { FieldSerializerInput, JSONTypeObject, ModelData, ModelInstance } from "@/types/index.js";
+import { FieldSerializerInput, JSONObject, ModelData, ModelInstance } from "@/types/index.js";
 import { Field } from "@/lib/field.js";
 import { getFieldFromDefinition, getNestedFieldsMap, getValidationValues } from "@/lib/utils.js";
 
@@ -56,7 +56,7 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
     const defaults = ctx?.defaults ?? true;
     const conditionalKeys = this._getConditionalKeys(from, input.nextData);
 
-    const json: JSONTypeObject = {};
+    const json: JSONObject = {};
 
     for (const [k, field] of fieldsMap) {
       if (conditionalKeys && !conditionalKeys.includes(k)) {

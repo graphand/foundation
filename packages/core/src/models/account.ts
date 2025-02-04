@@ -30,5 +30,5 @@ export class Account extends Model {
       { type: ValidatorTypes.UNIQUE, options: { field: "_email" } },
       { type: ValidatorTypes.REGEX, options: { field: "_email", pattern: Patterns.EMAIL } },
     ],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

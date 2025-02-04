@@ -13,7 +13,7 @@ class CustomModel extends Model {
         type: FieldTypes.TEXT,
       },
     },
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }
 
 class CustomAccount extends Model {
@@ -29,7 +29,7 @@ class CustomAccount extends Model {
         type: "text",
       },
     },
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }
 
 declare module "./types/index.js" {
@@ -59,7 +59,7 @@ describe("test types", () => {
               type: "text",
             },
           },
-        } satisfies ModelDefinition;
+        } as const satisfies ModelDefinition;
       }
 
       const i = CustomModel.hydrate();
@@ -83,7 +83,7 @@ describe("test types", () => {
                   type: FieldTypes.TEXT,
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -103,7 +103,7 @@ describe("test types", () => {
                   },
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -123,7 +123,7 @@ describe("test types", () => {
                   },
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -148,7 +148,7 @@ describe("test types", () => {
                   },
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -173,7 +173,7 @@ describe("test types", () => {
                   },
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -193,7 +193,7 @@ describe("test types", () => {
                   },
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -215,7 +215,7 @@ describe("test types", () => {
                   },
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -233,7 +233,7 @@ describe("test types", () => {
                   type: FieldTypes.DATE,
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -251,7 +251,7 @@ describe("test types", () => {
                   type: FieldTypes.INTEGER,
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -277,7 +277,7 @@ describe("test types", () => {
                   },
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -302,7 +302,7 @@ describe("test types", () => {
                   type: FieldTypes.DATE,
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -328,7 +328,7 @@ describe("test types", () => {
                   },
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -353,7 +353,7 @@ describe("test types", () => {
                   },
                 },
               },
-            } satisfies ModelDefinition;
+            } as const satisfies ModelDefinition;
           }
 
           const i = CustomModel.hydrate();
@@ -488,7 +488,7 @@ describe("test types", () => {
             type: FieldTypes.NUMBER,
           },
         },
-      } satisfies ModelDefinition;
+      } as const satisfies ModelDefinition;
     }
 
     class CustomModel extends Model {
@@ -508,7 +508,7 @@ describe("test types", () => {
             },
           },
         },
-      } satisfies ModelDefinition;
+      } as const satisfies ModelDefinition;
     }
 
     const i = CustomModel.hydrate();

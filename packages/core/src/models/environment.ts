@@ -42,5 +42,5 @@ export class Environment extends Model {
         options: { field: "name", pattern: "^(?!master$|main$).*$" },
       },
     ],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }

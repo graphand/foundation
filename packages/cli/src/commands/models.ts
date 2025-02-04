@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { colorizeJson, getClient, getTable } from "@/lib/utils.js";
-import { DataModel, JSONTypeObject, Adapter } from "@graphand/core";
+import { DataModel, JSONObject, Adapter } from "@graphand/core";
 
 export const commandModels = new Command("models")
   .description("Get a model description")
@@ -35,5 +35,5 @@ export const commandModels = new Command("models")
 
     await model.initialize();
 
-    console.log(colorizeJson(model.definition as JSONTypeObject));
+    console.log(colorizeJson(model.definition as JSONObject));
   });

@@ -1,4 +1,4 @@
-import { JSONSubtypeArray, JSONTypeObject } from "@graphand/core";
+import { JSONArray, JSONObject } from "@graphand/core";
 import qs from "qs";
 import { isIntegerOrIntString, mergeDeep, replaceAllStrings } from "./utils.js";
 import fs from "fs";
@@ -62,21 +62,21 @@ class Collector {
     });
   };
 
-  static setter = (value: string, previous?: JSONTypeObject | JSONSubtypeArray): JSONTypeObject | JSONSubtypeArray => {
+  static setter = (value: string, previous?: JSONObject | JSONArray): JSONObject | JSONArray => {
     previous ??= {};
 
     if (Array.isArray(previous)) {
       previous = previous.reduce((acc, item, index) => {
-        Object.assign(acc as JSONTypeObject, { [index]: item });
+        Object.assign(acc as JSONObject, { [index]: item });
         return acc;
-      }, {}) as JSONTypeObject;
+      }, {}) as JSONObject;
     }
 
     const obj = qs.parse(value);
 
     mergeDeep(previous as any, obj);
 
-    let result: JSONTypeObject | JSONSubtypeArray = previous;
+    let result: JSONObject | JSONArray = previous;
 
     const keys = Object.keys(previous || {});
     if (keys.length && keys.every(isIntegerOrIntString)) {
@@ -84,7 +84,7 @@ class Collector {
       for (const key of keys) {
         set[parseInt(key)] = previous[key as keyof typeof previous];
       }
-      result = set as JSONSubtypeArray;
+      result = set as JSONArray;
     }
 
     const _processValue = (value: string) => {

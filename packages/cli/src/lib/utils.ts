@@ -10,7 +10,7 @@ import open from "open";
 import ModuleCli from "./ModuleCli.js";
 import ora, { Ora } from "ora";
 import Table from "cli-table3";
-import { AuthMethods, Function, isObjectId, JSONType, JSONTypeObject, ModelJSON } from "@graphand/core";
+import { AuthMethods, Function, isObjectId, JSONType, JSONObject, ModelJSON } from "@graphand/core";
 import LogProcessor from "./LogProcessor.js";
 import crypto from "crypto";
 import { pathToFileURL } from "url";
@@ -40,7 +40,7 @@ export const getGdxPath = async (): Promise<string | null> => {
   return null;
 };
 
-export const loadPackageJson = (): JSONTypeObject | null => {
+export const loadPackageJson = (): JSONObject | null => {
   const packageJsonPath = path.join(process.cwd(), "package.json");
   if (!fs.existsSync(packageJsonPath)) {
     return null;
@@ -54,14 +54,15 @@ export const loadGdx = async (
   opts: {
     ignoreProjectData?: boolean;
     client?: Client;
+    models?: string[];
   } = {},
-): Promise<{ json: JSONTypeObject; file: Record<string, Promise<File>> | undefined }> => {
+): Promise<{ json: JSONObject; file: Record<string, Promise<File>> | undefined }> => {
   const configPath = await getGdxPath();
   if (!configPath) {
     throw new Error("No gdx file found");
   }
 
-  let json: JSONTypeObject | undefined;
+  let json: JSONObject | undefined;
   let file: Record<string, Promise<File>> | undefined;
 
   if (path.extname(configPath) === ".json") {
@@ -89,7 +90,7 @@ export const loadGdx = async (
       const importedConfig = await import(pathToFileURL(tempFilePath).href);
 
       if (importedConfig.default) {
-        json = importedConfig.default as JSONTypeObject;
+        json = importedConfig.default as JSONObject;
       }
     } finally {
       // Ensure temp file is deleted even if an error occurs
@@ -98,14 +99,14 @@ export const loadGdx = async (
   }
 
   if (json && "$cli.set" in json && Object.keys(json["$cli.set"] as object).length) {
-    const set = json["$cli.set"] as JSONTypeObject;
+    const set = json["$cli.set"] as JSONObject;
     const assign = Object.entries(set).reduce((acc, [key, value]) => Collector.setter(`${key}=${value}`, acc), {});
 
     mergeDeep(json, assign);
   }
 
   if (json && "$cli.file" in json && Object.keys(json["$cli.file"] as object).length) {
-    const _file = json["$cli.file"] as JSONTypeObject;
+    const _file = json["$cli.file"] as JSONObject;
     file = Object.entries(_file).reduce((acc, [key, value]) => Collector.file(`${key}=${value}`, acc), {});
 
     const assign = Object.entries(_file).reduce((acc, [key]) => Collector.setter(key, acc), {});
@@ -121,8 +122,10 @@ export const loadGdx = async (
     for (const [key, value] of Object.entries(_functions)) {
       functions[key] ??= {};
       const f = functions[key]!;
-      f.exposed ??= true;
-      f.runtime ??= "deno";
+      Object.assign(f, {
+        exposed: f.exposed ?? true,
+        runtime: f.runtime ?? "deno",
+      });
 
       const functionPath = path.join(process.cwd(), value);
       const checksum = await checksumDirectory(functionPath);
@@ -155,6 +158,14 @@ export const loadGdx = async (
 
       if (isProjectScoped) {
         delete json![key];
+      }
+    });
+  }
+
+  if (opts.models?.length && json) {
+    Object.keys(json as Record<string, unknown>).forEach(key => {
+      if (!opts.models?.includes(key)) {
+        delete json[key];
       }
     });
   }
@@ -510,7 +521,7 @@ export const replaceAllStrings = <T>(input: T, replacer: (_str: string) => strin
   }
 
   if (typeof input === "object" && input !== null) {
-    const result: JSONTypeObject = {};
+    const result: JSONObject = {};
     for (const [key, value] of Object.entries(input)) {
       result[key] = replaceAllStrings(value, replacer);
     }

@@ -57,5 +57,5 @@ export class MergeRequest extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "options" } },
       { type: ValidatorTypes.REQUIRED, options: { field: "target" } },
     ],
-  } satisfies ModelDefinition;
+  } as const satisfies ModelDefinition;
 }
