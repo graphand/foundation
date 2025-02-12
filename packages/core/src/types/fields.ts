@@ -9,7 +9,6 @@ import {
   SerializerCtx,
   SerializerFormat,
   DecodeRefModel,
-  ModelDefinition,
   FieldsDefinition,
   ValidatorsDefinition,
 } from "../index.js";
@@ -22,14 +21,13 @@ export type ConditionalFieldsDefinition<Mappings extends Array<string> = Array<s
 
 export type FieldOptionsMap = {
   [FieldTypes.ARRAY]: {
+    default?: Readonly<Array<unknown>>;
     items: Readonly<FieldDefinitions>;
     validators?: Readonly<Array<ValidatorDefinitionOmitField>>;
     distinct?: Readonly<boolean>;
   };
   [FieldTypes.TEXT]: {
     default?: Readonly<string>;
-    enum?: Readonly<string[]>;
-    strict?: Readonly<boolean>;
   };
   [FieldTypes.RELATION]: {
     ref: Readonly<string>;
@@ -55,22 +53,27 @@ export type FieldOptionsMap = {
     default?: Readonly<string>;
     enum: Readonly<string[]>;
   };
+  [FieldTypes.DEFAULT]: never;
+  [FieldTypes.ID]: never;
+  [FieldTypes.DATE]: never;
+  [FieldTypes.IDENTITY]: never;
 };
 
-export type FieldOptions<T extends FieldTypes = FieldTypes> = T extends keyof FieldOptionsMap
-  ? Readonly<FieldOptionsMap[T]>
-  : never;
+export type FieldOptions<T extends FieldTypes = FieldTypes> = Readonly<FieldOptionsMap[T]>;
 
 export type FieldDefinitions = {
-  [K in FieldTypes]: FieldDefinition<K>;
+  [K in FieldTypes]: FieldDefinitionGeneric<K>;
 }[FieldTypes];
 
-export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
+export type FieldDefinitionGeneric<T extends FieldTypes> = {
   type: T | `${T}`;
-  options?: FieldOptions<T>;
+  options?: FieldOptionsMap[T];
   _ts?: any;
-  _tsModel?: typeof Model;
 };
+
+export type FieldDefinition = {
+  [K in FieldTypes]: FieldDefinitionGeneric<K>;
+}[FieldTypes];
 
 export interface SystemFieldsBase {
   _id: { type: FieldTypes.ID };
@@ -85,7 +88,9 @@ export interface SystemFieldsOverrides<M extends typeof Model> {}
 export type SystemFields<M extends typeof Model> = Omit<SystemFieldsBase, keyof SystemFieldsOverrides<M>> &
   SystemFieldsOverrides<M>;
 
-export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition> {
+export interface SerializerFieldsMap<
+  F extends FieldDefinitionGeneric<FieldTypes> = FieldDefinitionGeneric<FieldTypes>,
+> {
   json: {
     [FieldTypes.ID]: string;
     [FieldTypes.IDENTITY]: string;
@@ -93,13 +98,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
     [FieldTypes.NUMBER]: number;
     [FieldTypes.INTEGER]: number;
     [FieldTypes.DATE]: string;
-    [FieldTypes.TEXT]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
-      ? F["options"]["enum"] extends Array<string>
-        ? F["options"]["strict"] extends true
-          ? F["options"]["enum"][number]
-          : F["options"]["enum"][number] | string
-        : string
-      : string;
+    [FieldTypes.TEXT]: string;
     [FieldTypes.ENUM]: F["options"] extends FieldOptionsMap[FieldTypes.ENUM] ? F["options"]["enum"][number] : never;
     [FieldTypes.OBJECT]: F["options"] extends FieldOptionsMap[FieldTypes.OBJECT]
       ? (F["options"]["fields"] extends FieldsDefinition
@@ -126,13 +125,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
     [FieldTypes.NUMBER]: number;
     [FieldTypes.INTEGER]: number;
     [FieldTypes.DATE]: Date;
-    [FieldTypes.TEXT]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
-      ? F["options"]["enum"] extends Array<string>
-        ? F["options"]["strict"] extends true
-          ? F["options"]["enum"][number]
-          : F["options"]["enum"][number] | string
-        : string
-      : string;
+    [FieldTypes.TEXT]: string;
     [FieldTypes.ENUM]: F["options"] extends FieldOptionsMap[FieldTypes.ENUM] ? F["options"]["enum"][number] : never;
     [FieldTypes.OBJECT]: F["options"] extends FieldOptionsMap[FieldTypes.OBJECT]
       ? (F["options"]["fields"] extends FieldsDefinition
@@ -149,7 +142,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
       : JSONObject;
     [FieldTypes.RELATION]: F["options"] extends FieldOptionsMap[FieldTypes.RELATION]
       ? F["options"]["ref"] extends string
-        ? PromiseModel<F["_tsModel"] extends typeof Model ? F["_tsModel"] : DecodeRefModel<F["options"]["ref"]>>
+        ? PromiseModel<DecodeRefModel<F["options"]["ref"]>>
         : PromiseModel<typeof Model>
       : PromiseModel<typeof Model>;
     [FieldTypes.ARRAY]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
@@ -165,27 +158,36 @@ export interface SerializerFieldsMap<F extends FieldDefinition = FieldDefinition
 
 type StringToFieldType<T extends string> = T extends `${infer U extends FieldTypes}` ? U : never;
 
-export type InferFieldType<D extends FieldDefinition, F extends SerializerFormat> = "_ts" extends keyof D
-  ? D["_ts"]
-  : F extends keyof SerializerFieldsMap<D>
-    ? D["type"] extends keyof SerializerFieldsMap<D>[F]
-      ? SerializerFieldsMap<D>[F][D["type"]]
-      : StringToFieldType<D["type"]> extends keyof SerializerFieldsMap<D>[F]
-        ? SerializerFieldsMap<D>[F][StringToFieldType<D["type"]>]
-        : `${D["type"]}` extends keyof SerializerFieldsMap<D>[F]
-          ? SerializerFieldsMap<D>[F][`${D["type"]}`]
-          : unknown
-    : unknown;
-
 export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "object"> = (M extends {
   definition: { fields: infer R };
 }
-  ? R extends ModelDefinition["fields"]
-    ? { [F in keyof R]?: R[F] extends FieldDefinition<FieldTypes> ? InferFieldType<R[F], S> : never }
+  ? R extends FieldsDefinition
+    ? { [K in keyof R]?: InferFieldType<R[K], S> }
     : never
   : unknown) & {
-  [F in keyof SystemFields<M>]?: Readonly<InferFieldType<SystemFields<M>[F], S>>;
+  [F in keyof SystemFields<M>]?: InferFieldType<SystemFields<M>[F], S>;
 };
+
+export type InferFieldType<D extends FieldDefinitionGeneric<FieldTypes>, F extends SerializerFormat> =
+  // If a custom type is provided via the _ts property, use it.
+  "_ts" extends keyof D
+    ? D["_ts"]
+    : // Otherwise, if there is a mapping for the provided format F, use it.
+      F extends keyof SerializerFieldsMap<D>
+      ? InferFieldTypeByMapping<D, SerializerFieldsMap<D>[F]>
+      : unknown;
+
+type InferFieldTypeByMapping<D extends FieldDefinitionGeneric<FieldTypes>, Mapping> =
+  // First, try to use the type directly.
+  D["type"] extends keyof Mapping
+    ? Mapping[D["type"]]
+    : // If that fails, try to convert the type with StringToFieldType.
+      StringToFieldType<D["type"]> extends keyof Mapping
+      ? Mapping[StringToFieldType<D["type"]>]
+      : // Finally, try using a template literal version of the type.
+        `${D["type"]}` extends keyof Mapping
+        ? Mapping[`${D["type"]}`]
+        : unknown;
 
 export type ModelObject<M extends typeof Model = typeof Model> = InferModelDef<M, "object">;
 

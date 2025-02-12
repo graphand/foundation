@@ -8,7 +8,7 @@ import { Patterns } from "@/enums/patterns.js";
 
 @modelDecorator()
 export class Account extends Model {
-  static __name = "Account" as const;
+  static __name = "Account";
   static connectable = true as const;
   static extensible = true as const;
   static realtime = true as const;

@@ -12,10 +12,6 @@ export class FieldText extends Field<FieldTypes.TEXT> {
         return;
       }
 
-      if (this.options.enum?.length && this.options.strict && !this.options.enum.includes(String(v))) {
-        throw new Error(`value does not match strict enum`);
-      }
-
       if (isObjectId(v)) {
         throw new Error(`value is an ObjectId. Text fields do not accept ObjectId values`);
       }
@@ -26,10 +22,6 @@ export class FieldText extends Field<FieldTypes.TEXT> {
 
   _sDefault = ({ value }: FieldSerializerInput) => {
     const single = Array.isArray(value) ? String(value[0]) : String(value);
-
-    if (this.options.enum?.length && this.options.strict) {
-      return this.options.enum.includes(single) ? single : undefined;
-    }
 
     return single;
   };

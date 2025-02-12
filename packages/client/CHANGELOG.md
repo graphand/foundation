@@ -1,5 +1,13 @@
 # @graphand/client
 
+## 1.3.3
+
+### Patch Changes
+
+- improve types
+- Updated dependencies
+  - @graphand/core@1.5.8
+
 ## 1.3.2
 
 ### Patch Changes

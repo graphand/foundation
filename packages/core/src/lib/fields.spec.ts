@@ -80,153 +80,6 @@ describe("test fields", () => {
 
       await expect(model.validate([i.getData()])).rejects.toThrow(ValidationError);
     });
-
-    describe("options.enum", () => {
-      it("should return value within enum", async () => {
-        const _enum = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
-
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: _enum,
-              },
-            },
-          },
-        }).extend({ adapterClass: adapter });
-        await model.initialize();
-
-        const title = _enum[0];
-
-        const i = model.hydrate({ title });
-        expect(i.title).toEqual(title);
-      });
-
-      it("should return value not in enum if strict mode is not enabled", async () => {
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()],
-              },
-            },
-          },
-        }).extend({ adapterClass: adapter });
-        await model.initialize();
-
-        const title = "notInEnum";
-
-        const i = model.hydrate({ title });
-        expect(i.title).toEqual(title);
-      });
-
-      it("should return value within enum if value is valid & strict mode is enabled", async () => {
-        const _enum = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
-
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: _enum,
-                strict: true,
-              },
-            },
-          },
-        }).extend({ adapterClass: adapter });
-        await model.initialize();
-
-        const title = _enum[0];
-
-        const i = model.hydrate({ title });
-        expect(i.title).toEqual(title);
-      });
-
-      it("should return null if value not in enum and strict mode is enabled", async () => {
-        const _enum = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
-
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: _enum,
-                strict: true,
-              },
-            },
-          },
-        }).extend({ adapterClass: adapter });
-        await model.initialize();
-
-        const title = "notInEnum";
-
-        const i = model.hydrate({ title });
-        expect(i.title).toEqual(undefined);
-      });
-
-      it("should not throw error if value is in _enum and strict mode is enabled", async () => {
-        const _enum = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
-
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: _enum,
-                strict: true,
-              },
-            },
-          },
-        }).extend({ adapterClass: adapter });
-        await model.initialize();
-
-        const title = _enum[0];
-
-        const i = model.hydrate({ title });
-        await expect(model.validate([i.getData()])).resolves.toBeTruthy();
-      });
-
-      it("should throw error if value not in enum and strict mode is enabled", async () => {
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()],
-                strict: true,
-              },
-            },
-          },
-        }).extend({ adapterClass: adapter });
-        await model.initialize();
-
-        const title = "notInEnum";
-
-        const i = model.hydrate({ title });
-        await expect(model.validate([i.getData()])).rejects.toThrow(ValidationError);
-      });
-
-      it("should throw error if value not in enum and strict mode is enabled on create", async () => {
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                enum: [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()],
-                strict: true,
-              },
-            },
-          },
-        }).extend({ adapterClass: adapter });
-        await model.initialize();
-
-        const title = "notInEnum";
-
-        await expect(model.create({ title })).rejects.toThrow(ValidationError);
-      });
-    });
   });
 
   describe("Nested field", () => {
@@ -1115,10 +968,9 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             channel: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["email", "slack"],
-                strict: true,
               },
             },
             options: {
@@ -1164,10 +1016,10 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             channel: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["email", "slack"],
-                strict: true,
+                blbal: true,
               },
             },
             options: {
@@ -1253,10 +1105,9 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             type: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["type1", "type2"],
-                strict: true,
               },
             },
             obj: {
@@ -1388,10 +1239,9 @@ describe("test fields", () => {
               options: {
                 fields: {
                   mode: {
-                    type: FieldTypes.TEXT,
+                    type: FieldTypes.ENUM,
                     options: {
                       enum: ["simple", "advanced"],
-                      strict: true,
                     },
                   },
                   config: {
@@ -1446,10 +1296,9 @@ describe("test fields", () => {
                   options: {
                     fields: {
                       type: {
-                        type: FieldTypes.TEXT,
+                        type: FieldTypes.ENUM,
                         options: {
                           enum: ["A", "B"],
-                          strict: true,
                         },
                       },
                       data: {
@@ -1508,10 +1357,9 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             channel: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["email", "slack"],
-                strict: true,
               },
             },
             options: {
@@ -1611,10 +1459,9 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             channel: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["email", "slack"],
-                strict: true,
               },
             },
             options: {
@@ -1678,10 +1525,9 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             channel: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["email", "slack", "unknown"],
-                strict: true,
               },
             },
             options: {
@@ -1733,10 +1579,9 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             channel: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["email", "slack", "unknown"],
-                strict: true,
               },
             },
             options: {
@@ -1791,10 +1636,9 @@ describe("test fields", () => {
               options: {
                 fields: {
                   mode: {
-                    type: FieldTypes.TEXT,
+                    type: FieldTypes.ENUM,
                     options: {
                       enum: ["light", "dark"],
-                      strict: true,
                     },
                   },
                   theme: {
@@ -1846,10 +1690,9 @@ describe("test fields", () => {
                   options: {
                     fields: {
                       type: {
-                        type: FieldTypes.TEXT,
+                        type: FieldTypes.ENUM,
                         options: {
                           enum: ["A", "B"],
-                          strict: true,
                         },
                       },
                       config: {
@@ -1914,10 +1757,9 @@ describe("test fields", () => {
                   options: {
                     fields: {
                       type: {
-                        type: FieldTypes.TEXT,
+                        type: FieldTypes.ENUM,
                         options: {
                           enum: ["A", "B"],
-                          strict: true,
                         },
                       },
                       config: {
@@ -2004,10 +1846,9 @@ describe("test fields", () => {
                   options: {
                     fields: {
                       type: {
-                        type: FieldTypes.TEXT,
+                        type: FieldTypes.ENUM,
                         options: {
                           enum: ["A", "B"],
-                          strict: true,
                         },
                       },
                       config: {
@@ -2085,10 +1926,9 @@ describe("test fields", () => {
               options: {
                 fields: {
                   mode: {
-                    type: FieldTypes.TEXT,
+                    type: FieldTypes.ENUM,
                     options: {
                       enum: ["simple", "complex"],
-                      strict: true,
                     },
                   },
                   config: {
@@ -2096,10 +1936,9 @@ describe("test fields", () => {
                     options: {
                       fields: {
                         subMode: {
-                          type: FieldTypes.TEXT,
+                          type: FieldTypes.ENUM,
                           options: {
                             enum: ["A", "B"],
-                            strict: true,
                           },
                         },
                         options: {
@@ -2156,10 +1995,9 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             paymentMethod: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["creditCard", "paypal"],
-                strict: true,
               },
             },
             paymentDetails: {
@@ -2241,10 +2079,9 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             level1Type: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["typeA", "typeB"],
-                strict: true,
               },
             },
             level1: {
@@ -2252,10 +2089,9 @@ describe("test fields", () => {
               options: {
                 fields: {
                   level2Type: {
-                    type: FieldTypes.TEXT,
+                    type: FieldTypes.ENUM,
                     options: {
                       enum: ["subType1", "subType2"],
-                      strict: true,
                     },
                   },
                   level2: {
@@ -2306,10 +2142,9 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             status: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["active", "inactive", "unknown"],
-                strict: true,
               },
             },
             details: {
@@ -2348,10 +2183,9 @@ describe("test fields", () => {
         const model = mockModel({
           fields: {
             type: {
-              type: FieldTypes.TEXT,
+              type: FieldTypes.ENUM,
               options: {
                 enum: ["type1", "type2", "type3"],
-                strict: true,
               },
             },
             data: {
@@ -2956,44 +2790,6 @@ describe("test fields", () => {
           arr: ["507f191e810c19729de860ea"],
         }),
       ).resolves.toBeInstanceOf(model);
-    });
-
-    it("should return valid serialized array from items enum", async () => {
-      const _enum = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
-
-      const model = mockModel({
-        fields: {
-          arrTextWithOpts: {
-            type: FieldTypes.ARRAY,
-            options: {
-              items: {
-                type: FieldTypes.TEXT,
-                options: {
-                  enum: _enum,
-                  strict: true,
-                },
-              },
-            },
-          },
-          arrNumbers: {
-            type: FieldTypes.ARRAY,
-            options: {
-              items: {
-                type: FieldTypes.NUMBER,
-              },
-            },
-          },
-        },
-      }).extend({ adapterClass: adapter });
-      await model.initialize();
-
-      const i = model.hydrate({
-        arrTextWithOpts: ["invalid1", _enum[1], "invalid2"],
-        arrNumbers: ["1", "2", "3"],
-      } as object);
-
-      expect(i.arrTextWithOpts).toEqual([undefined, _enum[1], undefined]);
-      expect(i.arrNumbers).toEqual([1, 2, 3]);
     });
 
     it("should return PromiseModelList for relation array with format object", async () => {

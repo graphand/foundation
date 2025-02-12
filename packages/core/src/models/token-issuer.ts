@@ -7,7 +7,7 @@ import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class TokenIssuer extends Model {
-  static __name = "TokenIssuer" as const;
+  static __name = "TokenIssuer";
   static slug = "tokenIssuers" as const;
   static isEnvironmentScoped = true as const;
   static definition = {

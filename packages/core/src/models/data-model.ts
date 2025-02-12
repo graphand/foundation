@@ -39,7 +39,7 @@ const functionRelationField = {
 
 @modelDecorator()
 export class DataModel extends Model {
-  static __name = "DataModel" as const;
+  static __name = "DataModel";
   static isEnvironmentScoped = true as const;
   static realtime = true as const;
   static slug = "datamodels" as const;
@@ -85,7 +85,7 @@ export class DataModel extends Model {
                             dependsOn: "$.type",
                             mappings: {
                               [FieldTypes.ARRAY]: ["items", "validators", "distinct"],
-                              [FieldTypes.TEXT]: ["default", "enum", "strict"],
+                              [FieldTypes.TEXT]: ["default"],
                               [FieldTypes.RELATION]: ["ref"],
                               [FieldTypes.NUMBER]: ["default"],
                               [FieldTypes.INTEGER]: ["default"],

@@ -1009,7 +1009,6 @@ describe("ClientAdapter", () => {
             options: {
               ref: OtherRelatedModel.slug,
             },
-            _tsModel: undefined as unknown as typeof OtherRelatedModel,
           },
         },
       } as const satisfies ModelDefinition;
@@ -1028,7 +1027,6 @@ describe("ClientAdapter", () => {
             options: {
               ref: RelatedModel.slug,
             },
-            _tsModel: undefined as unknown as typeof RelatedModel,
           },
           multiRelated: {
             type: FieldTypes.ARRAY,
@@ -1051,7 +1049,6 @@ describe("ClientAdapter", () => {
                   options: {
                     ref: RelatedModel.slug,
                   },
-                  _tsModel: undefined as unknown as typeof RelatedModel,
                 },
                 multiRelated: {
                   type: FieldTypes.ARRAY,
@@ -1061,7 +1058,6 @@ describe("ClientAdapter", () => {
                       options: {
                         ref: RelatedModel.slug,
                       },
-                      _tsModel: undefined as unknown as typeof RelatedModel,
                     },
                     distinct: true,
                   },
@@ -1071,7 +1067,6 @@ describe("ClientAdapter", () => {
                   options: {
                     ref: RelatedModel.slug,
                   },
-                  _tsModel: undefined as unknown as typeof RelatedModel,
                 },
               },
             },
@@ -1088,7 +1083,6 @@ describe("ClientAdapter", () => {
                       options: {
                         ref: RelatedModel.slug,
                       },
-                      _tsModel: undefined as unknown as typeof RelatedModel,
                     },
                     multiRelated: {
                       type: FieldTypes.ARRAY,
@@ -1098,7 +1092,6 @@ describe("ClientAdapter", () => {
                           options: {
                             ref: RelatedModel.slug,
                           },
-                          _tsModel: undefined as unknown as typeof RelatedModel,
                         },
                         distinct: true,
                       },
@@ -1108,7 +1101,6 @@ describe("ClientAdapter", () => {
                       options: {
                         ref: RelatedModel.slug,
                       },
-                      _tsModel: undefined as unknown as typeof RelatedModel,
                     },
                   },
                 },
@@ -1352,9 +1344,11 @@ describe("ClientAdapter", () => {
       expect(result.nested?.related?.cached).toBeInstanceOf(RelatedModel);
       expect(result.nested?.related?.cached?._id).toBe(relatedId1);
 
-      expect(result.nested?.related?.cached?.other).toBeInstanceOf(PromiseModel);
-      expect(result.nested?.related?.cached?.other?.cached).toBeInstanceOf(OtherRelatedModel);
-      expect(result.nested?.related?.cached?.other?.cached?._id).toBe(relatedId2);
+      const relatedInstance = result.nested?.related as PromiseModel<typeof RelatedModel>;
+
+      expect(relatedInstance.cached?.other).toBeInstanceOf(PromiseModel);
+      expect(relatedInstance.cached?.other?.cached).toBeInstanceOf(OtherRelatedModel);
+      expect(relatedInstance.cached?.other?.cached?._id).toBe(relatedId2);
     });
 
     it("should handle multiple levels of nested populated data for multiple relations", async () => {

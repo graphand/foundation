@@ -951,25 +951,23 @@ export class Model {
    * @returns the adapter object.
    */
   static getAdapter<T extends typeof Model>(this: T, required = true): Adapter<T> {
-    let adapter: Adapter | undefined;
-    const baseClass = this.getBaseClass();
-    const adapterClass = baseClass?.adapterClass;
-
-    if (this.hasOwnProperty("__adapter")) {
-      adapter = this.__adapter;
-    } else if (adapterClass) {
-      this.__adapter = new adapterClass(this);
-      adapter = this.__adapter;
+    if (!this.hasOwnProperty("__adapter")) {
+      const baseClass = this.getBaseClass();
+      if (baseClass?.adapterClass) {
+        this.__adapter = new baseClass.adapterClass(this);
+      } else if (globalThis.__GLOBAL_ADAPTER__) {
+        this.__adapter = new globalThis.__GLOBAL_ADAPTER__(this);
+      }
     }
 
-    if (!adapter && required) {
+    if (!this.__adapter && required) {
       throw new CoreError({
         code: ErrorCodes.INVALID_ADAPTER,
         message: `invalid adapter on model ${this.__name}. Please define an adapter for this model or a global adapter class on Model.adapterClass`,
       });
     }
 
-    return adapter as Adapter<T>;
+    return this.__adapter as Adapter<T>;
   }
 
   /**

@@ -197,9 +197,8 @@ describe("ValidationError", () => {
     const model = mockModel({
       fields: {
         enum: {
-          type: FieldTypes.TEXT,
+          type: FieldTypes.ENUM,
           options: {
-            strict: true,
             enum: ["a", "b", "c"],
           },
         },
@@ -234,9 +233,8 @@ describe("ValidationError", () => {
           options: {
             fields: {
               enum: {
-                type: FieldTypes.TEXT,
+                type: FieldTypes.ENUM,
                 options: {
-                  strict: true,
                   enum: ["a", "b", "c"],
                 },
               },
@@ -281,9 +279,8 @@ describe("ValidationError", () => {
                     options: {
                       fields: {
                         enum: {
-                          type: FieldTypes.TEXT,
+                          type: FieldTypes.ENUM,
                           options: {
-                            strict: true,
                             enum: ["a", "b", "c"],
                           },
                         },

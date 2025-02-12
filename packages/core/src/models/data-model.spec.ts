@@ -60,7 +60,7 @@ describe("DataModel Model", () => {
     const datamodel = DataModelModel.hydrate({
       slug: generateRandomString(),
       definition: {
-        validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "rel", min: 1 } }],
+        validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "rel" } }],
       },
     });
 

@@ -8,7 +8,7 @@ import { Patterns } from "@/enums/patterns.js";
 
 @modelDecorator()
 export class Invitation extends Model {
-  static __name = "Invitation" as const;
+  static __name = "Invitation";
   static isEnvironmentScoped = true as const;
   static allowMultipleOperations = false as const;
   static slug = "invitations" as const;

@@ -1,7 +1,6 @@
 import { FieldTypes } from "@/enums/field-types.js";
 import { Model } from "@/lib/model.js";
 import {
-  FieldDefinition,
   FieldOptions,
   ModelInstance,
   InferFieldType,
@@ -11,25 +10,28 @@ import {
   SerializerFieldsMap,
   FieldSerializerInput,
   ModelData,
+  FieldDefinitionGeneric,
 } from "@/types/index.js";
 
 export class Field<T extends FieldTypes = FieldTypes> {
   static readonly defaultSymbol: unique symbol = Symbol("defaultSerializer");
 
-  #definition: FieldDefinition<T>; // The field definition
+  #definition: FieldDefinitionGeneric<T>; // The field definition
   #path: string; // The path of the field in the model
 
   serializerMap: Partial<{
-    [S in SerializerFormat]: (_input: FieldSerializerInput<S>) => InferFieldType<FieldDefinition<T>, S>;
+    [S in SerializerFormat]: (_input: FieldSerializerInput<S>) => InferFieldType<FieldDefinitionGeneric<T>, S>;
   }> & {
     [Field.defaultSymbol]?: (
       _input: FieldSerializerInput,
-    ) => T extends keyof SerializerFieldsMap<FieldDefinition<T>>[keyof SerializerFieldsMap<FieldDefinition<T>>]
-      ? SerializerFieldsMap<FieldDefinition<T>>[keyof SerializerFieldsMap<FieldDefinition<T>>][T]
+    ) => T extends keyof SerializerFieldsMap<FieldDefinitionGeneric<T>>[keyof SerializerFieldsMap<
+      FieldDefinitionGeneric<T>
+    >]
+      ? SerializerFieldsMap<FieldDefinitionGeneric<T>>[keyof SerializerFieldsMap<FieldDefinitionGeneric<T>>][T]
       : unknown;
   };
 
-  constructor(definition: FieldDefinition<T>, path: string) {
+  constructor(definition: FieldDefinitionGeneric<T>, path: string) {
     this.#definition = definition;
     this.#path = path;
     this.serializerMap ??= {};
@@ -59,7 +61,7 @@ export class Field<T extends FieldTypes = FieldTypes> {
     from: ModelInstance;
     ctx: SerializerCtx;
     nextData?: ModelData;
-  }): InferFieldType<FieldDefinition<T>, S> => {
+  }): InferFieldType<FieldDefinitionGeneric<T>, S> => {
     const { value, format } = opts;
     const s = this.serializerMap?.[format] || this.serializerMap?.[Field.defaultSymbol];
 
@@ -67,7 +69,7 @@ export class Field<T extends FieldTypes = FieldTypes> {
       return value;
     }
 
-    const serializer = s as (_input: FieldSerializerInput<S>) => InferFieldType<FieldDefinition<T>, S>;
+    const serializer = s as (_input: FieldSerializerInput<S>) => InferFieldType<FieldDefinitionGeneric<T>, S>;
 
     return serializer(opts);
   };

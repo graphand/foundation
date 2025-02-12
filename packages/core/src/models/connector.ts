@@ -8,7 +8,7 @@ import { Job } from "./job.js";
 
 @modelDecorator()
 export class Connector extends Model {
-  static __name = "Connector" as const;
+  static __name = "Connector";
   static isEnvironmentScoped = true as const;
   static allowMultipleOperations = false as const;
   static slug = "connectors" as const;

@@ -8,7 +8,7 @@ import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Environment extends Model {
-  static __name = "Environment" as const;
+  static __name = "Environment";
   static allowMultipleOperations = false as const;
   static slug = "environments" as const;
   static definition = {

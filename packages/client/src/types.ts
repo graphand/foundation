@@ -5,15 +5,15 @@ import {
   ModelJSON,
   ModelList,
   Model,
-  FieldDefinition,
   FieldTypes,
+  FieldDefinitionGeneric,
 } from "@graphand/core";
 import { Module } from "./lib/Module.js";
 import { Client } from "./lib/Client.js";
 import { ClientAdapter } from "./lib/ClientAdapter.js";
 
 declare module "@graphand/core" {
-  export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
+  export interface SerializerFieldsMap<F extends FieldDefinitionGeneric<FieldTypes>> {
     data: SerializerFieldsMap<F>["json"];
   }
 

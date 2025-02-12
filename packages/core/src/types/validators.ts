@@ -13,6 +13,8 @@ export type ValidatorOptionsMap = {
   [ValidatorTypes.SAMPLE]: { field: Readonly<string> };
   [ValidatorTypes.KEY_FIELD]: { field: Readonly<string> };
   [ValidatorTypes.EXISTS]: { field: Readonly<string> };
+  [ValidatorTypes.DATAMODEL_SLUG]: never;
+  [ValidatorTypes.DATAMODEL_DEFINITION]: never;
 };
 
 export type ValidatorOptionsMapOmitField = {
@@ -28,13 +30,17 @@ export type ValidatorOptions<T extends ValidatorTypes = keyof ValidatorOptionsMa
   T extends keyof ValidatorOptionsMap ? ValidatorOptionsMap[T] : Record<string, never>;
 
 export type ValidatorDefinitions = {
-  [K in ValidatorTypes]: ValidatorDefinition<K>;
+  [K in ValidatorTypes]: ValidatorDefinitionGeneric<K>;
 }[ValidatorTypes];
 
-export type ValidatorDefinition<T extends ValidatorTypes = ValidatorTypes> = {
+export type ValidatorDefinitionGeneric<T extends ValidatorTypes> = {
   type: T | `${T}`;
-  options?: T extends keyof ValidatorOptionsMap ? ValidatorOptionsMap[T] : never;
+  options?: ValidatorOptionsMap[T];
 };
+
+export type ValidatorDefinition = {
+  [K in ValidatorTypes]: ValidatorDefinitionGeneric<K>;
+}[ValidatorTypes];
 
 export type ValidatorDefinitionOmitField<
   T extends ValidatorTypes = keyof ValidatorOptionsMapOmitField | ValidatorTypes,

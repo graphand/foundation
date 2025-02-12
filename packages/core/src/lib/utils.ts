@@ -1,14 +1,14 @@
 import { Model } from "@/lib/model.js";
 import {
   AdapterFetcher,
-  FieldDefinition,
+  FieldDefinitionGeneric,
   FieldOptionsMap,
   FieldsPathItem,
   Hook,
   HookPhase,
   ModelDefinition,
   ModelInstance,
-  ValidatorDefinition,
+  ValidatorDefinitionGeneric,
   ValidatorOptions,
   FieldOptions,
   SerializerFormat,
@@ -18,6 +18,8 @@ import {
   Transaction,
   ModelJSON,
   ModelData,
+  ValidatorDefinition,
+  FieldDefinition,
 } from "@/types/index.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Field } from "@/lib/field.js";
@@ -488,7 +490,7 @@ export const getValidatorClass = <T extends ValidatorTypes>(type: T, adapter?: A
  * @returns an instance of the `FieldClass` which is created using the `def` and `path` parameters.
  */
 export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTypes>(
-  def: FieldDefinition<T>,
+  def: FieldDefinitionGeneric<T>,
   adapter: Adapter,
   path: string,
 ): Field<T> | null => {
@@ -526,7 +528,7 @@ export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTy
  * @returns an instance of the `Validator` class.
  */
 export const getValidatorFromDefinition = <T extends ValidatorTypes>(
-  def: ValidatorDefinition<T>,
+  def: ValidatorDefinitionGeneric<T>,
   adapter: Adapter,
   path?: string,
 ) => {
@@ -1179,7 +1181,7 @@ export const getModelInitPromise = (
 
 export const isValidFieldDefinition = (def: FieldDefinition) => {
   if (def.type === FieldTypes.RELATION) {
-    const _def = def as FieldDefinition<FieldTypes.RELATION>;
+    const _def = def as FieldDefinitionGeneric<FieldTypes.RELATION>;
     if (!_def.options?.ref) {
       return false;
     }

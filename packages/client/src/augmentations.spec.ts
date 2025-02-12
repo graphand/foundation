@@ -1403,7 +1403,6 @@ describe("augmentations", () => {
               options: {
                 ref: TestModel.slug,
               },
-              _tsModel: undefined as unknown as typeof TestModel,
             },
           },
         } as const satisfies ModelDefinition;
@@ -1418,7 +1417,7 @@ describe("augmentations", () => {
       expect(relInstance.get("rel.someField")).toBe("value");
       // @ts-expect-error test - someField is undefined on a PromiseModel instance
       expect(relInstance.rel.someField).toBeUndefined();
-      expect(relInstance.rel?.cached?.someField).toBe("value");
+      expect((relInstance.rel as PromiseModel<typeof TestModel>)?.cached?.someField).toBe("value");
     });
 
     it("Model.prototype.get should pass the cached instance to the next field with a relation array field", async () => {
@@ -1437,7 +1436,6 @@ describe("augmentations", () => {
                   options: {
                     ref: TestModel.slug,
                   },
-                  _tsModel: undefined as unknown as typeof TestModel,
                 },
               },
             },

@@ -5,7 +5,7 @@ import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Media extends Model {
-  static __name = "Media" as const;
+  static __name = "Media";
   static extensible = true as const;
   static connectable = true as const;
   static realtime = true as const;

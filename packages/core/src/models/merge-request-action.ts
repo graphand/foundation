@@ -9,7 +9,7 @@ import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class MergeRequestAction extends Model {
-  static __name = "MergeRequestAction" as const;
+  static __name = "MergeRequestAction";
   static allowMultipleOperations = false as const;
   static slug = "mergeRequestActions" as const;
   static definition = {
