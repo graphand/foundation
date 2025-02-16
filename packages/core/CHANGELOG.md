@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.5.10
+
+### Patch Changes
+
+- change email pattern regex with only lowercase chars
+
 ## 1.5.9
 
 ### Patch Changes
