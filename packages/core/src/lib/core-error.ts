@@ -50,6 +50,10 @@ export class CoreError extends Error {
     };
   }
 
+  toString() {
+    return this.message;
+  }
+
   static fromJSON(json: ReturnType<CoreError["toJSON"]>) {
     const { type, code, message } = json;
 
