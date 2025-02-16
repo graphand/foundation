@@ -109,7 +109,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.EMAIL,
                 options: {
-                  email: faker.internet.email(),
+                  email: faker.internet.email().toLowerCase(),
                 },
               },
             ],

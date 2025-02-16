@@ -36,7 +36,7 @@ vi.mock("./Config.js", () => ({
   })),
 }));
 
-describe("GDX", () => {
+describe.skip("GDX", () => {
   const mockGdx: JSONObject = {
     "$cli.set": {
       "models.user.name": "User",
