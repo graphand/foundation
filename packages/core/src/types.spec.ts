@@ -141,26 +141,6 @@ describe("test types", () => {
           simulateTypeCheck<string | undefined>(i.field?.title); // Check the field is a string
           simulateTypeCheck<NoProperty<typeof i.field, "unknown">>(i.field);
         });
-
-        it("should respect _ts type", () => {
-          class CustomModel extends Model {
-            static definition = {
-              fields: {
-                field: {
-                  type: FieldTypes.OBJECT,
-                  _ts: undefined as unknown as {
-                    subfield: string;
-                  },
-                },
-              },
-            } as const satisfies ModelDefinition;
-          }
-
-          const i = CustomModel.hydrate();
-
-          simulateTypeCheck<string | undefined>(i.field?.subfield); // Check the field is a string
-          simulateTypeCheck<NoProperty<typeof i.field, "unknown">>(i.field); // Check subtitle is not found in json
-        });
       });
 
       describe("relation field", () => {

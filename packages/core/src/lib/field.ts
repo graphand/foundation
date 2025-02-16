@@ -66,7 +66,7 @@ export class Field<T extends FieldTypes = FieldTypes> {
     const s = this.serializerMap?.[format] || this.serializerMap?.[Field.defaultSymbol];
 
     if (!s) {
-      return value;
+      return value as InferFieldType<FieldDefinitionGeneric<T>, S>;
     }
 
     const serializer = s as (_input: FieldSerializerInput<S>) => InferFieldType<FieldDefinitionGeneric<T>, S>;

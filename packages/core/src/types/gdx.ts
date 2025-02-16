@@ -9,11 +9,12 @@ export type GDXEntryModelInput<T extends ModelDefinition> =
   | "$delete"
   | "$ignore";
 
-export type GDXEntryModel<T extends ModelJSON<typeof DataModel>> = T["definition"] extends ModelDefinition
-  ? T["definition"]["single"] extends true
-    ? GDXEntryModelInput<T["definition"]>
-    : Record<string, GDXEntryModelInput<T["definition"]>>
-  : never;
+export type GDXEntryModel<T extends ModelJSON<typeof DataModel> | { definition: ModelDefinition }> =
+  T["definition"] extends ModelDefinition
+    ? T["definition"]["single"] extends true
+      ? GDXEntryModelInput<T["definition"]>
+      : Record<string, GDXEntryModelInput<T["definition"]>>
+    : never;
 
 export type GDXDatamodels = Record<string, ModelJSON<typeof DataModel>>;
 
@@ -24,3 +25,5 @@ export type GDXType<D extends Record<string, ModelJSON<typeof DataModel>>> = {
 } & {
   [K in keyof Models]?: GDXEntryModel<Models[K]>;
 };
+
+export const defineGDX = <D extends Record<string, ModelJSON<typeof DataModel>>>(gdx: GDXType<D>) => gdx;

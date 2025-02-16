@@ -21,7 +21,7 @@ class FieldArray extends CoreFieldArray {
     };
   };
 
-  serializerMap: Field<FieldTypes.RELATION>["serializerMap"] = {
+  serializerMap: Field<FieldTypes.ARRAY>["serializerMap"] = {
     validation: ({ value }) => value,
     [Field.defaultSymbol]: this.decodePopulate(this._sDefault),
   };

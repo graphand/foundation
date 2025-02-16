@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.5.9
+
+### Patch Changes
+
+- clean types & move media model to environment scope
+
 ## 1.5.8
 
 ### Patch Changes

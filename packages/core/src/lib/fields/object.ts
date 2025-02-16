@@ -1,5 +1,5 @@
 import { FieldTypes } from "@/enums/field-types.js";
-import { FieldSerializerInput, JSONObject, ModelData, ModelInstance } from "@/types/index.js";
+import { FieldSerializerInput, JSONObject, JSONPrimitive, ModelData, ModelInstance } from "@/types/index.js";
 import { Field } from "@/lib/field.js";
 import { getFieldFromDefinition, getNestedFieldsMap, getValidationValues } from "@/lib/utils.js";
 
@@ -64,11 +64,11 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
       }
 
       if (value[k] === undefined && defaults && "default" in field.options) {
-        json[k] = field.serialize({ ...input, value: field.options.default });
+        json[k] = field.serialize({ ...input, value: field.options.default }) as JSONPrimitive;
       } else if (value[k] === undefined || value[k] === null) {
         json[k] = value[k];
       } else {
-        json[k] = field.serialize({ ...input, value: value[k] });
+        json[k] = field.serialize({ ...input, value: value[k] }) as JSONPrimitive;
       }
     }
 
@@ -94,7 +94,7 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
               [this.path, k].join("."),
             );
 
-            json[k] = tmpField?.serialize({ ...input, value: value[k] });
+            json[k] = tmpField?.serialize({ ...input, value: value[k] }) as JSONPrimitive;
           }
         });
       }

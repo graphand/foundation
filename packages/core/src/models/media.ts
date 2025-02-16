@@ -9,6 +9,7 @@ export class Media extends Model {
   static extensible = true as const;
   static connectable = true as const;
   static realtime = true as const;
+  static isEnvironmentScoped = true as const;
   static slug = "medias" as const;
   static definition = {
     keyField: "name",

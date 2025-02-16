@@ -11,6 +11,8 @@ import {
   DecodeRefModel,
   FieldsDefinition,
   ValidatorsDefinition,
+  DataModel,
+  ModelDefinition,
 } from "../index.js";
 
 export type ConditionalFieldsDefinition<Mappings extends Array<string> = Array<string>> = {
@@ -162,20 +164,44 @@ export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "
   definition: { fields: infer R };
 }
   ? R extends FieldsDefinition
-    ? { [K in keyof R]?: InferFieldType<R[K], S> }
+    ? {
+        [K in keyof R]?: M extends typeof DataModel
+          ? K extends "definition"
+            ? ModelDefinition
+            : InferFieldType<R[K], S>
+          : InferFieldType<R[K], S>;
+      }
     : never
   : unknown) & {
   [F in keyof SystemFields<M>]?: InferFieldType<SystemFields<M>[F], S>;
 };
 
-export type InferFieldType<D extends FieldDefinitionGeneric<FieldTypes>, F extends SerializerFormat> =
-  // If a custom type is provided via the _ts property, use it.
-  "_ts" extends keyof D
-    ? D["_ts"]
-    : // Otherwise, if there is a mapping for the provided format F, use it.
-      F extends keyof SerializerFieldsMap<D>
-      ? InferFieldTypeByMapping<D, SerializerFieldsMap<D>[F]>
-      : unknown;
+// export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "object"> = (M extends {
+//   definition: { fields: infer R };
+// }
+//   ? R extends FieldsDefinition
+//     ? { [K in keyof R]?: InferFieldType<R[K], S> }
+//     : never
+//   : unknown) & {
+//   [F in keyof SystemFields<M>]?: InferFieldType<SystemFields<M>[F], S>;
+// };
+
+// {
+//   const dm = DataModel.hydrate();
+//   const definition: ModelDefinition = dm.definition!;
+//   console.log(definition);
+// }
+
+// {
+//   const definition: ModelDefinition = {};
+//   const dm: ModelJSON<typeof DataModel> = { definition };
+//   console.log(dm);
+// }
+
+export type InferFieldType<
+  D extends FieldDefinitionGeneric<FieldTypes>,
+  F extends SerializerFormat,
+> = F extends keyof SerializerFieldsMap<D> ? InferFieldTypeByMapping<D, SerializerFieldsMap<D>[F]> : unknown;
 
 type InferFieldTypeByMapping<D extends FieldDefinitionGeneric<FieldTypes>, Mapping> =
   // First, try to use the type directly.

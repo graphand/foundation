@@ -1,5 +1,13 @@
 # @graphand/client
 
+## 1.3.4
+
+### Patch Changes
+
+- clean types & move media model to environment scope
+- Updated dependencies
+  - @graphand/core@1.5.9
+
 ## 1.3.3
 
 ### Patch Changes

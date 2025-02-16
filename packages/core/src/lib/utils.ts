@@ -20,6 +20,7 @@ import {
   ModelData,
   ValidatorDefinition,
   FieldDefinition,
+  ValidatorsDefinition,
 } from "@/types/index.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Field } from "@/lib/field.js";
@@ -1099,7 +1100,7 @@ export const assignDatamodel = async <T extends typeof Model>(model: T, datamode
   model.realtime = baseClass.realtime || datamodel?.realtime || false;
 
   const data = datamodel?.getData() as ModelJSON<typeof DataModel>;
-  const definition = data?.definition;
+  const definition = data?.definition as ModelDefinition;
   const baseDefinition = (baseClass.definition ?? {}) as ModelDefinition;
 
   const fields = {};
@@ -1112,7 +1113,7 @@ export const assignDatamodel = async <T extends typeof Model>(model: T, datamode
     Object.assign(fields, definition.fields);
   }
 
-  const validators = [];
+  const validators: ValidatorsDefinition = [];
 
   if (baseDefinition?.validators?.length) {
     validators.push(...baseDefinition.validators);
