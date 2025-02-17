@@ -64,7 +64,7 @@ class JobHandler {
         message =
           typeof this.#params.spin.message === "function" ? this.#params.spin.message(job) : this.#params.spin.message;
       }
-      message ??= `Job ${job._type} (${chalk.bold(job._id)}) is: ${chalk[this.#getStatusColor(job._status || JobStatus.FAILED)](job._status || "unknown")} ...`;
+      message ??= `Job ${job._type} (${chalk.bold(job._id)}) is: ${chalk[this.#getStatusColor((job._status as JobStatus) || JobStatus.FAILED)](job._status || "unknown")} ...`;
 
       this.#params.spin.spinner.text = message;
     }
@@ -114,7 +114,7 @@ class JobHandler {
     const endPromise = new Promise<void>(resolve => {
       unsubscribe = job.subscribe(() => {
         this.#handleJob(job);
-        if (job._status && [JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status)) {
+        if (job._status && [JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status as JobStatus)) {
           resolve();
         }
       });
@@ -126,7 +126,7 @@ class JobHandler {
     if (pollInterval) {
       const pollPromise = new Promise<void>(async (resolve, reject) => {
         try {
-          while (job._status && ![JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status)) {
+          while (job._status && ![JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status as JobStatus)) {
             job = (await this.#fetch()) as ModelInstance<typeof Job>;
             await new Promise(resolve => setTimeout(resolve, pollInterval));
           }
@@ -155,7 +155,7 @@ class JobHandler {
               ? this.#params.spin.messageFail(job)
               : this.#params.spin.messageFail;
         }
-        message ??= `${chalk[this.#getStatusColor(job._status)](job._status)}: Job ${job._type} (${chalk.bold(job._id)}) has failed with error: ${chalk.bold(String(job._result?.error ?? "Unknown error"))}`;
+        message ??= `${chalk[this.#getStatusColor(job._status as JobStatus)](job._status as JobStatus)}: Job ${job._type} (${chalk.bold(job._id)}) has failed with error: ${chalk.bold(String(job._result?.error ?? "Unknown error"))}`;
 
         if (message) {
           this.#params.spin.spinner.fail(message);
@@ -174,7 +174,7 @@ class JobHandler {
               ? this.#params.spin.messageSuccess(job)
               : this.#params.spin.messageSuccess;
         }
-        message ??= `${chalk[this.#getStatusColor(job._status)](job._status)}: Job ${job._type} (${chalk.bold(job._id)}) has finished successfully`;
+        message ??= `${chalk[this.#getStatusColor(job._status as JobStatus)](job._status as JobStatus)}: Job ${job._type} (${chalk.bold(job._id)}) has finished successfully`;
 
         if (message) {
           this.#params.spin.spinner.succeed(message);
