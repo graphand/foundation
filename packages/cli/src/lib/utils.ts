@@ -1,7 +1,6 @@
 import chalk from "chalk";
 import path from "path";
 import fs from "fs";
-import Conf from "conf";
 import { build } from "esbuild";
 import { Client, ClientModules, ClientOptions } from "@graphand/client";
 import { ModuleAuth } from "@graphand/client-module-auth";
@@ -17,6 +16,8 @@ import { pathToFileURL } from "url";
 import { Config } from "./Config.js";
 import JobHandler from "./JobHandler.js";
 import Collector from "./Collector.js";
+import storage from "node-persist";
+import os from "os";
 
 export const getGdxPath = async (): Promise<string | null> => {
   const config = await new Config().load();
@@ -191,7 +192,14 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
 
   const config: Config = globalThis.userConfig ?? (await new Config().load());
   const configClient = (config.client || {}) as ClientOptions;
-  const conf = new Conf({ projectName: `graphandcli-${configClient.project || "head"}` });
+
+  // Initialize node-persist storage in user's home directory
+  await storage.init({
+    dir: path.join(os.homedir(), ".graphand", "cli", configClient.project || "head"),
+    stringify: JSON.stringify,
+    parse: JSON.parse,
+    encoding: "utf8",
+  });
 
   // @ts-ignore
   const modules: ClientModules<[typeof ModuleAuth, typeof ModuleCli, typeof ModuleRealtime]> = [
@@ -199,9 +207,15 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
       ModuleAuth,
       {
         storage: {
-          setItem: (key: string, value: string) => conf.set(key, value),
-          getItem: (key: string) => conf.get(key) as string,
-          removeItem: (key: string) => conf.delete(key),
+          setItem: async (key: string, value: string) => {
+            await storage.setItem(key, value);
+          },
+          getItem: async (key: string) => {
+            return await storage.getItem(key);
+          },
+          removeItem: async (key: string) => {
+            await storage.removeItem(key);
+          },
         },
         handleCallback: {
           [AuthMethods.CODE]: async url => {

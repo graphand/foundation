@@ -4,7 +4,8 @@ import dts from "vite-plugin-dts";
 import path from "path";
 import fs from "fs";
 import { builtinModules } from "module";
-import pkg from "./package.json";
+
+const nodeBuiltinWithPrefix = builtinModules.map(m => `node:${m}`);
 
 export default defineConfig({
   plugins: [
@@ -24,6 +25,7 @@ export default defineConfig({
     },
   ],
   build: {
+    target: "node23",
     lib: {
       entry: {
         index: path.resolve(__dirname, "src/index.ts"),
@@ -34,12 +36,7 @@ export default defineConfig({
       fileName: (format, entryName) => `${entryName}.${format}.js`,
     },
     rollupOptions: {
-      external: [
-        // Exclude all Node.js built-in modules (e.g., 'fs', 'path')
-        ...builtinModules,
-        // Exclude dependencies specified in package.json
-        ...Object.keys(pkg.dependencies || {}),
-      ],
+      external: [...builtinModules, ...nodeBuiltinWithPrefix, "esbuild"],
       output: {
         globals: {},
       },
