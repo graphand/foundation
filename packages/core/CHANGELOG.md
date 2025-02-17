@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.5.11
+
+### Patch Changes
+
+- improve gdx types
+
 ## 1.5.10
 
 ### Patch Changes

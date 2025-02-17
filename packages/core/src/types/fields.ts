@@ -101,7 +101,9 @@ export interface SerializerFieldsMap<
     [FieldTypes.INTEGER]: number;
     [FieldTypes.DATE]: string;
     [FieldTypes.TEXT]: string;
-    [FieldTypes.ENUM]: F["options"] extends FieldOptionsMap[FieldTypes.ENUM] ? F["options"]["enum"][number] : never;
+    [FieldTypes.ENUM]: F["options"] extends FieldOptionsMap[FieldTypes.ENUM]
+      ? F["options"]["enum"][number] | `${F["options"]["enum"][number]}`
+      : never;
     [FieldTypes.OBJECT]: F["options"] extends FieldOptionsMap[FieldTypes.OBJECT]
       ? (F["options"]["fields"] extends FieldsDefinition
           ? Partial<{
@@ -128,7 +130,9 @@ export interface SerializerFieldsMap<
     [FieldTypes.INTEGER]: number;
     [FieldTypes.DATE]: Date;
     [FieldTypes.TEXT]: string;
-    [FieldTypes.ENUM]: F["options"] extends FieldOptionsMap[FieldTypes.ENUM] ? F["options"]["enum"][number] : never;
+    [FieldTypes.ENUM]: F["options"] extends FieldOptionsMap[FieldTypes.ENUM]
+      ? F["options"]["enum"][number] | `${F["options"]["enum"][number]}`
+      : never;
     [FieldTypes.OBJECT]: F["options"] extends FieldOptionsMap[FieldTypes.OBJECT]
       ? (F["options"]["fields"] extends FieldsDefinition
           ? Partial<{
