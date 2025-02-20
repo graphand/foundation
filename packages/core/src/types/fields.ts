@@ -70,7 +70,6 @@ export type FieldDefinitions = {
 export type FieldDefinitionGeneric<T extends FieldTypes> = {
   type: T | `${T}`;
   options?: FieldOptionsMap[T];
-  _ts?: any;
 };
 
 export type FieldDefinition = {

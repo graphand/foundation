@@ -179,7 +179,6 @@ export class DataModel extends Model {
             },
           },
         },
-        _ts: undefined as unknown as ModelDefinition,
       },
       hooks: {
         type: FieldTypes.OBJECT,
