@@ -39,7 +39,10 @@ export class Environment extends Model {
     validators: [
       {
         type: ValidatorTypes.REGEX,
-        options: { field: "name", pattern: "^(?!master$|main$).*$" },
+        options: {
+          field: "name",
+          pattern: "^(?!master$|main$)[a-z0-9]+$",
+        },
       },
     ],
   } as const satisfies ModelDefinition;

@@ -171,14 +171,24 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return Promise.all(this.#modulesInitPromises.values());
   }
 
-  getBaseUrl(scheme?: string) {
-    const { endpoint, project, ssl } = this.options;
-    scheme ??= ssl ? "https" : "http";
-    if (!project) {
-      return `${scheme}://${endpoint}`;
+  getBaseUrl(scheme?: string, excludeEnvironment = false): string {
+    const { endpoint, project, ssl, environment } = this.options;
+
+    if (!endpoint) {
+      throw new Error("Endpoint is required in client options");
     }
 
-    return `${scheme}://${project}.${endpoint}`;
+    // Determine scheme (protocol)
+    const protocol = scheme ?? (ssl ? "https" : "http");
+
+    // Build base domain
+    const domain = project ? `${project}.${endpoint}` : endpoint;
+
+    // Add environment prefix if needed
+    const shouldIncludeEnv = environment && !excludeEnvironment;
+    const finalDomain = shouldIncludeEnv ? `${environment}-${domain}` : domain;
+
+    return `${protocol}://${finalDomain}`;
   }
 
   buildUrl(controller: Controller, opts: { params?: Record<string, string>; query?: JSONObject }) {

@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.6.0
+
+### Minor Changes
+
+- exclude core from client bundle
+
 ## 1.5.11
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @graphand/client
 
+## 1.4.0
+
+### Minor Changes
+
+- exclude core from client bundle
+
+### Patch Changes
+
+- Updated dependencies
+  - @graphand/core@1.6.0
+
 ## 1.3.4
 
 ### Patch Changes
