@@ -10,9 +10,6 @@ import fs from "fs";
 import path from "path";
 import { Config } from "@/lib/Config.js";
 
-vi.mock("fs");
-vi.mock("path");
-
 describe("Create Command", () => {
   globalThis.userConfig = new Config({
     client: {
