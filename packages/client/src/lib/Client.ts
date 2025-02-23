@@ -16,11 +16,15 @@ import {
   Controller,
   controllerCurrentAccount,
   ControllerInput,
+  controllerMediaPrivate,
+  controllerMediaPublic,
   CoreError,
   ErrorCodes,
   IdentityTypes,
   InferControllerInput,
   JSONObject,
+  Media,
+  MediaTransformOptions,
   Model,
   ModelInstance,
   TransactionCtx,
@@ -508,6 +512,29 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     const modules = Array.from(this.#modules.values());
 
     await Promise.all(modules.map(module => module[symbolModuleDestroy]()));
+  }
+
+  buildMediaUrl(
+    idOrMedia: string | ModelInstance<typeof Media>,
+    opts: {
+      private?: boolean;
+      transform?: MediaTransformOptions;
+    },
+  ): string {
+    const id = typeof idOrMedia === "string" ? idOrMedia : idOrMedia._id;
+
+    if (!id) {
+      throw new Error("Media or id is required");
+    }
+
+    const mediaPrivate = opts.private ?? (typeof idOrMedia === "string" ? false : idOrMedia.private);
+
+    const controller = mediaPrivate ? controllerMediaPrivate : controllerMediaPublic;
+
+    return this.buildUrl(controller, {
+      params: { id },
+      query: opts.transform as Record<string, string>,
+    });
   }
 
   clone(options: Partial<ClientOptions> = {}) {

@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { getClient, withSpinner } from "@/lib/utils.js";
-import { controllerMediaPrivate, controllerMediaPublic, Media, MediaTransformOptions } from "@graphand/core";
+import { Media, MediaTransformOptions } from "@graphand/core";
 import open from "open";
 
 export const commandSrc = new Command("src")
@@ -55,11 +55,8 @@ export const commandSrc = new Command("src")
         }
       }
 
-      const controller = media.private ? controllerMediaPrivate : controllerMediaPublic;
-
-      const url = client.buildUrl(controller, {
-        params: { id: media._id as string },
-        query: transformOptions as Record<string, string>,
+      const url = client.buildMediaUrl(media, {
+        transform: transformOptions,
       });
 
       spinner.succeed(url);

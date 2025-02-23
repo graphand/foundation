@@ -1,5 +1,13 @@
 # @graphand/cli
 
+## 1.3.10
+
+### Patch Changes
+
+- add buildMediaUrl on graphand client
+- Updated dependencies
+  - @graphand/client@1.4.1
+
 ## 1.3.9
 
 ### Patch Changes
