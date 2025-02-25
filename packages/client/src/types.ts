@@ -146,3 +146,11 @@ export type ModelListState = {
   lastAge?: number;
   key: string;
 };
+
+export type TransformFunction = (_value: any, _key?: string | number) => any;
+
+export interface TraverseOptions {
+  preTransformObject?: (_obj: Record<string, any>) => Record<string, any> | null;
+  preTransformArray?: (_arr: any[]) => any[] | null;
+  transform?: TransformFunction;
+}

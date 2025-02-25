@@ -58,6 +58,18 @@ describe("ClientAdapter", () => {
     expect(await model.count()).toBe(5);
   });
 
+  it("should sanitize query", async () => {
+    fetchMock.mockResolvedValueOnce(new Response('{"data": {"rows": [{"_id": "123", "name": "Test"}], "count": 1}}'));
+    // Should work with a set
+    const set = new Set(["123", "456"]);
+    // Should work with a list
+    const list = new ModelList(model, [MockModel.hydrate({ _id: "ABC" }), MockModel.hydrate({ _id: "DEF" })]);
+    // Should work with a list of ids
+    const listIds = list.map(i => i.get("_id"));
+    // @ts-ignore
+    await model.get({ filter: { set, list, listIds } });
+  });
+
   it("should fetch a single model correctly", async () => {
     fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
     const result = await model.get("123");

@@ -24,10 +24,11 @@ import {
   FieldsPathItem,
   defineFieldsProperties,
   ModelData,
+  UpdateObject,
 } from "@graphand/core";
 import { Client } from "./Client.js";
 import { Subject } from "./Subject.js";
-import { canUseIds } from "./utils.js";
+import { canUseIds, traverseObject } from "./utils.js";
 import { ModelUpdaterEvent, SubjectObserver } from "@/types.js";
 import { ClientError } from "./ClientError.js";
 import FieldRelation from "./fields/Relation.js";
@@ -98,6 +99,44 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     updater.ids = ids;
   }
 
+  #sanitizeQuery<T extends string | JSONQuery>(query: T): T {
+    if (typeof query === "string") {
+      return query;
+    }
+
+    return traverseObject(query, {
+      preTransformArray: obj => {
+        return Array.from(obj);
+      },
+      preTransformObject(obj) {
+        if (obj instanceof Model) {
+          return { $_next: obj.get("_id") };
+        }
+
+        if (obj instanceof Set) {
+          return { $_next: Array.from(obj) };
+        }
+
+        return obj;
+      },
+      transform(obj) {
+        if (obj["$_next"]) {
+          return obj["$_next"];
+        }
+
+        return obj;
+      },
+    });
+  }
+
+  #sanitizeUpdate(update: UpdateObject): UpdateObject {
+    return update;
+  }
+
+  #sanitizePayload(payload: ModelJSON<T>): ModelJSON<T> {
+    return payload;
+  }
+
   checkClient(): void {
     if (!this.client) {
       throw new ClientError({
@@ -122,7 +161,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       const res = await this.client.execute(controllerModelCount, {
         ctx,
         params: { model: this.model.slug },
-        init: { body: JSON.stringify(query), headers: { Accept: "application/json" } },
+        init: { body: JSON.stringify(this.#sanitizeQuery(query)), headers: { Accept: "application/json" } },
       });
 
       return Number(await res.json().then(r => r.data));
@@ -135,52 +174,65 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         return this.#getSingle(ctx);
       }
 
-      return typeof query === "string" ? this.#getById(query, ctx) : this.#getByQuery(query, ctx);
+      return typeof query === "string" ? this.#getById(query, ctx) : this.#getByQuery(this.#sanitizeQuery(query), ctx);
     },
 
     getList: async ([query], ctx) => {
       this.checkClient();
 
-      return this.#getListInternal(query, ctx);
+      return this.#getListInternal(this.#sanitizeQuery(query), ctx);
     },
 
     createOne: async ([payload], ctx) => {
       this.checkClient();
 
-      const json = await this.#createOneInternal(payload, ctx);
+      const json = await this.#createOneInternal(this.#sanitizePayload(payload), ctx);
       return this.processInstancePayload(json).instance as ModelInstance<T>;
     },
 
     createMultiple: async ([payload], ctx) => {
       this.checkClient();
 
-      const json = await this.#createMultipleInternal(payload, ctx);
+      if (!Array.isArray(payload)) {
+        throw new ClientError({
+          message: "Payload must be an array",
+        });
+      }
+
+      const sanitizedPayload = payload.map(p => this.#sanitizePayload(p));
+      const json = await this.#createMultipleInternal(sanitizedPayload, ctx);
       return json.map(r => this.processInstancePayload(r).instance).filter(Boolean) as Array<ModelInstance<T>>;
     },
 
     updateOne: async ([query, update], ctx) => {
       this.checkClient();
 
-      return typeof query === "string" ? this.#updateById(query, update, ctx) : this.#updateByQuery(query, update, ctx);
+      const sanitizedUpdate = this.#sanitizeUpdate(update);
+
+      return typeof query === "string"
+        ? this.#updateById(query, sanitizedUpdate, ctx)
+        : this.#updateByQuery(this.#sanitizeQuery(query), sanitizedUpdate, ctx);
     },
 
     updateMultiple: async ([query, update], ctx) => {
       this.checkClient();
 
-      const json = await this.#updateMultipleInternal(query, update, ctx);
+      const json = await this.#updateMultipleInternal(this.#sanitizeQuery(query), this.#sanitizeUpdate(update), ctx);
       return json.map(r => this.processInstancePayload(r).instance).filter(Boolean) as Array<ModelInstance<T>>;
     },
 
     deleteOne: async ([query], ctx) => {
       this.checkClient();
 
-      return typeof query === "string" ? this.#deleteById(query, ctx) : this.#deleteByQuery(query, ctx);
+      return typeof query === "string"
+        ? this.#deleteById(query, ctx)
+        : this.#deleteByQuery(this.#sanitizeQuery(query), ctx);
     },
 
     deleteMultiple: async ([query], ctx) => {
       this.checkClient();
 
-      return this.#deleteMultipleInternal(query, ctx);
+      return this.#deleteMultipleInternal(this.#sanitizeQuery(query), ctx);
     },
   };
 

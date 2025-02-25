@@ -7,7 +7,7 @@ import {
   PromiseModelList,
   ValidationError,
 } from "@graphand/core";
-import { ModuleConstructor, ModuleWithConfig } from "@/types.js";
+import { ModuleConstructor, ModuleWithConfig, TransformFunction, TraverseOptions } from "@/types.js";
 import { ClientError } from "./ClientError.js";
 import { FetchError } from "./FetchError.js";
 import { ClientAdapter } from "./ClientAdapter.js";
@@ -114,4 +114,54 @@ export const getCachedPartialModelList = (promise: PromiseModelList<typeof Model
   }
 
   return null;
+};
+
+export const traverseObject = (
+  obj: any,
+  options: TraverseOptions | TransformFunction,
+  visited: WeakSet<object> = new WeakSet(),
+): any => {
+  const opts: TraverseOptions = typeof options === "function" ? { transform: options } : options;
+  const { preTransformObject, preTransformArray } = opts;
+  const transform = opts.transform ?? (v => v);
+
+  // Handle null and non-objects
+  if (obj === null || typeof obj !== "object") {
+    return transform(obj);
+  }
+
+  // Handle circular references
+  if (visited.has(obj)) {
+    return obj;
+  }
+
+  // Add current object to visited set
+  visited.add(obj);
+
+  // Pre-transform arrays if handler provided
+  if (Array.isArray(obj)) {
+    const preTransformed = preTransformArray ? preTransformArray(obj) : null;
+    if (preTransformed !== null) {
+      obj = preTransformed;
+    }
+    return obj.map((item: any, _index: number) => traverseObject(item, opts, visited));
+  }
+
+  // Pre-transform objects if handler provided
+  const preTransformed = preTransformObject ? preTransformObject(obj) : null;
+  if (preTransformed !== null) {
+    obj = preTransformed;
+  }
+
+  if (typeof obj !== "object") {
+    return transform(obj, undefined);
+  }
+
+  // Handle objects
+  const result: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = traverseObject(value, opts, visited);
+  }
+
+  return transform(result, undefined);
 };
