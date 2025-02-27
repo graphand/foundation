@@ -16,6 +16,7 @@ import { PromiseModel } from "@/lib/promise-model.js";
 import { faker } from "@faker-js/faker";
 import { Adapter } from "@/lib/adapter.js";
 import { ObjectId } from "bson";
+import { modelDecorator } from "./model-decorator.js";
 
 describe("Test Model", () => {
   const BaseModel = mockModel({
@@ -161,10 +162,12 @@ describe("Test Model", () => {
 
     it("Model initialization should use initOptions", async () => {
       const adapter = mockAdapter();
-      const base = class extends Model {
-        static slug = generateRandomString();
-        static extensible: boolean = true;
-      };
+      const base = modelDecorator()(
+        class extends Model {
+          static slug = generateRandomString();
+          static extensible: boolean = true;
+        },
+      );
 
       const model = base.extend({ adapterClass: adapter });
 
@@ -262,15 +265,17 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const slug1 = generateRandomString();
       const slug2 = generateRandomString();
-      const model = class extends Model {
-        static slug = slug1;
-        static connectable = true;
-        static extensible = true;
-        static isEnvironmentScoped = true;
-        static definition: ModelDefinition = {
-          keyField: "test",
-        };
-      }.extend({ adapterClass: adapter });
+      const model = modelDecorator()(
+        class extends Model {
+          static slug = slug1;
+          static connectable = true;
+          static extensible = true;
+          static isEnvironmentScoped = true;
+          static definition: ModelDefinition = {
+            keyField: "test",
+          };
+        },
+      ).extend({ adapterClass: adapter });
 
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: slug2,
@@ -284,12 +289,14 @@ describe("Test Model", () => {
         },
       });
 
-      const model2 = class extends model {
-        static slug = slug2;
-        static connectable = true;
-        static extensible = true;
-        static isEnvironmentScoped = true;
-      }.extend({ adapterClass: adapter });
+      const model2 = modelDecorator()(
+        class extends model {
+          static slug = slug2;
+          static connectable = true;
+          static extensible = true;
+          static isEnvironmentScoped = true;
+        },
+      ).extend({ adapterClass: adapter });
 
       await model2.initialize();
 
@@ -2348,16 +2355,18 @@ describe("Test Model", () => {
         },
       ]);
 
-      const Model1 = class extends Model {
-        static slug = slug1;
-        static connectable = true;
-        static extensible = true;
-        static isEnvironmentScoped = true;
-      }.extend({ adapterClass: adapter });
+      const Model1 = modelDecorator()(
+        class extends Model {
+          static slug = slug1;
+          static connectable = true;
+          static extensible = true;
+          static isEnvironmentScoped = true;
+        },
+      ).extend({ adapterClass: adapter });
 
       const i1 = await Model.getClass(slug1, adapter).create({});
 
-      i1._id = new ObjectId().toString();
+      i1.getData()._id = new ObjectId().toString();
 
       const i2 = await Model.getClass<
         typeof Model & {
@@ -2416,12 +2425,14 @@ describe("Test Model", () => {
 
       expect(i2.rel?.model).toHaveProperty("slug", slug1);
 
-      const Model1 = class extends Model {
-        static slug = slug1;
-        static connectable = true;
-        static extensible = true;
-        static isEnvironmentScoped = true;
-      }.extend({ adapterClass: adapter, force: true });
+      const Model1 = modelDecorator()(
+        class extends Model {
+          static slug = slug1;
+          static connectable = true;
+          static extensible = true;
+          static isEnvironmentScoped = true;
+        },
+      ).extend({ adapterClass: adapter, force: true });
 
       const i3 = await Model.getClass<
         typeof Model & {
@@ -2466,16 +2477,18 @@ describe("Test Model", () => {
         },
       ]);
 
-      const Model1 = class extends Model {
-        static slug = slug1;
-        static connectable = true;
-        static extensible = true;
-        static isEnvironmentScoped = true;
-      }.extend({ adapterClass: adapter });
+      const Model1 = modelDecorator()(
+        class extends Model {
+          static slug = slug1;
+          static connectable = true;
+          static extensible = true;
+          static isEnvironmentScoped = true;
+        },
+      ).extend({ adapterClass: adapter });
 
       const i1 = await Model.getClass(slug1, adapter).create({});
 
-      i1._id = new ObjectId().toString();
+      i1.getData()._id = new ObjectId().toString();
 
       const i2 = await Model.getClass<
         typeof Model & {
@@ -2490,7 +2503,7 @@ describe("Test Model", () => {
             };
           };
         }
-      >(slug2, adapter).create({ rel: [i1._id] });
+      >(slug2, adapter).create({ rel: [i1._id!] });
 
       expect(i2.rel?.model).toBe(Model1);
     });
@@ -2805,10 +2818,12 @@ describe("Test Model", () => {
   describe("Model realtime", () => {
     it("should keep realtime flag when getting class from slug", () => {
       const adapter = mockAdapter();
-      const TestModel = class extends Model {
-        static slug = generateRandomString();
-        static realtime = true;
-      }.extend({ adapterClass: adapter });
+      const TestModel = modelDecorator()(
+        class extends Model {
+          static slug = generateRandomString();
+          static realtime = true;
+        },
+      ).extend({ adapterClass: adapter });
 
       const ModelFromSlug = Model.getClass(TestModel.slug, adapter);
       expect(ModelFromSlug.realtime).toBe(true);
@@ -2816,10 +2831,12 @@ describe("Test Model", () => {
 
     it("should keep realtime flag when getting class from model", () => {
       const adapter = mockAdapter();
-      const TestModel = class extends Model {
-        static slug = generateRandomString();
-        static realtime = true;
-      }.extend({ adapterClass: adapter });
+      const TestModel = modelDecorator()(
+        class extends Model {
+          static slug = generateRandomString();
+          static realtime = true;
+        },
+      ).extend({ adapterClass: adapter });
 
       const ModelFromClass = Model.getClass(TestModel, adapter);
       expect(ModelFromClass.realtime).toBe(true);
@@ -2849,11 +2866,13 @@ describe("Test Model", () => {
 
     it("should not override realtime flag from datamodel if defined in class", async () => {
       const adapter = mockAdapter();
-      const TestModel = class extends Model {
-        static slug = generateRandomString();
-        static realtime = false;
-        static extensible = true;
-      }.extend({ adapterClass: adapter });
+      const TestModel = modelDecorator()(
+        class extends Model {
+          static slug = generateRandomString();
+          static realtime = false;
+          static extensible = true;
+        },
+      ).extend({ adapterClass: adapter });
 
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: TestModel.slug,

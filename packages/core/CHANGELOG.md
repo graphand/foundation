@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.6.1
+
+### Patch Changes
+
+- enfore models to use modelDecorator
+
 ## 1.6.0
 
 ### Minor Changes

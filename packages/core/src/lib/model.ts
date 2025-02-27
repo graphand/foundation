@@ -276,6 +276,13 @@ export class Model {
       return this.__initPromise;
     }
 
+    const baseClass = this.getBaseClass();
+    if (!baseClass.hasOwnProperty("__isDecorated")) {
+      throw new CoreError({
+        message: `Model ${this.slug} is not decorated with modelDecorator. Please use the @modelDecorator() decorator on your model class.`,
+      });
+    }
+
     let opts: Parameters<typeof getModelInitPromise>[1] = {};
     if (this.hasOwnProperty("__initOptions")) {
       opts = this.__initOptions;
@@ -443,6 +450,7 @@ export class Model {
 
     // If the model is not fount yet, we deduce it to be a generic model extended with a datamodel instance (extensible and environment scoped)
     model ??= class extends Model {
+      static __isDecorated = true;
       static __name = `Data<${slug}>`;
       static slug = slug as string;
       static realtime = realtime as boolean;

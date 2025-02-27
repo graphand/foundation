@@ -519,7 +519,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     opts: {
       private?: boolean;
       transform?: MediaTransformOptions;
-    },
+    } = {},
   ): string {
     const id = typeof idOrMedia === "string" ? idOrMedia : idOrMedia._id;
 

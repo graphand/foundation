@@ -13,6 +13,7 @@ import {
   ValidatorsDefinition,
   DataModel,
   ModelDefinition,
+  Models,
 } from "../index.js";
 
 export type ConditionalFieldsDefinition<Mappings extends Array<string> = Array<string>> = {
@@ -32,7 +33,7 @@ export type FieldOptionsMap = {
     default?: Readonly<string>;
   };
   [FieldTypes.RELATION]: {
-    ref: Readonly<string>;
+    ref: Readonly<keyof Models> | (string & {});
   };
   [FieldTypes.NUMBER]: {
     default?: Readonly<number>;
@@ -178,28 +179,6 @@ export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "
   : unknown) & {
   [F in keyof SystemFields<M>]?: InferFieldType<SystemFields<M>[F], S>;
 };
-
-// export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "object"> = (M extends {
-//   definition: { fields: infer R };
-// }
-//   ? R extends FieldsDefinition
-//     ? { [K in keyof R]?: InferFieldType<R[K], S> }
-//     : never
-//   : unknown) & {
-//   [F in keyof SystemFields<M>]?: InferFieldType<SystemFields<M>[F], S>;
-// };
-
-// {
-//   const dm = DataModel.hydrate();
-//   const definition: ModelDefinition = dm.definition!;
-//   console.log(definition);
-// }
-
-// {
-//   const definition: ModelDefinition = {};
-//   const dm: ModelJSON<typeof DataModel> = { definition };
-//   console.log(dm);
-// }
 
 export type InferFieldType<
   D extends FieldDefinitionGeneric<FieldTypes>,

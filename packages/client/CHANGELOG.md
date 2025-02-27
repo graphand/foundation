@@ -1,5 +1,13 @@
 # @graphand/client
 
+## 1.4.3
+
+### Patch Changes
+
+- enfore models to use modelDecorator
+- Updated dependencies
+  - @graphand/core@1.6.1
+
 ## 1.4.2
 
 ### Patch Changes

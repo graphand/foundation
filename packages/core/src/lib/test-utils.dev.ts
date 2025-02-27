@@ -6,6 +6,7 @@ import { ValidatorTypes } from "@/enums/validator-types.js";
 import { defineFieldsProperties, isObjectId } from "@/lib/utils.js";
 import { Validator } from "@/lib/validator.js";
 import { ObjectId } from "bson";
+import { modelDecorator } from "@/lib/model-decorator.js";
 
 const cache: Map<typeof Model, Set<ModelInstance<typeof Model>>> = new Map();
 
@@ -200,16 +201,18 @@ export const mockAdapter = ({
 };
 
 export const mockModel = <D extends ModelDefinition>(def?: D): typeof Model & { definition: D } => {
-  return class extends Model {
-    static slug = "a" + generateRandomString();
-    static definition = def as any;
+  return modelDecorator()(
+    class extends Model {
+      static slug = "a" + generateRandomString();
+      static definition = def as any;
 
-    constructor(doc: ModelData<typeof Model>) {
-      super(doc);
+      constructor(doc: ModelData<typeof Model>) {
+        super(doc);
 
-      defineFieldsProperties(this);
-    }
-  };
+        defineFieldsProperties(this);
+      }
+    },
+  );
 };
 
 export const generateRandomString = () => {

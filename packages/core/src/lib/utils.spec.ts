@@ -4,6 +4,7 @@ import { FieldTypes } from "@/enums/field-types.js";
 import { ModelDefinition } from "@/types/index.js";
 import { mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
 import { faker } from "@faker-js/faker";
+import { modelDecorator } from "@/lib/model-decorator.js";
 
 describe("test utils", () => {
   describe("crossModelTree", () => {
@@ -605,9 +606,11 @@ describe("test utils", () => {
     const adapter = mockAdapter();
 
     it("should return empty array if no relations found", async () => {
-      const model = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-      }.extend({ adapterClass: adapter });
+      const model = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+        },
+      ).extend({ adapterClass: adapter });
 
       const models = await getRelationModelsFromPath(model, "field1");
 
@@ -618,19 +621,21 @@ describe("test utils", () => {
     it("should work with single relation field", async () => {
       const model1 = faker.random.alphaNumeric(10);
 
-      const model = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-        static definition: ModelDefinition = {
-          fields: {
-            field1: {
-              type: FieldTypes.RELATION,
-              options: {
-                ref: model1,
+      const model = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+          static definition: ModelDefinition = {
+            fields: {
+              field1: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: model1,
+                },
               },
             },
-          },
-        };
-      }.extend({ adapterClass: adapter });
+          };
+        },
+      ).extend({ adapterClass: adapter });
 
       const models = await getRelationModelsFromPath(model, "field1");
 
@@ -642,33 +647,37 @@ describe("test utils", () => {
     it("should work with chained relation fields", async () => {
       const model2 = faker.random.alphaNumeric(10);
 
-      const model1 = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-        static definition: ModelDefinition = {
-          fields: {
-            field1: {
-              type: FieldTypes.RELATION,
-              options: {
-                ref: model2,
+      const model1 = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+          static definition: ModelDefinition = {
+            fields: {
+              field1: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: model2,
+                },
               },
             },
-          },
-        };
-      }.extend({ adapterClass: adapter });
+          };
+        },
+      ).extend({ adapterClass: adapter });
 
-      const model = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-        static definition: ModelDefinition = {
-          fields: {
-            field1: {
-              type: FieldTypes.RELATION,
-              options: {
-                ref: model1.slug,
+      const model = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+          static definition: ModelDefinition = {
+            fields: {
+              field1: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: model1.slug,
+                },
               },
             },
-          },
-        };
-      }.extend({ adapterClass: adapter });
+          };
+        },
+      ).extend({ adapterClass: adapter });
 
       const models = await getRelationModelsFromPath(model, "field1.field1");
 
@@ -679,30 +688,34 @@ describe("test utils", () => {
     });
 
     it("should work with nested relation fields", async () => {
-      const model1 = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-      }.extend({ adapterClass: adapter });
+      const model1 = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+        },
+      ).extend({ adapterClass: adapter });
 
-      const model = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-        static definition: ModelDefinition = {
-          fields: {
-            nested: {
-              type: FieldTypes.OBJECT,
-              options: {
-                fields: {
-                  rel: {
-                    type: FieldTypes.RELATION,
-                    options: {
-                      ref: model1.slug,
+      const model = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+          static definition: ModelDefinition = {
+            fields: {
+              nested: {
+                type: FieldTypes.OBJECT,
+                options: {
+                  fields: {
+                    rel: {
+                      type: FieldTypes.RELATION,
+                      options: {
+                        ref: model1.slug,
+                      },
                     },
                   },
                 },
               },
             },
-          },
-        };
-      }.extend({ adapterClass: adapter });
+          };
+        },
+      ).extend({ adapterClass: adapter });
 
       const models = await getRelationModelsFromPath(model, "nested.rel");
 
@@ -714,21 +727,23 @@ describe("test utils", () => {
     it("should work with nested field in nested array and chained relation fields", async () => {
       const model2 = faker.random.alphaNumeric(10);
 
-      const model1 = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-        static definition: ModelDefinition = {
-          fields: {
-            arr: {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.OBJECT,
-                  options: {
-                    fields: {
-                      rel: {
-                        type: FieldTypes.RELATION,
-                        options: {
-                          ref: model2,
+      const model1 = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+          static definition: ModelDefinition = {
+            fields: {
+              arr: {
+                type: FieldTypes.ARRAY,
+                options: {
+                  items: {
+                    type: FieldTypes.OBJECT,
+                    options: {
+                      fields: {
+                        rel: {
+                          type: FieldTypes.RELATION,
+                          options: {
+                            ref: model2,
+                          },
                         },
                       },
                     },
@@ -736,29 +751,31 @@ describe("test utils", () => {
                 },
               },
             },
-          },
-        };
-      }.extend({ adapterClass: adapter });
+          };
+        },
+      ).extend({ adapterClass: adapter });
 
-      const model = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-        static definition: ModelDefinition = {
-          fields: {
-            nested: {
-              type: FieldTypes.OBJECT,
-              options: {
-                fields: {
-                  arr: {
-                    type: FieldTypes.ARRAY,
-                    options: {
-                      items: {
-                        type: FieldTypes.OBJECT,
-                        options: {
-                          fields: {
-                            rel: {
-                              type: FieldTypes.RELATION,
-                              options: {
-                                ref: model1.slug,
+      const model = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+          static definition: ModelDefinition = {
+            fields: {
+              nested: {
+                type: FieldTypes.OBJECT,
+                options: {
+                  fields: {
+                    arr: {
+                      type: FieldTypes.ARRAY,
+                      options: {
+                        items: {
+                          type: FieldTypes.OBJECT,
+                          options: {
+                            fields: {
+                              rel: {
+                                type: FieldTypes.RELATION,
+                                options: {
+                                  ref: model1.slug,
+                                },
                               },
                             },
                           },
@@ -769,9 +786,9 @@ describe("test utils", () => {
                 },
               },
             },
-          },
-        };
-      }.extend({ adapterClass: adapter });
+          };
+        },
+      ).extend({ adapterClass: adapter });
 
       const models = await getRelationModelsFromPath(model, "nested.arr.[].rel.arr.[].rel");
       expect(models).toBeInstanceOf(Array);
@@ -781,16 +798,18 @@ describe("test utils", () => {
     });
 
     it("should return empty array if no relations found in nested field", async () => {
-      const model = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-        static definition: ModelDefinition = {
-          fields: {
-            nested: {
-              type: FieldTypes.OBJECT,
+      const model = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+          static definition: ModelDefinition = {
+            fields: {
+              nested: {
+                type: FieldTypes.OBJECT,
+              },
             },
-          },
-        };
-      }.extend({ adapterClass: adapter });
+          };
+        },
+      ).extend({ adapterClass: adapter });
 
       const models = await getRelationModelsFromPath(model, "nested.unknown.field");
 
@@ -799,30 +818,34 @@ describe("test utils", () => {
     });
 
     it("should work with nested array in chained relation field", async () => {
-      const model1 = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-        static definition: ModelDefinition = {
-          fields: {
-            nested: {
-              type: FieldTypes.OBJECT,
-            },
-          },
-        };
-      }.extend({ adapterClass: adapter });
-
-      const model = class extends Model {
-        static slug = faker.random.alphaNumeric(10);
-        static definition: ModelDefinition = {
-          fields: {
-            rel: {
-              type: FieldTypes.RELATION,
-              options: {
-                ref: model1.slug,
+      const model1 = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+          static definition: ModelDefinition = {
+            fields: {
+              nested: {
+                type: FieldTypes.OBJECT,
               },
             },
-          },
-        };
-      }.extend({ adapterClass: adapter });
+          };
+        },
+      ).extend({ adapterClass: adapter });
+
+      const model = modelDecorator()(
+        class extends Model {
+          static slug = faker.random.alphaNumeric(10);
+          static definition: ModelDefinition = {
+            fields: {
+              rel: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: model1.slug,
+                },
+              },
+            },
+          };
+        },
+      ).extend({ adapterClass: adapter });
 
       const models = await getRelationModelsFromPath(model, "rel.nested.unknown.field");
 

@@ -50,7 +50,7 @@ export interface ModelsBase {
 
 export type Models = Omit<ModelsBase, keyof ModelsOverrides> & ModelsOverrides;
 
-export type DecodeRefModel<T extends string> = T extends keyof Models ? Models[T] : typeof Model;
+export type DecodeRefModel<T extends string | keyof Models> = T extends keyof Models ? Models[T] : typeof Model;
 
 export type ModelInstance<M extends typeof Model = typeof Model> = (M["definition"] extends ModelDefinition
   ? InstanceType<typeof Model>
