@@ -143,7 +143,7 @@ export class Config {
 
   async save(): Promise<void> {
     const content = `
-        import { defineConfig } from "@graphand/cli.js";
+        import { defineConfig } from "@graphand/cli";
 
         export default defineConfig($CONFIG);
     `

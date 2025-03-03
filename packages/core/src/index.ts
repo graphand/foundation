@@ -89,4 +89,5 @@ export {
   getNestedFieldsArrayForModel,
   getRelationModelsFromPath,
   createValidationError,
+  assignDatamodel,
 } from "@/lib/utils.js";

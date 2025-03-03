@@ -26,4 +26,7 @@ export type GDXType<D extends GDXDatamodels | undefined> = {
   [K in keyof Models]?: GDXEntryModel<Models[K]>;
 };
 
+// Extract the datamodels type from a GDX object
+export type InferGDXDatamodels<T> = T extends GDXType<infer D> ? D : never;
+
 export const defineGDX = <D extends GDXDatamodels | undefined>(gdx: GDXType<D>) => gdx;

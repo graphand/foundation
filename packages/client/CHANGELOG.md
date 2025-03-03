@@ -1,5 +1,13 @@
 # @graphand/client
 
+## 1.4.4
+
+### Patch Changes
+
+- improve models management
+- Updated dependencies
+  - @graphand/core@1.6.2
+
 ## 1.4.3
 
 ### Patch Changes

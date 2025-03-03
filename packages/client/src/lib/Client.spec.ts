@@ -1,7 +1,17 @@
 import { vi } from "vitest";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
-import { Account, DataModel, IdentityTypes, Model, ModelInstance, ModelList, TransactionCtx } from "@graphand/core";
+import {
+  Account,
+  DataModel,
+  defineGDX,
+  IdentityTypes,
+  Model,
+  modelDecorator,
+  ModelInstance,
+  ModelList,
+  TransactionCtx,
+} from "@graphand/core";
 import { Client } from "./Client.js";
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.js";
 import { ClientAdapter } from "./ClientAdapter.js";
@@ -895,6 +905,203 @@ describe("Client", () => {
       expect(res).toBeInstanceOf(Account);
       expect(res?.get("_id")).toBe(account._id);
       expect(res?.get("_email")).toBe(account._email);
+    });
+  });
+
+  describe("models management", () => {
+    it("should register and retrieve a model correctly", async () => {
+      const gdx = defineGDX({
+        datamodels: {
+          test: {
+            definition: {
+              fields: {
+                title: {
+                  type: "text",
+                },
+              },
+            },
+          },
+        },
+      });
+
+      @modelDecorator()
+      class Test extends Model {
+        static slug = "test" as const;
+        static definition = gdx.datamodels.test.definition;
+        foo() {
+          return "bar";
+        }
+      }
+
+      const client = new Client([], { project: "test" }, [Test], gdx);
+      const model = client.getModel("test");
+      expect(model).toBeDefined();
+      expect(model.slug).toBe("test");
+    });
+
+    it("should hydrate model instances correctly", async () => {
+      const gdx = defineGDX({
+        datamodels: {
+          test: {
+            definition: {
+              fields: {
+                title: {
+                  type: "text",
+                },
+              },
+            },
+          },
+        },
+      });
+
+      @modelDecorator()
+      class Test extends Model {
+        static slug = "test" as const;
+        static definition = gdx.datamodels.test.definition;
+        foo() {
+          return "bar";
+        }
+      }
+
+      const client = new Client([], { project: "test" }, [Test], gdx);
+      const model = client.getModel("test");
+      const instance = model.hydrate({ title: "test" });
+      expect(instance).toBeInstanceOf(Test);
+      expect(instance.title).toBe("test");
+    });
+
+    it("should preserve custom methods in hydrated instances", async () => {
+      const gdx = defineGDX({
+        datamodels: {
+          test: {
+            definition: {
+              fields: {
+                title: {
+                  type: "text",
+                },
+              },
+            },
+          },
+        },
+      });
+
+      @modelDecorator()
+      class Test extends Model {
+        static slug = "test" as const;
+        static definition = gdx.datamodels.test.definition;
+        foo() {
+          return "bar";
+        }
+      }
+
+      const client = new Client([], { project: "test" }, [Test], gdx);
+      const model = client.getModel("test");
+      const instance = model.hydrate({ title: "test" });
+      expect(instance.foo()).toBe("bar");
+    });
+
+    it("should correctly register models that extend core models", async () => {
+      const gdx = defineGDX({
+        datamodels: {
+          accounts: {
+            definition: {
+              fields: {
+                firstname: {
+                  type: "text",
+                },
+                lastname: {
+                  type: "text",
+                },
+              },
+            },
+          },
+        },
+      });
+
+      @modelDecorator()
+      class _Account extends Account {
+        static slug = "accounts" as const;
+        foo() {
+          return "bar";
+        }
+      }
+
+      const client = new Client([], { project: "test" }, [_Account], gdx);
+      const model = client.getModel("accounts");
+      expect(model).toBeDefined();
+      expect(model.slug).toBe("accounts");
+    });
+
+    it("should correctly hydrate extended core model instances", async () => {
+      const gdx = defineGDX({
+        datamodels: {
+          accounts: {
+            definition: {
+              fields: {
+                firstname: {
+                  type: "text",
+                },
+                lastname: {
+                  type: "text",
+                },
+              },
+            },
+          },
+        },
+      });
+
+      @modelDecorator()
+      class _Account extends Account {
+        static slug = "accounts" as const;
+        foo() {
+          return "bar";
+        }
+      }
+
+      const client = new Client([], { project: "test" }, [_Account], gdx);
+      const model = client.getModel("accounts");
+      const instance = model.hydrate({
+        firstname: "John",
+        lastname: "Doe",
+        _email: "john.doe@example.com",
+      });
+
+      expect(instance).toBeInstanceOf(_Account);
+      expect(instance.firstname).toBe("John");
+      expect(instance.lastname).toBe("Doe");
+      expect(instance._email).toBe("john.doe@example.com");
+    });
+
+    it("should preserve custom methods in extended core model instances", async () => {
+      const gdx = defineGDX({
+        datamodels: {
+          accounts: {
+            definition: {
+              fields: {
+                firstname: {
+                  type: "text",
+                },
+                lastname: {
+                  type: "text",
+                },
+              },
+            },
+          },
+        },
+      });
+
+      @modelDecorator()
+      class _Account extends Account {
+        static slug = "accounts" as const;
+        foo() {
+          return "bar";
+        }
+      }
+
+      const client = new Client([], { project: "test" }, [_Account], gdx);
+      const model = client.getModel("accounts");
+      const instance = model.hydrate({ firstname: "John", lastname: "Doe" });
+      expect(instance.foo()).toBe("bar");
     });
   });
 });

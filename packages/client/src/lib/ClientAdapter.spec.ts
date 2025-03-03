@@ -1544,18 +1544,17 @@ describe("ClientAdapter", () => {
         );
       });
 
-      const model = client.getModel<
-        typeof Model & {
-          definition: {
-            fields: {
-              title: { type: FieldTypes.TEXT };
-              selfRef: {
-                type: FieldTypes.RELATION;
-              };
+      const model = client.getModel(slug) as typeof Model & {
+        definition: {
+          fields: {
+            title: { type: FieldTypes.TEXT };
+            selfRef: {
+              type: FieldTypes.RELATION;
             };
           };
-        }
-      >(slug);
+        };
+      };
+
       await model.get(id1);
       const adapter = model.getAdapter() as unknown as ClientAdapter;
 

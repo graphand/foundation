@@ -1,6 +1,6 @@
 {
   "name": "@graphand/client",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "private": false,
   "type": "module",
   "exports": {
@@ -27,7 +27,7 @@
     "jsonwebtoken": "^9.0.2"
   },
   "dependencies": {
-    "@graphand/core": "^1.6.1"
+    "@graphand/core": "^1.6.2"
   },
   "files": [
     "dist",

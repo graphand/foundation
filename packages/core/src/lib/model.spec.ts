@@ -68,6 +68,22 @@ describe("Test Model", () => {
     });
   });
 
+  it("should be able to save a model with a model on a child adapter", async () => {
+    class CustomAccount extends Account {
+      static __name = "CustomAccount";
+      static slug = "accounts" as const;
+      static foo = "bar";
+    }
+
+    class AdapterA<T extends typeof Model> extends Adapter<T> {
+      static __name = "AdapterA";
+    }
+
+    expect(() => Model.getClass(CustomAccount, Adapter)).toThrowError(); // Model "accounts" is already registered with the default account class
+    const model = Model.getClass(CustomAccount, AdapterA);
+    expect(model.__name).toBe("CustomAccount");
+  });
+
   describe("Model initialization", () => {
     it("should be able to manually define fields", () => {
       const adapter = mockAdapter();
@@ -209,7 +225,7 @@ describe("Test Model", () => {
 
       const lastCall2Args = initFn2.mock.calls?.[0]?.[0];
 
-      expect(lastCall2Args?.datamodel).toBeInstanceOf(DataModel);
+      expect(lastCall2Args?.datamodel).toHaveProperty("definition");
 
       expect(model.getKeyField()).toEqual("_id");
       expect(model2.getKeyField()).toEqual("test");

@@ -1092,15 +1092,12 @@ export const crossFields = (
   return results;
 };
 
-export const assignDatamodel = async <T extends typeof Model>(model: T, datamodel: ModelInstance<typeof DataModel>) => {
-  model.__dm = datamodel ? String(datamodel._id) : null;
-
+export const assignDatamodel = async <T extends typeof Model>(model: T, datamodel: ModelJSON<typeof DataModel>) => {
   const baseClass = model.getBaseClass();
 
   model.realtime = baseClass.realtime || datamodel?.realtime || false;
 
-  const data = datamodel?.getData() as ModelJSON<typeof DataModel>;
-  const definition = data?.definition as ModelDefinition;
+  const definition = datamodel?.definition;
   const baseDefinition = (baseClass.definition ?? {}) as ModelDefinition;
 
   const fields = {};
@@ -1163,7 +1160,7 @@ export const getModelInitPromise = (
       }, Promise.resolve());
 
       if (model.extensible) {
-        await model.reloadModel({ datamodel, ctx });
+        await model.reloadModel({ datamodel: datamodel?.toJSON(), ctx });
       }
 
       const hooksAfter = getRecursiveHooksFromModel(model, "initialize", "after");

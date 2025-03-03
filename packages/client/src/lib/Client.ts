@@ -13,13 +13,17 @@ import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.js";
 import {
   type Account,
   Adapter,
+  assignDatamodel,
   Controller,
   controllerCurrentAccount,
   ControllerInput,
   controllerMediaPrivate,
   controllerMediaPublic,
   CoreError,
+  DataModel,
   ErrorCodes,
+  GDXDatamodels,
+  GDXType,
   IdentityTypes,
   InferControllerInput,
   JSONObject,
@@ -27,6 +31,8 @@ import {
   MediaTransformOptions,
   Model,
   ModelInstance,
+  ModelJSON,
+  Models,
   TransactionCtx,
 } from "@graphand/core";
 import { ClientAdapter } from "./ClientAdapter.js";
@@ -41,17 +47,25 @@ const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   maxRetries: 3,
 };
 
-export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
+export class Client<
+  T extends ModuleConstructor[] = ModuleConstructor[],
+  M extends (typeof Model)[] = (typeof Model)[],
+  D extends GDXDatamodels | undefined = undefined,
+> {
   #clientModules: ClientModules<T>;
   #options: BehaviorSubject<ClientOptions>;
   #modules: Map<string, Module>;
   #modulesInitPromises: Map<string, Promise<void> | void> | undefined;
   #hooks: Set<Hook>;
   #adapterClass: typeof ClientAdapter | undefined;
+  #gdx: GDXType<GDXDatamodels> | undefined;
 
-  constructor(modules: ClientModules<T>, options?: ClientOptions) {
+  constructor(modules: ClientModules<T>, options?: ClientOptions, models: M = [] as unknown as M, gdx?: GDXType<D>) {
     this.#clientModules = modules;
     this.#options = new BehaviorSubject(options || { ...DEFAULT_OPTIONS, project: null });
+    this.#gdx = gdx as GDXType<GDXDatamodels>;
+
+    models.forEach(m => this.getModel(m));
 
     // Checking there are no duplicate module names
     const moduleNames = modules.map(m => decodeClientModule(m).moduleClass.moduleName);
@@ -100,7 +114,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return this.#modules.get(name) || null;
   }
 
-  use<U extends ModuleConstructor>(...m: ModuleWithConfig<U>): Client<[...T, U]> {
+  use<U extends ModuleConstructor>(...m: ModuleWithConfig<U>): Client<[...T, U], M, D> {
     const { moduleClass, conf } = decodeClientModule(m);
 
     if (!moduleClass.moduleName) {
@@ -125,7 +139,7 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
       this.#modulesInitPromises.set(moduleClass.moduleName, module[symbolModuleInit]());
     }
 
-    return this as unknown as Client<[...T, U]>;
+    return this as unknown as Client<[...T, U], M, D>;
   }
 
   resolveDependencies(module: Module) {
@@ -301,9 +315,27 @@ export class Client<T extends ModuleConstructor[] = ModuleConstructor[]> {
     return globalThis.__GLOBAL_CLIENT__ as Client;
   }
 
-  getModel: (typeof Model)["getClass"] = (input, adapterClass) => {
-    return Model.getClass(input, this.getAdapterClass(adapterClass));
-  };
+  getModel<MC extends typeof Model>(_input: MC): MC & (MC["slug"] extends keyof D ? D[MC["slug"]] : {});
+
+  getModel<S extends Extract<M[number]["slug"], string>>(
+    _input: S,
+  ): [Extract<M[number], { slug: S }>] extends [never]
+    ? typeof Model & (S extends keyof D ? D[S] : {})
+    : Extract<M[number], { slug: S }> & (S extends keyof D ? D[S] : {});
+
+  getModel<MK extends keyof D | keyof Models>(
+    _input: MK,
+  ): (MK extends keyof Models ? Models[MK] : typeof Model) & (MK extends keyof D ? D[MK] : {});
+
+  getModel(_input: string): typeof Model;
+
+  getModel(input: string | typeof Model | keyof D | keyof Models): typeof Model {
+    const model: typeof Model = Model.getClass(input as any, this.getAdapterClass());
+    if (this.#gdx?.datamodels[model.slug]) {
+      assignDatamodel(model, this.#gdx.datamodels[model.slug] as ModelJSON<typeof DataModel>);
+    }
+    return model;
+  }
 
   async me(useClaimToken = true): Promise<ModelInstance<typeof Account> | null> {
     if (!this.options.accessToken) {

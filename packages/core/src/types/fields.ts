@@ -54,7 +54,7 @@ export type FieldOptionsMap = {
   };
   [FieldTypes.ENUM]: {
     default?: Readonly<string>;
-    enum: Readonly<string[]>;
+    enum: Array<Readonly<keyof number> | (string & {})>;
   };
   [FieldTypes.DEFAULT]: never;
   [FieldTypes.ID]: never;

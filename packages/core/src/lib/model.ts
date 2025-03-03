@@ -66,7 +66,6 @@ export class Model {
   static __initPromise: Promise<void>;
   static __adapter: Adapter;
   static __extendedClass: typeof Model;
-  static __dm?: string | null; // The id of the datamodel that initialized the model if extensible. null if datamodel not found
   static __memo: {
     fieldsMap?: Map<string, Field>;
     validatorsArray?: Array<Validator | null>;
@@ -256,6 +255,7 @@ export class Model {
 
     // If the register option is set or an adapter class is provided and the model has a slug, register the model
     if (opts?.register ?? (opts?.adapterClass && model.slug)) {
+      console.log(opts?.adapterClass?.__name);
       opts?.adapterClass?.registerModel(model, opts?.force);
     }
 
@@ -299,15 +299,16 @@ export class Model {
    * @returns
    */
   static async reloadModel(opts?: {
-    datamodel?: ModelInstance<typeof DataModel>;
+    datamodel?: ModelJSON<typeof DataModel>;
     ctx?: TransactionCtx;
-  }): Promise<ModelInstance<typeof DataModel> | undefined> {
+  }): Promise<ModelJSON<typeof DataModel> | undefined> {
     let { datamodel, ctx } = opts ?? {};
     const adapter = this.getAdapter();
 
     if (!datamodel) {
       datamodel = await Model.getClass("datamodels", adapter.base)
         .get(this.slug, ctx)
+        .then(dm => dm?.toJSON())
         .catch(() => undefined);
     }
 
@@ -445,7 +446,7 @@ export class Model {
         return adapterModel;
       }
 
-      model = adapterModel;
+      model ??= adapterModel;
     }
 
     // If the model is not fount yet, we deduce it to be a generic model extended with a datamodel instance (extensible and environment scoped)
@@ -477,7 +478,7 @@ export class Model {
 
     // If the input is a datamodel instance, assign it to the model
     if (dm) {
-      assignDatamodel(model, dm);
+      assignDatamodel(model, dm?.toJSON());
     }
 
     return model as any;

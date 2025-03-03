@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.6.2
+
+### Patch Changes
+
+- improve models management
+
 ## 1.6.1
 
 ### Patch Changes
