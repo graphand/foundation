@@ -518,15 +518,20 @@ export class Client<
     return payloadAfter.res as Response;
   }
 
-  hook<P extends HookPhase>(phase: P, handler: Hook<P>["fn"], options: Omit<Hook<P>, "fn" | "phase"> = {}) {
-    const hook: Hook<P> = {
+  hook<P extends HookPhase, C extends Client>(
+    this: C,
+    phase: P,
+    handler: Hook<P, C>["fn"],
+    options: Omit<Hook<P, C>, "fn" | "phase"> = {},
+  ) {
+    const hook: Hook<P, C> = {
       phase,
       order: options.order ?? 0,
       handleErrors: options.handleErrors ?? false,
       fn: handler,
     };
 
-    this.#hooks.add(hook);
+    this.#hooks.add(hook as unknown as Hook);
 
     return this;
   }

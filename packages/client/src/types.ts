@@ -7,6 +7,8 @@ import {
   Model,
   FieldTypes,
   FieldDefinitionGeneric,
+  GDXDatamodels,
+  GDXType,
 } from "@graphand/core";
 import { Module } from "./lib/Module.js";
 import { Client } from "./lib/Client.js";
@@ -88,7 +90,7 @@ export type ClientModules<T extends ModuleConstructor[] = []> = {
 };
 
 // Define the ClientOptions type
-export type ClientOptions = {
+export type ClientOptions<D extends GDXDatamodels | undefined = undefined> = {
   project: string | null;
   endpoint?: string;
   ssl?: boolean;
@@ -98,6 +100,7 @@ export type ClientOptions = {
   headers?: Record<string, string>;
   disableCache?: boolean | Array<string>;
   disableStore?: boolean | Array<string>;
+  gdx?: GDXType<D>;
 };
 
 export type SubjectObserver<T> = (_value: T, _previousValue?: T) => void;
@@ -122,11 +125,11 @@ export type HookCallbackArgs<P extends HookPhase> = P extends "beforeRequest"
       res: Response | undefined;
     };
 
-export type Hook<P extends HookPhase = HookPhase> = {
+export type Hook<P extends HookPhase = HookPhase, C extends Client = Client> = {
   phase: P;
   order?: number;
   handleErrors?: boolean;
-  fn: (this: Client, _args: HookCallbackArgs<P>) => void;
+  fn: (this: C, _args: HookCallbackArgs<P>) => void;
 };
 
 export type Transaction = {
