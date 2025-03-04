@@ -149,14 +149,25 @@ describe("Client", () => {
       ).toThrow();
     });
 
-    // Test 10: Client.use() method
-    it("should allow adding new modules using the use() method", () => {
+    // Test 10: Client.useModule() method
+    it("should allow adding new modules using the useModule() method", () => {
       class LateModule extends Module {
         static moduleName = "LateModule" as const;
       }
       const client = new Client([]);
-      const updatedClient = client.use(LateModule, {});
+      const updatedClient = client.useModule(LateModule, {});
       expect(updatedClient.get("LateModule")).toBeInstanceOf(LateModule);
+    });
+
+    // Test 10b: Client.useModel() method
+    it("should allow adding new models using the useModel() method", () => {
+      class LateModel extends Model {
+        static slug = "LateModel" as const;
+      }
+      const client = new Client([]);
+      const updatedClient = client.useModel(LateModel);
+      const model = updatedClient.getModel("LateModel");
+      expect(model.hydrate()).toBeInstanceOf(LateModel);
     });
 
     // Test 11: Module configuration merging
@@ -933,7 +944,7 @@ describe("Client", () => {
         }
       }
 
-      const client = new Client([], { project: "test" }, [Test], gdx);
+      const client = new Client([], { project: "test" }, [Test]);
       const model = client.getModel("test");
       expect(model).toBeDefined();
       expect(model.slug).toBe("test");
@@ -963,7 +974,7 @@ describe("Client", () => {
         }
       }
 
-      const client = new Client([], { project: "test" }, [Test], gdx);
+      const client = new Client([], { project: "test", gdx }, [Test]);
       const model = client.getModel("test");
       const instance = model.hydrate({ title: "test" });
       expect(instance).toBeInstanceOf(Test);
@@ -994,7 +1005,7 @@ describe("Client", () => {
         }
       }
 
-      const client = new Client([], { project: "test" }, [Test], gdx);
+      const client = new Client([], { project: "test", gdx }, [Test]);
       const model = client.getModel("test");
       const instance = model.hydrate({ title: "test" });
       expect(instance.foo()).toBe("bar");
@@ -1026,7 +1037,7 @@ describe("Client", () => {
         }
       }
 
-      const client = new Client([], { project: "test" }, [_Account], gdx);
+      const client = new Client([], { project: "test", gdx }, [_Account]);
       const model = client.getModel("accounts");
       expect(model).toBeDefined();
       expect(model.slug).toBe("accounts");
@@ -1058,7 +1069,7 @@ describe("Client", () => {
         }
       }
 
-      const client = new Client([], { project: "test" }, [_Account], gdx);
+      const client = new Client([], { project: "test", gdx }, [_Account]);
       const model = client.getModel("accounts");
       const instance = model.hydrate({
         firstname: "John",
@@ -1098,7 +1109,7 @@ describe("Client", () => {
         }
       }
 
-      const client = new Client([], { project: "test" }, [_Account], gdx);
+      const client = new Client([], { project: "test", gdx }, [_Account]);
       const model = client.getModel("accounts");
       const instance = model.hydrate({ firstname: "John", lastname: "Doe" });
       expect(instance.foo()).toBe("bar");

@@ -23,7 +23,6 @@ import {
   DataModel,
   ErrorCodes,
   GDXDatamodels,
-  GDXType,
   IdentityTypes,
   InferControllerInput,
   JSONObject,
@@ -49,23 +48,22 @@ const DEFAULT_OPTIONS: Partial<ClientOptions> = {
 
 export class Client<
   T extends ModuleConstructor[] = ModuleConstructor[],
-  M extends (typeof Model)[] = (typeof Model)[],
+  M extends (typeof Model)[] = [],
   D extends GDXDatamodels | undefined = undefined,
 > {
   #clientModules: ClientModules<T>;
-  #options: BehaviorSubject<ClientOptions>;
+  #options: BehaviorSubject<ClientOptions<D>>;
   #modules: Map<string, Module>;
   #modulesInitPromises: Map<string, Promise<void> | void> | undefined;
   #hooks: Set<Hook>;
   #adapterClass: typeof ClientAdapter | undefined;
-  #gdx: GDXType<GDXDatamodels> | undefined;
 
-  constructor(modules: ClientModules<T>, options?: ClientOptions, models: M = [] as unknown as M, gdx?: GDXType<D>) {
+  constructor(modules: ClientModules<T>, options?: ClientOptions<D>, models: M = [] as unknown as M) {
     this.#clientModules = modules;
     this.#options = new BehaviorSubject(options || { ...DEFAULT_OPTIONS, project: null });
-    this.#gdx = gdx as GDXType<GDXDatamodels>;
 
-    models.forEach(m => this.getModel(m));
+    // Registering models
+    models.forEach(m => this.useModel(m));
 
     // Checking there are no duplicate module names
     const moduleNames = modules.map(m => decodeClientModule(m).moduleClass.moduleName);
@@ -82,7 +80,7 @@ export class Client<
     this.#modules = new Map();
 
     // Registering modules
-    modules.forEach(m => this.use(...m));
+    modules.forEach(m => this.useModule(...m));
 
     // Resolving dependencies
     for (const module of this.#modules.values()) {
@@ -93,7 +91,7 @@ export class Client<
     this.init().catch(() => null);
   }
 
-  subscribeOptions(observer: SubjectObserver<ClientOptions>) {
+  subscribeOptions(observer: SubjectObserver<ClientOptions<D>>) {
     return this.#options.subscribe(observer);
   }
 
@@ -101,7 +99,7 @@ export class Client<
     this.#options.next({ ...this.#options.getValue(), ...options });
   }
 
-  get options(): ClientOptions {
+  get options(): ClientOptions<D> {
     const options = this.#options.getValue();
     return { ...DEFAULT_OPTIONS, ...options };
   }
@@ -114,7 +112,7 @@ export class Client<
     return this.#modules.get(name) || null;
   }
 
-  use<U extends ModuleConstructor>(...m: ModuleWithConfig<U>): Client<[...T, U], M, D> {
+  useModule<U extends ModuleConstructor>(...m: ModuleWithConfig<U>): Client<[...T, U], M, D> {
     const { moduleClass, conf } = decodeClientModule(m);
 
     if (!moduleClass.moduleName) {
@@ -125,7 +123,7 @@ export class Client<
       throw new Error(`Module ${moduleClass.moduleName} is already registered`);
     }
 
-    const module = new moduleClass(conf, this);
+    const module = new moduleClass(conf, this as Client);
     this.#modules.set(moduleClass.moduleName, module);
 
     // Waiting for the client to have finished registering all modules and dependencies bezfore initializing them
@@ -142,6 +140,12 @@ export class Client<
     return this as unknown as Client<[...T, U], M, D>;
   }
 
+  useModel<U extends typeof Model>(model: U): Client<T, [...M, U], D> {
+    this.getModel(model);
+
+    return this as Client<T, [...M, U], D>;
+  }
+
   resolveDependencies(module: Module) {
     if (!module.dependencies) {
       return;
@@ -149,7 +153,7 @@ export class Client<
 
     for (const dependency of module.dependencies) {
       if (dependency.moduleName && !this.#modules.has(dependency.moduleName)) {
-        this.use(dependency);
+        this.useModule(dependency);
       }
     }
   }
@@ -257,7 +261,7 @@ export class Client<
         }
 
         executed.add(hook);
-        await hook.fn.call(this, payload);
+        await hook.fn.call(this as Client, payload);
       }, Promise.resolve());
     } catch (e) {
       if (transaction.abortToken === e) {
@@ -279,7 +283,7 @@ export class Client<
 
         try {
           executed.add(h);
-          await h.fn.call(this, payload);
+          await h.fn.call(this as Client, payload);
         } catch (e) {
           payload.err ??= [];
           payload.err.push(e as Error);
@@ -298,7 +302,7 @@ export class Client<
 
   setAdapterClass(adapterClass: typeof ClientAdapter) {
     this.#adapterClass = class extends adapterClass {} as typeof ClientAdapter;
-    this.#adapterClass.client = this;
+    this.#adapterClass.client = this as Client;
 
     return this;
   }
@@ -331,8 +335,9 @@ export class Client<
 
   getModel(input: string | typeof Model | keyof D | keyof Models): typeof Model {
     const model: typeof Model = Model.getClass(input as any, this.getAdapterClass());
-    if (this.#gdx?.datamodels[model.slug]) {
-      assignDatamodel(model, this.#gdx.datamodels[model.slug] as ModelJSON<typeof DataModel>);
+    const gdx = this.options.gdx;
+    if (model.slug && gdx?.datamodels?.[model.slug]) {
+      assignDatamodel(model, gdx.datamodels[model.slug] as ModelJSON<typeof DataModel>);
     }
     return model;
   }
