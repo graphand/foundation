@@ -18,7 +18,7 @@ export type GDXEntryModel<T extends ModelJSON<typeof DataModel> | { definition: 
 
 export type GDXDatamodels = Record<string, ModelJSON<typeof DataModel>>;
 
-export type GDXType<D extends GDXDatamodels | undefined> = {
+export type GDXType<D extends GDXDatamodels = {}> = {
   datamodels: D;
 } & {
   [K in keyof D]?: D[K] extends ModelJSON<typeof DataModel> ? GDXEntryModel<D[K]> : never;
@@ -29,4 +29,4 @@ export type GDXType<D extends GDXDatamodels | undefined> = {
 // Extract the datamodels type from a GDX object
 export type InferGDXDatamodels<T> = T extends GDXType<infer D> ? D : never;
 
-export const defineGDX = <D extends GDXDatamodels | undefined>(gdx: GDXType<D>) => gdx;
+export const defineGDX = <D extends GDXDatamodels = {}>(gdx: GDXType<D>) => gdx;

@@ -7,7 +7,7 @@ import { Client } from "@graphand/client";
 export const commandVersion = new Command("version").description("Get the current version").action(async () => {
   await withSpinner(async spinner => {
     const client = await getClient();
-    const headClient = new Client([], {
+    const headClient = new Client({
       ...client.options,
       disableCache: true,
       project: null,

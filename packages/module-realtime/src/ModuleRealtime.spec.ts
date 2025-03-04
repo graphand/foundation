@@ -9,7 +9,7 @@ import RealtimeUpload from "./lib/RealtimeUpload.js";
 import { Server } from "socket.io";
 
 describe("ModuleRealtime", () => {
-  let client: Client<[typeof ModuleRealtime]>;
+  let client: Client<{}, [typeof ModuleRealtime]>;
   let spyFetch: MockInstance;
   let io: Server;
 
@@ -59,12 +59,15 @@ describe("ModuleRealtime", () => {
   });
 
   beforeEach(() => {
-    client = new Client([[ModuleRealtime]], {
-      endpoint: "127.0.0.1:3000",
-      ssl: false,
-      accessToken: faker.internet.password(),
-      project: null,
-    });
+    client = new Client(
+      {
+        endpoint: "127.0.0.1:3000",
+        ssl: false,
+        accessToken: faker.internet.password(),
+        project: null,
+      },
+      [[ModuleRealtime]],
+    );
   });
 
   afterEach(() => {
@@ -84,7 +87,7 @@ describe("ModuleRealtime", () => {
   });
 
   it("should not connect automatically when autoConnect is false", async () => {
-    const _client = new Client([[ModuleRealtime, { autoConnect: false }]], client.options);
+    const _client = new Client(client.options, [[ModuleRealtime, { autoConnect: false }]]);
     await _client.init();
     expect(_client.get("realtime").getSocket(false)).toBeUndefined();
     _client.destroy();
@@ -206,10 +209,10 @@ describe("ModuleRealtime", () => {
   });
 
   describe("autoSubscribe", () => {
-    let _client: Client<[typeof ModuleRealtime]>;
+    let _client: Client<{}, [typeof ModuleRealtime]>;
 
     beforeEach(() => {
-      _client = new Client([[ModuleRealtime, { autoSubscribe: true, autoConnect: false }]], client.options);
+      _client = new Client(client.options, [[ModuleRealtime, { autoSubscribe: true, autoConnect: false }]]);
     });
 
     it("should auto subscribe to models on Model.subscribe", async () => {

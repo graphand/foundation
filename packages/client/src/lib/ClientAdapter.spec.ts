@@ -39,9 +39,9 @@ describe("ClientAdapter", () => {
   let fetchMock: MockInstance;
 
   beforeEach(() => {
-    client = new Client([], {
-      accessToken: "...",
-      project: null,
+    client = new Client({
+      project: "test-project",
+      accessToken: "test-token",
     });
 
     model = client.getModel(MockModel);
@@ -1764,9 +1764,9 @@ describe("ClientAdapter", () => {
     let adapterWithDisabledCache: ClientAdapter;
 
     beforeEach(() => {
-      clientWithDisabledCache = new Client([], {
-        accessToken: "...",
-        project: null,
+      clientWithDisabledCache = new Client({
+        project: "test-project",
+        accessToken: "test-token",
         disableCache: true,
       });
       modelWithDisabledCache = clientWithDisabledCache.getModel(MockModel);
@@ -1810,9 +1810,9 @@ describe("ClientAdapter", () => {
     });
 
     it("should not use cache for specific models when disableCache is an array", async () => {
-      const clientWithSelectiveCache = new Client([], {
-        accessToken: "...",
-        project: null,
+      const clientWithSelectiveCache = new Client({
+        project: "test-project",
+        accessToken: "test-token",
         disableCache: ["mockModel"],
       });
       const modelWithSelectiveCache = clientWithSelectiveCache.getModel(MockModel);
@@ -1833,9 +1833,9 @@ describe("ClientAdapter", () => {
     let adapterWithDisabledStore: ClientAdapter;
 
     beforeEach(() => {
-      clientWithDisabledStore = new Client([], {
-        accessToken: "...",
-        project: null,
+      clientWithDisabledStore = new Client({
+        project: "test-project",
+        accessToken: "test-token",
         disableStore: true,
       });
       modelWithDisabledStore = clientWithDisabledStore.getModel(MockModel);
@@ -1876,9 +1876,9 @@ describe("ClientAdapter", () => {
     });
 
     it("should not store instances for specific models when disableStore is an array", async () => {
-      const clientWithSelectiveStore = new Client([], {
-        accessToken: "...",
-        project: null,
+      const clientWithSelectiveStore = new Client({
+        project: "test-project",
+        accessToken: "test-token",
         disableStore: ["mockModel"],
       });
       const modelWithSelectiveStore = clientWithSelectiveStore.getModel(MockModel);

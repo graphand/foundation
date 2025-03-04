@@ -9,6 +9,7 @@ import {
   FieldDefinitionGeneric,
   GDXDatamodels,
   GDXType,
+  Models,
 } from "@graphand/core";
 import { Module } from "./lib/Module.js";
 import { Client } from "./lib/Client.js";
@@ -90,7 +91,7 @@ export type ClientModules<T extends ModuleConstructor[] = []> = {
 };
 
 // Define the ClientOptions type
-export type ClientOptions<D extends GDXDatamodels | undefined = undefined> = {
+export type ClientOptions<D extends GDXDatamodels = {}> = {
   project: string | null;
   endpoint?: string;
   ssl?: boolean;
@@ -157,3 +158,20 @@ export interface TraverseOptions {
   preTransformArray?: (_arr: any[]) => any[] | null;
   transform?: TransformFunction;
 }
+
+/**
+ * Infers the model type returned by Client.getModel based on the input parameter
+ */
+export type InferClientModel<C extends Client<any, any, any>, Input> =
+  C extends Client<infer D, any, infer M>
+    ? Input extends typeof Model
+      ? Input & (Input["slug"] extends keyof D ? D[Input["slug"]] : {})
+      : Input extends string
+        ? Input extends Extract<M[number]["slug"], string>
+          ? Extract<M[number], { slug: Input }> & (Input extends keyof D ? D[Input] : {})
+          : Input extends keyof D | keyof Models
+            ? (Input extends keyof Models ? Models[Input & keyof Models] : typeof Model) &
+                (Input extends keyof D ? D[Input & keyof D] : {})
+            : typeof Model
+        : never
+    : never;

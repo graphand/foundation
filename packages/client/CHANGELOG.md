@@ -1,5 +1,16 @@
 # @graphand/client
 
+## 1.5.0
+
+### Minor Changes
+
+- improve gdx integration, fixes & improvements
+
+### Patch Changes
+
+- Updated dependencies
+  - @graphand/core@1.7.0
+
 ## 1.4.4
 
 ### Patch Changes

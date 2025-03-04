@@ -183,7 +183,7 @@ export const loadGdx = async (
 };
 
 export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Promise<
-  Client<[typeof ModuleAuth, typeof ModuleCli, typeof ModuleRealtime]>
+  Client<{}, [typeof ModuleAuth, typeof ModuleCli, typeof ModuleRealtime]>
 > => {
   let spinnerText = globalThis.spinner?.text;
   if (globalThis.spinner) {
@@ -255,7 +255,7 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
     ]);
   }
 
-  const client = new Client(modules, { disableCache: true, ...configClient });
+  const client = new Client({ disableCache: true, ...configClient }, modules);
 
   await client.init();
 

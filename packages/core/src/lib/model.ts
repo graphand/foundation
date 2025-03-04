@@ -255,7 +255,6 @@ export class Model {
 
     // If the register option is set or an adapter class is provided and the model has a slug, register the model
     if (opts?.register ?? (opts?.adapterClass && model.slug)) {
-      console.log(opts?.adapterClass?.__name);
       opts?.adapterClass?.registerModel(model, opts?.force);
     }
 

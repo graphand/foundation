@@ -34,7 +34,7 @@ describe("augmentations", () => {
   const mockFetch = vi.spyOn(global, "fetch");
 
   beforeEach(() => {
-    client = new Client([], { accessToken: "test-token", project: "test-project" });
+    client = new Client({ accessToken: "test-token", project: "test-project" });
     model = client.getModel(TestModel);
     adapter = model.getAdapter() as unknown as ClientAdapter;
   });

@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.7.0
+
+### Minor Changes
+
+- improve gdx integration, fixes & improvements
+
 ## 1.6.2
 
 ### Patch Changes

@@ -15,7 +15,7 @@ import ModuleAuth from "./ModuleAuth.js";
 import { AuthStorage } from "./types.js";
 
 describe("ModuleAuth", () => {
-  let client: Client<[typeof ModuleAuth]>;
+  let client: Client<{}, [typeof ModuleAuth]>;
   let spyFetch: MockInstance;
 
   beforeAll(() => {
@@ -128,7 +128,7 @@ describe("ModuleAuth", () => {
   });
 
   beforeEach(() => {
-    client = new Client([[ModuleAuth]]);
+    client = new Client({ project: "test" }, [[ModuleAuth]]);
     spyFetch.mockClear();
   });
 
@@ -147,7 +147,7 @@ describe("ModuleAuth", () => {
         getItem: vi.fn(),
         removeItem: vi.fn(),
       };
-      const customClient = new Client([[ModuleAuth, { storage: customStorage }]]);
+      const customClient = new Client({ project: "test" }, [[ModuleAuth, { storage: customStorage }]]);
       expect(customClient.get("auth").storage).toBe(customStorage);
       customClient.destroy();
     });
@@ -215,6 +215,10 @@ describe("ModuleAuth", () => {
       const spySetItem = vi.spyOn(AsyncStorage, "setItem");
 
       const _client = new Client(
+        {
+          accessToken: "test-access-token",
+          project: null,
+        },
         [
           [
             ModuleAuth,
@@ -223,7 +227,6 @@ describe("ModuleAuth", () => {
             },
           ],
         ],
-        { accessToken: "test-access-token", project: null },
       );
 
       const email = faker.internet.email();
@@ -249,9 +252,7 @@ describe("ModuleAuth", () => {
 
   describe("GRAPHAND Provider", () => {
     it("should be able to login with GRAPHAND provider and CODE method", async () => {
-      const _client = new Client([[ModuleAuth]], {
-        project: null,
-      });
+      const _client = new Client({ project: null }, [[ModuleAuth]]);
 
       const email = faker.internet.email();
       const password = faker.internet.password();
@@ -270,7 +271,7 @@ describe("ModuleAuth", () => {
         data: { provider: AuthProviders.GRAPHAND, configuration: { graphandToken } },
       });
 
-      const _client2 = new Client([
+      const _client2 = new Client({ project: "test" }, [
         [
           ModuleAuth,
           {
@@ -296,9 +297,7 @@ describe("ModuleAuth", () => {
     });
 
     it("should not be able to use REDIRECT method without getRedirectUrl option", async () => {
-      const _client = new Client([[ModuleAuth]], {
-        project: null,
-      });
+      const _client = new Client({ project: null }, [[ModuleAuth]]);
 
       const email = faker.internet.email();
       const password = faker.internet.password();
@@ -317,7 +316,7 @@ describe("ModuleAuth", () => {
         data: { provider: AuthProviders.GRAPHAND, configuration: { graphandToken } },
       });
 
-      const _client2 = new Client([[ModuleAuth, {}]]);
+      const _client2 = new Client({ project: "test" }, [[ModuleAuth, {}]]);
 
       expect(_client2.options.accessToken).toBeUndefined();
 
@@ -330,9 +329,7 @@ describe("ModuleAuth", () => {
     });
 
     it("should be able to login with GRAPHAND provider and REDIRECT method", async () => {
-      const _client = new Client([[ModuleAuth]], {
-        project: null,
-      });
+      const _client = new Client({ project: null }, [[ModuleAuth]]);
 
       const email = faker.internet.email();
       const password = faker.internet.password();
@@ -359,7 +356,7 @@ describe("ModuleAuth", () => {
         redirectUrl = url.toString();
       });
 
-      const _client2 = new Client([
+      const _client2 = new Client({ project: "test" }, [
         [
           ModuleAuth,
           {
@@ -393,7 +390,7 @@ describe("ModuleAuth", () => {
     it("should handle auth result from URL", async () => {
       const mockSuccess = vi.fn();
       const mockError = vi.fn();
-      const _client = new Client([
+      const _client = new Client({ project: "test" }, [
         [
           ModuleAuth,
           {
@@ -410,7 +407,7 @@ describe("ModuleAuth", () => {
 
       const authResult = JSON.stringify({ accessToken: "test-access-token", refreshToken: "test-refresh-token" });
 
-      const _client2 = new Client([
+      const _client2 = new Client({ project: "test" }, [
         [
           ModuleAuth,
           {
@@ -433,7 +430,7 @@ describe("ModuleAuth", () => {
     it("should handle auth result from URL as a promise", async () => {
       const mockSuccess = vi.fn();
       const mockError = vi.fn();
-      const _client = new Client([
+      const _client = new Client({ project: "test" }, [
         [
           ModuleAuth,
           {
@@ -454,7 +451,7 @@ describe("ModuleAuth", () => {
 
       const authResult = JSON.stringify({ accessToken: "test-access-token", refreshToken: "test-refresh-token" });
 
-      const _client2 = new Client([
+      const _client2 = new Client({ project: "test" }, [
         [
           ModuleAuth,
           {
@@ -478,7 +475,7 @@ describe("ModuleAuth", () => {
   describe("handleAccessToken", () => {
     it("should use handleAccessToken when provided", async () => {
       const handleAccessToken = vi.fn();
-      const _client = new Client([[ModuleAuth, { handleAccessToken }]]);
+      const _client = new Client({ project: "test" }, [[ModuleAuth, { handleAccessToken }]]);
 
       const email = faker.internet.email();
       const password = faker.internet.password();
@@ -496,19 +493,19 @@ describe("ModuleAuth", () => {
 
   describe("Error Handling", () => {
     it("should throw an error when refreshing token without storage", async () => {
-      const _client = new Client([[ModuleAuth, { storage: undefined }]]);
+      const _client = new Client({ project: "test" }, [[ModuleAuth, { storage: undefined }]]);
       await expect(_client.get("auth").refreshToken()).rejects.toThrow("No storage available");
       _client.destroy();
     });
 
     it("should throw an error when refreshing token without refresh token", async () => {
-      const _client = new Client([[ModuleAuth]]);
+      const _client = new Client({ project: "test" }, [[ModuleAuth]]);
       await expect(_client.get("auth").refreshToken()).rejects.toThrow("No refresh token available");
       _client.destroy();
     });
 
     it("should throw an error when handling redirect URL without authResult", async () => {
-      const _client = new Client([[ModuleAuth]]);
+      const _client = new Client({ project: "test" }, [[ModuleAuth]]);
       await expect(_client.get("auth").handleRedirectUrl("http://example.com")).rejects.toThrow(
         "authResult search param not found in url",
       );
@@ -519,19 +516,19 @@ describe("ModuleAuth", () => {
   // New tests
   describe("Storage Prefix and Key", () => {
     it("should generate correct storage prefix", () => {
-      const _client = new Client([[ModuleAuth]], { project: "test-project" });
+      const _client = new Client({ project: "test-project" }, [[ModuleAuth]]);
       expect(_client.get("auth").getStoragePrefix()).toBe("graphand-auth:test-project");
       _client.destroy();
     });
 
     it("should use custom storage prefix when provided", () => {
-      const _client = new Client([[ModuleAuth, { storagePrefix: "custom-prefix" }]]);
+      const _client = new Client({ project: "test" }, [[ModuleAuth, { storagePrefix: "custom-prefix" }]]);
       expect(_client.get("auth").getStoragePrefix()).toBe("custom-prefix");
       _client.destroy();
     });
 
     it("should generate correct storage key", () => {
-      const _client = new Client([[ModuleAuth]], { project: "test-project" });
+      const _client = new Client({ project: "test-project" }, [[ModuleAuth]]);
       expect(_client.get("auth").getStorageKey("accessToken")).toBe("graphand-auth:test-project:accessToken");
       _client.destroy();
     });
@@ -539,7 +536,7 @@ describe("ModuleAuth", () => {
 
   describe("handleAuthResult", () => {
     it("should handle login result correctly", async () => {
-      const _client = new Client([[ModuleAuth]]);
+      const _client = new Client({ project: "test" }, [[ModuleAuth]]);
       const authResult = {
         action: "login",
         account: { _id: new ObjectId().toString(), _email: faker.internet.email() },
@@ -557,7 +554,7 @@ describe("ModuleAuth", () => {
 
     it("should handle URL result correctly", async () => {
       const mockHandleCallback = vi.fn();
-      const _client = new Client([
+      const _client = new Client({ project: "test" }, [
         [
           ModuleAuth,
           {
@@ -578,7 +575,7 @@ describe("ModuleAuth", () => {
     });
 
     it("should throw an error when handleCallback is not defined for the method", async () => {
-      const _client = new Client([[ModuleAuth]]);
+      const _client = new Client({ project: "test" }, [[ModuleAuth]]);
       const authResult = {
         url: "http://example.com/callback",
       };
@@ -592,9 +589,7 @@ describe("ModuleAuth", () => {
 
   describe("autoRefreshToken", () => {
     it("should automatically refresh token on TOKEN_EXPIRED error", async () => {
-      const _client = new Client([[ModuleAuth, { autoRefreshToken: true }]], {
-        project: null,
-      });
+      const _client = new Client({ project: null }, [[ModuleAuth, { autoRefreshToken: true }]]);
 
       _client.get("auth").setTokens({ accessToken: "expired-access-token", refreshToken: "test-refresh-token" });
 
@@ -616,9 +611,7 @@ describe("ModuleAuth", () => {
     });
 
     it("should refresh token event if init headers are provided in execute", async () => {
-      const _client = new Client([[ModuleAuth, { autoRefreshToken: true }]], {
-        project: null,
-      });
+      const _client = new Client({ project: null }, [[ModuleAuth, { autoRefreshToken: true }]]);
 
       _client.get("auth").setTokens({ accessToken: "expired-access-token", refreshToken: "test-refresh-token" });
 
@@ -646,7 +639,7 @@ describe("ModuleAuth", () => {
 
   describe("autoSetTokens", () => {
     it("should not automatically set tokens after login when autoSetTokens is false", async () => {
-      const _client = new Client([[ModuleAuth, { autoSetTokens: false }]]);
+      const _client = new Client({ project: "test" }, [[ModuleAuth, { autoSetTokens: false }]]);
       const email = faker.internet.email();
       const password = faker.internet.password();
 
@@ -663,7 +656,7 @@ describe("ModuleAuth", () => {
     });
 
     it("should not automatically set tokens after register when autoSetTokens is false", async () => {
-      const _client = new Client([[ModuleAuth, { autoSetTokens: false }]]);
+      const _client = new Client({ project: "test" }, [[ModuleAuth, { autoSetTokens: false }]]);
       const email = faker.internet.email();
       const password = faker.internet.password();
 
@@ -680,7 +673,7 @@ describe("ModuleAuth", () => {
     });
 
     it("should allow manual token setting after login when autoSetTokens is false", async () => {
-      const _client = new Client([[ModuleAuth, { autoSetTokens: false }]]);
+      const _client = new Client({ project: "test" }, [[ModuleAuth, { autoSetTokens: false }]]);
       const email = faker.internet.email();
       const password = faker.internet.password();
 

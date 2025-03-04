@@ -31,7 +31,7 @@ export class Module<Conf extends object = object, Deps extends ModuleConstructor
     return c.moduleName;
   }
 
-  client<T extends Module>(this: T): Client<InferModuleDependencies<T>> {
+  client<T extends Module>(this: T): Client<{}, InferModuleDependencies<T>> {
     return this.#client as any;
   }
 

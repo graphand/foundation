@@ -8,10 +8,10 @@ import {
   Transaction,
   ClientOptions,
   ModuleConstructor,
+  InferClientModel,
 } from "@/types.js";
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.js";
 import {
-  type Account,
   Adapter,
   assignDatamodel,
   Controller,
@@ -47,20 +47,24 @@ const DEFAULT_OPTIONS: Partial<ClientOptions> = {
 };
 
 export class Client<
+  D extends GDXDatamodels = {},
   T extends ModuleConstructor[] = ModuleConstructor[],
   M extends (typeof Model)[] = [],
-  D extends GDXDatamodels | undefined = undefined,
 > {
-  #clientModules: ClientModules<T>;
   #options: BehaviorSubject<ClientOptions<D>>;
+  #clientModules: ClientModules<T>;
   #modules: Map<string, Module>;
   #modulesInitPromises: Map<string, Promise<void> | void> | undefined;
   #hooks: Set<Hook>;
   #adapterClass: typeof ClientAdapter | undefined;
 
-  constructor(modules: ClientModules<T>, options?: ClientOptions<D>, models: M = [] as unknown as M) {
-    this.#clientModules = modules;
+  constructor(
+    options: ClientOptions<D> = { project: null },
+    modules: ClientModules<T> = [] as ClientModules<T>,
+    models: M = [] as unknown as M,
+  ) {
     this.#options = new BehaviorSubject(options || { ...DEFAULT_OPTIONS, project: null });
+    this.#clientModules = modules;
 
     // Registering models
     models.forEach(m => this.useModel(m));
@@ -95,13 +99,13 @@ export class Client<
     return this.#options.subscribe(observer);
   }
 
-  setOptions(options: Partial<ClientOptions>) {
+  setOptions(options: Partial<ClientOptions<D>>) {
     this.#options.next({ ...this.#options.getValue(), ...options });
   }
 
   get options(): ClientOptions<D> {
     const options = this.#options.getValue();
-    return { ...DEFAULT_OPTIONS, ...options };
+    return { ...DEFAULT_OPTIONS, ...options } as ClientOptions<D>;
   }
 
   get<N extends T[number]["moduleName"]>(_name: N): InstanceType<Extract<T[number], { moduleName: N }>>;
@@ -112,7 +116,7 @@ export class Client<
     return this.#modules.get(name) || null;
   }
 
-  useModule<U extends ModuleConstructor>(...m: ModuleWithConfig<U>): Client<[...T, U], M, D> {
+  useModule<U extends ModuleConstructor>(...m: ModuleWithConfig<U>): Client<D, [...T, U], M> {
     const { moduleClass, conf } = decodeClientModule(m);
 
     if (!moduleClass.moduleName) {
@@ -137,13 +141,13 @@ export class Client<
       this.#modulesInitPromises.set(moduleClass.moduleName, module[symbolModuleInit]());
     }
 
-    return this as unknown as Client<[...T, U], M, D>;
+    return this as unknown as Client<D, [...T, U], M>;
   }
 
-  useModel<U extends typeof Model>(model: U): Client<T, [...M, U], D> {
+  useModel<U extends typeof Model>(model: U): Client<D, T, [...M, U]> {
     this.getModel(model);
 
-    return this as Client<T, [...M, U], D>;
+    return this as Client<D, T, [...M, U]>;
   }
 
   resolveDependencies(module: Module) {
@@ -302,7 +306,7 @@ export class Client<
 
   setAdapterClass(adapterClass: typeof ClientAdapter) {
     this.#adapterClass = class extends adapterClass {} as typeof ClientAdapter;
-    this.#adapterClass.client = this as Client;
+    this.#adapterClass.client = this as unknown as Client;
 
     return this;
   }
@@ -319,33 +323,21 @@ export class Client<
     return globalThis.__GLOBAL_CLIENT__ as Client;
   }
 
-  getModel<MC extends typeof Model>(_input: MC): MC & (MC["slug"] extends keyof D ? D[MC["slug"]] : {});
-
-  getModel<S extends Extract<M[number]["slug"], string>>(
-    _input: S,
-  ): [Extract<M[number], { slug: S }>] extends [never]
-    ? typeof Model & (S extends keyof D ? D[S] : {})
-    : Extract<M[number], { slug: S }> & (S extends keyof D ? D[S] : {});
-
-  getModel<MK extends keyof D | keyof Models>(
-    _input: MK,
-  ): (MK extends keyof Models ? Models[MK] : typeof Model) & (MK extends keyof D ? D[MK] : {});
-
-  getModel(_input: string): typeof Model;
-
-  getModel(input: string | typeof Model | keyof D | keyof Models): typeof Model {
+  getModel<I extends typeof Model | string | keyof D | keyof Models>(input: I): InferClientModel<this, I> {
     const model: typeof Model = Model.getClass(input as any, this.getAdapterClass());
     const gdx = this.options.gdx;
     if (model.slug && gdx?.datamodels?.[model.slug]) {
       assignDatamodel(model, gdx.datamodels[model.slug] as ModelJSON<typeof DataModel>);
     }
-    return model;
+    return model as InferClientModel<this, I>;
   }
 
-  async me(useClaimToken = true): Promise<ModelInstance<typeof Account> | null> {
+  async me(useClaimToken = true) {
     if (!this.options.accessToken) {
       return null;
     }
+
+    const model = this.getModel("accounts");
 
     if (useClaimToken) {
       try {
@@ -354,7 +346,7 @@ export class Client<
         const payload = JSON.parse(atob(parts[1]));
 
         if (payload.type === IdentityTypes.ACCOUNT && payload.id) {
-          return this.getModel("accounts").get(payload.id);
+          return model.get(payload.id);
         }
       } catch (e) {
         throw new Error(`Unable to decode claim access token: ${(e as Error).message}`);
@@ -365,7 +357,7 @@ export class Client<
 
     const { data } = await res.json();
 
-    return this.getModel("accounts").hydrateAndCache(data);
+    return model.hydrateAndCache(data);
   }
 
   async execute<C extends Controller<ControllerInput> = Controller<ControllerInput>>(
@@ -579,7 +571,7 @@ export class Client<
     });
   }
 
-  clone(options: Partial<ClientOptions> = {}) {
-    return new Client(this.#clientModules, { ...this.options, ...options });
+  clone(options: Partial<ClientOptions<D>> = {}) {
+    return new Client<D, T, M>({ ...this.options, ...options } as ClientOptions<D>, this.#clientModules);
   }
 }
