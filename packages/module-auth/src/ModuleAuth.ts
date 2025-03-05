@@ -1,6 +1,5 @@
 import { FetchError, Module, symbolModuleDestroy, symbolModuleInit } from "@graphand/client";
 import {
-  Account,
   AuthMethodOptions,
   AuthMethods,
   AuthProviders,
@@ -245,7 +244,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     }
 
     return {
-      account: this.client().getModel(Account).hydrateAndCache(account),
+      account: this.client().getModel("accounts").hydrateAndCache(account),
       accessToken,
       refreshToken,
     };
