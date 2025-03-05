@@ -1,5 +1,11 @@
 # @graphand/client
 
+## 1.5.2
+
+### Patch Changes
+
+- fix gdx model assign with global client
+
 ## 1.5.1
 
 ### Patch Changes

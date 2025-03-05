@@ -25,6 +25,8 @@ import {
   defineFieldsProperties,
   ModelData,
   UpdateObject,
+  assignDatamodel,
+  DataModel,
 } from "@graphand/core";
 import { Client } from "./Client.js";
 import { Subject } from "./Subject.js";
@@ -900,5 +902,13 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     for (const instance of this.#store.values()) {
       defineFieldsProperties(instance);
     }
+  }
+
+  static registerModel(model: typeof Model) {
+    const gdx = this.client.options.gdx;
+    if (model.slug && gdx?.datamodels?.[model.slug]) {
+      assignDatamodel(model, gdx.datamodels[model.slug] as ModelJSON<typeof DataModel>);
+    }
+    super.registerModel(model);
   }
 }

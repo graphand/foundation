@@ -13,14 +13,12 @@ import {
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.js";
 import {
   Adapter,
-  assignDatamodel,
   Controller,
   controllerCurrentAccount,
   ControllerInput,
   controllerMediaPrivate,
   controllerMediaPublic,
   CoreError,
-  DataModel,
   ErrorCodes,
   GDXDatamodels,
   IdentityTypes,
@@ -30,7 +28,6 @@ import {
   MediaTransformOptions,
   Model,
   ModelInstance,
-  ModelJSON,
   Models,
   TransactionCtx,
 } from "@graphand/core";
@@ -324,12 +321,7 @@ export class Client<
   }
 
   getModel<I extends typeof Model | string | keyof D | keyof Models>(input: I): InferClientModel<this, I> {
-    const model: typeof Model = Model.getClass(input as any, this.getAdapterClass());
-    const gdx = this.options.gdx;
-    if (model.slug && gdx?.datamodels?.[model.slug]) {
-      assignDatamodel(model, gdx.datamodels[model.slug] as ModelJSON<typeof DataModel>);
-    }
-    return model as InferClientModel<this, I>;
+    return Model.getClass(input as any, this.getAdapterClass()) as InferClientModel<this, I>;
   }
 
   async me(useClaimToken = true): Promise<ModelInstance<InferClientModel<this, "accounts">> | null> {

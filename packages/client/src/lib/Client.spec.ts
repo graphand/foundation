@@ -1127,5 +1127,27 @@ describe("Client", () => {
       const instance = model.hydrate({} as any);
       expect(instance.foo()).toBe("bar");
     });
+
+    it("should load definition from gdx", () => {
+      const gdx = defineGDX({
+        datamodels: {
+          test: {
+            definition: {
+              fields: {
+                title: {
+                  type: "text",
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const client = new Client({ project: "test", gdx });
+      const model = client.getModel("test");
+      expect(model).toBeDefined();
+      expect(model.slug).toBe("test");
+      expect(model.fieldsKeys).toContain("title");
+    });
   });
 });
