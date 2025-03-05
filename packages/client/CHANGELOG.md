@@ -1,5 +1,11 @@
 # @graphand/client
 
+## 1.5.3
+
+### Patch Changes
+
+- add model alias of getModel on client
+
 ## 1.5.2
 
 ### Patch Changes

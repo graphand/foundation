@@ -324,6 +324,9 @@ export class Client<
     return Model.getClass(input as any, this.getAdapterClass()) as InferClientModel<this, I>;
   }
 
+  // alias for getModel
+  model = this.getModel;
+
   async me(useClaimToken = true): Promise<ModelInstance<InferClientModel<this, "accounts">> | null> {
     if (!this.options.accessToken) {
       return null;
