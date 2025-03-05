@@ -1,5 +1,11 @@
 # @graphand/client
 
+## 1.5.1
+
+### Patch Changes
+
+- fix type on me method
+
 ## 1.5.0
 
 ### Minor Changes

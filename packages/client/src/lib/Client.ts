@@ -332,7 +332,7 @@ export class Client<
     return model as InferClientModel<this, I>;
   }
 
-  async me(useClaimToken = true) {
+  async me(useClaimToken = true): Promise<ModelInstance<InferClientModel<this, "accounts">> | null> {
     if (!this.options.accessToken) {
       return null;
     }
@@ -346,7 +346,7 @@ export class Client<
         const payload = JSON.parse(atob(parts[1]));
 
         if (payload.type === IdentityTypes.ACCOUNT && payload.id) {
-          return model.get(payload.id);
+          return model.get(payload.id) as any;
         }
       } catch (e) {
         throw new Error(`Unable to decode claim access token: ${(e as Error).message}`);
@@ -357,7 +357,7 @@ export class Client<
 
     const { data } = await res.json();
 
-    return model.hydrateAndCache(data);
+    return model.hydrateAndCache(data) as any;
   }
 
   async execute<C extends Controller<ControllerInput> = Controller<ControllerInput>>(
