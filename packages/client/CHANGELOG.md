@@ -1,5 +1,13 @@
 # @graphand/client
 
+## 1.5.4
+
+### Patch Changes
+
+- add assignGDXDatamodels option on client
+- Updated dependencies
+  - @graphand/core@1.7.1
+
 ## 1.5.3
 
 ### Patch Changes

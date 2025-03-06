@@ -41,6 +41,7 @@ const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   endpoint: "api.graphand.cloud",
   ssl: true,
   maxRetries: 3,
+  assignGDXDatamodels: true,
 };
 
 export class Client<
@@ -545,10 +546,10 @@ export class Client<
 
   buildMediaUrl(
     idOrMedia: string | ModelInstance<typeof Media>,
-    opts: {
+    opts?: {
       private?: boolean;
       transform?: MediaTransformOptions;
-    } = {},
+    },
   ): string {
     const id = typeof idOrMedia === "string" ? idOrMedia : idOrMedia._id;
 
@@ -556,13 +557,13 @@ export class Client<
       throw new Error("Media or id is required");
     }
 
-    const mediaPrivate = opts.private ?? (typeof idOrMedia === "string" ? false : idOrMedia.private);
+    const mediaPrivate = opts?.private ?? (typeof idOrMedia === "string" ? false : idOrMedia.private);
 
     const controller = mediaPrivate ? controllerMediaPrivate : controllerMediaPublic;
 
     return this.buildUrl(controller, {
       params: { id },
-      query: opts.transform as Record<string, string>,
+      query: opts?.transform as Record<string, string>,
     });
   }
 

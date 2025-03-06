@@ -1,4 +1,13 @@
-import { InferModel, Model, ModelInstance, ModelJSON, ModelList, PromiseModel, PromiseModelList } from "@graphand/core";
+import {
+  DataModel,
+  InferModel,
+  Model,
+  ModelInstance,
+  ModelJSON,
+  ModelList,
+  PromiseModel,
+  PromiseModelList,
+} from "@graphand/core";
 import { getCachedModel, getCachedModelList, getCachedPartialModelList } from "./lib/utils.js";
 import type { ClientAdapter } from "./lib/ClientAdapter.js";
 import type { InferModelFromList, ModelUpdaterEvent, SubjectObserver } from "./types.js";
@@ -177,4 +186,13 @@ Object.defineProperty(PromiseModelList.prototype, "cachedPartial", {
   get() {
     return getCachedPartialModelList(this);
   },
+});
+
+Model.hook("before", "initialize", function () {
+  const adapter = this.getAdapter() as ClientAdapter<typeof this>;
+  const client = adapter.client;
+  const gdx = client.options.gdx;
+  if (this.slug && gdx?.datamodels?.[this.slug] && client.options.assignGDXDatamodels) {
+    this.__initOptions.datamodel = gdx.datamodels[this.slug] as ModelJSON<typeof DataModel>;
+  }
 });

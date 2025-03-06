@@ -101,6 +101,7 @@ export type ClientOptions<D extends GDXDatamodels = {}> = {
   headers?: Record<string, string>;
   disableCache?: boolean | Array<string>;
   disableStore?: boolean | Array<string>;
+  assignGDXDatamodels?: boolean;
   gdx?: GDXType<D>;
 };
 

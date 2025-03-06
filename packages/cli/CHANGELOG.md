@@ -1,5 +1,13 @@
 # @graphand/cli
 
+## 1.4.1
+
+### Patch Changes
+
+- improve error messages
+- Updated dependencies
+  - @graphand/client@1.5.4
+
 ## 1.4.0
 
 ### Minor Changes

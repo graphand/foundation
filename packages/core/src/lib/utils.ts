@@ -1135,12 +1135,10 @@ export const assignDatamodel = async <T extends typeof Model>(model: T, datamode
 export const getModelInitPromise = (
   model: typeof Model,
   opts: {
-    datamodel?: ModelInstance<typeof DataModel>;
+    datamodel?: ModelJSON<typeof DataModel>;
     ctx?: TransactionCtx;
-  } = {},
+  },
 ) => {
-  const { datamodel, ctx } = opts;
-
   const transaction: Transaction<typeof Model, "initialize"> = {
     model: model.slug,
     action: "initialize",
@@ -1159,8 +1157,8 @@ export const getModelInitPromise = (
         return hook.fn.call(model, { args: undefined as never, transaction, ctx: {}, err: [] });
       }, Promise.resolve());
 
-      if (model.extensible) {
-        await model.reloadModel({ datamodel: datamodel?.toJSON(), ctx });
+      if (model.extensible || opts?.datamodel) {
+        await model.reloadModel({ datamodel: opts?.datamodel, ctx: opts?.ctx });
       }
 
       const hooksAfter = getRecursiveHooksFromModel(model, "initialize", "after");

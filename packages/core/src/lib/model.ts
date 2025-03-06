@@ -282,12 +282,11 @@ export class Model {
       });
     }
 
-    let opts: Parameters<typeof getModelInitPromise>[1] = {};
-    if (this.hasOwnProperty("__initOptions")) {
-      opts = this.__initOptions;
+    if (!this.hasOwnProperty("__initOptions")) {
+      this.__initOptions = {};
     }
 
-    this.__initPromise = getModelInitPromise(this, opts);
+    this.__initPromise = getModelInitPromise(this, this.__initOptions);
 
     return this.__initPromise;
   }
@@ -470,7 +469,7 @@ export class Model {
     if (adapterClass) {
       model = model.extend({
         adapterClass,
-        initOptions: { datamodel: dm },
+        initOptions: { datamodel: dm?.toJSON() },
         register: !adapterClass.hasModel(slug) || model.getAdapter(false)?.base !== adapterClass,
       });
     }

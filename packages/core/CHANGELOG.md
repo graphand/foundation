@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.7.1
+
+### Patch Changes
+
+- minor fixes
+
 ## 1.7.0
 
 ### Minor Changes
