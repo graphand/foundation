@@ -47,7 +47,7 @@ import { FieldTypes } from "@/enums/field-types.js";
 const noFieldSymbol = Symbol("noField");
 
 export class Model {
-  static extensible: boolean = false; // Whether the model can be extended with a DataModel with its slug
+  static loadDatamodel: boolean; // Whether the model can be extended with a DataModel with its slug
   static connectable: boolean = false; // Whether the model is able to be used as a connector source
   static exposed: boolean = true; // Whether the model is exposed in the API or not
   static realtime: boolean = false; // Whether the model is realtime enabled
@@ -454,7 +454,7 @@ export class Model {
       static slug = slug as string;
       static realtime = realtime as boolean;
       static connectable = true;
-      static extensible = true; // A data class is extensible as it should be linked to a datamodel with the same slug
+      static loadDatamodel = true; // A data class is extensible as it should be linked to a datamodel with the same slug
       static isEnvironmentScoped = true;
       static isDynamic = true;
 

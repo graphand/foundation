@@ -16,17 +16,24 @@ export type GDXEntryModel<T extends ModelJSON<typeof DataModel> | { definition: 
       : Record<string, GDXEntryModelInput<T["definition"]>>
     : never;
 
-export type GDXDatamodels = Record<string, ModelJSON<typeof DataModel>>;
+export type GDXDatamodels = {
+  [K: string]: ModelJSON<typeof DataModel>;
+};
 
 export type GDXType<D extends GDXDatamodels = {}> = {
   datamodels: D;
-} & {
-  [K in keyof D]?: D[K] extends ModelJSON<typeof DataModel> ? GDXEntryModel<D[K]> : never;
-} & {
-  [K in keyof Models]?: GDXEntryModel<Models[K]>;
-};
+} & Omit<
+  {
+    [K in keyof D]?: D[K] extends ModelJSON<typeof DataModel> ? GDXEntryModel<D[K]> : never;
+  } & {
+    [K in keyof Models]?: GDXEntryModel<Models[K]>;
+  },
+  "datamodels"
+>;
 
 // Extract the datamodels type from a GDX object
 export type InferGDXDatamodels<T> = T extends GDXType<infer D> ? D : never;
+
+export const defineDatamodels = <D extends GDXDatamodels = {}>(datamodels: D) => datamodels;
 
 export const defineGDX = <D extends GDXDatamodels = {}>(gdx: GDXType<D>) => gdx;

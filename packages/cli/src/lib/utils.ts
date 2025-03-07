@@ -19,14 +19,14 @@ import Collector from "./Collector.js";
 import storage from "node-persist";
 import os from "os";
 
-export const getGdxPath = async (): Promise<string | null> => {
-  const config = await new Config().load();
-
-  if (config.gdx?.path) {
+export const getGdxPath = async (config: Config): Promise<string | null> => {
+  if (config.gdx && "path" in config.gdx) {
     const configPath = path.join(process.cwd(), config.gdx.path);
     if (!fs.existsSync(configPath)) {
       throw new Error(`GDX file ${configPath} not found`);
     }
+
+    return configPath;
   }
 
   const gdxFiles = ["graphand.gdx.ts", "graphand.gdx.js", "graphand.gdx.json"];
@@ -58,46 +58,59 @@ export const loadGdx = async (
     models?: string[];
   } = {},
 ): Promise<{ json: JSONObject; file: Record<string, Promise<File>> | undefined }> => {
-  const configPath = await getGdxPath();
-  if (!configPath) {
-    throw new Error("No gdx file found");
+  let json: JSONObject | undefined;
+
+  const config = await new Config().load();
+
+  if (config.gdx && "data" in config.gdx) {
+    json = config.gdx.data as JSONObject;
   }
 
-  let json: JSONObject | undefined;
-  let file: Record<string, Promise<File>> | undefined;
+  if (!json) {
+    const gdxPath = await getGdxPath(config);
+    if (!gdxPath) {
+      throw new Error("No gdx file found");
+    }
 
-  if (path.extname(configPath) === ".json") {
-    const configContent = await fs.promises.readFile(configPath, "utf8");
-    json = JSON.parse(configContent);
-  } else {
-    const tempFileName = "." + Date.now() + ".gdx.mjs";
-    const tempFilePath = path.join(process.cwd(), tempFileName);
-    const packageJsonObject = loadPackageJson();
-    await build({
-      entryPoints: [configPath],
-      outfile: tempFilePath,
-      bundle: true,
-      platform: "node",
-      format: "esm",
-      target: "esnext",
-      external: [
-        ...Object.keys(packageJsonObject?.dependencies || {}),
-        ...Object.keys(packageJsonObject?.devDependencies || {}),
-      ],
-    });
+    if (path.extname(gdxPath) === ".json") {
+      const configContent = await fs.promises.readFile(gdxPath, "utf8");
+      json = JSON.parse(configContent);
+    } else {
+      const tempFileName = "." + Date.now() + ".gdx.mjs";
+      const tempFilePath = path.join(process.cwd(), tempFileName);
+      const packageJsonObject = loadPackageJson();
+      await build({
+        entryPoints: [gdxPath],
+        outfile: tempFilePath,
+        bundle: true,
+        platform: "node",
+        format: "esm",
+        target: "esnext",
+        external: [
+          ...Object.keys(packageJsonObject?.dependencies || {}),
+          ...Object.keys(packageJsonObject?.devDependencies || {}),
+        ],
+      });
 
-    try {
-      // Load the transpiled code
-      const importedConfig = await import(pathToFileURL(tempFilePath).href);
+      try {
+        // Load the transpiled code
+        const importedConfig = await import(pathToFileURL(tempFilePath).href);
 
-      if (importedConfig.default) {
-        json = importedConfig.default as JSONObject;
+        if (importedConfig.default) {
+          json = importedConfig.default as JSONObject;
+        }
+      } finally {
+        // Ensure temp file is deleted even if an error occurs
+        fs.promises.unlink(tempFilePath).catch(() => {});
       }
-    } finally {
-      // Ensure temp file is deleted even if an error occurs
-      fs.promises.unlink(tempFilePath).catch(() => {});
     }
   }
+
+  if (!json) {
+    throw new Error("gdx not found");
+  }
+
+  let file: Record<string, Promise<File>> | undefined;
 
   if (json && "$cli.set" in json && Object.keys(json["$cli.set"] as object).length) {
     const set = json["$cli.set"] as JSONObject;
@@ -131,7 +144,7 @@ export const loadGdx = async (
       const functionPath = path.join(process.cwd(), value);
       const checksum = await checksumDirectory(functionPath);
       const func = await client
-        .getModel(Function)
+        .model(Function)
         .get(key)
         .catch(() => null);
 
@@ -154,8 +167,8 @@ export const loadGdx = async (
         return;
       }
 
-      const model = client.getModel(key);
-      const isProjectScoped = !model.isEnvironmentScoped && !model.extensible;
+      const model = client.model(key);
+      const isProjectScoped = !model.isEnvironmentScoped && !model.loadDatamodel;
 
       if (isProjectScoped) {
         delete json![key];

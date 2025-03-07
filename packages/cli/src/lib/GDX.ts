@@ -26,7 +26,7 @@ export class GDX {
     const config = new Config();
     const configGdx = config.get?.()?.gdx;
 
-    if (configGdx?.path) {
+    if (configGdx && "path" in configGdx) {
       const gdxPath = path.join(process.cwd(), configGdx.path);
       if (fs.existsSync(gdxPath)) {
         return gdxPath;

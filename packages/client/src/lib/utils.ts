@@ -6,11 +6,13 @@ import {
   PromiseModel,
   PromiseModelList,
   ValidationError,
+  GDXDatamodels,
 } from "@graphand/core";
 import { ModuleConstructor, ModuleWithConfig, TransformFunction, TraverseOptions } from "@/types.js";
 import { ClientError } from "./ClientError.js";
 import { FetchError } from "./FetchError.js";
 import { ClientAdapter } from "./ClientAdapter.js";
+import { ClientOptions } from "@/types.js";
 
 export const canUseIds = (query: JSONQuery): boolean => {
   if (
@@ -165,3 +167,5 @@ export const traverseObject = (
 
   return transform(result, undefined);
 };
+
+export const defineClientOptions = <D extends GDXDatamodels>(options: ClientOptions<D>): ClientOptions<D> => options;

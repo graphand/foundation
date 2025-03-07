@@ -1,5 +1,14 @@
 # @graphand/client-module-realtime
 
+## 1.3.1
+
+### Patch Changes
+
+- improve gdx integration
+- Updated dependencies
+  - @graphand/client@1.5.5
+  - @graphand/core@1.7.2
+
 ## 1.3.0
 
 ### Minor Changes

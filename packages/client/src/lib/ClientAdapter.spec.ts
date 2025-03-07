@@ -44,7 +44,7 @@ describe("ClientAdapter", () => {
       accessToken: "test-token",
     });
 
-    model = client.getModel(MockModel);
+    model = client.model(MockModel);
     adapter = model.getAdapter() as unknown as ClientAdapter;
     fetchMock = vi.spyOn(global, "fetch");
   });
@@ -265,7 +265,7 @@ describe("ClientAdapter", () => {
       };
     }
     fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "single", "name": "SingleTest"}}'));
-    const result = await client.getModel(MockModelSingle).get({});
+    const result = await client.model(MockModelSingle).get({});
     expect(result).toBeInstanceOf(MockModelSingle);
     expect(result?.get("_id")).toBe("single");
     expect(result?.get("name")).toBe("SingleTest");
@@ -1131,9 +1131,9 @@ describe("ClientAdapter", () => {
     let adapterWithRelation: ClientAdapter;
 
     beforeEach(() => {
-      modelRelated = client.getModel(RelatedModel);
-      modelOtherRelated = client.getModel(OtherRelatedModel);
-      modelWithRelation = client.getModel(MockModelWithRelation);
+      modelRelated = client.model(RelatedModel);
+      modelOtherRelated = client.model(OtherRelatedModel);
+      modelWithRelation = client.model(MockModelWithRelation);
       adapterRelated = modelRelated.getAdapter() as unknown as ClientAdapter;
       adapterOtherRelated = modelOtherRelated.getAdapter() as unknown as ClientAdapter;
       adapterWithRelation = modelWithRelation.getAdapter() as unknown as ClientAdapter;
@@ -1411,7 +1411,7 @@ describe("ClientAdapter", () => {
     });
 
     it("should correctly handle and cache deeply nested relations across multiple dynamic models", async () => {
-      const dmOtherRelated = client.getModel(DataModel).hydrate({
+      const dmOtherRelated = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-3",
         definition: {
@@ -1423,7 +1423,7 @@ describe("ClientAdapter", () => {
           },
         },
       });
-      const dmRelated = client.getModel(DataModel).hydrate({
+      const dmRelated = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-2",
         definition: {
@@ -1441,7 +1441,7 @@ describe("ClientAdapter", () => {
           },
         },
       });
-      const dm = client.getModel(DataModel).hydrate({
+      const dm = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-1",
         definition: {
@@ -1490,11 +1490,11 @@ describe("ClientAdapter", () => {
       const id2 = new ObjectId().toString();
       const id3 = new ObjectId().toString();
 
-      await client.getModel(dm.slug as string).get(id1);
+      await client.model(dm.slug as string).get(id1);
 
-      const adapter1 = client.getModel(dm.slug as string).getAdapter() as unknown as ClientAdapter;
-      const adapter2 = client.getModel(dmRelated.slug as string).getAdapter() as unknown as ClientAdapter;
-      const adapter3 = client.getModel(dmOtherRelated.slug as string).getAdapter() as unknown as ClientAdapter;
+      const adapter1 = client.model(dm.slug as string).getAdapter() as unknown as ClientAdapter;
+      const adapter2 = client.model(dmRelated.slug as string).getAdapter() as unknown as ClientAdapter;
+      const adapter3 = client.model(dmOtherRelated.slug as string).getAdapter() as unknown as ClientAdapter;
 
       expect(adapter1.store.has(id1)).toBeTruthy();
       expect(adapter2.store.has(id2)).toBeTruthy();
@@ -1544,7 +1544,7 @@ describe("ClientAdapter", () => {
         );
       });
 
-      const model = client.getModel(slug) as typeof Model & {
+      const model = client.model(slug) as typeof Model & {
         definition: {
           fields: {
             title: { type: FieldTypes.TEXT };
@@ -1570,7 +1570,7 @@ describe("ClientAdapter", () => {
 
     it("should correctly populate nested arrays with relations", async () => {
       const slug = faker.random.alphaNumeric(10) + "-nested";
-      const dmNested = client.getModel(DataModel).hydrate({
+      const dmNested = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug,
         definition: {
@@ -1633,8 +1633,8 @@ describe("ClientAdapter", () => {
         );
       });
 
-      await client.getModel(dmNested.slug as string).get(id1);
-      const adapter = client.getModel(dmNested.slug as string).getAdapter() as unknown as ClientAdapter;
+      await client.model(dmNested.slug as string).get(id1);
+      const adapter = client.model(dmNested.slug as string).getAdapter() as unknown as ClientAdapter;
 
       expect(adapter.store.has(id1)).toBeTruthy();
       expect(adapter.store.has(id2)).toBeTruthy();
@@ -1658,7 +1658,7 @@ describe("ClientAdapter", () => {
     });
 
     it("should update cache when deeply nested relations are modified", async () => {
-      const dmDeep2 = client.getModel(DataModel).hydrate({
+      const dmDeep2 = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-deep-2",
         definition: {
@@ -1669,7 +1669,7 @@ describe("ClientAdapter", () => {
         },
       });
 
-      const dmDeep1 = client.getModel(DataModel).hydrate({
+      const dmDeep1 = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-deep-1",
         definition: {
@@ -1684,7 +1684,7 @@ describe("ClientAdapter", () => {
         },
       });
 
-      const dmDeep = client.getModel(DataModel).hydrate({
+      const dmDeep = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-deep",
         definition: {
@@ -1735,17 +1735,17 @@ describe("ClientAdapter", () => {
         );
       });
 
-      await client.getModel(dmDeep.slug as string).get(id1);
-      const adapter = client.getModel(dmDeep.slug as string).getAdapter() as unknown as ClientAdapter;
-      const adapter1 = client.getModel(dmDeep1.slug as string).getAdapter() as unknown as ClientAdapter;
-      const adapter2 = client.getModel(dmDeep2.slug as string).getAdapter() as unknown as ClientAdapter;
+      await client.model(dmDeep.slug as string).get(id1);
+      const adapter = client.model(dmDeep.slug as string).getAdapter() as unknown as ClientAdapter;
+      const adapter1 = client.model(dmDeep1.slug as string).getAdapter() as unknown as ClientAdapter;
+      const adapter2 = client.model(dmDeep2.slug as string).getAdapter() as unknown as ClientAdapter;
 
       expect(adapter.store.has(id1)).toBeTruthy();
       expect(adapter1.store.has(id2)).toBeTruthy();
       expect(adapter2.store.has(id3)).toBeTruthy();
 
       // Update the deeply nested relation
-      await client.getModel(dmDeep.slug as string).get(id1, { disableCache: true });
+      await client.model(dmDeep.slug as string).get(id1, { disableCache: true });
 
       expect(updateCount).toBe(2);
 
@@ -1769,7 +1769,7 @@ describe("ClientAdapter", () => {
         accessToken: "test-token",
         disableCache: true,
       });
-      modelWithDisabledCache = clientWithDisabledCache.getModel(MockModel);
+      modelWithDisabledCache = clientWithDisabledCache.model(MockModel);
       adapterWithDisabledCache = modelWithDisabledCache.getAdapter() as unknown as ClientAdapter;
       vi.spyOn(global, "fetch");
     });
@@ -1815,7 +1815,7 @@ describe("ClientAdapter", () => {
         accessToken: "test-token",
         disableCache: ["mockModel"],
       });
-      const modelWithSelectiveCache = clientWithSelectiveCache.getModel(MockModel);
+      const modelWithSelectiveCache = clientWithSelectiveCache.model(MockModel);
       const adapterWithSelectiveCache = modelWithSelectiveCache.getAdapter() as unknown as ClientAdapter;
 
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
@@ -1838,7 +1838,7 @@ describe("ClientAdapter", () => {
         accessToken: "test-token",
         disableStore: true,
       });
-      modelWithDisabledStore = clientWithDisabledStore.getModel(MockModel);
+      modelWithDisabledStore = clientWithDisabledStore.model(MockModel);
       adapterWithDisabledStore = modelWithDisabledStore.getAdapter() as unknown as ClientAdapter;
       vi.spyOn(global, "fetch");
     });
@@ -1881,7 +1881,7 @@ describe("ClientAdapter", () => {
         accessToken: "test-token",
         disableStore: ["mockModel"],
       });
-      const modelWithSelectiveStore = clientWithSelectiveStore.getModel(MockModel);
+      const modelWithSelectiveStore = clientWithSelectiveStore.model(MockModel);
       const adapterWithSelectiveStore = modelWithSelectiveStore.getAdapter() as unknown as ClientAdapter;
 
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
@@ -1894,7 +1894,7 @@ describe("ClientAdapter", () => {
     let modelWithAcceptHeader: typeof MockModel;
 
     beforeEach(() => {
-      modelWithAcceptHeader = client.getModel(MockModel);
+      modelWithAcceptHeader = client.model(MockModel);
     });
 
     it("should be set to application/json on createOne", async () => {

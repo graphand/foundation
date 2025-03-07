@@ -9,11 +9,11 @@ export const commandModels = new Command("models")
     const client = await getClient();
 
     if (!modelName) {
-      const datamodels = await client.getModel(DataModel).getList();
+      const datamodels = await client.model(DataModel).getList();
       const coreModels = Array.from(Adapter.getModelsRegistry().keys());
 
       const slugs = Array.from(new Set(datamodels.map(model => model.slug).concat(coreModels))).filter(Boolean);
-      const list = await Promise.all(slugs.map(slug => client.getModel(slug as string)));
+      const list = await Promise.all(slugs.map(slug => client.model(slug as string)));
 
       const table = getTable({
         fields: ["slug", "keyField"],
@@ -31,7 +31,7 @@ export const commandModels = new Command("models")
       return;
     }
 
-    const model = client.getModel(String(modelName));
+    const model = client.model(String(modelName));
 
     await model.initialize();
 

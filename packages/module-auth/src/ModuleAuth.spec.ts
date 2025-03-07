@@ -32,7 +32,7 @@ describe("ModuleAuth", () => {
 
         if (provider === AuthProviders.LOCAL) {
           const _email = body.configuration?.email ?? faker.internet.email();
-          const account = await client.getModel(Account).hydrate({ _id: new ObjectId().toString(), _email });
+          const account = await client.model(Account).hydrate({ _id: new ObjectId().toString(), _email });
           const accessToken = faker.internet.password();
           const refreshToken = faker.internet.password();
           return new Response(
@@ -53,7 +53,7 @@ describe("ModuleAuth", () => {
 
         if (provider === AuthProviders.LOCAL) {
           const _email = body.credentials?.email ?? faker.internet.email();
-          const account = await client.getModel(Account).hydrate({ _id: new ObjectId().toString(), _email });
+          const account = await client.model(Account).hydrate({ _id: new ObjectId().toString(), _email });
           const accessToken = faker.internet.password();
           const refreshToken = faker.internet.password();
           return new Response(
@@ -94,7 +94,7 @@ describe("ModuleAuth", () => {
 
       if (url.pathname === "/auth/code") {
         const account = await client
-          .getModel(Account)
+          .model(Account)
           .hydrate({ _id: new ObjectId().toString(), _email: faker.internet.email() });
         const accessToken = faker.internet.password();
         const refreshToken = faker.internet.password();

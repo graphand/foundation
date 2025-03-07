@@ -15,7 +15,7 @@ export const commandSrc = new Command("src")
     await withSpinner(async spinner => {
       const client = await getClient();
 
-      const media = await client.getModel(Media).get(key);
+      const media = await client.model(Media).get(key);
 
       if (!media) {
         throw new Error(`Media ${key} not found`);

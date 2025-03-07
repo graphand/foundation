@@ -9,6 +9,7 @@ export { Subject } from "@/lib/Subject.js";
 export { ClientAdapter } from "@/lib/ClientAdapter.js";
 export { ClientError } from "@/lib/ClientError.js";
 export { FetchError } from "@/lib/FetchError.js";
+export { defineClientOptions } from "@/lib/utils.js";
 
 export * from "@/types.js";
 export default "@/lib/Client.js";

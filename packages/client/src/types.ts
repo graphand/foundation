@@ -8,7 +8,6 @@ import {
   FieldTypes,
   FieldDefinitionGeneric,
   GDXDatamodels,
-  GDXType,
   Models,
 } from "@graphand/core";
 import { Module } from "./lib/Module.js";
@@ -91,7 +90,7 @@ export type ClientModules<T extends ModuleConstructor[] = []> = {
 };
 
 // Define the ClientOptions type
-export type ClientOptions<D extends GDXDatamodels = {}> = {
+export type ClientOptions<D extends GDXDatamodels = {}> = { datamodels?: D } & {
   project: string | null;
   endpoint?: string;
   ssl?: boolean;
@@ -101,8 +100,6 @@ export type ClientOptions<D extends GDXDatamodels = {}> = {
   headers?: Record<string, string>;
   disableCache?: boolean | Array<string>;
   disableStore?: boolean | Array<string>;
-  assignGDXDatamodels?: boolean;
-  gdx?: GDXType<D>;
 };
 
 export type SubjectObserver<T> = (_value: T, _previousValue?: T) => void;

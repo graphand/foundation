@@ -20,7 +20,7 @@ export const _create = async (options: {
   const skipRealtimeUpload = options.skipRealtimeUpload ?? false;
 
   const client = options.client ?? (await getClient({ realtime: true }));
-  const model = client.getModel(String(options.modelName));
+  const model = client.model(String(options.modelName));
 
   options.spinner.text = `Initializing model ${model.slug} ...`;
 

@@ -1157,7 +1157,7 @@ export const getModelInitPromise = (
         return hook.fn.call(model, { args: undefined as never, transaction, ctx: {}, err: [] });
       }, Promise.resolve());
 
-      if (model.extensible || opts?.datamodel) {
+      if (model.loadDatamodel || opts?.datamodel) {
         await model.reloadModel({ datamodel: opts?.datamodel, ctx: opts?.ctx });
       }
 

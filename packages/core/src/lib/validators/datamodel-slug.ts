@@ -15,7 +15,7 @@ export class ValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_S
     if (!values?.length) return true;
 
     values.forEach((slug: string | undefined) => {
-      if (slug && modelsMap.has(slug) && !modelsMap.get(slug)?.extensible) {
+      if (slug && modelsMap.has(slug) && !modelsMap.get(slug)?.loadDatamodel) {
         throw new ValidationValidatorError({
           validator: this,
           message: `model slug "${slug}" is reserved`,

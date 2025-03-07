@@ -12,7 +12,7 @@ export const commandUpdate = new Command("update")
   .action(async (modelName, key, options) => {
     await withSpinner(async spinner => {
       const client = await getClient({ realtime: true });
-      const model = client.getModel(String(modelName));
+      const model = client.model(String(modelName));
 
       console.info(`Initializing model ${model.slug} ...`);
 

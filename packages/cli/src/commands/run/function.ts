@@ -17,7 +17,7 @@ export const commandRunFunction = new Command("function")
     await withSpinner(async spinner => {
       const client = await getClient();
 
-      const func = await client.getModel(Function).get(functionName);
+      const func = await client.model(Function).get(functionName);
 
       if (!func) {
         throw new Error(`Function ${functionName} not found`);

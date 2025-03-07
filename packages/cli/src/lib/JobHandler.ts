@@ -74,7 +74,7 @@ class JobHandler {
 
   async #fetch(): Promise<ModelInstance<typeof Job> | null> {
     const job = await this.client
-      .getModel(Job)
+      .model(Job)
       .get(this.jobId)
       .catch(() => null);
 

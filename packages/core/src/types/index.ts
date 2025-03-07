@@ -31,7 +31,15 @@ export type SerializerFormat = keyof SerializerFieldsMap<FieldDefinition> | "dat
 export type FieldsDefinition = Record<string, FieldDefinition>;
 export type ValidatorsDefinition = Array<ValidatorDefinition>;
 
-export type JSONPrimitive = null | string | number | Date | boolean | JSONArray | { [key: string]: JSONPrimitive };
+export type JSONPrimitive =
+  | undefined
+  | null
+  | string
+  | number
+  | Date
+  | boolean
+  | JSONArray
+  | { [key: string]: JSONPrimitive };
 export type JSONArray = Array<JSONPrimitive>;
 export type JSONObject = Record<string, JSONPrimitive>;
 export type JSONType = JSONObject | JSONArray;

@@ -4,7 +4,7 @@ import { ObjectId } from "bson";
 import {
   Account,
   DataModel,
-  defineGDX,
+  defineDatamodels,
   IdentityTypes,
   Model,
   modelDecorator,
@@ -166,7 +166,7 @@ describe("Client", () => {
       }
       const client = new Client({ project: null });
       const updatedClient = client.useModel(LateModel);
-      const model = updatedClient.getModel("LateModel");
+      const model = updatedClient.model("LateModel");
       expect(model.hydrate()).toBeInstanceOf(LateModel);
     });
 
@@ -505,13 +505,13 @@ describe("Client", () => {
     it("should be able to call request init through the ClientAdapter (on model create)", async () => {
       const _client = new Client({ accessToken: "test-token", project: null });
       const requestFn = vi.fn(i => i);
-      const dm = _client.getModel(DataModel).hydrate({
+      const dm = _client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10),
       });
-      const list = new ModelList(_client.getModel(DataModel), [dm]);
+      const list = new ModelList(_client.model(DataModel), [dm]);
       mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ data: list.toJSON() }), { status: 200 }));
-      await expect(_client.getModel("test").create({}, { onRequest: requestFn })).rejects.toThrow();
+      await expect(_client.model("test").create({}, { onRequest: requestFn })).rejects.toThrow();
       expect(requestFn).toHaveBeenCalled();
     });
   });
@@ -887,9 +887,9 @@ describe("Client", () => {
           }),
         ),
       );
-      await _client.getModel(Account).initialize();
+      await _client.model(Account).initialize();
       account = await _client
-        .getModel(Account)
+        .model(Account)
         .hydrateAndCache({ _id: new ObjectId().toString(), _email: faker.internet.email() });
     });
 
@@ -921,14 +921,12 @@ describe("Client", () => {
 
   describe("models management", () => {
     it("should register and retrieve a model correctly", async () => {
-      const gdx = defineGDX({
-        datamodels: {
-          test: {
-            definition: {
-              fields: {
-                title: {
-                  type: "text",
-                },
+      const datamodels = defineDatamodels({
+        test: {
+          definition: {
+            fields: {
+              title: {
+                type: "text",
               },
             },
           },
@@ -938,27 +936,25 @@ describe("Client", () => {
       @modelDecorator()
       class Test extends Model {
         static slug = "test" as const;
-        static definition = gdx.datamodels.test.definition;
+        static definition = datamodels.test.definition;
         foo() {
           return "bar";
         }
       }
 
       const client = new Client({ project: "test" }, [], [Test]);
-      const model = client.getModel("test");
+      const model = client.model("test");
       expect(model).toBeDefined();
       expect(model.slug).toBe("test");
     });
 
     it("should hydrate model instances correctly", async () => {
-      const gdx = defineGDX({
-        datamodels: {
-          test: {
-            definition: {
-              fields: {
-                title: {
-                  type: "text",
-                },
+      const datamodels = defineDatamodels({
+        test: {
+          definition: {
+            fields: {
+              title: {
+                type: "text",
               },
             },
           },
@@ -968,28 +964,26 @@ describe("Client", () => {
       @modelDecorator()
       class Test extends Model {
         static slug = "test" as const;
-        static definition = gdx.datamodels.test.definition;
+        static definition = datamodels.test.definition;
         foo() {
           return "bar";
         }
       }
 
-      const client = new Client({ project: "test", gdx }, [], [Test]);
-      const model = client.getModel("test");
+      const client = new Client({ project: "test", datamodels }, [], [Test]);
+      const model = client.model("test");
       const instance = model.hydrate({ title: "test" });
       expect(instance).toBeInstanceOf(Test);
       expect(instance.title).toBe("test");
     });
 
     it("should preserve custom methods in hydrated instances", async () => {
-      const gdx = defineGDX({
-        datamodels: {
-          test: {
-            definition: {
-              fields: {
-                title: {
-                  type: "text",
-                },
+      const datamodels = defineDatamodels({
+        test: {
+          definition: {
+            fields: {
+              title: {
+                type: "text",
               },
             },
           },
@@ -999,30 +993,28 @@ describe("Client", () => {
       @modelDecorator()
       class Test extends Model {
         static slug = "test" as const;
-        static definition = gdx.datamodels.test.definition;
+        static definition = datamodels.test.definition;
         foo() {
           return "bar";
         }
       }
 
-      const client = new Client({ project: "test", gdx }, [], [Test]);
-      const model = client.getModel("test");
+      const client = new Client({ project: "test", datamodels }, [], [Test]);
+      const model = client.model("test");
       const instance = model.hydrate({ title: "test" });
       expect(instance.foo()).toBe("bar");
     });
 
     it("should correctly register models that extend core models", async () => {
-      const gdx = defineGDX({
-        datamodels: {
-          accounts: {
-            definition: {
-              fields: {
-                firstname: {
-                  type: "text",
-                },
-                lastname: {
-                  type: "text",
-                },
+      const datamodels = defineDatamodels({
+        accounts: {
+          definition: {
+            fields: {
+              firstname: {
+                type: "text",
+              },
+              lastname: {
+                type: "text",
               },
             },
           },
@@ -1037,24 +1029,22 @@ describe("Client", () => {
         }
       }
 
-      const client = new Client({ project: "test", gdx }, [], [_Account]);
-      const model = client.getModel("accounts");
+      const client = new Client({ project: "test", datamodels }, [], [_Account]);
+      const model = client.model("accounts");
       expect(model).toBeDefined();
       expect(model.slug).toBe("accounts");
     });
 
     it("should correctly hydrate extended core model instances", async () => {
-      const gdx = defineGDX({
-        datamodels: {
-          accounts: {
-            definition: {
-              fields: {
-                firstname: {
-                  type: "text",
-                },
-                lastname: {
-                  type: "text",
-                },
+      const datamodels = defineDatamodels({
+        accounts: {
+          definition: {
+            fields: {
+              firstname: {
+                type: "text",
+              },
+              lastname: {
+                type: "text",
               },
             },
           },
@@ -1075,8 +1065,8 @@ describe("Client", () => {
         }
       }
 
-      const client = new Client({ project: "test", gdx }, [], [_Account]);
-      const model = client.getModel("accounts");
+      const client = new Client({ project: "test", datamodels }, [], [_Account]);
+      const model = client.model("accounts");
       // Use type assertion to avoid type errors
       const instance = model.hydrate({
         _email: "john.doe@example.com",
@@ -1090,17 +1080,15 @@ describe("Client", () => {
     });
 
     it("should preserve custom methods in extended core model instances", async () => {
-      const gdx = defineGDX({
-        datamodels: {
-          accounts: {
-            definition: {
-              fields: {
-                firstname: {
-                  type: "text",
-                },
-                lastname: {
-                  type: "text",
-                },
+      const datamodels = defineDatamodels({
+        accounts: {
+          definition: {
+            fields: {
+              firstname: {
+                type: "text",
+              },
+              lastname: {
+                type: "text",
               },
             },
           },
@@ -1121,30 +1109,28 @@ describe("Client", () => {
         }
       }
 
-      const client = new Client({ project: "test", gdx }, [], [_Account]);
-      const model = client.getModel("accounts");
+      const client = new Client({ project: "test", datamodels }, [], [_Account]);
+      const model = client.model("accounts");
       // Use type assertion to avoid type errors
       const instance = model.hydrate({} as any);
       expect(instance.foo()).toBe("bar");
     });
 
-    it("should load definition from gdx", () => {
-      const gdx = defineGDX({
-        datamodels: {
-          test: {
-            definition: {
-              fields: {
-                title: {
-                  type: "text",
-                },
+    it("should load definition from datamodels", async () => {
+      const datamodels = defineDatamodels({
+        test: {
+          definition: {
+            fields: {
+              title: {
+                type: "text",
               },
             },
           },
         },
       });
 
-      const client = new Client({ project: "test", gdx });
-      const model = client.getModel("test");
+      const client = new Client({ project: "test", datamodels });
+      const model = client.model("test");
       expect(model).toBeDefined();
       expect(model.slug).toBe("test");
       expect(model.fieldsKeys).toContain("title");

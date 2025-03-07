@@ -1,5 +1,6 @@
 import {
   DataModel,
+  GDXDatamodels,
   InferModel,
   Model,
   ModelInstance,
@@ -191,8 +192,8 @@ Object.defineProperty(PromiseModelList.prototype, "cachedPartial", {
 Model.hook("before", "initialize", function () {
   const adapter = this.getAdapter() as ClientAdapter<typeof this>;
   const client = adapter.client;
-  const gdx = client.options.gdx;
-  if (this.slug && gdx?.datamodels?.[this.slug] && client.options.assignGDXDatamodels) {
-    this.__initOptions.datamodel = gdx.datamodels[this.slug] as ModelJSON<typeof DataModel>;
+  const datamodels = client.options.datamodels as GDXDatamodels;
+  if (this.slug && datamodels && datamodels?.[this.slug]) {
+    this.__initOptions.datamodel = datamodels[this.slug] as ModelJSON<typeof DataModel>;
   }
 });

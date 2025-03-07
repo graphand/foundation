@@ -1,6 +1,6 @@
 {
   "name": "@graphand/cli",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "private": false,
   "type": "module",
   "exports": {
@@ -26,12 +26,13 @@
   },
   "dependencies": {
     "@graphand/client": "*",
-    "@graphand/client-module-auth": "^1.4.0",
+    "@graphand/client-module-auth": "^1.4.2",
     "@inquirer/prompts": "^7.3.2",
     "archiver": "^7.0.1",
     "chalk": "^5.3.0",
     "cli-table3": "^0.6.5",
     "commander": "^12.1.0",
+    "dotenv": "^16.4.7",
     "esbuild": "^0.23.0",
     "mime": "^4.0.4",
     "node-persist": "^4.0.4",

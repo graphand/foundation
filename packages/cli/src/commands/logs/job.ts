@@ -14,7 +14,7 @@ export const commandLogsJob = new Command("job")
     await withSpinner(async spinner => {
       const client = await getClient();
 
-      const job = await client.getModel(Job).get(id);
+      const job = await client.model(Job).get(id);
 
       if (!job) {
         throw new Error(`Job ${id} not found`);

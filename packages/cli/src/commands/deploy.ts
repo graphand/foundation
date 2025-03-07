@@ -22,7 +22,7 @@ export const commandDeploy = new Command("deploy")
       async spinner => {
         client = await getClient({ realtime: true });
 
-        const model = client.getModel(Function);
+        const model = client.model(Function);
 
         if (!fs.existsSync(path.resolve(functionPath))) {
           throw new Error(`Function path ${functionPath} does not exist`);

@@ -41,7 +41,6 @@ const DEFAULT_OPTIONS: Partial<ClientOptions> = {
   endpoint: "api.graphand.cloud",
   ssl: true,
   maxRetries: 3,
-  assignGDXDatamodels: true,
 };
 
 export class Client<
@@ -143,7 +142,7 @@ export class Client<
   }
 
   useModel<U extends typeof Model>(model: U): Client<D, T, [...M, U]> {
-    this.getModel(model);
+    this.model(model);
 
     return this as Client<D, T, [...M, U]>;
   }
@@ -321,19 +320,21 @@ export class Client<
     return globalThis.__GLOBAL_CLIENT__ as Client;
   }
 
-  getModel<I extends typeof Model | string | keyof D | keyof Models>(input: I): InferClientModel<this, I> {
-    return Model.getClass(input as any, this.getAdapterClass()) as InferClientModel<this, I>;
+  model<I extends typeof Model | string | keyof D | keyof Models>(input: I): InferClientModel<this, I> {
+    const model = Model.getClass(input as any, this.getAdapterClass()) as InferClientModel<this, I>;
+    model.loadDatamodel ??= true;
+    return model;
   }
 
-  // alias for getModel
-  model = this.getModel;
+  // alias for model
+  getModel = this.model;
 
   async me(useClaimToken = true): Promise<ModelInstance<InferClientModel<this, "accounts">> | null> {
     if (!this.options.accessToken) {
       return null;
     }
 
-    const model = this.getModel("accounts");
+    const model = this.model("accounts");
 
     if (useClaimToken) {
       try {

@@ -35,7 +35,7 @@ describe("augmentations", () => {
 
   beforeEach(() => {
     client = new Client({ accessToken: "test-token", project: "test-project" });
-    model = client.getModel(TestModel);
+    model = client.model(TestModel);
     adapter = model.getAdapter() as unknown as ClientAdapter;
   });
 
@@ -149,7 +149,7 @@ describe("augmentations", () => {
         static slug = "otherModel";
       }
 
-      const adapter2 = client.getModel(OtherModel).getAdapter() as unknown as ClientAdapter;
+      const adapter2 = client.model(OtherModel).getAdapter() as unknown as ClientAdapter;
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
       adapter2.dispatch({ ...event, model: "otherModel", data: [{ _id: "123" }] } as ModelCrudEvent<
@@ -218,7 +218,7 @@ describe("augmentations", () => {
       class NewModel extends Model {
         static slug = "newModel";
       }
-      const newModel = client.getModel(NewModel);
+      const newModel = client.model(NewModel);
       const newAdapter = newModel.getAdapter() as unknown as ClientAdapter;
 
       const observer = vi.fn();
@@ -254,7 +254,7 @@ describe("augmentations", () => {
       class OtherModel extends Model {
         static slug = "otherModel";
       }
-      const otherModel = client.getModel(OtherModel);
+      const otherModel = client.model(OtherModel);
       const otherAdapter = otherModel.getAdapter() as unknown as ClientAdapter;
 
       const observer1 = vi.fn();
@@ -317,7 +317,7 @@ describe("augmentations", () => {
         static slug = "extendedModel";
       }
 
-      const extendedModel = client.getModel(ExtendedModel);
+      const extendedModel = client.model(ExtendedModel);
       const extendedAdapter = extendedModel.getAdapter() as unknown as ClientAdapter;
 
       const observer = vi.fn();
@@ -356,7 +356,7 @@ describe("augmentations", () => {
       class OtherModel extends Model {
         static slug = "otherModel";
       }
-      const otherModel = client.getModel(OtherModel);
+      const otherModel = client.model(OtherModel);
       const otherAdapter = otherModel.getAdapter() as unknown as ClientAdapter;
 
       const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
@@ -381,7 +381,7 @@ describe("augmentations", () => {
       class ExtendedModel extends TestModel {
         static slug = "extendedModel";
       }
-      const extendedModel = client.getModel(ExtendedModel);
+      const extendedModel = client.model(ExtendedModel);
       const extendedAdapter = extendedModel.getAdapter() as unknown as ClientAdapter;
 
       const instance = ExtendedModel.hydrate({ _id: "1", someField: "value" });
@@ -454,7 +454,7 @@ describe("augmentations", () => {
       class AnotherModel extends Model {
         static slug = "anotherModel";
       }
-      const anotherModel = client.getModel(AnotherModel);
+      const anotherModel = client.model(AnotherModel);
 
       const client1 = model.getClient();
       const client2 = anotherModel.getClient();
@@ -1382,7 +1382,7 @@ describe("augmentations", () => {
           single: true,
         };
       }
-      const singleModel = client.getModel(SingleModel);
+      const singleModel = client.model(SingleModel);
       const singleAdapter = singleModel.getAdapter() as unknown as ClientAdapter;
       const instance = singleModel.hydrate({ _id: "single-id" });
       singleAdapter.store.set("single-id", instance);
@@ -1409,7 +1409,7 @@ describe("augmentations", () => {
       }
 
       const instance = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value" });
-      const relModel = client.getModel(RelModel);
+      const relModel = client.model(RelModel);
       const relInstance = relModel.hydrateAndCache({ _id: new ObjectId().toString(), rel: instance._id });
       const rel = relInstance?.get("rel") as PromiseModel<typeof TestModel>;
       expect(rel).toBeInstanceOf(PromiseModel);
@@ -1446,7 +1446,7 @@ describe("augmentations", () => {
       const instance1 = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value1" });
       const instance2 = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value2" });
 
-      const relModel = client.getModel(RelModel);
+      const relModel = client.model(RelModel);
       const relInstance = relModel.hydrateAndCache({
         _id: new ObjectId().toString(),
         relArr: [instance1._id as string, instance2._id as string],

@@ -879,9 +879,9 @@ describe("Global tests", () => {
 
     const registeredModels = Array.from(Adapter._modelsRegistry.values());
 
-    const extensibleModels = registeredModels.filter(model => model.extensible).map(model => model.slug);
+    const extensibleModels = registeredModels.filter(model => model.loadDatamodel).map(model => model.slug);
 
-    const nonExtensible = registeredModels.filter(model => !model.extensible).map(model => model.slug);
+    const nonExtensible = registeredModels.filter(model => !model.loadDatamodel).map(model => model.slug);
 
     for (const slug of extensibleModels) {
       await expect(DM.validate([{ slug }])).resolves.toBeTruthy();
@@ -898,7 +898,7 @@ describe("Global tests", () => {
 
     class CoreModel extends Model {
       static slug = "sampleCoreModel";
-      static extensible = false; // That means it's a core model and creating a datamodel with this slug is not allowed
+      static loadDatamodel = false; // That means it's a core model and creating a datamodel with this slug is not allowed
     }
 
     await expect(DM.validate([{ slug: "sampleCoreModel" }])).resolves.toBeTruthy(); // CoreModel is not registered in the adapter yet

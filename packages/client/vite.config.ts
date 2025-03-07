@@ -24,7 +24,10 @@ export default defineConfig({
     rollupOptions: {
       external: ["@graphand/core"],
       output: {
-        globals: {},
+        exports: "named",
+        globals: {
+          "@graphand/core": "core",
+        },
       },
     },
   },

@@ -112,7 +112,7 @@ describe("ModuleRealtime", () => {
     await client.get("realtime").connect();
     const socket = client.get("realtime").getSocket();
 
-    const model = client.getModel("testModel");
+    const model = client.model("testModel");
     const adapter = model.getAdapter() as ClientAdapter;
     const mockDispatch = vi.spyOn(adapter, "dispatch");
     const event: ModelCrudEvent = {
@@ -218,7 +218,7 @@ describe("ModuleRealtime", () => {
     it("should auto subscribe to models on Model.subscribe", async () => {
       const _module = _client.get("realtime");
       expect(_module.getSubscribedModels()).toHaveLength(0);
-      const model = _client.getModel("testModel");
+      const model = _client.model("testModel");
       model.subscribe(() => {});
       expect(_module.getSubscribedModels()).toContain(model.slug);
     });
@@ -226,7 +226,7 @@ describe("ModuleRealtime", () => {
     it("should auto subscribe to models on Model.prototype.subscribe", async () => {
       const _module = _client.get("realtime");
       expect(_module.getSubscribedModels()).toHaveLength(0);
-      const model = _client.getModel("testModel");
+      const model = _client.model("testModel");
       const i = model.hydrate({});
       i.subscribe(() => {});
       expect(_module.getSubscribedModels()).toContain(model.slug);
@@ -235,7 +235,7 @@ describe("ModuleRealtime", () => {
     it("should auto subscribe to models on ModelList.prototype.subscribe", async () => {
       const _module = _client.get("realtime");
       expect(_module.getSubscribedModels()).toHaveLength(0);
-      const model = _client.getModel("datamodels");
+      const model = _client.model("datamodels");
       const list = await model.getList({});
       list.subscribe(() => {});
       expect(_module.getSubscribedModels()).toContain(model.slug);

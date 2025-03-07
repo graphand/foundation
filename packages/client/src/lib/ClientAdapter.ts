@@ -25,6 +25,9 @@ import {
   defineFieldsProperties,
   ModelData,
   UpdateObject,
+  assignDatamodel,
+  DataModel,
+  GDXDatamodels,
 } from "@graphand/core";
 import { Client } from "./Client.js";
 import { Subject } from "./Subject.js";
@@ -141,7 +144,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     if (!this.client) {
       throw new ClientError({
         message:
-          "Model must be initialized with a client. Please use client.getModel() or client.getAdapterClass() method first",
+          "Model must be initialized with a client. Please use client.model() or client.getAdapterClass() method first",
       });
     }
   }
@@ -709,7 +712,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
             const arrayOptions = currentField.options as FieldOptionsMap[FieldTypes.ARRAY];
             if (Array.isArray(current[key])) {
               if (arrayOptions?.items?.type === FieldTypes.RELATION) {
-                const refModel = this.client.getModel((arrayOptions.items.options as any).ref);
+                const refModel = this.client.model((arrayOptions.items.options as any).ref);
                 modelsToInitialize.add(refModel);
                 current[key].forEach((item: any) => {
                   if (typeof item === "object" && item !== null) {
@@ -725,7 +728,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
             break;
           } else if (currentField.type === FieldTypes.RELATION) {
             if (typeof current[key] === "object" && current[key] !== null) {
-              const refModel = this.client.getModel((currentField.options as any).ref);
+              const refModel = this.client.model((currentField.options as any).ref);
               modelsToInitialize.add(refModel);
               collectModels(current[key], refModel);
             }
@@ -770,7 +773,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
           const arrayOptions = currentField.options as FieldOptionsMap[FieldTypes.ARRAY];
           if (Array.isArray(current[key])) {
             if (arrayOptions?.items?.type === FieldTypes.RELATION) {
-              const refModel = this.client.getModel((arrayOptions.items.options as any).ref);
+              const refModel = this.client.model((arrayOptions.items.options as any).ref);
               const adapter = refModel.getAdapter() as ClientAdapter;
               current[key] = current[key].map((item: any) =>
                 typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance?._id : item,
@@ -783,7 +786,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
           break;
         } else if (currentField.type === FieldTypes.RELATION) {
           if (typeof current[key] === "object" && current[key] !== null) {
-            const refModel = this.client.getModel((currentField.options as any).ref);
+            const refModel = this.client.model((currentField.options as any).ref);
             const adapter = refModel.getAdapter() as ClientAdapter;
             current[key] = adapter.processInstancePayload(current[key]).instance?._id;
           }
@@ -833,7 +836,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     for (const [key, field] of Object.entries(fields)) {
       if (field.type === FieldTypes.RELATION) {
         if (typeof processedObj[key] === "object" && processedObj[key] !== null) {
-          const refModel = this.client.getModel((field.options as any).ref);
+          const refModel = this.client.model((field.options as any).ref);
           const adapter = refModel.getAdapter() as ClientAdapter;
           processedObj[key] = adapter.processInstancePayload(processedObj[key]).instance?._id;
         }
@@ -841,7 +844,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         const arrayOptions = field.options as FieldOptionsMap[FieldTypes.ARRAY];
         if (Array.isArray(processedObj[key])) {
           if (arrayOptions?.items?.type === FieldTypes.RELATION) {
-            const refModel = this.client.getModel((arrayOptions.items.options as any).ref);
+            const refModel = this.client.model((arrayOptions.items.options as any).ref);
             const adapter = refModel.getAdapter() as ClientAdapter;
             processedObj[key] = processedObj[key].map((item: any) =>
               typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance?._id : item,
@@ -900,5 +903,15 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     for (const instance of this.#store.values()) {
       defineFieldsProperties(instance);
     }
+  }
+
+  static registerModel(model: typeof Model, force?: boolean): void {
+    const datamodels = this.client?.options.datamodels as GDXDatamodels;
+
+    if (model.slug && datamodels && datamodels?.[model.slug]) {
+      assignDatamodel(model, datamodels[model.slug] as ModelJSON<typeof DataModel>);
+    }
+
+    super.registerModel(model, force);
   }
 }

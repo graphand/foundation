@@ -142,7 +142,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
           return;
         }
 
-        const model = client.getModel(event.model);
+        const model = client.model(event.model);
         const adapter = model.getAdapter() as ClientAdapter;
 
         Object.assign(event, { __socketId: socket?.id });

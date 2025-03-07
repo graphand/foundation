@@ -1,5 +1,14 @@
 # @graphand/cli
 
+## 1.4.2
+
+### Patch Changes
+
+- improve gdx integration
+- Updated dependencies
+  - @graphand/client-module-auth@1.4.2
+  - @graphand/client@1.5.5
+
 ## 1.4.1
 
 ### Patch Changes

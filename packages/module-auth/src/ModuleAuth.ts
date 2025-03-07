@@ -244,7 +244,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     }
 
     return {
-      account: this.client().getModel("accounts").hydrateAndCache(account),
+      account: this.client().model("accounts").hydrateAndCache(account),
       accessToken,
       refreshToken,
     };

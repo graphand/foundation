@@ -181,7 +181,7 @@ describe("Test Model", () => {
       const base = modelDecorator()(
         class extends Model {
           static slug = generateRandomString();
-          static extensible: boolean = true;
+          static loadDatamodel: boolean = true;
         },
       );
 
@@ -210,7 +210,7 @@ describe("Test Model", () => {
             definition: {
               keyField: "test",
             },
-          }),
+          }).toJSON(),
         },
         adapterClass: mockAdapter(),
       });
@@ -285,7 +285,7 @@ describe("Test Model", () => {
         class extends Model {
           static slug = slug1;
           static connectable = true;
-          static extensible = true;
+          static loadDatamodel = true;
           static isEnvironmentScoped = true;
           static definition: ModelDefinition = {
             keyField: "test",
@@ -309,7 +309,7 @@ describe("Test Model", () => {
         class extends model {
           static slug = slug2;
           static connectable = true;
-          static extensible = true;
+          static loadDatamodel = true;
           static isEnvironmentScoped = true;
         },
       ).extend({ adapterClass: adapter });
@@ -2375,7 +2375,7 @@ describe("Test Model", () => {
         class extends Model {
           static slug = slug1;
           static connectable = true;
-          static extensible = true;
+          static loadDatamodel = true;
           static isEnvironmentScoped = true;
         },
       ).extend({ adapterClass: adapter });
@@ -2445,7 +2445,7 @@ describe("Test Model", () => {
         class extends Model {
           static slug = slug1;
           static connectable = true;
-          static extensible = true;
+          static loadDatamodel = true;
           static isEnvironmentScoped = true;
         },
       ).extend({ adapterClass: adapter, force: true });
@@ -2497,7 +2497,7 @@ describe("Test Model", () => {
         class extends Model {
           static slug = slug1;
           static connectable = true;
-          static extensible = true;
+          static loadDatamodel = true;
           static isEnvironmentScoped = true;
         },
       ).extend({ adapterClass: adapter });
@@ -2529,7 +2529,7 @@ describe("Test Model", () => {
 
       class CustomModel extends Model {
         static slug = "custom";
-        static extensible = false;
+        static loadDatamodel = false;
         static definition = {
           fields: {
             customField: {
@@ -2553,7 +2553,7 @@ describe("Test Model", () => {
 
       class CustomModel extends Model {
         static slug = "custom";
-        static extensible = false;
+        static loadDatamodel = false;
         static definition = {
           fields: {
             customField: {
@@ -2577,7 +2577,7 @@ describe("Test Model", () => {
 
       class CustomModel extends Model {
         static slug = "custom";
-        static extensible = false;
+        static loadDatamodel = false;
         static definition = {
           fields: {
             customField: {
@@ -2602,7 +2602,7 @@ describe("Test Model", () => {
 
       class CustomModel extends Model {
         static slug = "custom";
-        static extensible = false;
+        static loadDatamodel = false;
         static definition = {
           fields: {
             customField: {
@@ -2638,13 +2638,13 @@ describe("Test Model", () => {
       const model = Model.getClass(dm, adapter);
 
       expect(model.prototype).toBeInstanceOf(Model);
-      expect(model.extensible).toBeTruthy();
+      expect(model.loadDatamodel).toBeTruthy();
       expect(model.isEnvironmentScoped).toBeTruthy();
       expect(Model.getClass(model, adapter)).toBe(model);
 
       class CustomModel extends Model {
         static slug = "custom";
-        static extensible = false;
+        static loadDatamodel = false;
       }
 
       expect(() => Model.getClass(CustomModel, adapter)).toThrow("already registered");
@@ -2886,7 +2886,7 @@ describe("Test Model", () => {
         class extends Model {
           static slug = generateRandomString();
           static realtime = false;
-          static extensible = true;
+          static loadDatamodel = true;
         },
       ).extend({ adapterClass: adapter });
 

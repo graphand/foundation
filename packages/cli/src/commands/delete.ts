@@ -14,7 +14,7 @@ export const commandDelete = new Command("delete")
   .action(async (modelName, key, options) => {
     await withSpinner(async spinner => {
       const client = await getClient();
-      const model = client.getModel(String(modelName));
+      const model = client.model(String(modelName));
       let deleted: Array<string> = [];
 
       console.info(`Initializing model ${model.slug} ...`);

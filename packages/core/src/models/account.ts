@@ -10,7 +10,7 @@ import { Patterns } from "@/enums/patterns.js";
 export class Account extends Model {
   static __name = "Account";
   static connectable = true as const;
-  static extensible = true as const;
+  static loadDatamodel = true as const;
   static realtime = true as const;
   static isEnvironmentScoped = true as const;
   static slug = "accounts" as const;

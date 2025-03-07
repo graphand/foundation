@@ -10,7 +10,7 @@ export const commandCount = new Command("count")
   .action(async (modelName, options) => {
     await withSpinner(async () => {
       const client = await getClient();
-      const model = client.getModel(String(modelName));
+      const model = client.model(String(modelName));
 
       console.info(`Initializing model ${model.slug} ...`);
 

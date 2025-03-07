@@ -26,7 +26,7 @@ export const commandGet = new Command("get")
   .action(async (modelName, key, options) => {
     await withSpinner(async spinner => {
       const client = await getClient();
-      const model = client.getModel(String(modelName));
+      const model = client.model(String(modelName));
       let list: ModelList<typeof model> | null;
 
       console.info(`Initializing model ${model.slug} ...`);

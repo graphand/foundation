@@ -90,12 +90,14 @@ export interface SystemFieldsOverrides<M extends typeof Model> {}
 export type SystemFields<M extends typeof Model> = Omit<SystemFieldsBase, keyof SystemFieldsOverrides<M>> &
   SystemFieldsOverrides<M>;
 
+type IdentityString = string & {};
+
 export interface SerializerFieldsMap<
   F extends FieldDefinitionGeneric<FieldTypes> = FieldDefinitionGeneric<FieldTypes>,
 > {
   json: {
     [FieldTypes.ID]: string;
-    [FieldTypes.IDENTITY]: string;
+    [FieldTypes.IDENTITY]: IdentityString;
     [FieldTypes.BOOLEAN]: boolean;
     [FieldTypes.NUMBER]: number;
     [FieldTypes.INTEGER]: number;
@@ -124,7 +126,7 @@ export interface SerializerFieldsMap<
   };
   object: {
     [FieldTypes.ID]: string;
-    [FieldTypes.IDENTITY]: string;
+    [FieldTypes.IDENTITY]: IdentityString;
     [FieldTypes.BOOLEAN]: boolean;
     [FieldTypes.NUMBER]: number;
     [FieldTypes.INTEGER]: number;

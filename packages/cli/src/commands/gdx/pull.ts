@@ -3,6 +3,8 @@ import qs from "qs";
 import { colorizeJson, getClient, getGdxPath, withSpinner } from "@/lib/utils.js";
 import { controllerGdxPull, JSONQuery, JSONObject } from "@graphand/core";
 import { Command } from "commander";
+import { Config } from "@/lib/Config.js";
+import path from "path";
 
 export const commandGdxPull = new Command("pull")
   .description("gdx pull")
@@ -10,6 +12,7 @@ export const commandGdxPull = new Command("pull")
   .option("-q --query <query>", "The gdx query object")
   .option("-s --include-system-fields", "Include system fields")
   .option("-o --output <output>", "Output (json, file)")
+  .option("-w --write <path>", "Write to gdx file")
   .action(async options => {
     await withSpinner(async () => {
       const client = await getClient();
@@ -48,12 +51,24 @@ export const commandGdxPull = new Command("pull")
       }
 
       if (output === "file") {
-        const configPath = await getGdxPath();
-        if (!configPath) {
+        let gdxPath: string | null = null;
+
+        if (options.write) {
+          gdxPath = path.join(process.cwd(), options.write);
+        } else {
+          const config = await new Config().load();
+          gdxPath = await getGdxPath(config);
+        }
+
+        if (!gdxPath) {
           throw new Error("No GDX file found");
         }
 
-        await fs.promises.writeFile(configPath, JSON.stringify(json.data, null, 2));
+        if (path.extname(gdxPath) !== ".json") {
+          throw new Error("GDX file must be a json file");
+        }
+
+        await fs.promises.writeFile(gdxPath, JSON.stringify(json.data, null, 2));
         return;
       }
 

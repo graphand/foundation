@@ -19,11 +19,11 @@ suivants :
 - `validators`: les validateurs de ce modèle (type `ValidatorsDefinition`)
 - `single`: si le modèle est un singleton (un seul élément de ce modèle peut exister)
 
-Si le modèle est extensible (`Model.extensible`), Graphand cherchera un datamodel ayant le même slug pour lui associer
-sa définition lors de l'initialisation du modèle (`Model.initialize`). Les modèles extensibles sont `Account`, `Media`
-et `Data`. Il est donc possible de créer un datamodel ayant le slug `accounts` pour étendre le modèle `Account` et
-ajouter des champs à ce modèle. Pour créer un modèle custom, il faut créer un datamodel et définir une classe qui étend
-le modèle de base `Data` avec le slug du datamodel.
+Si le modèle est extensible (`Model.loadDatamodel`), Graphand cherchera un datamodel ayant le même slug pour lui
+associer sa définition lors de l'initialisation du modèle (`Model.initialize`). Les modèles extensibles sont `Account`,
+`Media` et `Data`. Il est donc possible de créer un datamodel ayant le slug `accounts` pour étendre le modèle `Account`
+et ajouter des champs à ce modèle. Pour créer un modèle custom, il faut créer un datamodel et définir une classe qui
+étend le modèle de base `Data` avec le slug du datamodel.
 
 ### Exemple
 
@@ -92,8 +92,8 @@ classe. _Chaque instance de l'adaptateur a donc accès au modèle en question vi
 
 Pour fonctionner avec un adaptateur, les modèles doivent être appelé avec la méthode `Model.extend`, qui prend en
 paramètre la classe de l'adaptateur qui sera instanciée. C'est cette fonction qui est appelée under the hood par le
-client avec la méthode `Client.prototype.getModel` et par le serveur avec la méthode `Controller.prototype.getModel`
-(avec leurs adaptateurs respectifs).
+client avec la méthode `Client.prototype.model` et par le serveur avec la méthode `Controller.prototype.model` (avec
+leurs adaptateurs respectifs).
 
 ```ts
 class ClientAdapter extends Adapter {} // ClientAdapter décrit comment les modèles interagissent avec les données sur le client

@@ -23,6 +23,7 @@ import { commandSrc } from "./commands/src.js";
 import { commandModels } from "./commands/models.js";
 import { commandGdx } from "./commands/gdx/index.js";
 import { commandVersion } from "./commands/version.js";
+import "dotenv/config";
 
 program
   .version(packageJson.version)
