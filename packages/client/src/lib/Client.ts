@@ -330,6 +330,8 @@ export class Client<
   getModel = this.model;
 
   async me(useClaimToken = true): Promise<ModelInstance<InferClientModel<this, "accounts">> | null> {
+    await this.init();
+
     if (!this.options.accessToken) {
       return null;
     }

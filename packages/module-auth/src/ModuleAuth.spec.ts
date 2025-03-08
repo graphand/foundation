@@ -192,6 +192,20 @@ describe("ModuleAuth", () => {
       await client.get("auth").logout();
       expect(client.options.accessToken).toBeUndefined();
     });
+
+    it("should load the tokens from storage on using me", async () => {
+      const customStorage: AuthStorage = {
+        setItem: vi.fn(),
+        getItem: vi.fn(async () => Promise.resolve("test-access-token")),
+        removeItem: vi.fn(),
+      };
+      const customClient = new Client({ project: "test" }, [[ModuleAuth, { storage: customStorage }]]);
+      expect(customClient.options.accessToken).toBeUndefined();
+      await customClient.me();
+      expect(customStorage.getItem).toHaveBeenCalledTimes(1);
+      expect(customClient.options.accessToken).toEqual("test-access-token");
+      customClient.destroy();
+    });
   });
 
   describe("Async Storage", () => {
