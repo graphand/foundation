@@ -8,6 +8,7 @@ export class Settings extends Model {
   static __name = "Settings";
   static allowMultipleOperations = false as const;
   static slug = "settings" as const;
+  static loadDatamodel = false as const;
   static definition = {
     keyField: "key",
     fields: {

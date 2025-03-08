@@ -12,7 +12,7 @@ export const commandRunFunction = new Command("function")
   .option("-p --params <params>", "URL encoded params options")
   .option("-q --query <query>", "URL encoded query options")
   .option("-d --data <data>", "URL encoded data options")
-  .option("-run-in-job", "Run the function in a job")
+  .option("--run-in-job", "Run the function in a job")
   .action(async (functionName, options) => {
     await withSpinner(async spinner => {
       const client = await getClient();
@@ -60,17 +60,22 @@ export const commandRunFunction = new Command("function")
       console.info(`Executing function ${chalk.cyan(func.name)} (${chalk.bold(func._id)}) ...`);
 
       const params = options.params ? (qs.parse(options.params) as Record<string, string>) : undefined;
+      const query = options.query ? (qs.parse(options.query) as Record<string, string>) : undefined;
 
       try {
         const r = await client.execute(controllerFunctionRun, {
           params: Object.assign({}, params, { id: func._id }) as NonNullable<
             InferControllerInput<typeof controllerFunctionRun>
           >["params"],
-          query: options.query ? (qs.parse(options.query) as Record<string, string>) : undefined,
+          query: Object.assign({}, { runInJob: !!options.runInJob }, query),
           init: {
             body: options.data ? JSON.stringify(qs.parse(options.data)) : undefined,
           },
         });
+
+        if (options.runInJob) {
+          return;
+        }
 
         await _handleRes(r);
       } catch (e) {

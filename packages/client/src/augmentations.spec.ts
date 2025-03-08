@@ -19,6 +19,7 @@ describe("augmentations", () => {
   @modelDecorator()
   class TestModel extends Model {
     static slug = "testModel";
+    static loadDatamodel = false as const;
     static definition = {
       fields: {
         someField: {

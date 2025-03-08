@@ -6,11 +6,11 @@ import { ModelDefinition } from "@/types/index.js";
 @modelDecorator()
 export class Media extends Model {
   static __name = "Media";
+  static slug = "medias" as const;
   static loadDatamodel = true as const;
   static connectable = true as const;
   static realtime = true as const;
   static isEnvironmentScoped = true as const;
-  static slug = "medias" as const;
   static definition = {
     keyField: "name",
     fields: {

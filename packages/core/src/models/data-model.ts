@@ -43,6 +43,7 @@ export class DataModel extends Model {
   static isEnvironmentScoped = true as const;
   static realtime = true as const;
   static slug = "datamodels" as const;
+  static loadDatamodel = false as const;
   static definition = {
     keyField: "slug",
     fields: {

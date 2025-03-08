@@ -11,6 +11,7 @@ export class Connector extends Model {
   static __name = "Connector";
   static isEnvironmentScoped = true as const;
   static allowMultipleOperations = false as const;
+  static loadDatamodel = false as const;
   static slug = "connectors" as const;
   static definition = {
     keyField: "slug",

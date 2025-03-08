@@ -9,6 +9,7 @@ export class Snapshot extends Model {
   static __name = "Snapshot";
   static allowMultipleOperations = false as const;
   static slug = "snapshots" as const;
+  static loadDatamodel = false as const;
   static definition = {
     fields: {
       _expiresAt: {

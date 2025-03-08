@@ -10,6 +10,7 @@ import { EventSeverities } from "@/enums/event-severities.js";
 export class Event extends Model {
   static __name = "Event";
   static slug = "events" as const;
+  static loadDatamodel = false as const;
   static definition = {
     fields: {
       type: { type: FieldTypes.TEXT },

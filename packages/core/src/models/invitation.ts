@@ -11,6 +11,7 @@ export class Invitation extends Model {
   static __name = "Invitation";
   static isEnvironmentScoped = true as const;
   static allowMultipleOperations = false as const;
+  static loadDatamodel = false as const;
   static slug = "invitations" as const;
   static definition = {
     fields: {

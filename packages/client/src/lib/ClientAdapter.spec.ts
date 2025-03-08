@@ -24,6 +24,7 @@ describe("ClientAdapter", () => {
   @modelDecorator()
   class MockModel extends Model {
     static slug = "mockModel";
+    static loadDatamodel = false;
     static definition = {
       fields: {
         name: {
@@ -259,6 +260,7 @@ describe("ClientAdapter", () => {
     @modelDecorator()
     class MockModelSingle extends Model {
       static slug = "mockModelSingle" as const;
+      static loadDatamodel = false;
       static definition = {
         ...MockModel.definition,
         single: true,
@@ -999,6 +1001,7 @@ describe("ClientAdapter", () => {
     @modelDecorator()
     class OtherRelatedModel extends Model {
       static slug = "otherRelatedModel";
+      static loadDatamodel = false;
       static definition = {
         fields: {
           title: {
@@ -1011,6 +1014,7 @@ describe("ClientAdapter", () => {
     @modelDecorator()
     class RelatedModel extends Model {
       static slug = "relatedModel";
+      static loadDatamodel = false;
       static definition = {
         fields: {
           title: {
@@ -1029,6 +1033,7 @@ describe("ClientAdapter", () => {
     @modelDecorator()
     class MockModelWithRelation extends Model {
       static slug = "mockModelWithRelation";
+      static loadDatamodel = false;
       static definition = {
         fields: {
           name: {
@@ -1633,8 +1638,9 @@ describe("ClientAdapter", () => {
         );
       });
 
-      await client.model(dmNested.slug as string).get(id1);
-      const adapter = client.model(dmNested.slug as string).getAdapter() as unknown as ClientAdapter;
+      const model = client.model(dmNested.slug as string);
+      await model.get(id1);
+      const adapter = model.getAdapter() as unknown as ClientAdapter;
 
       expect(adapter.store.has(id1)).toBeTruthy();
       expect(adapter.store.has(id2)).toBeTruthy();

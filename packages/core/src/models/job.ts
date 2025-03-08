@@ -10,6 +10,7 @@ export class Job extends Model {
   static __name = "Job";
   static slug = "jobs" as const;
   static realtime = true as const;
+  static loadDatamodel = false as const;
   static definition = {
     fields: {
       _type: {

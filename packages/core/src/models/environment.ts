@@ -11,6 +11,7 @@ export class Environment extends Model {
   static __name = "Environment";
   static allowMultipleOperations = false as const;
   static slug = "environments" as const;
+  static loadDatamodel = false as const;
   static definition = {
     keyField: "name",
     fields: {

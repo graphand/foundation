@@ -12,6 +12,7 @@ export class Role extends Model {
   static __name = "Role";
   static isEnvironmentScoped = true as const;
   static realtime = true as const;
+  static loadDatamodel = false as const;
   static slug = "roles" as const;
   static definition = {
     keyField: "slug",

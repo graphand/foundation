@@ -12,6 +12,7 @@ export class Function extends Model {
   static realtime = true as const;
   static isEnvironmentScoped = true as const;
   static allowMultipleOperations = false as const;
+  static loadDatamodel = false as const;
   static slug = "functions" as const;
   static definition = {
     keyField: "name",

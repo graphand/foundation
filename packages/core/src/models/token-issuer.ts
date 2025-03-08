@@ -10,6 +10,7 @@ export class TokenIssuer extends Model {
   static __name = "TokenIssuer";
   static slug = "tokenIssuers" as const;
   static isEnvironmentScoped = true as const;
+  static loadDatamodel = false as const;
   static definition = {
     keyField: "name",
     fields: {

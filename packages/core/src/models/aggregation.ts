@@ -8,6 +8,7 @@ import { ModelDefinition } from "@/types/index.js";
 export class Aggregation extends Model {
   static __name = "Aggregation";
   static isEnvironmentScoped = true as const;
+  static loadDatamodel = false as const;
   static slug = "aggregations" as const;
   static definition = {
     keyField: "slug",

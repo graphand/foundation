@@ -12,6 +12,7 @@ import { Patterns } from "../enums/patterns.js";
 export class EventSubscription extends Model {
   static __name = "EventSubscription";
   static slug = "eventSubscriptions" as const;
+  static loadDatamodel = false as const;
   static definition = {
     keyField: "slug",
     fields: {

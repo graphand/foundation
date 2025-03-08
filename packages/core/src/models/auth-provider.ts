@@ -11,6 +11,7 @@ export class AuthProvider extends Model {
   static __name = "AuthProvider";
   static slug = "authProviders" as const;
   static isEnvironmentScoped = true as const;
+  static loadDatamodel = false as const;
   static definition = {
     keyField: "type",
     fields: {

@@ -11,6 +11,7 @@ export class MergeRequest extends Model {
   static __name = "MergeRequest";
   static allowMultipleOperations = false as const;
   static realtime = true as const;
+  static loadDatamodel = false as const;
   static slug = "mergeRequests" as const;
   static definition = {
     keyField: "slug",

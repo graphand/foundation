@@ -8,6 +8,7 @@ import { ModelDefinition } from "@/types/index.js";
 export class Secret extends Model {
   static __name = "Secret";
   static slug = "secrets" as const;
+  static loadDatamodel = false as const;
   static definition = {
     keyField: "name",
     fields: {
