@@ -1,5 +1,11 @@
 # @graphand/client
 
+## 1.5.8
+
+### Patch Changes
+
+- add 'query' option in TransactionCtx
+
 ## 1.5.7
 
 ### Patch Changes

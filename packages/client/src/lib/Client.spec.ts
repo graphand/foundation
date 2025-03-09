@@ -502,6 +502,51 @@ describe("Client", () => {
       expect(requestFn).toHaveBeenCalled();
     });
 
+    it("should add query parameters when ctx.query is provided", async () => {
+      mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
+
+      await client.execute(
+        { path: "/test", methods: ["get"], secured: false },
+        { ctx: { query: { sort: "name", limit: "10" } } },
+      );
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringMatching(/\?sort=name&limit=10/),
+        }),
+      );
+    });
+
+    it("should merge ctx.query with existing query parameters", async () => {
+      mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
+
+      await client.execute(
+        { path: "/test", methods: ["get"], secured: false },
+        { query: { filter: "active" }, ctx: { query: { sort: "name", limit: "10" } } },
+      );
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringMatching(/\?filter=active&sort=name&limit=10/),
+        }),
+      );
+    });
+
+    it("should override existing query parameters with ctx.query if keys match", async () => {
+      mockFetch.mockResolvedValueOnce(new Response("{}", { status: 200 }));
+
+      await client.execute(
+        { path: "/test", methods: ["get"], secured: false },
+        { query: { limit: "5", filter: "active" }, ctx: { query: { limit: "10" } } },
+      );
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringMatching(/\?limit=10&filter=active/),
+        }),
+      );
+    });
+
     it("should be able to call request init through the ClientAdapter (on model create)", async () => {
       const _client = new Client({ accessToken: "test-token", project: null });
       const requestFn = vi.fn(i => i);

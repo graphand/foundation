@@ -393,10 +393,12 @@ export class Client<
       });
     }
 
-    const url = this.buildUrl(controller, {
-      params: opts.params as Record<string, string>,
-      query: opts.query as Record<string, string>,
-    });
+    const params = opts.params as Record<string, string>;
+    const query = Object.assign({}, opts.query, opts.ctx?.query);
+
+    console.log(opts, query);
+
+    const url = this.buildUrl(controller, { params, query });
 
     let init: RequestInit = Object.assign({}, opts.init);
     init.headers = Object.assign({}, init.headers, {

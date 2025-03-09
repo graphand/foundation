@@ -23,6 +23,7 @@ declare module "@graphand/core" {
     disableCache?: boolean;
     formData?: FormData;
     uploadId?: string;
+    query?: Record<string, string>;
     onRequest?: (_req: RequestInit) => RequestInit;
   }
 
