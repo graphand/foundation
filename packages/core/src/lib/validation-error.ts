@@ -121,12 +121,7 @@ export class ValidationError extends CoreError {
     ];
   }
 
-  forPath(path: string) {
-    return [
-      ...this.fields.filter(f => f.field?.path === path),
-      ...this.validators.filter(v => v.validator.getFullPath() === path),
-    ];
-  }
+  forPath = this.onPath;
 
   toJSON() {
     const json = {
