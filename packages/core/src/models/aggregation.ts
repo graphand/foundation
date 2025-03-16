@@ -17,10 +17,8 @@ export class Aggregation extends Model {
       source: { type: PropertyTypes.TEXT },
       pipeline: {
         type: PropertyTypes.ARRAY,
-        options: {
-          items: {
-            type: PropertyTypes.OBJECT,
-          },
+        items: {
+          type: PropertyTypes.OBJECT,
         },
       },
       let: {

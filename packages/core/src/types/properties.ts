@@ -30,7 +30,7 @@ export type PropertyOptionsMap = {
     default?: Readonly<string>;
   };
   [PropertyTypes.RELATION]: {
-    ref: string;
+    ref?: string;
   };
   [PropertyTypes.NUMBER]: {
     default?: Readonly<number>;
@@ -54,10 +54,10 @@ export type PropertyOptionsMap = {
     default?: Readonly<string>;
     enum: Array<string>;
   };
-  [PropertyTypes.DEFAULT]: never;
-  [PropertyTypes.ID]: never;
-  [PropertyTypes.DATE]: never;
-  [PropertyTypes.IDENTITY]: never;
+  [PropertyTypes.DEFAULT]: {};
+  [PropertyTypes.ID]: {};
+  [PropertyTypes.DATE]: {};
+  [PropertyTypes.IDENTITY]: {};
 };
 
 export type PropertyOptions<T extends PropertyTypes = PropertyTypes> = Readonly<PropertyOptionsMap[T]>;
@@ -68,9 +68,8 @@ export type PropertyDefinitions = {
 
 export type PropertyDefinitionGeneric<T extends PropertyTypes> = {
   type: T | `${T}`;
-  options?: PropertyOptionsMap[T];
   required?: true;
-};
+} & PropertyOptionsMap[T];
 
 export type PropertyDefinition = {
   [K in PropertyTypes]: PropertyDefinitionGeneric<K>;
@@ -107,25 +106,25 @@ type SerializerJSON<F extends PropertyDefinitionGeneric<PropertyTypes>> = {
   [PropertyTypes.INTEGER]: number;
   [PropertyTypes.DATE]: string;
   [PropertyTypes.TEXT]: string;
-  [PropertyTypes.ENUM]: F["options"] extends PropertyOptionsMap[PropertyTypes.ENUM]
-    ? F["options"]["enum"][number] | `${F["options"]["enum"][number]}`
+  [PropertyTypes.ENUM]: F extends PropertyDefinitionGeneric<PropertyTypes.ENUM>
+    ? F["enum"][number] | `${F["enum"][number]}`
     : never;
-  [PropertyTypes.OBJECT]: F["options"] extends PropertyOptionsMap[PropertyTypes.OBJECT]
-    ? (F["options"]["properties"] extends PropertiesDefinition
-        ? F["options"]["additionalProperties"] extends PropertyDefinition
+  [PropertyTypes.OBJECT]: F extends PropertyDefinitionGeneric<PropertyTypes.OBJECT>
+    ? (F["properties"] extends PropertiesDefinition
+        ? F["additionalProperties"] extends PropertyDefinition
           ? WithDefaultProperty<
-              InferPropertiesDefinition<F["options"]["properties"], "json">,
-              InferPropertyType<F["options"]["additionalProperties"], "json">
+              InferPropertiesDefinition<F["properties"], "json">,
+              InferPropertyType<F["additionalProperties"], "json">
             >
-          : InferPropertiesDefinition<F["options"]["properties"], "json">
-        : F["options"]["additionalProperties"] extends PropertyDefinition
-          ? Record<string, InferPropertyType<F["options"]["additionalProperties"], "json">>
+          : InferPropertiesDefinition<F["properties"], "json">
+        : F["additionalProperties"] extends PropertyDefinition
+          ? Record<string, InferPropertyType<F["additionalProperties"], "json">>
           : {}) &
-        (F["options"]["strict"] extends true ? {} : JSONObject)
+        (F["strict"] extends true ? {} : JSONObject)
     : JSONObject;
   [PropertyTypes.RELATION]: string;
-  [PropertyTypes.ARRAY]: F["options"] extends PropertyOptionsMap[PropertyTypes.ARRAY]
-    ? Array<InferPropertyType<F["options"]["items"], "json">>
+  [PropertyTypes.ARRAY]: F extends PropertyDefinitionGeneric<PropertyTypes.ARRAY>
+    ? Array<InferPropertyType<F["items"], "json">>
     : Array<unknown>;
 };
 
@@ -137,33 +136,33 @@ type SerializerObject<F extends PropertyDefinitionGeneric<PropertyTypes>> = {
   [PropertyTypes.INTEGER]: number;
   [PropertyTypes.DATE]: Date;
   [PropertyTypes.TEXT]: string;
-  [PropertyTypes.ENUM]: F["options"] extends PropertyOptionsMap[PropertyTypes.ENUM]
-    ? F["options"]["enum"][number]
+  [PropertyTypes.ENUM]: F extends PropertyDefinitionGeneric<PropertyTypes.ENUM>
+    ? F["enum"][number] | `${F["enum"][number]}`
     : never;
-  [PropertyTypes.OBJECT]: F["options"] extends PropertyOptionsMap[PropertyTypes.OBJECT]
-    ? (F["options"]["properties"] extends PropertiesDefinition
-        ? F["options"]["additionalProperties"] extends PropertyDefinition
+  [PropertyTypes.OBJECT]: F extends PropertyDefinitionGeneric<PropertyTypes.OBJECT>
+    ? (F["properties"] extends PropertiesDefinition
+        ? F["additionalProperties"] extends PropertyDefinition
           ? WithDefaultProperty<
-              InferPropertiesDefinition<F["options"]["properties"], "object">,
-              InferPropertyType<F["options"]["additionalProperties"], "object">
+              InferPropertiesDefinition<F["properties"], "object">,
+              InferPropertyType<F["additionalProperties"], "object">
             >
-          : InferPropertiesDefinition<F["options"]["properties"], "object">
-        : F["options"]["additionalProperties"] extends PropertyDefinition
-          ? Record<string, InferPropertyType<F["options"]["additionalProperties"], "object">>
+          : InferPropertiesDefinition<F["properties"], "object">
+        : F["additionalProperties"] extends PropertyDefinition
+          ? Record<string, InferPropertyType<F["additionalProperties"], "object">>
           : {}) &
-        (F["options"]["strict"] extends true ? {} : JSONObject)
+        (F["strict"] extends true ? {} : JSONObject)
     : JSONObject;
-  [PropertyTypes.RELATION]: F["options"] extends PropertyOptionsMap[PropertyTypes.RELATION]
-    ? F["options"]["ref"] extends string
-      ? PromiseModel<DecodeRefModel<F["options"]["ref"]>>
+  [PropertyTypes.RELATION]: F extends PropertyDefinitionGeneric<PropertyTypes.RELATION>
+    ? F["ref"] extends string
+      ? PromiseModel<DecodeRefModel<F["ref"]>>
       : PromiseModel<typeof Model>
     : PromiseModel<typeof Model>;
-  [PropertyTypes.ARRAY]: F["options"] extends PropertyOptionsMap[PropertyTypes.ARRAY]
-    ? F["options"]["items"]["type"] extends PropertyTypes.RELATION
-      ? F["options"]["items"]["options"] extends PropertyOptionsMap[PropertyTypes.RELATION]
-        ? PromiseModelList<DecodeRefModel<F["options"]["items"]["options"]["ref"]>>
+  [PropertyTypes.ARRAY]: F extends PropertyDefinitionGeneric<PropertyTypes.ARRAY>
+    ? F["items"]["type"] extends PropertyTypes.RELATION
+      ? F["items"] extends PropertyDefinitionGeneric<PropertyTypes.RELATION>
+        ? PromiseModelList<F["items"]["ref"] extends string ? DecodeRefModel<F["items"]["ref"]> : typeof Model>
         : PromiseModelList<typeof Model>
-      : Array<InferPropertyType<F["options"]["items"], "object">>
+      : Array<InferPropertyType<F["items"], "object">>
     : Array<unknown>;
 };
 

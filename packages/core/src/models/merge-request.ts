@@ -18,39 +18,31 @@ export class MergeRequest extends Model {
       slug: { type: PropertyTypes.TEXT },
       type: {
         type: PropertyTypes.ENUM,
-        options: {
-          enum: Object.values(MergeRequestTypes),
-          default: MergeRequestTypes.STATIC,
-        },
+        enum: Object.values(MergeRequestTypes),
+        default: MergeRequestTypes.STATIC,
       },
       options: {
         type: PropertyTypes.OBJECT,
-        options: {
-          properties: {
-            source: {
-              type: PropertyTypes.TEXT,
-            },
-            query: {
-              type: PropertyTypes.OBJECT,
-            },
-            gdx: {
-              type: PropertyTypes.OBJECT,
-            },
+        properties: {
+          source: {
+            type: PropertyTypes.TEXT,
+          },
+          query: {
+            type: PropertyTypes.OBJECT,
+          },
+          gdx: {
+            type: PropertyTypes.OBJECT,
           },
         },
       },
       target: { type: PropertyTypes.TEXT },
       _closed: {
         type: PropertyTypes.BOOLEAN,
-        options: {
-          default: false,
-        },
+        default: false,
       },
       _job: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: Job.configuration.slug,
-        },
+        ref: Job.configuration.slug,
       },
     },
     validators: [

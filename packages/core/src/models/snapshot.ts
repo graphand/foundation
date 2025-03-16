@@ -16,9 +16,7 @@ export class Snapshot extends Model {
       },
       _job: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: Job.configuration.slug,
-        },
+        ref: Job.configuration.slug,
       },
     },
   });

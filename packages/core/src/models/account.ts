@@ -17,9 +17,7 @@ export class Account extends Model {
     properties: {
       role: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: Role.configuration.slug,
-        },
+        ref: Role.configuration.slug,
       },
       _email: { type: PropertyTypes.TEXT },
       _lastLoginAt: { type: PropertyTypes.DATE },

@@ -111,11 +111,9 @@ describe("test types", () => {
               properties: {
                 property: {
                   type: PropertyTypes.OBJECT,
-                  options: {
-                    properties: {
-                      title: {
-                        type: PropertyTypes.TEXT,
-                      },
+                  properties: {
+                    title: {
+                      type: PropertyTypes.TEXT,
                     },
                   },
                 },
@@ -136,14 +134,12 @@ describe("test types", () => {
               properties: {
                 property: {
                   type: PropertyTypes.OBJECT,
-                  options: {
-                    properties: {
-                      title: {
-                        type: PropertyTypes.TEXT,
-                      },
+                  properties: {
+                    title: {
+                      type: PropertyTypes.TEXT,
                     },
-                    strict: true,
                   },
+                  strict: true,
                 },
               },
             });
@@ -163,9 +159,7 @@ describe("test types", () => {
               properties: {
                 property: {
                   type: PropertyTypes.RELATION,
-                  options: {
-                    ref: "accounts" as const,
-                  },
+                  ref: "accounts" as const,
                 },
               },
             });
@@ -228,9 +222,7 @@ describe("test types", () => {
               properties: {
                 property: {
                   type: PropertyTypes.ENUM,
-                  options: {
-                    enum: ["a", "b", "c"],
-                  },
+                  enum: ["a", "b", "c"],
                 },
               },
             });
@@ -281,9 +273,7 @@ describe("test types", () => {
               properties: {
                 property: {
                   type: PropertyTypes.RELATION,
-                  options: {
-                    ref: "accounts" as const,
-                  },
+                  ref: "accounts" as const,
                 },
               },
             });
@@ -307,9 +297,7 @@ describe("test types", () => {
               properties: {
                 property: {
                   type: PropertyTypes.ARRAY,
-                  options: {
-                    items: { type: PropertyTypes.TEXT },
-                  },
+                  items: { type: PropertyTypes.TEXT },
                 },
               },
             });

@@ -14,23 +14,17 @@ export class Job extends Model {
     properties: {
       _type: {
         type: PropertyTypes.ENUM,
-        options: {
-          enum: Object.values(JobTypes),
-        },
+        enum: Object.values(JobTypes),
       },
       _status: {
         type: PropertyTypes.ENUM,
-        options: {
-          enum: Object.values(JobStatus),
-          default: JobStatus.QUEUED,
-        },
+        enum: Object.values(JobStatus),
+        default: JobStatus.QUEUED,
       },
       _refs: {
         type: PropertyTypes.ARRAY,
-        options: {
-          items: {
-            type: PropertyTypes.TEXT,
-          },
+        items: {
+          type: PropertyTypes.TEXT,
         },
       },
       _startedAt: {

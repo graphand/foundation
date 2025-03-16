@@ -147,73 +147,48 @@ describe("Global tests", () => {
           properties: {
             title: {
               type: PropertyTypes.TEXT,
-              options: {},
             },
             relSingle: {
               type: PropertyTypes.RELATION,
-              options: {
-                ref: "ref",
-              },
+              ref: "ref",
             },
             relMultiple: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.RELATION,
-                  options: {
-                    ref: "ref",
-                  },
-                },
+              items: {
+                type: PropertyTypes.RELATION,
+                ref: "ref",
               },
             },
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  relSingle: {
+              properties: {
+                relSingle: {
+                  type: PropertyTypes.RELATION,
+                  ref: "ref",
+                },
+                relMultiple: {
+                  type: PropertyTypes.ARRAY,
+                  items: {
                     type: PropertyTypes.RELATION,
-                    options: {
-                      ref: "ref",
-                    },
-                  },
-                  relMultiple: {
-                    type: PropertyTypes.ARRAY,
-                    options: {
-                      items: {
-                        type: PropertyTypes.RELATION,
-                        options: {
-                          ref: "ref",
-                        },
-                      },
-                    },
+                    ref: "ref",
                   },
                 },
               },
             },
             objArr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
-                    properties: {
-                      relSingle: {
-                        type: PropertyTypes.RELATION,
-                        options: {
-                          ref: "ref",
-                        },
-                      },
-                      relMultiple: {
-                        type: PropertyTypes.ARRAY,
-                        options: {
-                          items: {
-                            type: PropertyTypes.RELATION,
-                            options: {
-                              ref: "ref",
-                            },
-                          },
-                        },
-                      },
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  relSingle: {
+                    type: PropertyTypes.RELATION,
+                    ref: "ref",
+                  },
+                  relMultiple: {
+                    type: PropertyTypes.ARRAY,
+                    items: {
+                      type: PropertyTypes.RELATION,
+                      ref: "ref",
                     },
                   },
                 },
@@ -233,26 +208,21 @@ describe("Global tests", () => {
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
-            options: {
-              additionalProperties: {
-                type: PropertyTypes.OBJECT,
-                options: {
-                  properties: {
-                    title: {
-                      type: PropertyTypes.TEXT,
-                      options: {},
-                    },
-                  },
-                  validators: [
-                    {
-                      type: ValidatorTypes.REQUIRED,
-                      options: {
-                        property: "title",
-                      },
-                    },
-                  ],
+            additionalProperties: {
+              type: PropertyTypes.OBJECT,
+              properties: {
+                title: {
+                  type: PropertyTypes.TEXT,
                 },
               },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: {
+                    property: "title",
+                  },
+                },
+              ],
             },
           },
         },
@@ -298,31 +268,24 @@ describe("Global tests", () => {
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
-            options: {
-              properties: {
-                arr: {
-                  type: PropertyTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: PropertyTypes.OBJECT,
-                      options: {
-                        properties: {
-                          title: {
-                            type: PropertyTypes.TEXT,
-                            options: {},
-                          },
-                        },
-                        validators: [
-                          {
-                            type: ValidatorTypes.REQUIRED,
-                            options: {
-                              property: "title",
-                            },
-                          },
-                        ],
-                      },
+            properties: {
+              arr: {
+                type: PropertyTypes.ARRAY,
+                items: {
+                  type: PropertyTypes.OBJECT,
+                  properties: {
+                    title: {
+                      type: PropertyTypes.TEXT,
                     },
                   },
+                  validators: [
+                    {
+                      type: ValidatorTypes.REQUIRED,
+                      options: {
+                        property: "title",
+                      },
+                    },
+                  ],
                 },
               },
             },
@@ -370,48 +333,33 @@ describe("Global tests", () => {
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
-            options: {
-              properties: {
-                arr: {
-                  type: PropertyTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: PropertyTypes.OBJECT,
-                      options: {
-                        additionalProperties: {
+            properties: {
+              arr: {
+                type: PropertyTypes.ARRAY,
+                items: {
+                  type: PropertyTypes.OBJECT,
+                  additionalProperties: {
+                    type: PropertyTypes.OBJECT,
+                    properties: {
+                      nestedArr: {
+                        type: PropertyTypes.ARRAY,
+                        items: {
                           type: PropertyTypes.OBJECT,
-                          options: {
+                          additionalProperties: {
+                            type: PropertyTypes.OBJECT,
                             properties: {
-                              nestedArr: {
-                                type: PropertyTypes.ARRAY,
-                                options: {
-                                  items: {
-                                    type: PropertyTypes.OBJECT,
-                                    options: {
-                                      additionalProperties: {
-                                        type: PropertyTypes.OBJECT,
-                                        options: {
-                                          properties: {
-                                            title: {
-                                              type: PropertyTypes.TEXT,
-                                              options: {},
-                                            },
-                                          },
-                                          validators: [
-                                            {
-                                              type: ValidatorTypes.REQUIRED,
-                                              options: {
-                                                property: "title",
-                                              },
-                                            },
-                                          ],
-                                        },
-                                      },
-                                    },
-                                  },
-                                },
+                              title: {
+                                type: PropertyTypes.TEXT,
                               },
                             },
+                            validators: [
+                              {
+                                type: ValidatorTypes.REQUIRED,
+                                options: {
+                                  property: "title",
+                                },
+                              },
+                            ],
                           },
                         },
                       },
@@ -564,44 +512,31 @@ describe("Global tests", () => {
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
-            options: {
-              properties: {
-                arr: {
-                  type: PropertyTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: PropertyTypes.OBJECT,
-                      options: {
-                        additionalProperties: {
+            properties: {
+              arr: {
+                type: PropertyTypes.ARRAY,
+                items: {
+                  type: PropertyTypes.OBJECT,
+                  additionalProperties: {
+                    type: PropertyTypes.OBJECT,
+                    properties: {
+                      nestedArr: {
+                        type: PropertyTypes.ARRAY,
+                        items: {
                           type: PropertyTypes.OBJECT,
-                          options: {
-                            properties: {
-                              nestedArr: {
-                                type: PropertyTypes.ARRAY,
-                                options: {
-                                  items: {
-                                    type: PropertyTypes.OBJECT,
-                                    options: {
-                                      properties: {
-                                        label: {
-                                          type: PropertyTypes.TEXT,
-                                          options: {},
-                                        },
-                                      },
-                                      validators: [
-                                        {
-                                          type: ValidatorTypes.UNIQUE,
-                                          options: {
-                                            property: "label",
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                },
-                              },
+                          properties: {
+                            label: {
+                              type: PropertyTypes.TEXT,
                             },
                           },
+                          validators: [
+                            {
+                              type: ValidatorTypes.UNIQUE,
+                              options: {
+                                property: "label",
+                              },
+                            },
+                          ],
                         },
                       },
                     },
@@ -655,7 +590,6 @@ describe("Global tests", () => {
       properties: {
         title: {
           type: PropertyTypes.TEXT,
-          options: {},
         },
       },
     });
@@ -781,11 +715,9 @@ describe("Global tests", () => {
           properties: {
             title: {
               type: PropertyTypes.TEXT,
-              options: {},
             },
             subtitle: {
               type: PropertyTypes.TEXT,
-              options: {},
             },
           },
         },
@@ -803,7 +735,6 @@ describe("Global tests", () => {
           properties: {
             title: {
               type: PropertyTypes.TEXT,
-              options: {},
             },
           },
           validators: [
@@ -828,7 +759,6 @@ describe("Global tests", () => {
           properties: {
             title: {
               type: PropertyTypes.TEXT,
-              options: {},
             },
           },
           validators: [
@@ -928,9 +858,7 @@ describe("Global tests", () => {
       properties: {
         title: {
           type: PropertyTypes.TEXT,
-          options: {
-            default: "defaultTitle",
-          },
+          default: "defaultTitle",
         },
       },
     });
@@ -941,9 +869,7 @@ describe("Global tests", () => {
           properties: {
             title: {
               type: PropertyTypes.TEXT;
-              options: {
-                default: string;
-              };
+              default: string;
             };
           };
         };
@@ -961,9 +887,7 @@ describe("Global tests", () => {
         properties: {
           title: {
             type: PropertyTypes.TEXT,
-            options: {
-              default: "newDefaultTitle",
-            },
+            default: "newDefaultTitle",
           },
         },
       },
@@ -1012,11 +936,9 @@ describe("Global tests", () => {
         properties: {
           title: {
             type: PropertyTypes.OBJECT,
-            options: {
-              properties: {
-                a: {
-                  type: PropertyTypes.TEXT,
-                },
+            properties: {
+              a: {
+                type: PropertyTypes.TEXT,
               },
             },
           },

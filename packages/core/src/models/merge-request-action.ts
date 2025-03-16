@@ -15,38 +15,30 @@ export class MergeRequestAction extends Model {
     properties: {
       type: {
         type: PropertyTypes.ENUM,
-        options: {
-          enum: Object.values(MergeRequestActionTypes),
-          default: MergeRequestActionTypes.PATCH,
-        },
+        enum: Object.values(MergeRequestActionTypes),
+        default: MergeRequestActionTypes.PATCH,
       },
       data: {
         type: PropertyTypes.OBJECT,
-        options: {
-          properties: {
-            close: {
-              type: PropertyTypes.BOOLEAN,
-            },
-            comment: {
-              type: PropertyTypes.TEXT,
-            },
-            apply: {
-              type: PropertyTypes.OBJECT,
-            },
+        properties: {
+          close: {
+            type: PropertyTypes.BOOLEAN,
+          },
+          comment: {
+            type: PropertyTypes.TEXT,
+          },
+          apply: {
+            type: PropertyTypes.OBJECT,
           },
         },
       },
       request: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: MergeRequest.configuration.slug,
-        },
+        ref: MergeRequest.configuration.slug,
       },
       _job: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: Job.configuration.slug,
-        },
+        ref: Job.configuration.slug,
       },
     },
     validators: [{ type: ValidatorTypes.REQUIRED, options: { property: "request" } }],

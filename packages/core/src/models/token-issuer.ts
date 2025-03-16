@@ -15,20 +15,16 @@ export class TokenIssuer extends Model {
     properties: {
       name: { type: PropertyTypes.TEXT },
       expiresAt: { type: PropertyTypes.DATE },
-      neverExpires: { type: PropertyTypes.BOOLEAN, options: { default: false } }, // If true, the token never expires
+      neverExpires: { type: PropertyTypes.BOOLEAN, default: false }, // If true, the token never expires
       lifetime: { type: PropertyTypes.INTEGER }, // By default, the token lifetime is the accessTokenLifetime in system settings. In seconds
       maxGen: { type: PropertyTypes.INTEGER },
       role: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: Role.configuration.slug,
-        },
+        ref: Role.configuration.slug,
       },
       _generation: {
         type: PropertyTypes.INTEGER,
-        options: {
-          default: 0,
-        },
+        default: 0,
       },
     },
     validators: [

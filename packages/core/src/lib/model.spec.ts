@@ -96,7 +96,6 @@ describe("Test Model", () => {
         properties: {
           title: {
             type: PropertyTypes.TEXT,
-            options: {},
           },
         },
       }).extend({ adapterClass: adapter });
@@ -344,9 +343,7 @@ describe("Test Model", () => {
         properties: {
           test: {
             type: PropertyTypes.TEXT,
-            options: {
-              default: "default",
-            },
+            default: "default",
           },
         },
       }).extend({ adapterClass: adapter });
@@ -380,11 +377,9 @@ describe("Test Model", () => {
         properties: {
           test: {
             type: PropertyTypes.OBJECT,
-            options: {
-              properties: {
-                nested: {
-                  type: PropertyTypes.TEXT,
-                },
+            properties: {
+              nested: {
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -409,10 +404,8 @@ describe("Test Model", () => {
         properties: {
           test: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.TEXT,
-              },
+            items: {
+              type: PropertyTypes.TEXT,
             },
           },
         },
@@ -437,14 +430,10 @@ describe("Test Model", () => {
         properties: {
           test: {
             type: PropertyTypes.ARRAY,
-            options: {
+            items: {
+              type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.ARRAY,
-                options: {
-                  items: {
-                    type: PropertyTypes.TEXT,
-                  },
-                },
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -466,19 +455,13 @@ describe("Test Model", () => {
         properties: {
           test: {
             type: PropertyTypes.ARRAY,
-            options: {
+            items: {
+              type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.ARRAY,
-                options: {
-                  items: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      properties: {
-                        nested: {
-                          type: PropertyTypes.TEXT,
-                        },
-                      },
-                    },
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  nested: {
+                    type: PropertyTypes.TEXT,
                   },
                 },
               },
@@ -568,15 +551,11 @@ describe("Test Model", () => {
         properties: {
           test: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.OBJECT,
-                options: {
-                  properties: {
-                    nested: {
-                      type: PropertyTypes.TEXT,
-                    },
-                  },
+            items: {
+              type: PropertyTypes.OBJECT,
+              properties: {
+                nested: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -627,27 +606,19 @@ describe("Test Model", () => {
         properties: {
           property1: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.OBJECT,
-                options: {
-                  properties: {
-                    property2: {
-                      type: PropertyTypes.TEXT,
-                    },
-                    property3: {
-                      type: PropertyTypes.ARRAY,
-                      options: {
-                        items: {
-                          type: PropertyTypes.OBJECT,
-                          options: {
-                            properties: {
-                              property4: {
-                                type: PropertyTypes.TEXT,
-                              },
-                            },
-                          },
-                        },
+            items: {
+              type: PropertyTypes.OBJECT,
+              properties: {
+                property2: {
+                  type: PropertyTypes.TEXT,
+                },
+                property3: {
+                  type: PropertyTypes.ARRAY,
+                  items: {
+                    type: PropertyTypes.OBJECT,
+                    properties: {
+                      property4: {
+                        type: PropertyTypes.TEXT,
                       },
                     },
                   },
@@ -756,13 +727,9 @@ describe("Test Model", () => {
         properties: {
           test: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.RELATION,
-                options: {
-                  ref: "accounts",
-                },
-              },
+            items: {
+              type: PropertyTypes.RELATION,
+              ref: "accounts",
             },
           },
         },
@@ -782,29 +749,19 @@ describe("Test Model", () => {
         properties: {
           arr: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.OBJECT,
-                options: {
-                  properties: {
-                    arrRel: {
-                      type: PropertyTypes.ARRAY,
-                      options: {
-                        items: {
-                          type: PropertyTypes.RELATION,
-                          options: {
-                            ref: "accounts",
-                          },
-                        },
-                      },
-                    },
-                    rel: {
-                      type: PropertyTypes.RELATION,
-                      options: {
-                        ref: "accounts",
-                      },
-                    },
+            items: {
+              type: PropertyTypes.OBJECT,
+              properties: {
+                arrRel: {
+                  type: PropertyTypes.ARRAY,
+                  items: {
+                    type: PropertyTypes.RELATION,
+                    ref: "accounts",
                   },
+                },
+                rel: {
+                  type: PropertyTypes.RELATION,
+                  ref: "accounts",
                 },
               },
             },
@@ -843,11 +800,9 @@ describe("Test Model", () => {
         properties: {
           test: {
             type: PropertyTypes.OBJECT,
-            options: {
-              properties: {
-                test: {
-                  type: PropertyTypes.TEXT,
-                },
+            properties: {
+              test: {
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -866,15 +821,11 @@ describe("Test Model", () => {
         properties: {
           test: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.OBJECT,
-                options: {
-                  properties: {
-                    test: {
-                      type: PropertyTypes.TEXT,
-                    },
-                  },
+            items: {
+              type: PropertyTypes.OBJECT,
+              properties: {
+                test: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -911,55 +862,39 @@ describe("Test Model", () => {
         },
         obj: {
           type: PropertyTypes.OBJECT,
-          options: {
-            properties: {
-              nested: {
-                type: PropertyTypes.TEXT,
-              },
+          properties: {
+            nested: {
+              type: PropertyTypes.TEXT,
             },
           },
         },
         relSingle: {
           type: PropertyTypes.RELATION,
-          options: {
-            ref: "accounts",
-          },
+          ref: "accounts",
         },
         relArray: {
           type: PropertyTypes.ARRAY,
-          options: {
-            items: {
-              type: PropertyTypes.RELATION,
-              options: {
-                ref: "accounts",
-              },
-            },
+          items: {
+            type: PropertyTypes.RELATION,
+            ref: "accounts",
           },
         },
         arrOfText: {
           type: PropertyTypes.ARRAY,
-          options: {
-            items: {
-              type: PropertyTypes.TEXT,
-            },
+          items: {
+            type: PropertyTypes.TEXT,
           },
         },
         complex: {
           type: PropertyTypes.OBJECT,
-          options: {
-            properties: {
-              nestedArr: {
-                type: PropertyTypes.ARRAY,
-                options: {
-                  items: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      properties: {
-                        nested: {
-                          type: PropertyTypes.TEXT,
-                        },
-                      },
-                    },
+          properties: {
+            nestedArr: {
+              type: PropertyTypes.ARRAY,
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  nested: {
+                    type: PropertyTypes.TEXT,
                   },
                 },
               },
@@ -1549,17 +1484,13 @@ describe("Test Model", () => {
       properties: {
         test: {
           type: PropertyTypes.TEXT,
-          options: {
-            default: "defaultValue",
-          },
+          default: "defaultValue",
         },
         nested: {
           type: PropertyTypes.OBJECT,
-          options: {
-            properties: {
-              subtitle: {
-                type: PropertyTypes.TEXT,
-              },
+          properties: {
+            subtitle: {
+              type: PropertyTypes.TEXT,
             },
           },
         },
@@ -1989,9 +1920,7 @@ describe("Test Model", () => {
         properties: {
           property1: {
             type: PropertyTypes.TEXT,
-            options: {
-              default: "defaultValue",
-            },
+            default: "defaultValue",
           },
         },
       });
@@ -2269,9 +2198,7 @@ describe("Test Model", () => {
           properties: {
             rel: {
               type: PropertyTypes.RELATION,
-              options: {
-                ref: slug1,
-              },
+              ref: slug1,
             },
           },
         },
@@ -2298,9 +2225,7 @@ describe("Test Model", () => {
             properties: {
               rel: {
                 type: PropertyTypes.RELATION;
-                options: {
-                  ref: "accounts";
-                };
+                ref: "accounts";
               };
             };
           };
@@ -2325,9 +2250,7 @@ describe("Test Model", () => {
           properties: {
             rel: {
               type: PropertyTypes.RELATION,
-              options: {
-                ref: slug1,
-              },
+              ref: slug1,
             },
           },
         },
@@ -2386,13 +2309,9 @@ describe("Test Model", () => {
           properties: {
             rel: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.RELATION,
-                  options: {
-                    ref: slug1,
-                  },
-                },
+              items: {
+                type: PropertyTypes.RELATION,
+                ref: slug1,
               },
             },
           },
@@ -2420,9 +2339,7 @@ describe("Test Model", () => {
             properties: {
               rel: {
                 type: PropertyTypes.ARRAY;
-                options: {
-                  items: { type: PropertyTypes.RELATION };
-                };
+                items: { type: PropertyTypes.RELATION };
               };
             };
           };
@@ -2628,9 +2545,7 @@ describe("Test Model", () => {
         properties: {
           title: {
             type: PropertyTypes.TEXT,
-            options: {
-              default: "1",
-            },
+            default: "1",
           },
         },
       });
@@ -2653,9 +2568,7 @@ describe("Test Model", () => {
         properties: {
           title: {
             type: PropertyTypes.TEXT,
-            options: {
-              default: "1",
-            },
+            default: "1",
           },
         },
       });
@@ -2678,13 +2591,11 @@ describe("Test Model", () => {
     const adapter = mockAdapter();
 
     const dm = await DataModel.extend({ adapterClass: adapter }).create({
-      slug: slug,
+      slug,
       properties: {
         title: {
           type: PropertyTypes.TEXT,
-          options: {
-            default: "1",
-          },
+          default: "1",
         },
       },
     });

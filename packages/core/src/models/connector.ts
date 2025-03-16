@@ -18,49 +18,39 @@ export class Connector extends Model {
       slug: { type: PropertyTypes.TEXT },
       options: {
         type: PropertyTypes.OBJECT,
-        options: { default: {} },
+        default: {},
       },
       function: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: Function.configuration.slug,
-        },
+        ref: Function.configuration.slug,
       },
       query: {
         type: PropertyTypes.OBJECT,
-        options: {
-          default: {},
-          properties: {
-            enabled: { type: PropertyTypes.BOOLEAN, options: { default: false } },
-            cache: { type: PropertyTypes.BOOLEAN, options: { default: false } },
-          },
+        default: {},
+        properties: {
+          enabled: { type: PropertyTypes.BOOLEAN, default: false },
+          cache: { type: PropertyTypes.BOOLEAN, default: false },
         },
       },
       source: { type: PropertyTypes.TEXT },
       filter: { type: PropertyTypes.OBJECT },
       retryStrategy: {
         type: PropertyTypes.OBJECT,
-        options: {
-          default: {},
-          properties: {
-            maxRetries: { type: PropertyTypes.INTEGER, options: { default: 3 } },
-            initialDelay: { type: PropertyTypes.INTEGER, options: { default: 1000 } },
-            backoffFactor: { type: PropertyTypes.INTEGER, options: { default: 2 } },
-            strategyType: {
-              type: PropertyTypes.ENUM,
-              options: {
-                enum: ["fixed", "exponential", "exponentialWithJitter"],
-                default: "exponential",
-              },
-            },
+        default: {},
+        properties: {
+          maxRetries: { type: PropertyTypes.INTEGER, default: 3 },
+          initialDelay: { type: PropertyTypes.INTEGER, default: 1000 },
+          backoffFactor: { type: PropertyTypes.INTEGER, default: 2 },
+          strategyType: {
+            type: PropertyTypes.ENUM,
+            enum: ["fixed", "exponential", "exponentialWithJitter"],
+            default: "exponential",
           },
         },
       },
       _job: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: Job.configuration.slug,
-        },
+        ref: Job.configuration.slug,
       },
     },
     validators: [

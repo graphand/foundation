@@ -23,9 +23,7 @@ describe("test properties", () => {
         properties: {
           title: {
             type: PropertyTypes.TEXT,
-            options: {
-              default: defaultText,
-            },
+            default: defaultText,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -96,9 +94,7 @@ describe("test properties", () => {
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
-            options: {
-              default: defaultJSON,
-            },
+            default: defaultJSON,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -164,9 +160,7 @@ describe("test properties", () => {
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
-            options: {
-              default: { test: 1 },
-            },
+            default: { test: 1 },
           },
         },
       }).extend({ adapterClass: adapter });
@@ -184,14 +178,10 @@ describe("test properties", () => {
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
-            options: {
-              properties: {
-                foo: {
-                  type: PropertyTypes.TEXT,
-                  options: {
-                    default: "bar",
-                  },
-                },
+            properties: {
+              foo: {
+                type: PropertyTypes.TEXT,
+                default: "bar",
               },
             },
           },
@@ -213,20 +203,14 @@ describe("test properties", () => {
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
-            options: {
-              properties: {
-                property1: {
-                  type: PropertyTypes.TEXT,
-                  options: {
-                    default: "foo",
-                  },
-                },
-                property2: {
-                  type: PropertyTypes.TEXT,
-                  options: {
-                    default: "bar",
-                  },
-                },
+            properties: {
+              property1: {
+                type: PropertyTypes.TEXT,
+                default: "foo",
+              },
+              property2: {
+                type: PropertyTypes.TEXT,
+                default: "bar",
               },
             },
           },
@@ -253,20 +237,14 @@ describe("test properties", () => {
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
-            options: {
-              properties: {
-                property1: {
-                  type: PropertyTypes.TEXT,
-                  options: {
-                    default: "foo",
-                  },
-                },
-                property2: {
-                  type: PropertyTypes.TEXT,
-                  options: {
-                    default: "bar",
-                  },
-                },
+            properties: {
+              property1: {
+                type: PropertyTypes.TEXT,
+                default: "foo",
+              },
+              property2: {
+                type: PropertyTypes.TEXT,
+                default: "bar",
               },
             },
           },
@@ -293,11 +271,9 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  title: {
-                    type: PropertyTypes.TEXT,
-                  },
+              properties: {
+                title: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -315,14 +291,10 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                additionalProperties: {
-                  type: PropertyTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: PropertyTypes.TEXT,
-                    },
-                  },
+              additionalProperties: {
+                type: PropertyTypes.ARRAY,
+                items: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -343,11 +315,9 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  title: {
-                    type: PropertyTypes.TEXT,
-                  },
+              properties: {
+                title: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -392,14 +362,12 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  title: {
-                    type: PropertyTypes.TEXT,
-                  },
-                  value: {
-                    type: PropertyTypes.NUMBER,
-                  },
+              properties: {
+                title: {
+                  type: PropertyTypes.TEXT,
+                },
+                value: {
+                  type: PropertyTypes.NUMBER,
                 },
               },
             },
@@ -453,24 +421,20 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  subObj: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      properties: {
-                        title: {
-                          type: PropertyTypes.TEXT,
-                        },
-                        value: {
-                          type: PropertyTypes.NUMBER,
-                        },
-                      },
+              properties: {
+                subObj: {
+                  type: PropertyTypes.OBJECT,
+                  properties: {
+                    title: {
+                      type: PropertyTypes.TEXT,
+                    },
+                    value: {
+                      type: PropertyTypes.NUMBER,
                     },
                   },
-                  subValue: {
-                    type: PropertyTypes.NUMBER,
-                  },
+                },
+                subValue: {
+                  type: PropertyTypes.NUMBER,
                 },
               },
             },
@@ -530,18 +494,14 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
-                    properties: {
-                      title: {
-                        type: PropertyTypes.TEXT,
-                      },
-                      value: {
-                        type: PropertyTypes.NUMBER,
-                      },
-                    },
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  title: {
+                    type: PropertyTypes.TEXT,
+                  },
+                  value: {
+                    type: PropertyTypes.NUMBER,
                   },
                 },
               },
@@ -578,12 +538,10 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                strict: true,
-                properties: {
-                  title: {
-                    type: PropertyTypes.TEXT,
-                  },
+              strict: true,
+              properties: {
+                title: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -626,11 +584,9 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  title: {
-                    type: PropertyTypes.TEXT,
-                  },
+              properties: {
+                title: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -665,11 +621,9 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  title: {
-                    type: PropertyTypes.TEXT,
-                  },
+              properties: {
+                title: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -712,16 +666,12 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  nested: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      properties: {
-                        title: {
-                          type: PropertyTypes.TEXT,
-                        },
-                      },
+              properties: {
+                nested: {
+                  type: PropertyTypes.OBJECT,
+                  properties: {
+                    title: {
+                      type: PropertyTypes.TEXT,
                     },
                   },
                 },
@@ -767,16 +717,12 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  nested: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      properties: {
-                        title: {
-                          type: PropertyTypes.TEXT,
-                        },
-                      },
+              properties: {
+                nested: {
+                  type: PropertyTypes.OBJECT,
+                  properties: {
+                    title: {
+                      type: PropertyTypes.TEXT,
                     },
                   },
                 },
@@ -821,14 +767,12 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "title" },
-                  },
-                ],
-              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "title" },
+                },
+              ],
             },
           },
         }).extend({ adapterClass: _adapter });
@@ -861,14 +805,12 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "title" },
-                  },
-                ],
-              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "title" },
+                },
+              ],
             },
           },
         }).extend({ adapterClass: _adapter });
@@ -903,19 +845,15 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  nested: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      validators: [
-                        {
-                          type: ValidatorTypes.REQUIRED,
-                          options: { property: "title" },
-                        },
-                      ],
+              properties: {
+                nested: {
+                  type: PropertyTypes.OBJECT,
+                  validators: [
+                    {
+                      type: ValidatorTypes.REQUIRED,
+                      options: { property: "title" },
                     },
-                  },
+                  ],
                 },
               },
             },
@@ -951,19 +889,15 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  nested: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      validators: [
-                        {
-                          type: ValidatorTypes.REQUIRED,
-                          options: { property: "title" },
-                        },
-                      ],
+              properties: {
+                nested: {
+                  type: PropertyTypes.OBJECT,
+                  validators: [
+                    {
+                      type: ValidatorTypes.REQUIRED,
+                      options: { property: "title" },
                     },
-                  },
+                  ],
                 },
               },
             },
@@ -996,25 +930,21 @@ describe("test properties", () => {
           properties: {
             channel: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["email", "slack"],
-              },
+              enum: ["email", "slack"],
             },
             options: {
               type: PropertyTypes.OBJECT,
-              options: {
-                strict: true,
-                properties: {
-                  email: { type: PropertyTypes.TEXT },
-                  slackWebhookUrl: { type: PropertyTypes.TEXT },
-                },
-                conditionalProperties: {
-                  dependsOn: "channel",
-                  defaultMapping: "email",
-                  mappings: {
-                    email: ["email"],
-                    slack: ["slackWebhookUrl"],
-                  },
+              strict: true,
+              properties: {
+                email: { type: PropertyTypes.TEXT },
+                slackWebhookUrl: { type: PropertyTypes.TEXT },
+              },
+              conditionalProperties: {
+                dependsOn: "channel",
+                defaultMapping: "email",
+                mappings: {
+                  email: ["email"],
+                  slack: ["slackWebhookUrl"],
                 },
               },
             },
@@ -1045,38 +975,34 @@ describe("test properties", () => {
           properties: {
             channel: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["email", "slack"],
-                blbal: true,
-              },
+              enum: ["email", "slack"],
+              blbala: true,
             },
             options: {
               type: PropertyTypes.OBJECT,
-              options: {
-                strict: true,
-                properties: {
-                  email: { type: PropertyTypes.TEXT },
-                  slackWebhookUrl: { type: PropertyTypes.TEXT },
-                },
-                conditionalProperties: {
-                  dependsOn: "channel",
-                  defaultMapping: "email",
-                  mappings: {
-                    email: ["email"],
-                    slack: ["slackWebhookUrl"],
-                  },
-                },
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "email" },
-                  },
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "slackWebhookUrl" },
-                  },
-                ],
+              strict: true,
+              properties: {
+                email: { type: PropertyTypes.TEXT },
+                slackWebhookUrl: { type: PropertyTypes.TEXT },
               },
+              conditionalProperties: {
+                dependsOn: "channel",
+                defaultMapping: "email",
+                mappings: {
+                  email: ["email"],
+                  slack: ["slackWebhookUrl"],
+                },
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "email" },
+                },
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "slackWebhookUrl" },
+                },
+              ],
             },
           },
         }).extend({ adapterClass: _adapter });
@@ -1135,54 +1061,46 @@ describe("test properties", () => {
           properties: {
             type: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["type1", "type2"],
-              },
+              enum: ["type1", "type2"],
             },
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                strict: true,
-                properties: {
-                  property1: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      strict: true,
-                      properties: {
-                        property11: { type: PropertyTypes.TEXT },
-                        property12: { type: PropertyTypes.TEXT },
-                      },
-                      validators: [
-                        {
-                          type: ValidatorTypes.REQUIRED,
-                          options: { property: "property12" },
-                        },
-                      ],
-                    },
+              strict: true,
+              properties: {
+                property1: {
+                  type: PropertyTypes.OBJECT,
+                  strict: true,
+                  properties: {
+                    property11: { type: PropertyTypes.TEXT },
+                    property12: { type: PropertyTypes.TEXT },
                   },
-                  property2: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      strict: true,
-                      properties: {
-                        property21: { type: PropertyTypes.TEXT },
-                        property22: { type: PropertyTypes.TEXT },
-                      },
-                      validators: [
-                        {
-                          type: ValidatorTypes.REQUIRED,
-                          options: { property: "property22" },
-                        },
-                      ],
+                  validators: [
+                    {
+                      type: ValidatorTypes.REQUIRED,
+                      options: { property: "property12" },
                     },
-                  },
+                  ],
                 },
-                conditionalProperties: {
-                  dependsOn: "$.type",
-                  mappings: {
-                    type1: ["property1"],
-                    type2: ["property2"],
+                property2: {
+                  type: PropertyTypes.OBJECT,
+                  strict: true,
+                  properties: {
+                    property21: { type: PropertyTypes.TEXT },
+                    property22: { type: PropertyTypes.TEXT },
                   },
+                  validators: [
+                    {
+                      type: ValidatorTypes.REQUIRED,
+                      options: { property: "property22" },
+                    },
+                  ],
+                },
+              },
+              conditionalProperties: {
+                dependsOn: "$.type",
+                mappings: {
+                  type1: ["property1"],
+                  type2: ["property2"],
                 },
               },
             },
@@ -1266,30 +1184,24 @@ describe("test properties", () => {
           properties: {
             settings: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  mode: {
-                    type: PropertyTypes.ENUM,
-                    options: {
-                      enum: ["simple", "advanced"],
-                    },
+              properties: {
+                mode: {
+                  type: PropertyTypes.ENUM,
+                  enum: ["simple", "advanced"],
+                },
+                config: {
+                  type: PropertyTypes.OBJECT,
+                  strict: true,
+                  properties: {
+                    simpleOption: { type: PropertyTypes.TEXT },
+                    advancedOption: { type: PropertyTypes.NUMBER },
                   },
-                  config: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      strict: true,
-                      properties: {
-                        simpleOption: { type: PropertyTypes.TEXT },
-                        advancedOption: { type: PropertyTypes.NUMBER },
-                      },
-                      conditionalProperties: {
-                        dependsOn: "$.mode",
-                        defaultMapping: "simple",
-                        mappings: {
-                          simple: ["simpleOption"],
-                          advanced: ["advancedOption"],
-                        },
-                      },
+                  conditionalProperties: {
+                    dependsOn: "$.mode",
+                    defaultMapping: "simple",
+                    mappings: {
+                      simple: ["simpleOption"],
+                      advanced: ["advancedOption"],
                     },
                   },
                 },
@@ -1321,34 +1233,26 @@ describe("test properties", () => {
           properties: {
             items: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  type: {
+                    type: PropertyTypes.ENUM,
+                    enum: ["A", "B"],
+                  },
+                  data: {
+                    type: PropertyTypes.OBJECT,
+                    strict: true,
                     properties: {
-                      type: {
-                        type: PropertyTypes.ENUM,
-                        options: {
-                          enum: ["A", "B"],
-                        },
-                      },
-                      data: {
-                        type: PropertyTypes.OBJECT,
-                        options: {
-                          strict: true,
-                          properties: {
-                            propertyA: { type: PropertyTypes.TEXT },
-                            propertyB: { type: PropertyTypes.NUMBER },
-                          },
-                          conditionalProperties: {
-                            dependsOn: "$.type",
-                            defaultMapping: "A",
-                            mappings: {
-                              A: ["propertyA"],
-                              B: ["propertyB"],
-                            },
-                          },
-                        },
+                      propertyA: { type: PropertyTypes.TEXT },
+                      propertyB: { type: PropertyTypes.NUMBER },
+                    },
+                    conditionalProperties: {
+                      dependsOn: "$.type",
+                      defaultMapping: "A",
+                      mappings: {
+                        A: ["propertyA"],
+                        B: ["propertyB"],
                       },
                     },
                   },
@@ -1390,41 +1294,37 @@ describe("test properties", () => {
           properties: {
             channel: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["email", "slack"],
-              },
+              enum: ["email", "slack"],
             },
             options: {
               type: PropertyTypes.OBJECT,
-              options: {
-                strict: true,
-                properties: {
-                  email: { type: PropertyTypes.TEXT },
-                  slackWebhookUrl: { type: PropertyTypes.TEXT },
-                },
-                conditionalProperties: {
-                  dependsOn: "channel",
-                  defaultMapping: "email",
-                  mappings: {
-                    email: ["email"],
-                    slack: ["slackWebhookUrl"],
-                  },
-                },
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "email" },
-                  },
-                  {
-                    type: ValidatorTypes.REGEX,
-                    options: { property: "email", pattern: Patterns.EMAIL },
-                  },
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "slackWebhookUrl" },
-                  },
-                ],
+              strict: true,
+              properties: {
+                email: { type: PropertyTypes.TEXT },
+                slackWebhookUrl: { type: PropertyTypes.TEXT },
               },
+              conditionalProperties: {
+                dependsOn: "channel",
+                defaultMapping: "email",
+                mappings: {
+                  email: ["email"],
+                  slack: ["slackWebhookUrl"],
+                },
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "email" },
+                },
+                {
+                  type: ValidatorTypes.REGEX,
+                  options: { property: "email", pattern: Patterns.EMAIL },
+                },
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "slackWebhookUrl" },
+                },
+              ],
             },
           },
         }).extend({ adapterClass: mockAdapter() });
@@ -1493,37 +1393,33 @@ describe("test properties", () => {
           properties: {
             channel: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["email", "slack"],
-              },
+              enum: ["email", "slack"],
             },
             options: {
               type: PropertyTypes.OBJECT,
-              options: {
-                strict: true,
-                properties: {
-                  email: { type: PropertyTypes.TEXT },
-                  slackWebhookUrl: { type: PropertyTypes.TEXT },
-                },
-                conditionalProperties: {
-                  dependsOn: "channel",
-                  defaultMapping: "email",
-                  mappings: {
-                    email: ["email"],
-                    slack: ["slackWebhookUrl"],
-                  },
-                },
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "email" },
-                  },
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "slackWebhookUrl" },
-                  },
-                ],
+              strict: true,
+              properties: {
+                email: { type: PropertyTypes.TEXT },
+                slackWebhookUrl: { type: PropertyTypes.TEXT },
               },
+              conditionalProperties: {
+                dependsOn: "channel",
+                defaultMapping: "email",
+                mappings: {
+                  email: ["email"],
+                  slack: ["slackWebhookUrl"],
+                },
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "email" },
+                },
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "slackWebhookUrl" },
+                },
+              ],
             },
           },
         }).extend({ adapterClass: mockAdapter() });
@@ -1560,37 +1456,33 @@ describe("test properties", () => {
           properties: {
             channel: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["email", "slack", "unknown"],
-              },
+              enum: ["email", "slack", "unknown"],
             },
             options: {
               type: PropertyTypes.OBJECT,
-              options: {
-                strict: true,
-                properties: {
-                  email: { type: PropertyTypes.TEXT },
-                  slackWebhookUrl: { type: PropertyTypes.TEXT },
-                },
-                conditionalProperties: {
-                  dependsOn: "channel",
-                  defaultMapping: "email",
-                  mappings: {
-                    email: ["email"],
-                    slack: ["slackWebhookUrl"],
-                  },
-                },
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "email" },
-                  },
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "slackWebhookUrl" },
-                  },
-                ],
+              strict: true,
+              properties: {
+                email: { type: PropertyTypes.TEXT },
+                slackWebhookUrl: { type: PropertyTypes.TEXT },
               },
+              conditionalProperties: {
+                dependsOn: "channel",
+                defaultMapping: "email",
+                mappings: {
+                  email: ["email"],
+                  slack: ["slackWebhookUrl"],
+                },
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "email" },
+                },
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "slackWebhookUrl" },
+                },
+              ],
             },
           },
         }).extend({ adapterClass: mockAdapter() });
@@ -1615,36 +1507,32 @@ describe("test properties", () => {
           properties: {
             channel: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["email", "slack", "unknown"],
-              },
+              enum: ["email", "slack", "unknown"],
             },
             options: {
               type: PropertyTypes.OBJECT,
-              options: {
-                strict: true,
-                properties: {
-                  email: { type: PropertyTypes.TEXT },
-                  slackWebhookUrl: { type: PropertyTypes.TEXT },
-                },
-                conditionalProperties: {
-                  dependsOn: "channel",
-                  mappings: {
-                    email: ["email"],
-                    slack: ["slackWebhookUrl"],
-                  },
-                },
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "email" },
-                  },
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "slackWebhookUrl" },
-                  },
-                ],
+              strict: true,
+              properties: {
+                email: { type: PropertyTypes.TEXT },
+                slackWebhookUrl: { type: PropertyTypes.TEXT },
               },
+              conditionalProperties: {
+                dependsOn: "channel",
+                mappings: {
+                  email: ["email"],
+                  slack: ["slackWebhookUrl"],
+                },
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "email" },
+                },
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "slackWebhookUrl" },
+                },
+              ],
             },
           },
         }).extend({ adapterClass: mockAdapter() });
@@ -1669,29 +1557,23 @@ describe("test properties", () => {
           properties: {
             settings: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  mode: {
-                    type: PropertyTypes.ENUM,
-                    options: {
-                      enum: ["light", "dark"],
-                    },
+              properties: {
+                mode: {
+                  type: PropertyTypes.ENUM,
+                  enum: ["light", "dark"],
+                },
+                theme: {
+                  type: PropertyTypes.OBJECT,
+                  strict: true,
+                  properties: {
+                    lightOption: { type: PropertyTypes.TEXT },
+                    darkOption: { type: PropertyTypes.TEXT },
                   },
-                  theme: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      strict: true,
-                      properties: {
-                        lightOption: { type: PropertyTypes.TEXT },
-                        darkOption: { type: PropertyTypes.TEXT },
-                      },
-                      conditionalProperties: {
-                        dependsOn: "$.mode",
-                        mappings: {
-                          light: ["lightOption"],
-                          dark: ["darkOption"],
-                        },
-                      },
+                  conditionalProperties: {
+                    dependsOn: "$.mode",
+                    mappings: {
+                      light: ["lightOption"],
+                      dark: ["darkOption"],
                     },
                   },
                 },
@@ -1721,33 +1603,25 @@ describe("test properties", () => {
           properties: {
             settings: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  type: {
+                    type: PropertyTypes.ENUM,
+                    enum: ["A", "B"],
+                  },
+                  config: {
+                    type: PropertyTypes.OBJECT,
+                    strict: true,
                     properties: {
-                      type: {
-                        type: PropertyTypes.ENUM,
-                        options: {
-                          enum: ["A", "B"],
-                        },
-                      },
-                      config: {
-                        type: PropertyTypes.OBJECT,
-                        options: {
-                          strict: true,
-                          properties: {
-                            optionA: { type: PropertyTypes.TEXT },
-                            optionB: { type: PropertyTypes.TEXT },
-                          },
-                          conditionalProperties: {
-                            dependsOn: "$.type",
-                            mappings: {
-                              A: ["optionA"],
-                              B: ["optionB"],
-                            },
-                          },
-                        },
+                      optionA: { type: PropertyTypes.TEXT },
+                      optionB: { type: PropertyTypes.TEXT },
+                    },
+                    conditionalProperties: {
+                      dependsOn: "$.type",
+                      mappings: {
+                        A: ["optionA"],
+                        B: ["optionB"],
                       },
                     },
                   },
@@ -1789,45 +1663,37 @@ describe("test properties", () => {
           properties: {
             settings: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  type: {
+                    type: PropertyTypes.ENUM,
+                    enum: ["A", "B"],
+                  },
+                  config: {
+                    type: PropertyTypes.OBJECT,
+                    strict: true,
                     properties: {
-                      type: {
-                        type: PropertyTypes.ENUM,
-                        options: {
-                          enum: ["A", "B"],
-                        },
-                      },
-                      config: {
-                        type: PropertyTypes.OBJECT,
-                        options: {
-                          strict: true,
-                          properties: {
-                            optionA: { type: PropertyTypes.TEXT },
-                            optionB: { type: PropertyTypes.TEXT },
-                          },
-                          conditionalProperties: {
-                            dependsOn: "$.type",
-                            mappings: {
-                              A: ["optionA"],
-                              B: ["optionB"],
-                            },
-                          },
-                          validators: [
-                            {
-                              type: ValidatorTypes.REQUIRED,
-                              options: { property: "optionA" },
-                            },
-                            {
-                              type: ValidatorTypes.REQUIRED,
-                              options: { property: "optionB" },
-                            },
-                          ],
-                        },
+                      optionA: { type: PropertyTypes.TEXT },
+                      optionB: { type: PropertyTypes.TEXT },
+                    },
+                    conditionalProperties: {
+                      dependsOn: "$.type",
+                      mappings: {
+                        A: ["optionA"],
+                        B: ["optionB"],
                       },
                     },
+                    validators: [
+                      {
+                        type: ValidatorTypes.REQUIRED,
+                        options: { property: "optionA" },
+                      },
+                      {
+                        type: ValidatorTypes.REQUIRED,
+                        options: { property: "optionB" },
+                      },
+                    ],
                   },
                 },
               },
@@ -1879,45 +1745,37 @@ describe("test properties", () => {
           properties: {
             settings: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  type: {
+                    type: PropertyTypes.ENUM,
+                    enum: ["A", "B"],
+                  },
+                  config: {
+                    type: PropertyTypes.OBJECT,
+                    strict: true,
                     properties: {
-                      type: {
-                        type: PropertyTypes.ENUM,
-                        options: {
-                          enum: ["A", "B"],
-                        },
-                      },
-                      config: {
-                        type: PropertyTypes.OBJECT,
-                        options: {
-                          strict: true,
-                          properties: {
-                            optionA: { type: PropertyTypes.TEXT },
-                            optionB: { type: PropertyTypes.TEXT },
-                          },
-                          conditionalProperties: {
-                            dependsOn: "$.type",
-                            mappings: {
-                              A: ["optionA"],
-                              B: ["optionB"],
-                            },
-                          },
-                          validators: [
-                            {
-                              type: ValidatorTypes.REQUIRED,
-                              options: { property: "optionA" },
-                            },
-                            {
-                              type: ValidatorTypes.REQUIRED,
-                              options: { property: "optionB" },
-                            },
-                          ],
-                        },
+                      optionA: { type: PropertyTypes.TEXT },
+                      optionB: { type: PropertyTypes.TEXT },
+                    },
+                    conditionalProperties: {
+                      dependsOn: "$.type",
+                      mappings: {
+                        A: ["optionA"],
+                        B: ["optionB"],
                       },
                     },
+                    validators: [
+                      {
+                        type: ValidatorTypes.REQUIRED,
+                        options: { property: "optionA" },
+                      },
+                      {
+                        type: ValidatorTypes.REQUIRED,
+                        options: { property: "optionB" },
+                      },
+                    ],
                   },
                 },
               },
@@ -1963,48 +1821,38 @@ describe("test properties", () => {
           properties: {
             settings: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  mode: {
-                    type: PropertyTypes.ENUM,
-                    options: {
-                      enum: ["simple", "complex"],
+              properties: {
+                mode: {
+                  type: PropertyTypes.ENUM,
+                  enum: ["simple", "complex"],
+                },
+                config: {
+                  type: PropertyTypes.OBJECT,
+                  properties: {
+                    subMode: {
+                      type: PropertyTypes.ENUM,
+                      enum: ["A", "B"],
                     },
-                  },
-                  config: {
-                    type: PropertyTypes.OBJECT,
                     options: {
+                      type: PropertyTypes.OBJECT,
+                      strict: true,
                       properties: {
-                        subMode: {
-                          type: PropertyTypes.ENUM,
-                          options: {
-                            enum: ["A", "B"],
-                          },
-                        },
-                        options: {
-                          type: PropertyTypes.OBJECT,
-                          options: {
-                            strict: true,
-                            properties: {
-                              optionA: { type: PropertyTypes.TEXT },
-                              optionB: { type: PropertyTypes.TEXT },
-                            },
-                            conditionalProperties: {
-                              dependsOn: "$.subMode",
-                              mappings: {
-                                A: ["optionA"],
-                                B: ["optionB"],
-                              },
-                            },
-                          },
-                        },
+                        optionA: { type: PropertyTypes.TEXT },
+                        optionB: { type: PropertyTypes.TEXT },
                       },
                       conditionalProperties: {
-                        dependsOn: "$.mode",
+                        dependsOn: "$.subMode",
                         mappings: {
-                          simple: ["subMode", "options"],
+                          A: ["optionA"],
+                          B: ["optionB"],
                         },
                       },
+                    },
+                  },
+                  conditionalProperties: {
+                    dependsOn: "$.mode",
+                    mappings: {
+                      simple: ["subMode", "options"],
                     },
                   },
                 },
@@ -2037,35 +1885,31 @@ describe("test properties", () => {
           properties: {
             paymentMethod: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["creditCard", "paypal"],
-              },
+              enum: ["creditCard", "paypal"],
             },
             paymentDetails: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  cardNumber: { type: PropertyTypes.TEXT },
-                  paypalEmail: { type: PropertyTypes.TEXT },
-                },
-                conditionalProperties: {
-                  dependsOn: "paymentMethod",
-                  mappings: {
-                    creditCard: ["cardNumber"],
-                    paypal: ["paypalEmail"],
-                  },
-                },
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "cardNumber" },
-                  },
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: { property: "paypalEmail" },
-                  },
-                ],
+              properties: {
+                cardNumber: { type: PropertyTypes.TEXT },
+                paypalEmail: { type: PropertyTypes.TEXT },
               },
+              conditionalProperties: {
+                dependsOn: "paymentMethod",
+                mappings: {
+                  creditCard: ["cardNumber"],
+                  paypal: ["paypalEmail"],
+                },
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "cardNumber" },
+                },
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: { property: "paypalEmail" },
+                },
+              ],
             },
           },
         }).extend({ adapterClass: mockAdapter() });
@@ -2122,42 +1966,34 @@ describe("test properties", () => {
           properties: {
             level1Type: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["typeA", "typeB"],
-              },
+              enum: ["typeA", "typeB"],
             },
             level1: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  level2Type: {
-                    type: PropertyTypes.ENUM,
-                    options: {
-                      enum: ["subType1", "subType2"],
-                    },
+              properties: {
+                level2Type: {
+                  type: PropertyTypes.ENUM,
+                  enum: ["subType1", "subType2"],
+                },
+                level2: {
+                  type: PropertyTypes.OBJECT,
+                  properties: {
+                    property1: { type: PropertyTypes.TEXT },
+                    property2: { type: PropertyTypes.NUMBER },
                   },
-                  level2: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      properties: {
-                        property1: { type: PropertyTypes.TEXT },
-                        property2: { type: PropertyTypes.NUMBER },
-                      },
-                      conditionalProperties: {
-                        dependsOn: "$.level2Type",
-                        mappings: {
-                          subType1: ["property1"],
-                          subType2: ["property2"],
-                        },
-                      },
+                  conditionalProperties: {
+                    dependsOn: "$.level2Type",
+                    mappings: {
+                      subType1: ["property1"],
+                      subType2: ["property2"],
                     },
                   },
                 },
-                conditionalProperties: {
-                  dependsOn: "level1Type",
-                  mappings: {
-                    typeA: ["level2Type", "level2"],
-                  },
+              },
+              conditionalProperties: {
+                dependsOn: "level1Type",
+                mappings: {
+                  typeA: ["level2Type", "level2"],
                 },
               },
             },
@@ -2186,23 +2022,19 @@ describe("test properties", () => {
           properties: {
             status: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["active", "inactive", "unknown"],
-              },
+              enum: ["active", "inactive", "unknown"],
             },
             details: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  activeProperty: { type: PropertyTypes.TEXT },
-                  inactiveProperty: { type: PropertyTypes.TEXT },
-                },
-                conditionalProperties: {
-                  dependsOn: "status",
-                  mappings: {
-                    active: ["activeProperty"],
-                    inactive: ["inactiveProperty"],
-                  },
+              properties: {
+                activeProperty: { type: PropertyTypes.TEXT },
+                inactiveProperty: { type: PropertyTypes.TEXT },
+              },
+              conditionalProperties: {
+                dependsOn: "status",
+                mappings: {
+                  active: ["activeProperty"],
+                  inactive: ["inactiveProperty"],
                 },
               },
             },
@@ -2228,23 +2060,19 @@ describe("test properties", () => {
           properties: {
             type: {
               type: PropertyTypes.ENUM,
-              options: {
-                enum: ["type1", "type2", "type3"],
-              },
+              enum: ["type1", "type2", "type3"],
             },
             data: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  property1: { type: PropertyTypes.TEXT },
-                  property2: { type: PropertyTypes.TEXT },
-                },
-                conditionalProperties: {
-                  dependsOn: "type",
-                  mappings: {
-                    type1: ["property1"],
-                    type2: ["property2"],
-                  },
+              properties: {
+                property1: { type: PropertyTypes.TEXT },
+                property2: { type: PropertyTypes.TEXT },
+              },
+              conditionalProperties: {
+                dependsOn: "type",
+                mappings: {
+                  type1: ["property1"],
+                  type2: ["property2"],
                 },
               },
             },
@@ -2285,10 +2113,8 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                additionalProperties: {
-                  type: PropertyTypes.TEXT,
-                },
+              additionalProperties: {
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -2322,10 +2148,8 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                additionalProperties: {
-                  type: PropertyTypes.TEXT,
-                },
+              additionalProperties: {
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -2359,14 +2183,12 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                additionalProperties: {
-                  type: PropertyTypes.TEXT,
-                },
-                properties: {
-                  test: {
-                    type: PropertyTypes.NUMBER,
-                  },
+              additionalProperties: {
+                type: PropertyTypes.TEXT,
+              },
+              properties: {
+                test: {
+                  type: PropertyTypes.NUMBER,
                 },
               },
             },
@@ -2403,15 +2225,13 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                strict: true,
-                additionalProperties: {
-                  type: PropertyTypes.TEXT,
-                },
-                properties: {
-                  test: {
-                    type: PropertyTypes.NUMBER,
-                  },
+              strict: true,
+              additionalProperties: {
+                type: PropertyTypes.TEXT,
+              },
+              properties: {
+                test: {
+                  type: PropertyTypes.NUMBER,
                 },
               },
             },
@@ -2449,11 +2269,9 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  title: {
-                    type: PropertyTypes.TEXT,
-                  },
+              properties: {
+                title: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -2472,11 +2290,9 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  value: {
-                    type: PropertyTypes.NUMBER,
-                  },
+              properties: {
+                value: {
+                  type: PropertyTypes.NUMBER,
                 },
               },
             },
@@ -2495,11 +2311,9 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  value: {
-                    type: PropertyTypes.BOOLEAN,
-                  },
+              properties: {
+                value: {
+                  type: PropertyTypes.BOOLEAN,
                 },
               },
             },
@@ -2518,11 +2332,9 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  value: {
-                    type: PropertyTypes.DATE,
-                  },
+              properties: {
+                value: {
+                  type: PropertyTypes.DATE,
                 },
               },
             },
@@ -2541,11 +2353,9 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  value: {
-                    type: PropertyTypes.IDENTITY,
-                  },
+              properties: {
+                value: {
+                  type: PropertyTypes.IDENTITY,
                 },
               },
             },
@@ -2564,14 +2374,10 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  value: {
-                    type: PropertyTypes.RELATION,
-                    options: {
-                      ref: "accounts",
-                    },
-                  },
+              properties: {
+                value: {
+                  type: PropertyTypes.RELATION,
+                  ref: "accounts",
                 },
               },
             },
@@ -2590,15 +2396,11 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
-                    properties: {
-                      value: {
-                        type: PropertyTypes.NUMBER,
-                      },
-                    },
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  value: {
+                    type: PropertyTypes.NUMBER,
                   },
                 },
               },
@@ -2620,20 +2422,14 @@ describe("test properties", () => {
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  arr: {
-                    type: PropertyTypes.ARRAY,
-                    options: {
-                      items: {
-                        type: PropertyTypes.OBJECT,
-                        options: {
-                          properties: {
-                            value: {
-                              type: PropertyTypes.NUMBER,
-                            },
-                          },
-                        },
+              properties: {
+                arr: {
+                  type: PropertyTypes.ARRAY,
+                  items: {
+                    type: PropertyTypes.OBJECT,
+                    properties: {
+                      value: {
+                        type: PropertyTypes.NUMBER,
                       },
                     },
                   },
@@ -2659,19 +2455,13 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
-                    properties: {
-                      arr: {
-                        type: PropertyTypes.ARRAY,
-                        options: {
-                          items: {
-                            type: PropertyTypes.NUMBER,
-                          },
-                        },
-                      },
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  arr: {
+                    type: PropertyTypes.ARRAY,
+                    items: {
+                      type: PropertyTypes.NUMBER,
                     },
                   },
                 },
@@ -2729,9 +2519,7 @@ describe("test properties", () => {
         properties: {
           rel: {
             type: PropertyTypes.RELATION,
-            options: {
-              ref: "accounts",
-            },
+            ref: "accounts",
           },
         },
       }).extend({ adapterClass: adapter });
@@ -2751,9 +2539,7 @@ describe("test properties", () => {
         properties: {
           rel: {
             type: PropertyTypes.RELATION,
-            options: {
-              ref: "accounts",
-            },
+            ref: "accounts",
           },
         },
       }).extend({ adapterClass: adapter });
@@ -2771,9 +2557,7 @@ describe("test properties", () => {
         properties: {
           rel: {
             type: PropertyTypes.RELATION,
-            options: {
-              ref: "accounts",
-            },
+            ref: "accounts",
           },
         },
       }).extend({ adapterClass: adapter });
@@ -2790,9 +2574,7 @@ describe("test properties", () => {
         properties: {
           rel: {
             type: PropertyTypes.RELATION,
-            options: {
-              ref: "accounts",
-            },
+            ref: "accounts",
           },
         },
       }).extend({ adapterClass: adapter });
@@ -2812,13 +2594,9 @@ describe("test properties", () => {
         properties: {
           arr: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.RELATION,
-                options: {
-                  ref: "accounts",
-                },
-              },
+            items: {
+              type: PropertyTypes.RELATION,
+              ref: "accounts",
             },
           },
         },
@@ -2838,13 +2616,9 @@ describe("test properties", () => {
         properties: {
           arr: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.RELATION,
-                options: {
-                  ref: "accounts",
-                },
-              },
+            items: {
+              type: PropertyTypes.RELATION,
+              ref: "accounts",
             },
           },
         },
@@ -2864,13 +2638,9 @@ describe("test properties", () => {
         properties: {
           arrRel: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.RELATION,
-                options: {
-                  ref: "accounts",
-                },
-              },
+            items: {
+              type: PropertyTypes.RELATION,
+              ref: "accounts",
             },
           },
         },
@@ -2894,9 +2664,7 @@ describe("test properties", () => {
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
-            options: {
-              strict: false, // Default value
-            },
+            strict: false, // Default value
           },
         },
       }).extend({ adapterClass: adapter });
@@ -2925,13 +2693,9 @@ describe("test properties", () => {
         properties: {
           arrRel: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.RELATION,
-                options: {
-                  ref: "accounts",
-                },
-              },
+            items: {
+              type: PropertyTypes.RELATION,
+              ref: "accounts",
             },
           },
         },
@@ -2954,10 +2718,8 @@ describe("test properties", () => {
         properties: {
           arrJson: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.OBJECT,
-              },
+            items: {
+              type: PropertyTypes.OBJECT,
             },
           },
         },
@@ -2978,10 +2740,8 @@ describe("test properties", () => {
         properties: {
           arrJson: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.OBJECT,
-              },
+            items: {
+              type: PropertyTypes.OBJECT,
             },
           },
         },
@@ -3003,16 +2763,12 @@ describe("test properties", () => {
         properties: {
           arrJson: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.OBJECT,
-                options: {
-                  strict: true,
-                  properties: {
-                    title: {
-                      type: PropertyTypes.TEXT,
-                    },
-                  },
+            items: {
+              type: PropertyTypes.OBJECT,
+              strict: true,
+              properties: {
+                title: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -3045,13 +2801,9 @@ describe("test properties", () => {
         properties: {
           arrRel: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.RELATION,
-                options: {
-                  ref: "accounts",
-                },
-              },
+            items: {
+              type: PropertyTypes.RELATION,
+              ref: "accounts",
             },
           },
         },
@@ -3092,11 +2844,9 @@ describe("test properties", () => {
         properties: {
           arr: {
             type: PropertyTypes.ARRAY,
-            options: {
-              default: [],
-              items: {
-                type: PropertyTypes.TEXT,
-              },
+            default: [],
+            items: {
+              type: PropertyTypes.TEXT,
             },
           },
         },
@@ -3116,10 +2866,8 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.TEXT,
-                },
+              items: {
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -3136,12 +2884,10 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.TEXT,
-                },
-                distinct: true,
+              items: {
+                type: PropertyTypes.TEXT,
               },
+              distinct: true,
             },
           },
         }).extend({ adapterClass: adapter });
@@ -3163,12 +2909,10 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.TEXT,
-                },
-                distinct: true,
+              items: {
+                type: PropertyTypes.TEXT,
               },
+              distinct: true,
             },
           },
         }).extend({ adapterClass: adapter });
@@ -3190,16 +2934,12 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
+              items: {
+                type: PropertyTypes.ARRAY,
                 items: {
-                  type: PropertyTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: PropertyTypes.TEXT,
-                    },
-                    distinct: true,
-                  },
+                  type: PropertyTypes.TEXT,
                 },
+                distinct: true,
               },
             },
           },
@@ -3225,21 +2965,15 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
-                    properties: {
-                      arr: {
-                        type: PropertyTypes.ARRAY,
-                        options: {
-                          items: {
-                            type: PropertyTypes.TEXT,
-                          },
-                          distinct: true,
-                        },
-                      },
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  arr: {
+                    type: PropertyTypes.ARRAY,
+                    items: {
+                      type: PropertyTypes.TEXT,
                     },
+                    distinct: true,
                   },
                 },
               },
@@ -3264,21 +2998,15 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
-                    properties: {
-                      arr: {
-                        type: PropertyTypes.ARRAY,
-                        options: {
-                          items: {
-                            type: PropertyTypes.TEXT,
-                          },
-                          distinct: true,
-                        },
-                      },
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  arr: {
+                    type: PropertyTypes.ARRAY,
+                    items: {
+                      type: PropertyTypes.TEXT,
                     },
+                    distinct: true,
                   },
                 },
               },
@@ -3303,15 +3031,11 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.RELATION,
-                  options: {
-                    ref: "accounts",
-                  },
-                },
-                distinct: true,
+              items: {
+                type: PropertyTypes.RELATION,
+                ref: "accounts",
               },
+              distinct: true,
             },
           },
         }).extend({ adapterClass: adapter });
@@ -3333,17 +3057,13 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
+              items: {
+                type: PropertyTypes.ARRAY,
                 items: {
-                  type: PropertyTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: PropertyTypes.TEXT,
-                    },
-                  },
+                  type: PropertyTypes.TEXT,
                 },
-                distinct: true,
               },
+              distinct: true,
             },
           },
         }).extend({ adapterClass: adapter });
@@ -3368,19 +3088,15 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
-                    properties: {
-                      title: {
-                        type: PropertyTypes.TEXT,
-                      },
-                    },
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  title: {
+                    type: PropertyTypes.TEXT,
                   },
                 },
-                distinct: true,
               },
+              distinct: true,
             },
           },
         }).extend({ adapterClass: adapter });
@@ -3402,12 +3118,10 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.NUMBER,
-                },
-                distinct: true,
+              items: {
+                type: PropertyTypes.NUMBER,
               },
+              distinct: true,
             },
           },
         }).extend({ adapterClass: adapter });
@@ -3429,12 +3143,10 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.BOOLEAN,
-                },
-                distinct: true,
+              items: {
+                type: PropertyTypes.BOOLEAN,
               },
+              distinct: true,
             },
           },
         }).extend({ adapterClass: adapter });
@@ -3456,12 +3168,10 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.DATE,
-                },
-                distinct: true,
+              items: {
+                type: PropertyTypes.DATE,
               },
+              distinct: true,
             },
           },
         }).extend({ adapterClass: adapter });
@@ -3482,12 +3192,10 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.TEXT,
-                },
-                distinct: true,
+              items: {
+                type: PropertyTypes.TEXT,
               },
+              distinct: true,
             },
           },
         }).extend({ adapterClass: adapter });
@@ -3506,15 +3214,11 @@ describe("test properties", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
-                    properties: {
-                      title: {
-                        type: PropertyTypes.TEXT,
-                      },
-                    },
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  title: {
+                    type: PropertyTypes.TEXT,
                   },
                 },
               },
@@ -3542,9 +3246,7 @@ describe("test properties", () => {
         properties: {
           value: {
             type: PropertyTypes.INTEGER,
-            options: {
-              default: defaultValue,
-            },
+            default: defaultValue,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -3598,10 +3300,8 @@ describe("test properties", () => {
         properties: {
           status: {
             type: PropertyTypes.ENUM,
-            options: {
-              enum: enumValues,
-              default: defaultValue,
-            },
+            enum: enumValues,
+            default: defaultValue,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -3620,9 +3320,7 @@ describe("test properties", () => {
         properties: {
           status: {
             type: PropertyTypes.ENUM,
-            options: {
-              enum: enumValues,
-            },
+            enum: enumValues,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -3640,9 +3338,7 @@ describe("test properties", () => {
         properties: {
           status: {
             type: PropertyTypes.ENUM,
-            options: {
-              enum: enumValues,
-            },
+            enum: enumValues,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -3660,9 +3356,7 @@ describe("test properties", () => {
         properties: {
           status: {
             type: PropertyTypes.ENUM,
-            options: {
-              enum: enumValues,
-            },
+            enum: enumValues,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -3680,9 +3374,7 @@ describe("test properties", () => {
         properties: {
           status: {
             type: PropertyTypes.ENUM,
-            options: {
-              enum: enumValues,
-            },
+            enum: enumValues,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -3701,9 +3393,7 @@ describe("test properties", () => {
         properties: {
           status: {
             type: PropertyTypes.ENUM,
-            options: {
-              enum: enumValues,
-            },
+            enum: enumValues,
           },
         },
       }).extend({ adapterClass: adapter });

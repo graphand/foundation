@@ -18,35 +18,25 @@ export class Function extends Model {
       name: { type: PropertyTypes.TEXT },
       labels: {
         type: PropertyTypes.OBJECT,
-        options: {
-          additionalProperties: {
-            type: PropertyTypes.TEXT,
-          },
+        additionalProperties: {
+          type: PropertyTypes.TEXT,
         },
       },
       exposed: {
         type: PropertyTypes.BOOLEAN,
-        options: {
-          default: false,
-        },
+        default: false,
       },
       role: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: Role.configuration.slug,
-        },
+        ref: Role.configuration.slug,
       },
       runtime: {
         type: PropertyTypes.ENUM,
-        options: {
-          enum: ["deno"],
-        },
+        enum: ["deno"],
       },
       _job: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: Job.configuration.slug,
-        },
+        ref: Job.configuration.slug,
       },
       _checksum: { type: PropertyTypes.TEXT },
       _size: { type: PropertyTypes.INTEGER },

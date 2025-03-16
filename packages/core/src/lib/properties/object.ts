@@ -17,15 +17,15 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
   _getConditionalKeys = (from: ModelInstance, nextData?: ModelData) => {
     let conditionalKeys: Array<string> | undefined;
 
-    if (this.options.conditionalProperties) {
-      const { dependsOn, mappings, defaultMapping } = this.options.conditionalProperties;
+    if (this.definition.conditionalProperties) {
+      const { dependsOn, mappings, defaultMapping } = this.definition.conditionalProperties;
       let dependsOnPath: string = dependsOn;
       if (dependsOnPath.includes("$")) {
         const parentPath = this.path.split(".").slice(0, -1).join(".");
         dependsOnPath = dependsOnPath.replace("$", parentPath).replace(/^\./, "");
       }
 
-      const mapping = from.get(dependsOnPath, "object", { defaults: true }, nextData) as string;
+      const mapping = from.get(dependsOnPath, "object", { defaults: false }, nextData) as string;
       conditionalKeys = mappings[mapping];
       conditionalKeys ??= mappings[defaultMapping as string];
       conditionalKeys ??= [];
@@ -63,8 +63,8 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
         continue;
       }
 
-      if (value[k] === undefined && defaults && "default" in property.options) {
-        json[k] = property.serialize({ ...input, value: property.options.default }) as JSONPrimitive;
+      if (value[k] === undefined && defaults && "default" in property.definition) {
+        json[k] = property.serialize({ ...input, value: property.definition.default }) as JSONPrimitive;
       } else if (value[k] === undefined || value[k] === null) {
         json[k] = value[k];
       } else {
@@ -72,11 +72,11 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
       }
     }
 
-    if (this.options.strict) {
+    if (this.definition.strict) {
       return json;
     }
 
-    if (this.options.additionalProperties) {
+    if (this.definition.additionalProperties) {
       let noProperty = Object.keys(value).filter(k => !propertiesMap.has(k));
 
       if (conditionalKeys) {
@@ -87,9 +87,9 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
         noProperty.forEach(k => {
           if (value[k] === undefined || value[k] === null) {
             json[k] = value[k];
-          } else if (this.options?.additionalProperties) {
+          } else if (this.definition?.additionalProperties) {
             const tmpProperty = getPropertyFromDefinition(
-              this.options.additionalProperties,
+              this.definition.additionalProperties,
               model.getAdapter(false),
               [this.path, k].join("."),
             );
@@ -130,22 +130,22 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
       let value = target[prop];
 
       if (!targetProperty) {
-        if (this.options?.strict) {
+        if (this.definition?.strict) {
           return undefined;
         }
 
-        if (!this.options?.additionalProperties) {
+        if (!this.definition?.additionalProperties) {
           return value;
         }
 
         const tmpProperty = getPropertyFromDefinition(
-          this.options.additionalProperties,
+          this.definition.additionalProperties,
           adapter,
           [this.path, prop].join("."),
         );
 
         if (!tmpProperty) {
-          throw new Error(`Invalid default property ${this.options.additionalProperties}`);
+          throw new Error(`Invalid default property ${this.definition.additionalProperties}`);
         }
 
         targetProperty = tmpProperty;
@@ -156,8 +156,8 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
       }
 
       const defaults = ctx?.defaults ?? true;
-      if (defaults && value === undefined && "default" in targetProperty.options) {
-        value = targetProperty.options.default as typeof value;
+      if (defaults && value === undefined && "default" in targetProperty.definition) {
+        value = targetProperty.definition.default as typeof value;
       }
 
       if (value === undefined || value === null) {

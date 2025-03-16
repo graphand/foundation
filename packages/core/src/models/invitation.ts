@@ -17,7 +17,7 @@ export class Invitation extends Model {
       firstname: { type: PropertyTypes.TEXT },
       lastname: { type: PropertyTypes.TEXT },
       email: { type: PropertyTypes.TEXT },
-      account: { type: PropertyTypes.RELATION, options: { ref: Account.configuration.slug } },
+      account: { type: PropertyTypes.RELATION, ref: Account.configuration.slug },
     },
     validators: [
       { type: ValidatorTypes.REQUIRED, options: { property: "firstname" } },

@@ -58,8 +58,14 @@ export class PropertyRelation extends Property<PropertyTypes.RELATION> {
 
     const adapter = from.model().getAdapter();
 
+    if (!this.definition.ref) {
+      throw new CoreError({
+        message: `Relation ${this.path} has no ref`,
+      });
+    }
+
     // get the referenced model with the same adapter as from parameter
-    const model = Model.getClass(this.options.ref, adapter.base);
+    const model = Model.getClass(this.definition.ref, adapter.base);
 
     return model.get(id as string, Object.assign({}, ctx?.transactionCtx));
   };

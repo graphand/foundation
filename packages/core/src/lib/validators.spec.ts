@@ -21,11 +21,9 @@ describe("test validators", () => {
         },
         obj: {
           type: PropertyTypes.OBJECT,
-          options: {
-            properties: {
-              title: {
-                type: PropertyTypes.TEXT,
-              },
+          properties: {
+            title: {
+              type: PropertyTypes.TEXT,
             },
           },
         },
@@ -272,16 +270,14 @@ describe("test validators", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.TEXT,
-                },
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                  },
-                ],
+              items: {
+                type: PropertyTypes.TEXT,
               },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                },
+              ],
             },
           },
         }).extend({ adapterClass: adapter });
@@ -404,19 +400,17 @@ describe("test validators", () => {
         properties: {
           arr: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.TEXT,
-              },
-              validators: [
-                {
-                  type: ValidatorTypes.REGEX,
-                  options: {
-                    pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
-                  },
-                },
-              ],
+            items: {
+              type: PropertyTypes.TEXT,
             },
+            validators: [
+              {
+                type: ValidatorTypes.REGEX,
+                options: {
+                  pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
+                },
+              },
+            ],
           },
         },
       }).extend({ adapterClass: adapter });
@@ -813,33 +807,25 @@ describe("test validators", () => {
         properties: {
           arr: {
             type: PropertyTypes.ARRAY,
-            options: {
+            items: {
+              type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.ARRAY,
-                options: {
-                  items: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      properties: {
-                        nested: {
-                          type: PropertyTypes.ARRAY,
-                          options: {
-                            items: {
-                              type: PropertyTypes.TEXT,
-                            },
-                            validators: [
-                              {
-                                type: ValidatorTypes.LENGTH,
-                                options: {
-                                  min: 2,
-                                  max: 3,
-                                },
-                              },
-                            ],
-                          },
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  nested: {
+                    type: PropertyTypes.ARRAY,
+                    items: {
+                      type: PropertyTypes.TEXT,
+                    },
+                    validators: [
+                      {
+                        type: ValidatorTypes.LENGTH,
+                        options: {
+                          min: 2,
+                          max: 3,
                         },
                       },
-                    },
+                    ],
                   },
                 },
               },
@@ -981,10 +967,8 @@ describe("test validators", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
-                items: {
-                  type: PropertyTypes.TEXT,
-                },
+              items: {
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -1050,36 +1034,28 @@ describe("test validators", () => {
           properties: {
             arr: {
               type: PropertyTypes.ARRAY,
-              options: {
+              items: {
+                type: PropertyTypes.ARRAY,
                 items: {
-                  type: PropertyTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: PropertyTypes.OBJECT,
-                      options: {
-                        properties: {
-                          nested: {
-                            type: PropertyTypes.ARRAY,
-                            options: {
-                              items: {
-                                type: PropertyTypes.TEXT,
-                              },
-                            },
-                          },
-                        },
-                        validators: [
-                          {
-                            type: ValidatorTypes.LENGTH,
-                            options: {
-                              property: "nested",
-                              min: 2,
-                              max: 3,
-                            },
-                          },
-                        ],
+                  type: PropertyTypes.OBJECT,
+                  properties: {
+                    nested: {
+                      type: PropertyTypes.ARRAY,
+                      items: {
+                        type: PropertyTypes.TEXT,
                       },
                     },
                   },
+                  validators: [
+                    {
+                      type: ValidatorTypes.LENGTH,
+                      options: {
+                        property: "nested",
+                        min: 2,
+                        max: 3,
+                      },
+                    },
+                  ],
                 },
               },
             },
@@ -1265,44 +1241,38 @@ describe("test validators", () => {
         },
         arr: {
           type: PropertyTypes.ARRAY,
-          options: {
-            items: {
-              type: PropertyTypes.TEXT,
-            },
-            validators: [
-              {
-                type: ValidatorTypes.UNIQUE,
-              },
-            ],
+          items: {
+            type: PropertyTypes.TEXT,
           },
+          validators: [
+            {
+              type: ValidatorTypes.UNIQUE,
+            },
+          ],
         },
         arrObj: {
           type: PropertyTypes.ARRAY,
-          options: {
-            items: {
-              type: PropertyTypes.OBJECT,
-              options: {
-                properties: {
-                  label: {
-                    type: PropertyTypes.TEXT,
-                  },
-                },
-                validators: [
-                  {
-                    type: ValidatorTypes.UNIQUE,
-                    options: {
-                      property: "label",
-                    },
-                  },
-                ],
+          items: {
+            type: PropertyTypes.OBJECT,
+            properties: {
+              label: {
+                type: PropertyTypes.TEXT,
               },
             },
             validators: [
               {
                 type: ValidatorTypes.UNIQUE,
+                options: {
+                  property: "label",
+                },
               },
             ],
           },
+          validators: [
+            {
+              type: ValidatorTypes.UNIQUE,
+            },
+          ],
         },
       },
       validators: [
@@ -1457,10 +1427,8 @@ describe("test validators", () => {
         properties: {
           arr: {
             type: PropertyTypes.ARRAY,
-            options: {
-              items: {
-                type: PropertyTypes.TEXT,
-              },
+            items: {
+              type: PropertyTypes.TEXT,
             },
           },
         },

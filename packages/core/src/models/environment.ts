@@ -19,21 +19,15 @@ export class Environment extends Model {
       },
       base: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: "environments", // Circular reference
-        },
+        ref: "environments", // Circular reference
       },
       _job: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: Job.configuration.slug,
-        },
+        ref: Job.configuration.slug,
       },
       _fromRequest: {
         type: PropertyTypes.RELATION,
-        options: {
-          ref: MergeRequest.configuration.slug,
-        },
+        ref: MergeRequest.configuration.slug,
       },
     },
     validators: [

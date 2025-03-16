@@ -14,7 +14,7 @@ export class Media extends Model {
     keyProperty: "name",
     properties: {
       name: { type: PropertyTypes.TEXT },
-      private: { type: PropertyTypes.BOOLEAN, options: { default: false } },
+      private: { type: PropertyTypes.BOOLEAN, default: false },
       _mimetype: { type: PropertyTypes.TEXT },
       _originalname: { type: PropertyTypes.TEXT },
       _size: { type: PropertyTypes.INTEGER },

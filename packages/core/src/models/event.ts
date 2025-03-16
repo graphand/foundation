@@ -14,13 +14,14 @@ export class Event extends Model {
     properties: {
       type: { type: PropertyTypes.TEXT },
       message: { type: PropertyTypes.TEXT },
-      tags: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.TEXT } } },
+      tags: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.TEXT } },
       payload: { type: PropertyTypes.OBJECT },
-      mute: { type: PropertyTypes.BOOLEAN, options: { default: false } },
-      severity: { type: PropertyTypes.INTEGER, options: { default: EventSeverities.DEBUG } }, // Syslog protocol severity levels (0-7)
+      mute: { type: PropertyTypes.BOOLEAN, default: false },
+      severity: { type: PropertyTypes.INTEGER, default: EventSeverities.DEBUG }, // Syslog protocol severity levels (0-7)
       _source: {
         type: PropertyTypes.ENUM,
-        options: { enum: Object.values(EventSources), default: EventSources.USER },
+        enum: Object.values(EventSources),
+        default: EventSources.USER,
       },
     },
     validators: [

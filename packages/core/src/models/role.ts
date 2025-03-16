@@ -19,90 +19,68 @@ export class Role extends Model {
       slug: { type: PropertyTypes.TEXT },
       _admin: {
         type: PropertyTypes.BOOLEAN,
-        options: { default: false },
+        default: false,
       },
       inherits: {
         type: PropertyTypes.ARRAY,
-        options: {
-          items: {
-            type: PropertyTypes.RELATION,
-            options: {
-              ref: "roles",
-            },
-          },
+        items: {
+          type: PropertyTypes.RELATION,
+          ref: "roles",
         },
       },
       rules: {
         type: PropertyTypes.ARRAY,
-        options: {
-          items: {
-            type: PropertyTypes.OBJECT,
-            options: {
-              strict: true,
-              properties: {
-                ref: {
-                  type: PropertyTypes.TEXT,
-                },
-                actions: {
-                  type: PropertyTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: PropertyTypes.ENUM,
-                      options: {
-                        enum: Object.values(RuleActions),
-                      },
-                    },
-                  },
-                },
-                filter: {
-                  type: PropertyTypes.OBJECT,
-                },
-                prohibition: {
-                  type: PropertyTypes.BOOLEAN,
-                },
+        items: {
+          type: PropertyTypes.OBJECT,
+          strict: true,
+          properties: {
+            ref: {
+              type: PropertyTypes.TEXT,
+            },
+            actions: {
+              type: PropertyTypes.ARRAY,
+              items: {
+                type: PropertyTypes.ENUM,
+                enum: Object.values(RuleActions),
               },
+            },
+            filter: {
+              type: PropertyTypes.OBJECT,
+            },
+            prohibition: {
+              type: PropertyTypes.BOOLEAN,
             },
           },
         },
       },
       propertiesRestrictions: {
         type: PropertyTypes.ARRAY,
-        options: {
-          items: {
-            type: PropertyTypes.OBJECT,
-            options: {
-              strict: true,
-              properties: {
-                ref: {
-                  type: PropertyTypes.TEXT,
-                },
-                actions: {
-                  type: PropertyTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: PropertyTypes.ENUM,
-                      options: {
-                        enum: Object.values(RuleActions),
-                      },
-                    },
-                  },
-                },
-                filter: {
-                  type: PropertyTypes.OBJECT,
-                },
-                properties: {
-                  type: PropertyTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: PropertyTypes.TEXT,
-                    },
-                  },
-                },
-                inverseProperties: {
-                  type: PropertyTypes.BOOLEAN,
-                  options: { default: false },
-                },
+        items: {
+          type: PropertyTypes.OBJECT,
+          strict: true,
+          properties: {
+            ref: {
+              type: PropertyTypes.TEXT,
+            },
+            actions: {
+              type: PropertyTypes.ARRAY,
+              items: {
+                type: PropertyTypes.ENUM,
+                enum: Object.values(RuleActions),
               },
+            },
+            filter: {
+              type: PropertyTypes.OBJECT,
+            },
+            properties: {
+              type: PropertyTypes.ARRAY,
+              items: {
+                type: PropertyTypes.TEXT,
+              },
+            },
+            inverseProperties: {
+              type: PropertyTypes.BOOLEAN,
+              default: false,
             },
           },
         },

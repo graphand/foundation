@@ -20,7 +20,7 @@ export class PropertyArray extends Property<PropertyTypes.ARRAY> {
         throw new Error(`value is not an array`);
       }
 
-      if (this.options.distinct) {
+      if (this.definition.distinct) {
         const vSet = new Set();
         if (
           v.some(v => {
@@ -45,7 +45,7 @@ export class PropertyArray extends Property<PropertyTypes.ARRAY> {
   };
 
   _sToRelArr = (input: PropertySerializerInput) => {
-    const options = this.options.items?.options as PropertyOptions<PropertyTypes.RELATION>;
+    const options = this.definition.items as PropertyOptions<PropertyTypes.RELATION>;
     const { value, format, from, ctx } = input;
 
     const adapter = from.model().getAdapter();
@@ -60,6 +60,12 @@ export class PropertyArray extends Property<PropertyTypes.ARRAY> {
     }
 
     if (format === "object") {
+      if (!options.ref) {
+        throw new CoreError({
+          message: `Relation model not found. ref is ${options.ref}`,
+        });
+      }
+
       const model = Model.getClass(options.ref, adapter.base);
 
       if (!arrVal?.every(isObjectId)) {
@@ -72,7 +78,7 @@ export class PropertyArray extends Property<PropertyTypes.ARRAY> {
 
       if (model.configuration.single) {
         res = arrVal.map((v, i) => {
-          const itemsProperty = getPropertyFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
+          const itemsProperty = getPropertyFromDefinition(this.definition.items, adapter, this.path + `.[${i}]`);
 
           return itemsProperty?.serialize({ ...input, value: v });
         });
@@ -101,14 +107,14 @@ export class PropertyArray extends Property<PropertyTypes.ARRAY> {
     const arrVal = Array.isArray(value) ? value : [value];
 
     return arrVal.map((v, i) => {
-      const itemsProperty = getPropertyFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
+      const itemsProperty = getPropertyFromDefinition(this.definition.items, adapter, this.path + `.[${i}]`);
 
       return itemsProperty?.serialize({ ...input, value: v });
     });
   };
 
   _sDefault = (input: PropertySerializerInput) => {
-    if (this.options.items?.type === PropertyTypes.RELATION) {
+    if (this.definition.items?.type === PropertyTypes.RELATION) {
       return this._sToRelArr(input);
     }
 

@@ -1,7 +1,6 @@
 import { PropertyTypes } from "@/enums/property-types.js";
 import { Model } from "@/lib/model.js";
 import {
-  PropertyOptions,
   ModelInstance,
   InferPropertyType,
   SerializerFormat,
@@ -30,22 +29,23 @@ export class Property<T extends PropertyTypes = PropertyTypes> {
     this.#definition = definition;
     this.#path = path;
     this.serializerMap ??= {};
+
+    // TODO : remove this once we have a proper way to handle options
+    if ("options" in this.#definition && this.#definition.options) {
+      throw new Error("options is not allowed in property definition");
+    }
   }
 
-  get type() {
-    return this.#definition.type;
+  get type(): T {
+    return this.#definition.type as T;
   }
 
   get path() {
     return this.#path;
   }
 
-  get definition() {
+  get definition(): PropertyDefinitionGeneric<T> {
     return this.#definition;
-  }
-
-  get options(): PropertyOptions<T> {
-    return (this.#definition.options ?? {}) as PropertyOptions<T>;
   }
 
   validate?: (_input: { list: Array<ModelInstance>; model: typeof Model; ctx?: TransactionCtx }) => Promise<boolean>;
@@ -71,14 +71,13 @@ export class Property<T extends PropertyTypes = PropertyTypes> {
 
   toJSON() {
     return {
-      type: this.type,
-      options: this.options,
-      path: this.#path,
+      ...this.#definition,
+      _path: this.#path,
     };
   }
 
   static fromJSON(json: ReturnType<Property["toJSON"]>) {
-    const { type, options, path } = json;
-    return new Property({ type, options }, path);
+    const { _path, ...definition } = json;
+    return new Property(definition, _path);
   }
 }

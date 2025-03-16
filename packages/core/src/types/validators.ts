@@ -34,7 +34,7 @@ export type ValidatorDefinitions = {
 
 export type ValidatorDefinitionGeneric<T extends ValidatorTypes> = {
   type: T | `${T}` | string;
-  options?: ValidatorOptionsMap[T];
+  options?: ValidatorOptionsMap[T] | null;
 };
 
 export type ValidatorDefinition = {

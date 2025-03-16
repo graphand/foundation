@@ -6,7 +6,7 @@ import { getValidationValues, isObjectId } from "@/lib/utils.js";
 export class PropertyEnum extends Property<PropertyTypes.ENUM> {
   validate: Property<PropertyTypes.ENUM>["validate"] = async ({ list }) => {
     const values = getValidationValues(list, this.path);
-    const enums = this.options.enum ?? [];
+    const enums = this.definition.enum ?? [];
 
     values.forEach(v => {
       if (v === null || v === undefined) {
@@ -27,7 +27,7 @@ export class PropertyEnum extends Property<PropertyTypes.ENUM> {
 
   _sDefault = ({ value }: PropertySerializerInput) => {
     const single = Array.isArray(value) ? String(value[0]) : String(value);
-    const enums = this.options.enum ?? [];
+    const enums = this.definition.enum ?? [];
 
     return enums.includes(single) ? single : undefined;
   };

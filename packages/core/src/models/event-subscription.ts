@@ -16,57 +16,51 @@ export class EventSubscription extends Model {
     keyProperty: "slug",
     properties: {
       slug: { type: PropertyTypes.TEXT },
-      enabled: { type: PropertyTypes.BOOLEAN, options: { default: true } },
+      enabled: { type: PropertyTypes.BOOLEAN, default: true },
       filter: { type: PropertyTypes.OBJECT }, // Filter to limit the subscription to specific events
       channels: {
         type: PropertyTypes.ARRAY,
-        options: {
-          items: {
-            type: PropertyTypes.OBJECT,
+        items: {
+          type: PropertyTypes.OBJECT,
+          strict: true,
+          properties: {
+            channel: {
+              type: PropertyTypes.ENUM,
+              enum: Object.values(SubscriptionChannels),
+            },
             options: {
+              type: PropertyTypes.OBJECT,
               strict: true,
               properties: {
-                channel: {
-                  type: PropertyTypes.ENUM,
-                  options: { enum: Object.values(SubscriptionChannels) },
-                },
-                options: {
-                  type: PropertyTypes.OBJECT,
-                  options: {
-                    strict: true,
-                    properties: {
-                      email: { type: PropertyTypes.TEXT },
-                      account: { type: PropertyTypes.RELATION, options: { ref: Account.configuration.slug } },
-                      accountProperty: { type: PropertyTypes.TEXT },
-                      role: { type: PropertyTypes.RELATION, options: { ref: Role.configuration.slug } },
-                      slackWebhookUrl: { type: PropertyTypes.TEXT },
-                    },
-                    conditionalProperties: {
-                      dependsOn: "$.channel",
-                      defaultMapping: SubscriptionChannels.EMAIL,
-                      mappings: {
-                        [SubscriptionChannels.EMAIL]: ["email"],
-                        [SubscriptionChannels.ACCOUNT]: ["account", "accountProperty"],
-                        [SubscriptionChannels.ROLE]: ["role"],
-                        [SubscriptionChannels.SLACK]: ["slackWebhookUrl"],
-                      },
-                    },
-                    validators: [
-                      { type: ValidatorTypes.REQUIRED, options: { property: "email" } },
-                      { type: ValidatorTypes.REGEX, options: { pattern: Patterns.EMAIL, property: "email" } },
-                      { type: ValidatorTypes.REQUIRED, options: { property: "role" } },
-                      { type: ValidatorTypes.REQUIRED, options: { property: "slackWebhookUrl" } },
-                      { type: ValidatorTypes.REGEX, options: { pattern: Patterns.URL, property: "slackWebhookUrl" } },
-                    ],
-                  },
+                email: { type: PropertyTypes.TEXT },
+                account: { type: PropertyTypes.RELATION, ref: Account.configuration.slug },
+                accountProperty: { type: PropertyTypes.TEXT },
+                role: { type: PropertyTypes.RELATION, ref: Role.configuration.slug },
+                slackWebhookUrl: { type: PropertyTypes.TEXT },
+              },
+              conditionalProperties: {
+                dependsOn: "$.channel",
+                defaultMapping: SubscriptionChannels.EMAIL,
+                mappings: {
+                  [SubscriptionChannels.EMAIL]: ["email"],
+                  [SubscriptionChannels.ACCOUNT]: ["account", "accountProperty"],
+                  [SubscriptionChannels.ROLE]: ["role"],
+                  [SubscriptionChannels.SLACK]: ["slackWebhookUrl"],
                 },
               },
               validators: [
-                { type: ValidatorTypes.REQUIRED, options: { property: "channel" } },
-                { type: ValidatorTypes.REQUIRED, options: { property: "options" } },
+                { type: ValidatorTypes.REQUIRED, options: { property: "email" } },
+                { type: ValidatorTypes.REGEX, options: { pattern: Patterns.EMAIL, property: "email" } },
+                { type: ValidatorTypes.REQUIRED, options: { property: "role" } },
+                { type: ValidatorTypes.REQUIRED, options: { property: "slackWebhookUrl" } },
+                { type: ValidatorTypes.REGEX, options: { pattern: Patterns.URL, property: "slackWebhookUrl" } },
               ],
             },
           },
+          validators: [
+            { type: ValidatorTypes.REQUIRED, options: { property: "channel" } },
+            { type: ValidatorTypes.REQUIRED, options: { property: "options" } },
+          ],
         },
       },
     },

@@ -72,7 +72,8 @@ export const getRelationModelsFromPath = async (
 
     const isLast = i === properties.length - 1;
     if (property.property.type === PropertyTypes.RELATION) {
-      const options = property.property.options as PropertyOptions<PropertyTypes.RELATION>;
+      const options = property.property.definition as PropertyOptions<PropertyTypes.RELATION>;
+      if (!options.ref) throw new Error(`Relation model not found. ref is ${options.ref}`);
       const refModel = Model.getClass(options.ref, model.getAdapter(false).base);
       relationModels.add(refModel.configuration.slug);
 
@@ -124,7 +125,7 @@ export const getPropertiesPathsFromPath = (
     const pathStr = result.map(item => item?.key).join(".");
 
     if (prevProperty?.type === PropertyTypes.ARRAY) {
-      const options = prevProperty.options as PropertyOptions<PropertyTypes.ARRAY>;
+      const options = prevProperty.definition as PropertyOptions<PropertyTypes.ARRAY>;
       const matchIndex = key.match(/\[(\d+)?\]/);
 
       if (matchIndex) {
@@ -150,7 +151,7 @@ export const getPropertiesPathsFromPath = (
       if (matchIndex) continue;
 
       if (itemsProperty?.type === PropertyTypes.OBJECT) {
-        const nestedOptions = itemsProperty.options as PropertyOptions<PropertyTypes.OBJECT>;
+        const nestedOptions = itemsProperty.definition as PropertyOptions<PropertyTypes.OBJECT>;
         const nextPropertyDef = nestedOptions?.properties?.[key];
         if (!nextPropertyDef) {
           result.push(null);
@@ -166,7 +167,7 @@ export const getPropertiesPathsFromPath = (
     }
 
     if (prevProperty?.type === PropertyTypes.OBJECT) {
-      const options = prevProperty.options as PropertyOptions<PropertyTypes.OBJECT>;
+      const options = prevProperty.definition as PropertyOptions<PropertyTypes.OBJECT>;
       let nextPropertyDef = options.properties?.[key] || options.additionalProperties;
       if (nextPropertyDef === undefined && !options.strict) {
         nextPropertyDef = {
@@ -202,7 +203,8 @@ export const getPropertiesPathsFromPath = (
     }
 
     if (prevProperty?.type === PropertyTypes.RELATION) {
-      const options = prevProperty.options as PropertyOptions<PropertyTypes.RELATION>;
+      const options = prevProperty.definition as PropertyOptions<PropertyTypes.RELATION>;
+      if (!options.ref) throw new Error(`Relation model not found. ref is ${options.ref}`);
       const refModel = Model.getClass(options.ref, adapter.base);
       const restPaths = paths.slice(i);
       const nextProperties = getPropertiesPathsFromPath(refModel, restPaths);
@@ -283,7 +285,7 @@ export const getNestedPropertiesMap = (model: typeof Model, nestedProperty: Prop
   const adapter = model.getAdapter(false);
   const map = new Map<string, Property>();
 
-  Object.entries(nestedProperty.options.properties ?? {}).forEach(([slug, def]) => {
+  Object.entries(nestedProperty.definition.properties ?? {}).forEach(([slug, def]) => {
     const property = getPropertyFromDefinition(def, adapter, nestedProperty.path + "." + slug);
 
     if (property) {
@@ -307,7 +309,7 @@ export const getNestedValidatorsArray = (model: typeof Model, nestedProperty: Pr
   const adapter = model.getAdapter(false);
   const validators: Array<Validator> = [];
 
-  nestedProperty.options.validators?.forEach(def => {
+  nestedProperty.definition.validators?.forEach(def => {
     const validator = getValidatorFromDefinition(def, adapter, nestedProperty.path);
 
     if (validator) {
@@ -331,7 +333,7 @@ export const getArrayItemsPropertiesMap = (model: typeof Model, arrayProperty: P
   const adapter = model.getAdapter();
   const map = new Map();
 
-  const itemsProperty = getPropertyFromDefinition(arrayProperty.options.items, adapter, arrayProperty.path + ".[]");
+  const itemsProperty = getPropertyFromDefinition(arrayProperty.definition.items, adapter, arrayProperty.path + ".[]");
 
   if (itemsProperty) {
     map.set("[]", itemsProperty);
@@ -353,7 +355,7 @@ export const getArrayValidatorsArray = (model: typeof Model, arrayProperty: Prop
   const adapter = model.getAdapter();
   const validators: Array<Validator> = [];
 
-  arrayProperty.options.validators?.forEach(def => {
+  arrayProperty.definition.validators?.forEach(def => {
     const validator = getValidatorFromDefinition(def as ValidatorDefinition, adapter, arrayProperty.path + ".[]");
 
     if (validator) {
@@ -711,8 +713,8 @@ export const _getter = (opts: {
       n = value[key as keyof typeof value];
     }
 
-    if (n === undefined && "default" in property.options && (ctx?.defaults ?? true)) {
-      n = property.options.default as typeof n;
+    if (n === undefined && "default" in property.definition && (ctx?.defaults ?? true)) {
+      n = property.definition.default as typeof n;
     }
 
     if (n === undefined || n === null || n === PropertyObject.symbolIgnore) {
@@ -785,7 +787,7 @@ async function validateProperties<T extends typeof Model>(opts: {
 
         if (values?.length) {
           const _property = property as Property<PropertyTypes.OBJECT>;
-          const o = _property.options || {};
+          const o = _property.definition || {};
           if (o.additionalProperties) {
             const noProperty = values
               .map(v => {
@@ -1176,7 +1178,7 @@ export const getModelInitPromise = (
 export const isValidPropertyDefinition = (def: PropertyDefinition) => {
   if (def.type === PropertyTypes.RELATION) {
     const _def = def as PropertyDefinitionGeneric<PropertyTypes.RELATION>;
-    if (!_def.options?.ref) {
+    if (!_def?.ref) {
       return false;
     }
   }

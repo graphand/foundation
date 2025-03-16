@@ -200,9 +200,7 @@ describe("ValidationError", () => {
       properties: {
         enum: {
           type: PropertyTypes.ENUM,
-          options: {
-            enum: ["a", "b", "c"],
-          },
+          enum: ["a", "b", "c"],
         },
       },
       validators: [{ type: ValidatorTypes.REGEX, options: { property: "enum", pattern: "^d$" } }],
@@ -234,14 +232,10 @@ describe("ValidationError", () => {
       properties: {
         obj: {
           type: PropertyTypes.OBJECT,
-          options: {
-            properties: {
-              enum: {
-                type: PropertyTypes.ENUM,
-                options: {
-                  enum: ["a", "b", "c"],
-                },
-              },
+          properties: {
+            enum: {
+              type: PropertyTypes.ENUM,
+              enum: ["a", "b", "c"],
             },
           },
         },
@@ -275,23 +269,15 @@ describe("ValidationError", () => {
       properties: {
         obj: {
           type: PropertyTypes.OBJECT,
-          options: {
-            properties: {
-              array: {
-                type: PropertyTypes.ARRAY,
-                options: {
-                  items: {
-                    type: PropertyTypes.OBJECT,
-                    options: {
-                      properties: {
-                        enum: {
-                          type: PropertyTypes.ENUM,
-                          options: {
-                            enum: ["a", "b", "c"],
-                          },
-                        },
-                      },
-                    },
+          properties: {
+            array: {
+              type: PropertyTypes.ARRAY,
+              items: {
+                type: PropertyTypes.OBJECT,
+                properties: {
+                  enum: {
+                    type: PropertyTypes.ENUM,
+                    enum: ["a", "b", "c"],
                   },
                 },
               },

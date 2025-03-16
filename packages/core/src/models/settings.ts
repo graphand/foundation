@@ -14,7 +14,9 @@ export class Settings extends Model {
       key: { type: PropertyTypes.TEXT },
       data: {
         type: PropertyTypes.OBJECT,
-        options: { default: {}, properties: {}, conditionalProperties: { dependsOn: "$.key", mappings: {} } },
+        default: {},
+        properties: {},
+        conditionalProperties: { dependsOn: "$.key", mappings: {} },
       },
     },
   });
