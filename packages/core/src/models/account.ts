@@ -23,9 +23,9 @@ export class Account extends Model {
       _lastLoginAt: { type: PropertyTypes.DATE },
     },
     validators: [
-      { type: ValidatorTypes.REQUIRED, options: { property: "role" } },
-      { type: ValidatorTypes.UNIQUE, options: { property: "_email" } },
-      { type: ValidatorTypes.REGEX, options: { property: "_email", pattern: Patterns.EMAIL } },
+      { type: ValidatorTypes.REQUIRED, property: "role" },
+      { type: ValidatorTypes.UNIQUE, property: "_email" },
+      { type: ValidatorTypes.REGEX, property: "_email", pattern: Patterns.EMAIL },
     ],
   });
 }

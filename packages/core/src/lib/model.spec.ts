@@ -29,9 +29,7 @@ describe("Test Model", () => {
     validators: [
       {
         type: ValidatorTypes.SAMPLE,
-        options: {
-          property: "title",
-        },
+        property: "title",
       },
     ],
   });
@@ -1053,8 +1051,8 @@ describe("Test Model", () => {
           },
         },
         validators: [
-          { type: ValidatorTypes.UNIQUE, options: { property: "title" } },
-          { type: ValidatorTypes.REQUIRED, options: { property: "title" } },
+          { type: ValidatorTypes.UNIQUE, property: "title" },
+          { type: ValidatorTypes.REQUIRED, property: "title" },
         ],
       });
       Object.assign(BaseModelWithKeyProperty.configuration, { keyProperty: "title" });
@@ -2002,7 +2000,7 @@ describe("Test Model", () => {
         validators: [
           {
             type: ValidatorTypes.REQUIRED,
-            options: { property: "property1" },
+            property: "property1",
           },
         ],
       });

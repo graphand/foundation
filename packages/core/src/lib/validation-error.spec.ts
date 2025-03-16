@@ -41,13 +41,15 @@ describe("ValidationError", () => {
 
     const validator1 = new Validator({
       type: ValidatorTypes.REGEX,
-      options: { property: "property1", pattern: "^d$" },
+      property: "property1",
+      pattern: "^d$",
     });
     validator1.getFullPath = () => "property1";
 
     const validator2 = new Validator({
       type: ValidatorTypes.LENGTH,
-      options: { property: "property2", min: 5 },
+      property: "property2",
+      min: 5,
     });
     validator2.getFullPath = () => "property2";
 
@@ -106,7 +108,8 @@ describe("ValidationError", () => {
 
     const validator = new Validator({
       type: ValidatorTypes.REGEX,
-      options: { property: "property1", pattern: "^d$" },
+      property: "property1",
+      pattern: "^d$",
     });
     validator.getFullPath = () => "property1";
 
@@ -149,7 +152,8 @@ describe("ValidationError", () => {
     const validatorError = new ValidationValidatorError({
       validator: new Validator({
         type: ValidatorTypes.REGEX,
-        options: { property: "property1", pattern: "^d$" },
+        property: "property1",
+        pattern: "^d$",
       }),
     });
     validatorError.validator.getFullPath = () => "property1";
@@ -203,7 +207,7 @@ describe("ValidationError", () => {
           enum: ["a", "b", "c"],
         },
       },
-      validators: [{ type: ValidatorTypes.REGEX, options: { property: "enum", pattern: "^d$" } }],
+      validators: [{ type: ValidatorTypes.REGEX, property: "enum", pattern: "^d$" }],
     }).extend({ adapterClass });
 
     // @ts-expect-error
@@ -240,7 +244,7 @@ describe("ValidationError", () => {
           },
         },
       },
-      validators: [{ type: ValidatorTypes.REGEX, options: { property: "obj.enum", pattern: "^d$" } }],
+      validators: [{ type: ValidatorTypes.REGEX, property: "obj.enum", pattern: "^d$" }],
     }).extend({ adapterClass });
 
     // @ts-expect-error
@@ -285,7 +289,7 @@ describe("ValidationError", () => {
           },
         },
       },
-      validators: [{ type: ValidatorTypes.REGEX, options: { property: "obj.array.[].enum", pattern: "^d$" } }],
+      validators: [{ type: ValidatorTypes.REGEX, property: "obj.array.[].enum", pattern: "^d$" }],
     }).extend({ adapterClass });
 
     // @ts-expect-error

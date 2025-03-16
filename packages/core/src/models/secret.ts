@@ -14,6 +14,6 @@ export class Secret extends Model {
       name: { type: PropertyTypes.TEXT },
       value: { type: PropertyTypes.TEXT },
     },
-    validators: [{ type: ValidatorTypes.REQUIRED, options: { property: "value" } }],
+    validators: [{ type: ValidatorTypes.REQUIRED, property: "value" }],
   });
 }

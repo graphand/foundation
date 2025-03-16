@@ -770,7 +770,7 @@ describe("test properties", () => {
               validators: [
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "title" },
+                  property: "title",
                 },
               ],
             },
@@ -808,7 +808,7 @@ describe("test properties", () => {
               validators: [
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "title" },
+                  property: "title",
                 },
               ],
             },
@@ -851,7 +851,7 @@ describe("test properties", () => {
                   validators: [
                     {
                       type: ValidatorTypes.REQUIRED,
-                      options: { property: "title" },
+                      property: "title",
                     },
                   ],
                 },
@@ -895,7 +895,7 @@ describe("test properties", () => {
                   validators: [
                     {
                       type: ValidatorTypes.REQUIRED,
-                      options: { property: "title" },
+                      property: "title",
                     },
                   ],
                 },
@@ -996,11 +996,11 @@ describe("test properties", () => {
               validators: [
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "email" },
+                  property: "email",
                 },
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "slackWebhookUrl" },
+                  property: "slackWebhookUrl",
                 },
               ],
             },
@@ -1077,7 +1077,7 @@ describe("test properties", () => {
                   validators: [
                     {
                       type: ValidatorTypes.REQUIRED,
-                      options: { property: "property12" },
+                      property: "property12",
                     },
                   ],
                 },
@@ -1091,7 +1091,7 @@ describe("test properties", () => {
                   validators: [
                     {
                       type: ValidatorTypes.REQUIRED,
-                      options: { property: "property22" },
+                      property: "property22",
                     },
                   ],
                 },
@@ -1108,11 +1108,11 @@ describe("test properties", () => {
           validators: [
             {
               type: ValidatorTypes.REQUIRED,
-              options: { property: "obj.property1.property11" },
+              property: "obj.property1.property11",
             },
             {
               type: ValidatorTypes.REQUIRED,
-              options: { property: "obj.property2.property21" },
+              property: "obj.property2.property21",
             },
           ],
         }).extend({ adapterClass: _adapter });
@@ -1314,15 +1314,16 @@ describe("test properties", () => {
               validators: [
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "email" },
+                  property: "email",
                 },
                 {
                   type: ValidatorTypes.REGEX,
-                  options: { property: "email", pattern: Patterns.EMAIL },
+                  property: "email",
+                  pattern: Patterns.EMAIL,
                 },
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "slackWebhookUrl" },
+                  property: "slackWebhookUrl",
                 },
               ],
             },
@@ -1413,11 +1414,11 @@ describe("test properties", () => {
               validators: [
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "email" },
+                  property: "email",
                 },
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "slackWebhookUrl" },
+                  property: "slackWebhookUrl",
                 },
               ],
             },
@@ -1476,11 +1477,11 @@ describe("test properties", () => {
               validators: [
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "email" },
+                  property: "email",
                 },
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "slackWebhookUrl" },
+                  property: "slackWebhookUrl",
                 },
               ],
             },
@@ -1526,11 +1527,11 @@ describe("test properties", () => {
               validators: [
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "email" },
+                  property: "email",
                 },
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "slackWebhookUrl" },
+                  property: "slackWebhookUrl",
                 },
               ],
             },
@@ -1687,11 +1688,11 @@ describe("test properties", () => {
                     validators: [
                       {
                         type: ValidatorTypes.REQUIRED,
-                        options: { property: "optionA" },
+                        property: "optionA",
                       },
                       {
                         type: ValidatorTypes.REQUIRED,
-                        options: { property: "optionB" },
+                        property: "optionB",
                       },
                     ],
                   },
@@ -1769,11 +1770,11 @@ describe("test properties", () => {
                     validators: [
                       {
                         type: ValidatorTypes.REQUIRED,
-                        options: { property: "optionA" },
+                        property: "optionA",
                       },
                       {
                         type: ValidatorTypes.REQUIRED,
-                        options: { property: "optionB" },
+                        property: "optionB",
                       },
                     ],
                   },
@@ -1903,11 +1904,11 @@ describe("test properties", () => {
               validators: [
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "cardNumber" },
+                  property: "cardNumber",
                 },
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: { property: "paypalEmail" },
+                  property: "paypalEmail",
                 },
               ],
             },

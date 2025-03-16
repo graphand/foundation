@@ -26,8 +26,8 @@ export class Aggregation extends Model {
       },
     },
     validators: [
-      { type: ValidatorTypes.REQUIRED, options: { property: "source" } },
-      { type: ValidatorTypes.REQUIRED, options: { property: "pipeline" } },
+      { type: ValidatorTypes.REQUIRED, property: "source" },
+      { type: ValidatorTypes.REQUIRED, property: "pipeline" },
     ],
   });
 }

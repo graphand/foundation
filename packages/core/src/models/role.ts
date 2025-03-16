@@ -89,7 +89,8 @@ export class Role extends Model {
     validators: [
       {
         type: ValidatorTypes.REGEX,
-        options: { property: "slug", pattern: Patterns.SLUG },
+        property: "slug",
+        pattern: Patterns.SLUG,
       },
     ],
   });

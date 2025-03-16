@@ -22,7 +22,8 @@ export class ValidatorKeyProperty extends Validator<ValidatorTypes.KEY_PROPERTY>
     const validatorRegex = new ValidatorRegex(
       {
         type: ValidatorTypes.REGEX,
-        options: { property: this.options.property, pattern: Patterns.SLUG },
+        property: this.definition.property,
+        pattern: Patterns.SLUG,
       },
       this.path,
     );
@@ -31,7 +32,7 @@ export class ValidatorKeyProperty extends Validator<ValidatorTypes.KEY_PROPERTY>
     const validatorRequired = new ValidatorRequired(
       {
         type: ValidatorTypes.REQUIRED,
-        options: { property: this.options.property },
+        property: this.definition.property,
       },
       this.path,
     );
@@ -40,7 +41,7 @@ export class ValidatorKeyProperty extends Validator<ValidatorTypes.KEY_PROPERTY>
     const validatorUnique = new ValidatorUnique(
       {
         type: ValidatorTypes.UNIQUE,
-        options: { property: this.options.property },
+        property: this.definition.property,
       },
       this.path,
     );

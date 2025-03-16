@@ -27,11 +27,13 @@ export class Event extends Model {
     validators: [
       {
         type: ValidatorTypes.REQUIRED,
-        options: { property: "type" },
+        property: "type",
       },
       {
         type: ValidatorTypes.BOUNDARIES,
-        options: { property: "severity", min: 0, max: 7 },
+        property: "severity",
+        min: 0,
+        max: 7,
       },
     ],
   });

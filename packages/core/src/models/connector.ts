@@ -54,8 +54,8 @@ export class Connector extends Model {
       },
     },
     validators: [
-      { type: ValidatorTypes.REQUIRED, options: { property: "function" } },
-      { type: ValidatorTypes.REQUIRED, options: { property: "source" } },
+      { type: ValidatorTypes.REQUIRED, property: "function" },
+      { type: ValidatorTypes.REQUIRED, property: "source" },
     ],
   });
 }

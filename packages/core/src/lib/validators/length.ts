@@ -5,11 +5,13 @@ import { ValidationValidatorError } from "../validation-validator-error.js";
 
 export class ValidatorLength extends Validator<ValidatorTypes.LENGTH> {
   validate: Validator<ValidatorTypes.LENGTH>["validate"] = async ({ list }) => {
-    const values = getValidationValues(list, this.getFullPath()).filter(v => ![null, undefined].includes(v as any));
+    const values = getValidationValues(list, this.getFullPath() as string).filter(
+      v => ![null, undefined].includes(v as any),
+    );
 
     if (!values?.length) return true;
 
-    const { min, max } = this.options;
+    const { min, max } = this.definition;
 
     values.forEach(v => {
       let length = (v as string)?.length ?? 0;

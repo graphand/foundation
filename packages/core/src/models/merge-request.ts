@@ -46,8 +46,8 @@ export class MergeRequest extends Model {
       },
     },
     validators: [
-      { type: ValidatorTypes.REQUIRED, options: { property: "options" } },
-      { type: ValidatorTypes.REQUIRED, options: { property: "target" } },
+      { type: ValidatorTypes.REQUIRED, property: "options" },
+      { type: ValidatorTypes.REQUIRED, property: "target" },
     ],
   });
 }

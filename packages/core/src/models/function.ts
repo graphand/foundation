@@ -44,7 +44,7 @@ export class Function extends Model {
     validators: [
       {
         type: ValidatorTypes.REQUIRED,
-        options: { property: "name" },
+        property: "name",
       },
     ],
   });

@@ -218,9 +218,7 @@ describe("Global tests", () => {
               validators: [
                 {
                   type: ValidatorTypes.REQUIRED,
-                  options: {
-                    property: "title",
-                  },
+                  property: "title",
                 },
               ],
             },
@@ -281,9 +279,7 @@ describe("Global tests", () => {
                   validators: [
                     {
                       type: ValidatorTypes.REQUIRED,
-                      options: {
-                        property: "title",
-                      },
+                      property: "title",
                     },
                   ],
                 },
@@ -355,9 +351,7 @@ describe("Global tests", () => {
                             validators: [
                               {
                                 type: ValidatorTypes.REQUIRED,
-                                options: {
-                                  property: "title",
-                                },
+                                property: "title",
                               },
                             ],
                           },
@@ -532,9 +526,7 @@ describe("Global tests", () => {
                           validators: [
                             {
                               type: ValidatorTypes.UNIQUE,
-                              options: {
-                                property: "label",
-                              },
+                              property: "label",
                             },
                           ],
                         },
@@ -740,7 +732,7 @@ describe("Global tests", () => {
           validators: [
             {
               type: ValidatorTypes.REQUIRED,
-              options: { property: "title" },
+              property: "title",
             },
           ],
         },
@@ -764,7 +756,7 @@ describe("Global tests", () => {
           validators: [
             {
               type: ValidatorTypes.REQUIRED,
-              options: { property: "title" },
+              property: "title",
             },
           ],
         },

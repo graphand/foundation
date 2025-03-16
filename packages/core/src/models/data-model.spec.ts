@@ -36,9 +36,7 @@ describe("DataModel Model", () => {
       properties: {
         rel: {
           type: "relation",
-          options: {
-            ref: "medias",
-          },
+          ref: "medias",
         },
       },
     };
@@ -47,29 +45,25 @@ describe("DataModel Model", () => {
 
     expect(json?.rel).toEqual({
       type: "relation",
-      options: {
-        ref: "medias",
-      },
+      ref: "medias",
     });
   });
 
   it("should serialize property validators (conditionalProperties)", async () => {
     const datamodel = DataModelModel.hydrate({
       slug: generateRandomString(),
-      validators: [{ type: ValidatorTypes.REQUIRED, options: { property: "rel" } }],
+      validators: [{ type: ValidatorTypes.REQUIRED, property: "rel" }],
     });
 
-    expect(datamodel.get("validators", "json")).toEqual([
-      { type: ValidatorTypes.REQUIRED, options: { property: "rel" } },
-    ]); // min property does not exist for required validator
+    expect(datamodel.get("validators", "json")).toEqual([{ type: ValidatorTypes.REQUIRED, property: "rel" }]); // min property does not exist for required validator
 
     const datamodel2 = DataModelModel.hydrate({
       slug: generateRandomString(),
-      validators: [{ type: ValidatorTypes.BOUNDARIES, options: { property: "rel", min: 1 } }],
+      validators: [{ type: ValidatorTypes.BOUNDARIES, property: "rel", min: 1 }],
     });
 
     expect(datamodel2.get("validators", "json")).toEqual([
-      { type: ValidatorTypes.BOUNDARIES, options: { property: "rel", min: 1 } },
+      { type: ValidatorTypes.BOUNDARIES, property: "rel", min: 1 },
     ]);
   });
 });

@@ -20,11 +20,11 @@ export class Invitation extends Model {
       account: { type: PropertyTypes.RELATION, ref: Account.configuration.slug },
     },
     validators: [
-      { type: ValidatorTypes.REQUIRED, options: { property: "firstname" } },
-      { type: ValidatorTypes.REQUIRED, options: { property: "lastname" } },
-      { type: ValidatorTypes.REQUIRED, options: { property: "email" } },
-      { type: ValidatorTypes.REQUIRED, options: { property: "account" } },
-      { type: ValidatorTypes.REGEX, options: { property: "email", pattern: Patterns.EMAIL } },
+      { type: ValidatorTypes.REQUIRED, property: "firstname" },
+      { type: ValidatorTypes.REQUIRED, property: "lastname" },
+      { type: ValidatorTypes.REQUIRED, property: "email" },
+      { type: ValidatorTypes.REQUIRED, property: "account" },
+      { type: ValidatorTypes.REGEX, property: "email", pattern: Patterns.EMAIL },
     ],
   });
 }

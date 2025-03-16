@@ -1,14 +1,6 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import {
-  ModelInstance,
-  TransactionCtx,
-  ValidatorDefinition,
-  ValidatorDefinitionGeneric,
-  ValidatorHook,
-  ValidatorOptions,
-} from "@/types/index.js";
+import { ModelInstance, TransactionCtx, ValidatorDefinitionGeneric, ValidatorHook } from "@/types/index.js";
 import { Model } from "@/lib/model.js";
-import { getDefaultValidatorOptions } from "@/lib/utils.js";
 
 export class Validator<T extends ValidatorTypes = ValidatorTypes> {
   #definition: ValidatorDefinitionGeneric<T>;
@@ -19,6 +11,11 @@ export class Validator<T extends ValidatorTypes = ValidatorTypes> {
   constructor(definition: ValidatorDefinitionGeneric<T>, path?: string) {
     this.#definition = definition;
     this.#path = path;
+
+    // TODO : remove this once we have a proper way to handle options
+    if ("options" in this.#definition && this.#definition.options) {
+      throw new Error("options is not allowed in validator definition");
+    }
   }
 
   get type(): T {
@@ -29,14 +26,16 @@ export class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return this.#path;
   }
 
-  get options(): ValidatorOptions<T> {
-    const defaults = getDefaultValidatorOptions(this.type);
-
-    return Object.assign({}, defaults, this.#definition.options ?? {}) as ValidatorOptions<T>;
+  get definition(): ValidatorDefinitionGeneric<T> {
+    return this.#definition;
   }
 
   getFullPath() {
-    return [this.#path, this.options.property].filter(Boolean).join(".");
+    if ("property" in this.definition) {
+      return [this.#path, this.definition.property].filter(Boolean).join(".");
+    }
+
+    return this.#path;
   }
 
   getKey() {
@@ -51,15 +50,13 @@ export class Validator<T extends ValidatorTypes = ValidatorTypes> {
 
   toJSON() {
     return {
-      type: this.type,
-      options: this.options,
-      path: this.#path,
+      ...this.#definition,
+      _path: this.#path,
     };
   }
 
   static fromJSON(json: ReturnType<Validator["toJSON"]>) {
-    const { type, options, path } = json;
-    const definition = { type, options } as ValidatorDefinition;
-    return new Validator(definition, path);
+    const { _path, ...definition } = json;
+    return new Validator(definition, _path);
   }
 }

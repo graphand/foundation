@@ -31,9 +31,7 @@ describe("test validators", () => {
       validators: [
         {
           type: ValidatorTypes.REQUIRED,
-          options: {
-            property: "title",
-          },
+          property: "title",
         },
       ],
     }).extend({ adapterClass: adapter });
@@ -45,7 +43,7 @@ describe("test validators", () => {
     const _containsValidator = (e: ValidationError) => {
       return e.validators.some(err => {
         const v = err.validator as Validator<ValidatorTypes.REQUIRED>;
-        return v.type === ValidatorTypes.REQUIRED && v.options.property === "title";
+        return v.type === ValidatorTypes.REQUIRED && v.definition.property === "title";
       });
     };
 
@@ -313,10 +311,8 @@ describe("test validators", () => {
         validators: [
           {
             type: ValidatorTypes.REGEX,
-            options: {
-              property: "title",
-              ...options,
-            } as ValidatorOptions<ValidatorTypes.REGEX>,
+            property: "title",
+            ...options,
           },
         ],
       }).extend({ adapterClass: adapter });
@@ -406,9 +402,7 @@ describe("test validators", () => {
             validators: [
               {
                 type: ValidatorTypes.REGEX,
-                options: {
-                  pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
-                },
+                pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
               },
             ],
           },
@@ -444,9 +438,7 @@ describe("test validators", () => {
       validators: [
         {
           type: ValidatorTypes.KEY_PROPERTY,
-          options: {
-            property: "title",
-          },
+          property: "title",
         },
       ],
     }).extend({ adapterClass: adapter });
@@ -575,20 +567,6 @@ describe("test validators", () => {
           title: {
             // @ts-expect-error invalid type
             type: "invalid type",
-          },
-        },
-      });
-
-      await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
-    });
-
-    it("datamodel with invalid property options should throw error", async () => {
-      const datamodel = DataModel_.create({
-        slug: generateRandomString(),
-        properties: {
-          title: {
-            type: PropertyTypes.TEXT,
-            options: "invalid options",
           },
         },
       });
@@ -776,10 +754,8 @@ describe("test validators", () => {
         validators: [
           {
             type: ValidatorTypes.LENGTH,
-            options: {
-              property: "title",
-              ...options,
-            },
+            property: "title",
+            ...options,
           },
         ],
       }).extend({ adapterClass: adapter });
@@ -820,10 +796,8 @@ describe("test validators", () => {
                     validators: [
                       {
                         type: ValidatorTypes.LENGTH,
-                        options: {
-                          min: 2,
-                          max: 3,
-                        },
+                        min: 2,
+                        max: 3,
                       },
                     ],
                   },
@@ -975,10 +949,8 @@ describe("test validators", () => {
           validators: [
             {
               type: ValidatorTypes.LENGTH,
-              options: {
-                property: "arr",
-                ...options,
-              },
+              property: "arr",
+              ...options,
             },
           ],
         }).extend({ adapterClass: adapter });
@@ -1049,11 +1021,9 @@ describe("test validators", () => {
                   validators: [
                     {
                       type: ValidatorTypes.LENGTH,
-                      options: {
-                        property: "nested",
-                        min: 2,
-                        max: 3,
-                      },
+                      property: "nested",
+                      min: 2,
+                      max: 3,
                     },
                   ],
                 },
@@ -1136,10 +1106,8 @@ describe("test validators", () => {
         validators: [
           {
             type: ValidatorTypes.BOUNDARIES,
-            options: {
-              property: "title",
-              ...options,
-            },
+            property: "title",
+            ...options,
           },
         ],
       }).extend({ adapterClass: adapter });
@@ -1278,9 +1246,7 @@ describe("test validators", () => {
       validators: [
         {
           type: ValidatorTypes.UNIQUE,
-          options: {
-            property: "title",
-          },
+          property: "title",
         },
       ],
     }).extend({ adapterClass: adapter });
@@ -1383,17 +1349,13 @@ describe("test validators", () => {
         validators: [
           {
             type: ValidatorTypes.LENGTH,
-            options: {
-              property: "title",
-              min: 2,
-              max: 5,
-            },
+            property: "title",
+            min: 2,
+            max: 5,
           },
           {
             type: ValidatorTypes.REQUIRED,
-            options: {
-              property: "title",
-            },
+            property: "title",
           },
         ],
       }).extend({ adapterClass: adapter });
@@ -1435,17 +1397,13 @@ describe("test validators", () => {
         validators: [
           {
             type: ValidatorTypes.LENGTH,
-            options: {
-              property: "arr",
-              min: 2,
-              max: 3,
-            },
+            property: "arr",
+            min: 2,
+            max: 3,
           },
           {
             type: ValidatorTypes.REQUIRED,
-            options: {
-              property: "arr",
-            },
+            property: "arr",
           },
         ],
       }).extend({ adapterClass: adapter });

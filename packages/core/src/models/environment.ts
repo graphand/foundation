@@ -33,10 +33,8 @@ export class Environment extends Model {
     validators: [
       {
         type: ValidatorTypes.REGEX,
-        options: {
-          property: "name",
-          pattern: "^(?!master$|main$)[a-z0-9]+$",
-        },
+        property: "name",
+        pattern: "^(?!master$|main$)[a-z0-9]+$",
       },
     ],
   });

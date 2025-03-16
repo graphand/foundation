@@ -44,7 +44,7 @@ export class ValidationError extends CoreError {
       new Set(
         [...this.properties.map(f => f.property?.path), ...this.validators.map(v => v.validator.getFullPath())].filter(
           Boolean,
-        ),
+        ) as Array<string>,
       ),
     );
   }

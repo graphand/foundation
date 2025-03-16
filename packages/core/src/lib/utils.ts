@@ -409,16 +409,22 @@ export const createValidatorsArray = (model: typeof Model): Array<Validator | nu
   if (keyProperty && keyProperty !== "_id") {
     validators.push({
       type: ValidatorTypes.KEY_PROPERTY,
-      options: { property: keyProperty },
+      property: keyProperty,
     });
 
     validators = validators.filter(v => {
-      if (v.type === ValidatorTypes.UNIQUE && v.options?.property === keyProperty) {
-        return false;
+      if (v.type === ValidatorTypes.UNIQUE) {
+        const { property } = v as ValidatorDefinitionGeneric<ValidatorTypes.UNIQUE>;
+        if (property === keyProperty) {
+          return false;
+        }
       }
 
-      if (v.type === ValidatorTypes.REQUIRED && v.options?.property === keyProperty) {
-        return false;
+      if (v.type === ValidatorTypes.REQUIRED) {
+        const { property } = v as ValidatorDefinitionGeneric<ValidatorTypes.REQUIRED>;
+        if (property === keyProperty) {
+          return false;
+        }
       }
 
       return true;

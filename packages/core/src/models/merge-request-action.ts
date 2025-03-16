@@ -41,6 +41,6 @@ export class MergeRequestAction extends Model {
         ref: Job.configuration.slug,
       },
     },
-    validators: [{ type: ValidatorTypes.REQUIRED, options: { property: "request" } }],
+    validators: [{ type: ValidatorTypes.REQUIRED, property: "request" }],
   });
 }

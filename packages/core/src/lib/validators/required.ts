@@ -4,7 +4,7 @@ import { getValidationValues } from "../utils.js";
 
 export class ValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
   validate: Validator<ValidatorTypes.REQUIRED>["validate"] = async ({ list }) => {
-    const values = getValidationValues(list, this.getFullPath());
+    const values = getValidationValues(list, this.getFullPath() as string);
 
     if (!values?.length) return true;
 

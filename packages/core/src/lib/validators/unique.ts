@@ -5,7 +5,7 @@ import { ValidationValidatorError } from "../validation-validator-error.js";
 
 export class ValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
   validate: Validator<ValidatorTypes.UNIQUE>["validate"] = async ({ list }) => {
-    const values = getValidationValues(list, this.getFullPath()).filter(
+    const values = getValidationValues(list, this.getFullPath() as string).filter(
       v => ![null, undefined, ""].includes(v as string),
     );
 
