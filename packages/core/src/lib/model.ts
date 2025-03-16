@@ -51,6 +51,7 @@ export type TModelConfiguration<TSlug extends string = string> = {
   connectable?: boolean;
   exposed?: boolean;
   realtime?: boolean;
+  type?: "object";
   blockMultipleOperations?: boolean;
   freeMode?: boolean;
   properties?: PropertiesDefinition | null;
@@ -59,6 +60,7 @@ export type TModelConfiguration<TSlug extends string = string> = {
   validators?: ValidatorsDefinition;
   isEnvironmentScoped?: boolean;
   isDynamic?: boolean;
+  required?: string[];
 };
 
 export const defineConfiguration = <const C extends TModelConfiguration>(configuration: C) => configuration;
@@ -67,17 +69,6 @@ const noPropertySymbol = Symbol("noProperty");
 
 export class Model {
   static configuration: TModelConfiguration = { slug: "" };
-
-  // static loadDatamodel: boolean; // Whether the model can be extended with a DataModel with its slug
-  // static connectable: boolean = false; // Whether the model is able to be used as a connector source
-  // static exposed: boolean = true; // Whether the model is exposed in the API or not
-  // static realtime: boolean = false; // Whether the model is realtime enabled
-  // static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
-  // static slug: string; // The slug of the model used to identify it
-  // static freeMode: boolean = false; // Whether the model is free
-  // static definition: ModelDefinition; // The definition of the model (use satisfies ModelDefinition)
-  // static isEnvironmentScoped: boolean = false; // Whether the model is environment scoped or whole project scoped
-  // static isDynamic = false; // True if the model is created dynamically from just a slug
 
   static adapterClass: typeof Adapter; // The adapter class to use with the model and inherited models
 
@@ -1247,17 +1238,3 @@ export class Model {
     return this.toJSON();
   }
 }
-
-// const dm = DataModel.validate([
-//   {
-//     slug: "test",
-//     name: "DataModel",
-//     properties: {
-//       name: { type: "string" },
-//     },
-//   },
-// ]);
-
-// const json = dm.toJSON();
-
-// console.log(json.name);

@@ -56,7 +56,10 @@ export class AuthProvider extends Model {
             confirmTokenLifetime: { type: PropertyTypes.INTEGER, options: { default: 3600 } },
             resetTokenLifetime: { type: PropertyTypes.INTEGER, options: { default: 3600 } },
             allowResetPassword: { type: PropertyTypes.BOOLEAN, options: { default: false } },
-            propertiesMap: { type: PropertyTypes.OBJECT, options: { defaultProperty: { type: PropertyTypes.TEXT } } },
+            propertiesMap: {
+              type: PropertyTypes.OBJECT,
+              options: { additionalProperties: { type: PropertyTypes.TEXT } },
+            },
             scopes: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.TEXT } } },
             autoRegister: { type: PropertyTypes.BOOLEAN, options: { default: true } },
             teamId: { type: PropertyTypes.TEXT },
@@ -70,7 +73,7 @@ export class AuthProvider extends Model {
             //     properties: {
             //       clientId: { type: PropertyTypes.TEXT },
             //       clientSecret: { type: PropertyTypes.TEXT },
-            //       propertiesMap: { type: PropertyTypes.OBJECT, options: { defaultProperty: { type: PropertyTypes.TEXT } } },
+            //       propertiesMap: { type: PropertyTypes.OBJECT, options: { additionalProperties: { type: PropertyTypes.TEXT } } },
             //       scopes: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.TEXT } } },
             //     },
             //   },

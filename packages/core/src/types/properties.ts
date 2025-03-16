@@ -25,42 +25,34 @@ export type PropertyOptionsMap = {
     items: Readonly<PropertyDefinitions>;
     validators?: Readonly<Array<ValidatorDefinitionOmitProperty>>;
     distinct?: Readonly<boolean>;
-    required?: Readonly<boolean>;
   };
   [PropertyTypes.TEXT]: {
     default?: Readonly<string>;
-    required?: Readonly<boolean>;
   };
   [PropertyTypes.RELATION]: {
     ref: string;
-    required?: Readonly<boolean>;
   };
   [PropertyTypes.NUMBER]: {
     default?: Readonly<number>;
-    required?: Readonly<boolean>;
   };
   [PropertyTypes.INTEGER]: {
     default?: Readonly<number>;
-    required?: Readonly<boolean>;
   };
   [PropertyTypes.OBJECT]: {
     default?: Readonly<JSONObject>;
-    defaultProperty?: Readonly<PropertyDefinitions>;
+    additionalProperties?: Readonly<PropertyDefinitions>;
     conditionalProperties?: Readonly<ConditionalPropertiesDefinition>;
     properties?: Readonly<PropertiesDefinition>;
     strict?: Readonly<boolean>;
     validators?: Readonly<ValidatorsDefinition>;
-    required?: Readonly<boolean>;
+    required?: Readonly<string[]>;
   };
   [PropertyTypes.BOOLEAN]: {
     default?: Readonly<boolean>;
-    required?: Readonly<boolean>;
   };
   [PropertyTypes.ENUM]: {
     default?: Readonly<string>;
-    // enum: Array<Readonly<keyof number> | (string & {})>;
     enum: Array<string>;
-    required?: Readonly<boolean>;
   };
   [PropertyTypes.DEFAULT]: never;
   [PropertyTypes.ID]: never;
@@ -103,7 +95,7 @@ export type InferPropertiesDefinition<F extends PropertiesDefinition, S extends 
   [K in keyof F as F[K]["required"] extends true ? never : K]?: InferPropertyType<F[K], S> | null | undefined;
 };
 
-// Helper types to handle defaultProperty properly
+// Helper types to handle additionalProperties properly
 type WithDefaultProperty<Properties extends object, DefaultPropertyType> = Properties &
   Record<string, DefaultPropertyType | Properties[keyof Properties]>;
 
@@ -120,14 +112,14 @@ type SerializerJSON<F extends PropertyDefinitionGeneric<PropertyTypes>> = {
     : never;
   [PropertyTypes.OBJECT]: F["options"] extends PropertyOptionsMap[PropertyTypes.OBJECT]
     ? (F["options"]["properties"] extends PropertiesDefinition
-        ? F["options"]["defaultProperty"] extends PropertyDefinition
+        ? F["options"]["additionalProperties"] extends PropertyDefinition
           ? WithDefaultProperty<
               InferPropertiesDefinition<F["options"]["properties"], "json">,
-              InferPropertyType<F["options"]["defaultProperty"], "json">
+              InferPropertyType<F["options"]["additionalProperties"], "json">
             >
           : InferPropertiesDefinition<F["options"]["properties"], "json">
-        : F["options"]["defaultProperty"] extends PropertyDefinition
-          ? Record<string, InferPropertyType<F["options"]["defaultProperty"], "json">>
+        : F["options"]["additionalProperties"] extends PropertyDefinition
+          ? Record<string, InferPropertyType<F["options"]["additionalProperties"], "json">>
           : {}) &
         (F["options"]["strict"] extends true ? {} : JSONObject)
     : JSONObject;
@@ -150,14 +142,14 @@ type SerializerObject<F extends PropertyDefinitionGeneric<PropertyTypes>> = {
     : never;
   [PropertyTypes.OBJECT]: F["options"] extends PropertyOptionsMap[PropertyTypes.OBJECT]
     ? (F["options"]["properties"] extends PropertiesDefinition
-        ? F["options"]["defaultProperty"] extends PropertyDefinition
+        ? F["options"]["additionalProperties"] extends PropertyDefinition
           ? WithDefaultProperty<
               InferPropertiesDefinition<F["options"]["properties"], "object">,
-              InferPropertyType<F["options"]["defaultProperty"], "object">
+              InferPropertyType<F["options"]["additionalProperties"], "object">
             >
           : InferPropertiesDefinition<F["options"]["properties"], "object">
-        : F["options"]["defaultProperty"] extends PropertyDefinition
-          ? Record<string, InferPropertyType<F["options"]["defaultProperty"], "object">>
+        : F["options"]["additionalProperties"] extends PropertyDefinition
+          ? Record<string, InferPropertyType<F["options"]["additionalProperties"], "object">>
           : {}) &
         (F["options"]["strict"] extends true ? {} : JSONObject)
     : JSONObject;

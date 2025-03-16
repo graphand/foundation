@@ -52,7 +52,7 @@ export class DataModel extends Model {
       properties: {
         type: PropertyTypes.OBJECT,
         options: {
-          defaultProperty: {
+          additionalProperties: {
             type: PropertyTypes.OBJECT,
             options: {
               properties: {
@@ -74,7 +74,7 @@ export class DataModel extends Model {
                       enum: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.TEXT } } },
                       strict: { type: PropertyTypes.BOOLEAN },
                       ref: { type: PropertyTypes.TEXT },
-                      defaultProperty: { type: PropertyTypes.OBJECT },
+                      additionalProperties: { type: PropertyTypes.OBJECT },
                       conditionalProperties: { type: PropertyTypes.OBJECT },
                       properties: { type: PropertyTypes.OBJECT },
                     },
@@ -89,7 +89,7 @@ export class DataModel extends Model {
                         [PropertyTypes.ENUM]: ["default", "enum"],
                         [PropertyTypes.OBJECT]: [
                           "default",
-                          "defaultProperty",
+                          "additionalProperties",
                           "conditionalProperties",
                           "properties",
                           "strict",

@@ -309,14 +309,14 @@ describe("test properties", () => {
         await expect(() => model.validate([obj])).rejects.toThrow(ValidationError);
       });
 
-      it("should validate well with defaultProperty", async () => {
+      it("should validate well with additionalProperties", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
           properties: {
             obj: {
               type: PropertyTypes.OBJECT,
               options: {
-                defaultProperty: {
+                additionalProperties: {
                   type: PropertyTypes.ARRAY,
                   options: {
                     items: {
@@ -2265,8 +2265,8 @@ describe("test properties", () => {
       });
     });
 
-    describe("options.defaultProperty", () => {
-      it("should use defaultProperty by default to serialize", async () => {
+    describe("options.additionalProperties", () => {
+      it("should use additionalProperties by default to serialize", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = vi.fn(() => serializedText);
 
@@ -2286,7 +2286,7 @@ describe("test properties", () => {
             obj: {
               type: PropertyTypes.OBJECT,
               options: {
-                defaultProperty: {
+                additionalProperties: {
                   type: PropertyTypes.TEXT,
                 },
               },
@@ -2303,7 +2303,7 @@ describe("test properties", () => {
         expect(obj.title).toEqual(serializedText);
       });
 
-      it("should use defaultProperty by default to serialize in json", async () => {
+      it("should use additionalProperties by default to serialize in json", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = vi.fn(() => serializedText);
 
@@ -2323,7 +2323,7 @@ describe("test properties", () => {
             obj: {
               type: PropertyTypes.OBJECT,
               options: {
-                defaultProperty: {
+                additionalProperties: {
                   type: PropertyTypes.TEXT,
                 },
               },
@@ -2340,7 +2340,7 @@ describe("test properties", () => {
         expect(json.obj?.title).toEqual(serializedText);
       });
 
-      it("should use defaultProperty only for not defined properties", async () => {
+      it("should use additionalProperties only for not defined properties", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = vi.fn(() => serializedText);
 
@@ -2360,7 +2360,7 @@ describe("test properties", () => {
             obj: {
               type: PropertyTypes.OBJECT,
               options: {
-                defaultProperty: {
+                additionalProperties: {
                   type: PropertyTypes.TEXT,
                 },
                 properties: {
@@ -2384,7 +2384,7 @@ describe("test properties", () => {
         expect(obj.test).toEqual(fakerNumber);
       });
 
-      it("should use defaultProperty by default to validate", async () => {
+      it("should use additionalProperties by default to validate", async () => {
         const testValidator = vi.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
@@ -2405,7 +2405,7 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               options: {
                 strict: true,
-                defaultProperty: {
+                additionalProperties: {
                   type: PropertyTypes.TEXT,
                 },
                 properties: {

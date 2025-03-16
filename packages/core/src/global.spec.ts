@@ -225,7 +225,7 @@ describe("Global tests", () => {
     ).resolves.toBeTruthy();
   });
 
-  it("should be able to validate with nested property with defaultProperty with multiple documents with different properties", async () => {
+  it("should be able to validate with nested property with additionalProperties with multiple documents with different properties", async () => {
     const adapter = mockAdapter();
     const model = class extends Model {
       static configuration = defineConfiguration({
@@ -234,7 +234,7 @@ describe("Global tests", () => {
           obj: {
             type: PropertyTypes.OBJECT,
             options: {
-              defaultProperty: {
+              additionalProperties: {
                 type: PropertyTypes.OBJECT,
                 options: {
                   properties: {
@@ -362,7 +362,7 @@ describe("Global tests", () => {
     ).rejects.toThrow(ValidationError);
   });
 
-  it("should be able to validate with nested property in array with defaultProperty with multiple documents with different properties", async () => {
+  it("should be able to validate with nested property in array with additionalProperties with multiple documents with different properties", async () => {
     const adapter = mockAdapter();
     const model = class extends Model {
       static configuration = defineConfiguration({
@@ -378,7 +378,7 @@ describe("Global tests", () => {
                     items: {
                       type: PropertyTypes.OBJECT,
                       options: {
-                        defaultProperty: {
+                        additionalProperties: {
                           type: PropertyTypes.OBJECT,
                           options: {
                             properties: {
@@ -388,7 +388,7 @@ describe("Global tests", () => {
                                   items: {
                                     type: PropertyTypes.OBJECT,
                                     options: {
-                                      defaultProperty: {
+                                      additionalProperties: {
                                         type: PropertyTypes.OBJECT,
                                         options: {
                                           properties: {
@@ -572,7 +572,7 @@ describe("Global tests", () => {
                     items: {
                       type: PropertyTypes.OBJECT,
                       options: {
-                        defaultProperty: {
+                        additionalProperties: {
                           type: PropertyTypes.OBJECT,
                           options: {
                             properties: {
@@ -694,7 +694,7 @@ describe("Global tests", () => {
   //                 items: {
   //                   type: PropertyTypes.OBJECT,
   //                   options: {
-  //                     defaultProperty: {
+  //                     additionalProperties: {
   //                       type: PropertyTypes.OBJECT,
   //                       options: {
   //                         properties: {

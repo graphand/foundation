@@ -167,7 +167,7 @@ export const getPropertiesPathsFromPath = (
 
     if (prevProperty?.type === PropertyTypes.OBJECT) {
       const options = prevProperty.options as PropertyOptions<PropertyTypes.OBJECT>;
-      let nextPropertyDef = options.properties?.[key] || options.defaultProperty;
+      let nextPropertyDef = options.properties?.[key] || options.additionalProperties;
       if (nextPropertyDef === undefined && !options.strict) {
         nextPropertyDef = {
           type: PropertyTypes.DEFAULT,
@@ -786,7 +786,7 @@ async function validateProperties<T extends typeof Model>(opts: {
         if (values?.length) {
           const _property = property as Property<PropertyTypes.OBJECT>;
           const o = _property.options || {};
-          if (o.defaultProperty) {
+          if (o.additionalProperties) {
             const noProperty = values
               .map(v => {
                 if (!v || typeof v !== "object") {
@@ -800,7 +800,8 @@ async function validateProperties<T extends typeof Model>(opts: {
             if (noProperty?.length) {
               const adapter = model.getAdapter();
               const _process = async (_path: string, _list: Array<ModelInstance<T>>) => {
-                const tmpProperty = o.defaultProperty && getPropertyFromDefinition(o.defaultProperty, adapter, _path);
+                const tmpProperty =
+                  o.additionalProperties && getPropertyFromDefinition(o.additionalProperties, adapter, _path);
 
                 if (!tmpProperty) {
                   return;

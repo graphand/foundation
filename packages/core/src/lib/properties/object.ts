@@ -76,7 +76,7 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
       return json;
     }
 
-    if (this.options.defaultProperty) {
+    if (this.options.additionalProperties) {
       let noProperty = Object.keys(value).filter(k => !propertiesMap.has(k));
 
       if (conditionalKeys) {
@@ -87,9 +87,9 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
         noProperty.forEach(k => {
           if (value[k] === undefined || value[k] === null) {
             json[k] = value[k];
-          } else if (this.options?.defaultProperty) {
+          } else if (this.options?.additionalProperties) {
             const tmpProperty = getPropertyFromDefinition(
-              this.options.defaultProperty,
+              this.options.additionalProperties,
               model.getAdapter(false),
               [this.path, k].join("."),
             );
@@ -134,18 +134,18 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
           return undefined;
         }
 
-        if (!this.options?.defaultProperty) {
+        if (!this.options?.additionalProperties) {
           return value;
         }
 
         const tmpProperty = getPropertyFromDefinition(
-          this.options.defaultProperty,
+          this.options.additionalProperties,
           adapter,
           [this.path, prop].join("."),
         );
 
         if (!tmpProperty) {
-          throw new Error(`Invalid default property ${this.options.defaultProperty}`);
+          throw new Error(`Invalid default property ${this.options.additionalProperties}`);
         }
 
         targetProperty = tmpProperty;

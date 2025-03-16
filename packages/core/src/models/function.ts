@@ -19,7 +19,7 @@ export class Function extends Model {
       labels: {
         type: PropertyTypes.OBJECT,
         options: {
-          defaultProperty: {
+          additionalProperties: {
             type: PropertyTypes.TEXT,
           },
         },
