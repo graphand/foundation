@@ -4,8 +4,7 @@ declare global {
 
 export const __CORE_VERSION__ = JSON.stringify(__INTERNAL_CORE_VERSION__).replaceAll('"', "");
 
-import "@/modules/validators";
-import "@/modules/register-models";
+import "@/register-models";
 
 export * from "@/types/index.js";
 export * from "@/lib/controllers.js";
@@ -32,8 +31,7 @@ export { ValidationFieldError } from "@/lib/validation-field-error.js";
 export { ValidationValidatorError } from "@/lib/validation-validator-error.js";
 export { Validator } from "@/lib/validator.js";
 export { ValidatorBoundaries } from "@/lib/validators/boundaries.js";
-export { ValidatorDatamodelDefinition } from "@/lib/validators/datamodel-definition.js";
-export { ValidatorDatamodelSlug } from "@/lib/validators/datamodel-slug.js";
+export { ValidatorDatamodel } from "@/lib/validators/datamodel.js";
 export { ValidatorKeyField } from "@/lib/validators/key-field.js";
 export { ValidatorLength } from "@/lib/validators/length.js";
 export { ValidatorRegex } from "@/lib/validators/regex.js";

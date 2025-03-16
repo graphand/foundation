@@ -1,16 +1,15 @@
-import { Model } from "@/lib/model.js";
+import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { ModelDefinition } from "@/types/index.js";
 import { Job } from "./job.js";
 
 @modelDecorator()
 export class Snapshot extends Model {
   static __name = "Snapshot";
-  static allowMultipleOperations = false as const;
-  static slug = "snapshots" as const;
-  static loadDatamodel = false as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "snapshots",
+    blockMultipleOperations: true,
+    loadDatamodel: false,
     fields: {
       _expiresAt: {
         type: FieldTypes.DATE,
@@ -18,9 +17,9 @@ export class Snapshot extends Model {
       _job: {
         type: FieldTypes.RELATION,
         options: {
-          ref: Job.slug,
+          ref: Job.configuration.slug,
         },
       },
     },
-  } as const satisfies ModelDefinition;
+  });
 }

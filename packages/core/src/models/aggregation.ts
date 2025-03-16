@@ -1,16 +1,16 @@
-import { Model } from "@/lib/model.js";
+import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Aggregation extends Model {
   static __name = "Aggregation";
-  static isEnvironmentScoped = true as const;
-  static loadDatamodel = false as const;
-  static slug = "aggregations" as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "aggregations",
+    isEnvironmentScoped: true,
+    realtime: true,
+    loadDatamodel: false,
     keyField: "slug",
     fields: {
       slug: { type: FieldTypes.TEXT },
@@ -31,5 +31,5 @@ export class Aggregation extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "source" } },
       { type: ValidatorTypes.REQUIRED, options: { field: "pipeline" } },
     ],
-  } as const satisfies ModelDefinition;
+  });
 }

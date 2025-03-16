@@ -17,6 +17,7 @@ describe("DataModel Model", () => {
     const datamodel = DataModelModel.hydrate({
       slug: generateRandomString(),
       hooks: {
+        // @ts-expect-error test
         before_createOne: true,
       },
     });
@@ -27,28 +28,24 @@ describe("DataModel Model", () => {
   it("should get nested field options (conditionalFields) with data override", async () => {
     const datamodel = DataModelModel.hydrate({
       slug: generateRandomString(),
-      definition: {
-        fields: {},
-      },
+      fields: {},
     });
 
     const payload = {
       slug: "test",
-      definition: {
-        fields: {
-          rel: {
-            type: "relation",
-            options: {
-              ref: "medias",
-            },
+      fields: {
+        rel: {
+          type: "relation",
+          options: {
+            ref: "medias",
           },
         },
       },
     };
 
-    const json = datamodel.get("definition", "json", { defaults: false }, payload);
+    const json = datamodel.get("fields", "json", { defaults: false }, payload);
 
-    expect(json?.fields?.rel).toEqual({
+    expect(json?.rel).toEqual({
       type: "relation",
       options: {
         ref: "medias",
@@ -59,23 +56,17 @@ describe("DataModel Model", () => {
   it("should serialize field validators (conditionalFields)", async () => {
     const datamodel = DataModelModel.hydrate({
       slug: generateRandomString(),
-      definition: {
-        validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "rel" } }],
-      },
+      validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "rel" } }],
     });
 
-    expect(datamodel.get("definition.validators", "json")).toEqual([
-      { type: ValidatorTypes.REQUIRED, options: { field: "rel" } },
-    ]); // min field does not exist for required validator
+    expect(datamodel.get("validators", "json")).toEqual([{ type: ValidatorTypes.REQUIRED, options: { field: "rel" } }]); // min field does not exist for required validator
 
     const datamodel2 = DataModelModel.hydrate({
       slug: generateRandomString(),
-      definition: {
-        validators: [{ type: ValidatorTypes.BOUNDARIES, options: { field: "rel", min: 1 } }],
-      },
+      validators: [{ type: ValidatorTypes.BOUNDARIES, options: { field: "rel", min: 1 } }],
     });
 
-    expect(datamodel2.get("definition.validators", "json")).toEqual([
+    expect(datamodel2.get("validators", "json")).toEqual([
       { type: ValidatorTypes.BOUNDARIES, options: { field: "rel", min: 1 } },
     ]);
   });

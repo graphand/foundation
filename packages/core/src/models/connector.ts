@@ -1,7 +1,6 @@
-import { Model } from "@/lib/model.js";
+import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { ModelDefinition } from "@/types/index.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Function } from "./function.js";
 import { Job } from "./job.js";
@@ -9,11 +8,11 @@ import { Job } from "./job.js";
 @modelDecorator()
 export class Connector extends Model {
   static __name = "Connector";
-  static isEnvironmentScoped = true as const;
-  static allowMultipleOperations = false as const;
-  static loadDatamodel = false as const;
-  static slug = "connectors" as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "connectors",
+    isEnvironmentScoped: true,
+    realtime: true,
+    loadDatamodel: false,
     keyField: "slug",
     fields: {
       slug: { type: FieldTypes.TEXT },
@@ -24,7 +23,7 @@ export class Connector extends Model {
       function: {
         type: FieldTypes.RELATION,
         options: {
-          ref: Function.slug,
+          ref: Function.configuration.slug,
         },
       },
       query: {
@@ -60,7 +59,7 @@ export class Connector extends Model {
       _job: {
         type: FieldTypes.RELATION,
         options: {
-          ref: Job.slug,
+          ref: Job.configuration.slug,
         },
       },
     },
@@ -68,5 +67,5 @@ export class Connector extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "function" } },
       { type: ValidatorTypes.REQUIRED, options: { field: "source" } },
     ],
-  } as const satisfies ModelDefinition;
+  });
 }

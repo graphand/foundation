@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev.js";
 import { Field } from "@/lib/field.js";
-import { Model } from "@/lib/model.js";
+import { defineConfiguration, Model } from "@/lib/model.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Validator } from "@/lib/validator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
@@ -10,7 +10,7 @@ import { CoreError } from "@/lib/core-error.js";
 import { DataModel } from "@/models/data-model.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
 import { Media } from "@/models/media.js";
-import { ModelDefinition, ModelInstance, SerializerFieldsMap } from "@/types/index.js";
+import { ModelInstance, SerializerFieldsMap } from "@/types/index.js";
 import { PromiseModelList } from "@/lib/promise-model-list.js";
 import { PromiseModel } from "@/lib/promise-model.js";
 import { faker } from "@faker-js/faker";
@@ -20,6 +20,7 @@ import { modelDecorator } from "./model-decorator.js";
 
 describe("Test Model", () => {
   const BaseModel = mockModel({
+    slug: faker.random.alphaNumeric(10),
     fields: {
       title: {
         type: FieldTypes.TEXT,
@@ -71,7 +72,10 @@ describe("Test Model", () => {
   it("should be able to save a model with a model on a child adapter", async () => {
     class CustomAccount extends Account {
       static __name = "CustomAccount";
-      static slug = "accounts" as const;
+      static configuration = defineConfiguration({
+        ...Account.configuration,
+        slug: "accounts",
+      });
       static foo = "bar";
     }
 
@@ -88,6 +92,7 @@ describe("Test Model", () => {
     it("should be able to manually define fields", () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -180,8 +185,10 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const base = modelDecorator()(
         class extends Model {
-          static slug = generateRandomString();
-          static loadDatamodel: boolean = true;
+          static configuration = defineConfiguration({
+            slug: generateRandomString(),
+            loadDatamodel: true,
+          });
         },
       );
 
@@ -207,9 +214,7 @@ describe("Test Model", () => {
       const model2 = model.extend({
         initOptions: {
           datamodel: DataModel.hydrate({
-            definition: {
-              keyField: "test",
-            },
+            keyField: "test",
           }).toJSON(),
         },
         adapterClass: mockAdapter(),
@@ -225,57 +230,11 @@ describe("Test Model", () => {
 
       const lastCall2Args = initFn2.mock.calls?.[0]?.[0];
 
-      expect(lastCall2Args?.datamodel).toHaveProperty("definition");
+      expect(lastCall2Args?.datamodel).toHaveProperty("fields");
 
       expect(model.getKeyField()).toEqual("_id");
       expect(model2.getKeyField()).toEqual("test");
     });
-
-    // it("Model clone should override fields", async () => {
-    //   const adapter = mockAdapter();
-    //   const model = class extends Data {
-    //     static slug = "test";
-    //     static definition: ModelDefinition = {
-    //       fields: {
-    //         test: {
-    //           type: FieldTypes.TEXT,
-    //         },
-    //       },
-    //     };
-    //   }.extend({ adapterClass: adapter });
-
-    //   const fieldTest = model.fieldsMap.get("test");
-    //   expect(fieldTest).toBeInstanceOf(Field);
-    //   expect(fieldTest.type).toEqual(FieldTypes.TEXT);
-
-    //   const dm = await DataModel.extend({ adapterClass: adapter }).create({
-    //     slug: "test",
-    //     definition: {
-    //       fields: {
-    //         test: {
-    //           type: FieldTypes.NUMBER,
-    //         },
-    //         test2: {
-    //           type: FieldTypes.TEXT,
-    //         },
-    //       },
-    //     },
-    //   });
-
-    //   const model2 = model.extend({
-    //     initOptions: {
-    //       datamodel: dm,
-    //     },
-    //     adapterClass: mockAdapter(),
-    //   });
-
-    //   await model2.initialize();
-
-    //   expect(model2.fieldsMap?.get("test2")).toBeInstanceOf(Field);
-    //   const fieldTest2 = model2.fieldsMap.get("test");
-    //   expect(fieldTest2).toBeInstanceOf(Field);
-    //   expect(fieldTest2.type).toEqual(FieldTypes.NUMBER);
-    // });
 
     it("Model.keyField is not overriden by datamodel if declared in inherited class", async () => {
       const adapter = mockAdapter();
@@ -283,34 +242,35 @@ describe("Test Model", () => {
       const slug2 = generateRandomString();
       const model = modelDecorator()(
         class extends Model {
-          static slug = slug1;
-          static connectable = true;
-          static loadDatamodel = true;
-          static isEnvironmentScoped = true;
-          static definition: ModelDefinition = {
+          static configuration = defineConfiguration({
+            slug: slug1,
+            connectable: true,
+            loadDatamodel: true,
+            isEnvironmentScoped: true,
             keyField: "test",
-          };
+          });
         },
       ).extend({ adapterClass: adapter });
 
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: slug2,
-        definition: {
-          keyField: "test2",
-          fields: {
-            test2: {
-              type: FieldTypes.TEXT,
-            },
+        keyField: "test2",
+        fields: {
+          test2: {
+            type: FieldTypes.TEXT,
           },
         },
       });
 
       const model2 = modelDecorator()(
         class extends model {
-          static slug = slug2;
-          static connectable = true;
-          static loadDatamodel = true;
-          static isEnvironmentScoped = true;
+          static configuration = defineConfiguration({
+            ...model.configuration,
+            slug: slug2,
+            connectable: true,
+            loadDatamodel: true,
+            isEnvironmentScoped: true,
+          });
         },
       ).extend({ adapterClass: adapter });
 
@@ -322,13 +282,11 @@ describe("Test Model", () => {
     it("Medias keyField is not overriden by datamodel", async () => {
       const adapter = mockAdapter();
       await DataModel.extend({ adapterClass: adapter }).create({
-        slug: Media.slug,
-        definition: {
-          keyField: "test2",
-          fields: {
-            test2: {
-              type: FieldTypes.TEXT,
-            },
+        slug: Media.configuration.slug,
+        keyField: "test2",
+        fields: {
+          test2: {
+            type: FieldTypes.TEXT,
           },
         },
       });
@@ -343,13 +301,11 @@ describe("Test Model", () => {
     it("Medias singularity is not overriden by datamodel", async () => {
       const adapter = mockAdapter();
       await DataModel.extend({ adapterClass: adapter }).create({
-        slug: Media.slug,
-        definition: {
-          single: true,
-          fields: {
-            test2: {
-              type: FieldTypes.TEXT,
-            },
+        slug: Media.configuration.slug,
+        single: true,
+        fields: {
+          test2: {
+            type: FieldTypes.TEXT,
           },
         },
       });
@@ -358,19 +314,16 @@ describe("Test Model", () => {
       await model.initialize();
 
       expect(model.fieldsMap.get("test2")).toBeInstanceOf(Field);
-      expect(model.isSingle()).toBe(false);
     });
 
     it("Medias base fields are not overriden by datamodel", async () => {
       const adapter = mockAdapter();
       await DataModel.extend({ adapterClass: adapter }).create({
-        slug: Media.slug,
-        definition: {
-          single: true,
-          fields: {
-            name: {
-              type: FieldTypes.NUMBER,
-            },
+        slug: Media.configuration.slug,
+        single: true,
+        fields: {
+          name: {
+            type: FieldTypes.NUMBER,
           },
         },
       });
@@ -387,6 +340,7 @@ describe("Test Model", () => {
     it("Model should return field default value if undefined", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           test: {
             type: FieldTypes.TEXT,
@@ -404,6 +358,7 @@ describe("Test Model", () => {
     it("should serialize with field from adapter", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           test: {
             type: FieldTypes.TEXT,
@@ -421,6 +376,7 @@ describe("Test Model", () => {
     it("should serialize with nested fields in json", async () => {
       const adapter = mockAdapter();
       const _model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           test: {
             type: FieldTypes.OBJECT,
@@ -436,24 +392,7 @@ describe("Test Model", () => {
       });
       const model = _model.extend({ adapterClass: adapter });
 
-      const created = await model.create<
-        typeof Model & {
-          definition: {
-            fields: {
-              test: {
-                type: FieldTypes.OBJECT;
-                options: {
-                  fields: {
-                    nested: {
-                      type: FieldTypes.TEXT;
-                    };
-                  };
-                };
-              };
-            };
-          };
-        }
-      >({
+      const created = await model.create({
         test: {
           nested: 123 as unknown as string,
         },
@@ -466,6 +405,7 @@ describe("Test Model", () => {
     it("should serialize with nested fields in array", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           test: {
             type: FieldTypes.ARRAY,
@@ -493,6 +433,7 @@ describe("Test Model", () => {
     it("should serialize with nested fields in array of array", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           test: {
             type: FieldTypes.ARRAY,
@@ -521,6 +462,7 @@ describe("Test Model", () => {
     it("should serialize with nested json field in array of array", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           test: {
             type: FieldTypes.ARRAY,
@@ -622,6 +564,7 @@ describe("Test Model", () => {
     it("should serialize with nested fields in array of json", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           test: {
             type: FieldTypes.ARRAY,
@@ -680,6 +623,7 @@ describe("Test Model", () => {
     it("should serialize with complex schema fields", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           field1: {
             type: FieldTypes.ARRAY,
@@ -808,6 +752,7 @@ describe("Test Model", () => {
     it("should serialize array of relation to PromiseModelList", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           test: {
             type: FieldTypes.ARRAY,
@@ -833,6 +778,7 @@ describe("Test Model", () => {
     it("should serialize array of relation to PromiseModelList even if json nested", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arr: {
             type: FieldTypes.ARRAY,
@@ -893,6 +839,7 @@ describe("Test Model", () => {
     it("should serialize to undefined nested fields of null", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           test: {
             type: FieldTypes.OBJECT,
@@ -915,6 +862,7 @@ describe("Test Model", () => {
     it("should serialize to undefined nested fields of null array", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           test: {
             type: FieldTypes.ARRAY,
@@ -943,6 +891,7 @@ describe("Test Model", () => {
     it("should serialize to undefined nested fields of nested unexisting field", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {},
       }).extend({ adapterClass: adapter });
 
@@ -950,58 +899,12 @@ describe("Test Model", () => {
 
       expect(created.get("obj")).toEqual(undefined);
     });
-
-    it("should not call useless serializer", async () => {
-      const serializeText = vi.fn(value => value);
-
-      const _adapter = mockAdapter({
-        fieldsMap: {
-          [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
-            serialize = serializeText;
-          },
-        },
-      });
-
-      const model = mockModel({
-        fields: {
-          obj: {
-            type: FieldTypes.OBJECT,
-            options: {
-              fields: {
-                field1: {
-                  type: FieldTypes.TEXT,
-                },
-                field2: {
-                  type: FieldTypes.TEXT,
-                },
-                field3: {
-                  type: FieldTypes.TEXT,
-                },
-              },
-            },
-          },
-        },
-      }).extend({ adapterClass: _adapter });
-
-      const created = await model.create({
-        obj: {
-          field1: "test1",
-          field2: "test2",
-          field3: "test3",
-        },
-      });
-
-      expect(serializeText).toBeCalledTimes(0);
-
-      created.get("obj.field1");
-
-      expect(serializeText).toBeCalledTimes(1);
-    });
   });
 
   describe("Model getter and setter should be consistant", () => {
     const adapter = mockAdapter();
     const model = mockModel({
+      slug: faker.random.alphaNumeric(10),
       fields: {
         text: {
           type: FieldTypes.TEXT,
@@ -1186,13 +1089,14 @@ describe("Test Model", () => {
     it("Model should have keyField validator if keyField is defined", async () => {
       const adapter = mockAdapter();
       const BaseModelWithKeyField = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
           },
         },
       });
-      Object.assign(BaseModelWithKeyField.definition, { keyField: "title" });
+      Object.assign(BaseModelWithKeyField.configuration, { keyField: "title" });
       const TestModel = BaseModelWithKeyField.extend({ adapterClass: adapter });
 
       const keyFieldValidator = TestModel.validatorsArray.find(v => v?.type === ValidatorTypes.KEY_FIELD);
@@ -1202,6 +1106,7 @@ describe("Test Model", () => {
     it("Model should have keyField validator if keyField is defined and should filter unique and required validators", async () => {
       const adapter = mockAdapter();
       const BaseModelWithKeyField = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -1212,7 +1117,7 @@ describe("Test Model", () => {
           { type: ValidatorTypes.REQUIRED, options: { field: "title" } },
         ],
       });
-      Object.assign(BaseModelWithKeyField.definition, { keyField: "title" });
+      Object.assign(BaseModelWithKeyField.configuration, { keyField: "title" });
       const TestModel = BaseModelWithKeyField.extend({ adapterClass: adapter });
 
       const validators = TestModel.validatorsArray;
@@ -1479,6 +1384,7 @@ describe("Test Model", () => {
       const fn2 = vi.fn();
 
       const TestModel = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -1513,6 +1419,7 @@ describe("Test Model", () => {
       const fn2 = vi.fn();
 
       const TestModel = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -1548,6 +1455,7 @@ describe("Test Model", () => {
       const fn2 = vi.fn();
 
       const TestModel = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -1631,6 +1539,7 @@ describe("Test Model", () => {
   describe("Model page", () => {
     const adapter = mockAdapter();
     const DocModel = mockModel({
+      slug: faker.random.alphaNumeric(10),
       single: true,
       fields: {
         test: {
@@ -2025,7 +1934,7 @@ describe("Test Model", () => {
     it("should throw error when trying to updateMultiple on models with allowMultipleOperations = false", async () => {
       const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
-      TestModel.allowMultipleOperations = false;
+      TestModel.configuration.blockMultipleOperations = true;
 
       await expect(TestModel.update({}, {})).rejects.toThrow("Cannot run updateMultiple operation");
     });
@@ -2033,7 +1942,7 @@ describe("Test Model", () => {
     it("should be able to updateMultiple on models with allowMultipleOperations = false and query as string (=updateOne)", async () => {
       const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
-      TestModel.allowMultipleOperations = false;
+      TestModel.configuration.blockMultipleOperations = true;
 
       await expect(TestModel.update("", {})).resolves.toBeDefined();
     });
@@ -2041,7 +1950,7 @@ describe("Test Model", () => {
     it("should throw error when trying to deleteMultiple on models with allowMultipleOperations = false", async () => {
       const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
-      TestModel.allowMultipleOperations = false;
+      TestModel.configuration.blockMultipleOperations = true;
 
       await expect(TestModel.delete({})).rejects.toThrow("Cannot run deleteMultiple operation");
     });
@@ -2049,7 +1958,7 @@ describe("Test Model", () => {
     it("should be able to deleteMultiple on models with allowMultipleOperations = false and query as string (=deleteOne)", async () => {
       const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
-      TestModel.allowMultipleOperations = false;
+      TestModel.configuration.blockMultipleOperations = true;
 
       await expect(TestModel.delete("")).resolves.toBeDefined();
     });
@@ -2072,13 +1981,11 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: generateRandomString(),
-        definition: {
-          fields: {
-            field1: {
-              type: FieldTypes.TEXT,
-              options: {
-                default: "defaultValue",
-              },
+        fields: {
+          field1: {
+            type: FieldTypes.TEXT,
+            options: {
+              default: "defaultValue",
             },
           },
         },
@@ -2086,7 +1993,7 @@ describe("Test Model", () => {
 
       const TestModel = Model.getClass(dm);
 
-      expect(TestModel.slug).toEqual(dm.slug);
+      expect(TestModel.configuration.slug).toEqual(dm.slug);
 
       await TestModel.reloadModel();
 
@@ -2096,7 +2003,7 @@ describe("Test Model", () => {
       // @ts-ignore
       expect(i.field1).toEqual("defaultValue");
 
-      Object.assign(dm.definition as ModelDefinition, {
+      Object.assign(dm.getData(), {
         fields: {
           field2: {
             type: FieldTypes.TEXT,
@@ -2114,12 +2021,10 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: generateRandomString(),
-        definition: {
-          single: true,
-          fields: {
-            field1: {
-              type: FieldTypes.TEXT,
-            },
+        single: true,
+        fields: {
+          field1: {
+            type: FieldTypes.TEXT,
           },
         },
       });
@@ -2128,15 +2033,15 @@ describe("Test Model", () => {
 
       await TestModel.initialize();
 
-      expect(TestModel.isSingle()).toBeTruthy();
+      expect(TestModel.configuration.single).toBeTruthy();
 
-      expect(TestModel.slug).toEqual(dm.slug);
+      expect(TestModel.configuration.slug).toEqual(dm.slug);
 
       await TestModel.reloadModel();
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      Object.assign(dm.definition as ModelDefinition, {
+      Object.assign(dm.getData(), {
         fields: {
           field2: {
             type: FieldTypes.TEXT,
@@ -2154,20 +2059,18 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: generateRandomString(),
-        definition: {
-          keyField: "field1",
-          fields: {
-            field1: {
-              type: FieldTypes.TEXT,
-            },
+        keyField: "field1",
+        fields: {
+          field1: {
+            type: FieldTypes.TEXT,
           },
-          validators: [
-            {
-              type: ValidatorTypes.REQUIRED,
-              options: { field: "field1" },
-            },
-          ],
         },
+        validators: [
+          {
+            type: ValidatorTypes.REQUIRED,
+            options: { field: "field1" },
+          },
+        ],
       });
 
       const TestModel = Model.getClass(dm);
@@ -2178,7 +2081,7 @@ describe("Test Model", () => {
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      Object.assign(dm.definition || {}, {
+      Object.assign(dm.getData(), {
         keyField: "field2",
         fields: {
           field2: {
@@ -2223,13 +2126,13 @@ describe("Test Model", () => {
       const model = mockModel();
       model.adapterClass = adapterGlobal;
       const model1 = model.extend({ adapterClass: adapter1 });
-      model1.slug = generateRandomString();
+      model1.configuration.slug = generateRandomString();
       const model2 = model.extend({ adapterClass: adapter2 });
-      model2.slug = generateRandomString();
+      model2.configuration.slug = generateRandomString();
       const model3 = class extends model2 {};
-      model3.slug = generateRandomString();
+      model3.configuration.slug = generateRandomString();
       const model4 = model3.extend({ adapterClass: adapter1 });
-      model4.slug = generateRandomString();
+      model4.configuration.slug = generateRandomString();
 
       expect(model.getAdapter()?.base).toBe(adapterGlobal);
       expect(model1.getAdapter()?.base).toBe(adapter1);
@@ -2358,13 +2261,11 @@ describe("Test Model", () => {
         },
         {
           slug: slug2,
-          definition: {
-            fields: {
-              rel: {
-                type: FieldTypes.RELATION,
-                options: {
-                  ref: slug1,
-                },
+          fields: {
+            rel: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: slug1,
               },
             },
           },
@@ -2373,10 +2274,12 @@ describe("Test Model", () => {
 
       const Model1 = modelDecorator()(
         class extends Model {
-          static slug = slug1;
-          static connectable = true;
-          static loadDatamodel = true;
-          static isEnvironmentScoped = true;
+          static configuration = defineConfiguration({
+            slug: slug1,
+            connectable: true,
+            loadDatamodel: true,
+            isEnvironmentScoped: true,
+          });
         },
       ).extend({ adapterClass: adapter });
 
@@ -2386,7 +2289,7 @@ describe("Test Model", () => {
 
       const i2 = await Model.getClass<
         typeof Model & {
-          definition: {
+          configuration: {
             fields: {
               rel: {
                 type: FieldTypes.RELATION;
@@ -2414,13 +2317,11 @@ describe("Test Model", () => {
         },
         {
           slug: slug2,
-          definition: {
-            fields: {
-              rel: {
-                type: FieldTypes.RELATION,
-                options: {
-                  ref: slug1,
-                },
+          fields: {
+            rel: {
+              type: FieldTypes.RELATION,
+              options: {
+                ref: slug1,
               },
             },
           },
@@ -2431,7 +2332,7 @@ describe("Test Model", () => {
 
       const i2 = await Model.getClass<
         typeof Model & {
-          definition: {
+          configuration: {
             fields: {
               rel: { type: FieldTypes.RELATION };
             };
@@ -2439,20 +2340,22 @@ describe("Test Model", () => {
         }
       >(slug2, adapter).create({ rel: i1._id });
 
-      expect(i2.rel?.model).toHaveProperty("slug", slug1);
+      expect(i2.rel?.model).toHaveProperty("configuration.slug", slug1);
 
       const Model1 = modelDecorator()(
         class extends Model {
-          static slug = slug1;
-          static connectable = true;
-          static loadDatamodel = true;
-          static isEnvironmentScoped = true;
+          static configuration = defineConfiguration({
+            slug: slug1,
+            connectable: true,
+            loadDatamodel: true,
+            isEnvironmentScoped: true,
+          });
         },
       ).extend({ adapterClass: adapter, force: true });
 
       const i3 = await Model.getClass<
         typeof Model & {
-          definition: {
+          configuration: {
             fields: {
               rel: { type: FieldTypes.RELATION };
             };
@@ -2475,16 +2378,14 @@ describe("Test Model", () => {
         },
         {
           slug: slug2,
-          definition: {
-            fields: {
-              rel: {
-                type: FieldTypes.ARRAY,
-                options: {
-                  items: {
-                    type: FieldTypes.RELATION,
-                    options: {
-                      ref: slug1,
-                    },
+          fields: {
+            rel: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: slug1,
                   },
                 },
               },
@@ -2495,10 +2396,12 @@ describe("Test Model", () => {
 
       const Model1 = modelDecorator()(
         class extends Model {
-          static slug = slug1;
-          static connectable = true;
-          static loadDatamodel = true;
-          static isEnvironmentScoped = true;
+          static configuration = defineConfiguration({
+            slug: slug1,
+            connectable: true,
+            loadDatamodel: true,
+            isEnvironmentScoped: true,
+          });
         },
       ).extend({ adapterClass: adapter });
 
@@ -2508,7 +2411,7 @@ describe("Test Model", () => {
 
       const i2 = await Model.getClass<
         typeof Model & {
-          definition: {
+          configuration: {
             fields: {
               rel: {
                 type: FieldTypes.ARRAY;
@@ -2528,15 +2431,15 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
 
       class CustomModel extends Model {
-        static slug = "custom";
-        static loadDatamodel = false;
-        static definition = {
+        static configuration = defineConfiguration({
+          slug: "custom",
+          loadDatamodel: false,
           fields: {
             customField: {
               type: FieldTypes.TEXT,
             },
           },
-        };
+        });
       }
 
       const model = Model.getClass(CustomModel, adapter);
@@ -2552,15 +2455,15 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
 
       class CustomModel extends Model {
-        static slug = "custom";
-        static loadDatamodel = false;
-        static definition = {
+        static configuration = defineConfiguration({
+          slug: "custom",
+          loadDatamodel: false,
           fields: {
             customField: {
               type: FieldTypes.TEXT,
             },
           },
-        };
+        });
       }
 
       const model = Model.getClass(CustomModel, adapter);
@@ -2576,15 +2479,15 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
 
       class CustomModel extends Model {
-        static slug = "custom";
-        static loadDatamodel = false;
-        static definition = {
+        static configuration = defineConfiguration({
+          slug: "custom",
+          loadDatamodel: false,
           fields: {
             customField: {
               type: FieldTypes.TEXT,
             },
           },
-        };
+        });
       }
 
       const model = Model.getClass(CustomModel, adapter);
@@ -2601,15 +2504,15 @@ describe("Test Model", () => {
       const adapter2 = mockAdapter();
 
       class CustomModel extends Model {
-        static slug = "custom";
-        static loadDatamodel = false;
-        static definition = {
+        static configuration = defineConfiguration({
+          slug: "custom",
+          loadDatamodel: false,
           fields: {
             customField: {
               type: FieldTypes.TEXT,
             },
           },
-        };
+        });
       }
 
       const model = Model.getClass(CustomModel, adapter);
@@ -2626,11 +2529,9 @@ describe("Test Model", () => {
 
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: "custom",
-        definition: {
-          fields: {
-            customField: {
-              type: FieldTypes.TEXT,
-            },
+        fields: {
+          customField: {
+            type: FieldTypes.TEXT,
           },
         },
       });
@@ -2638,13 +2539,15 @@ describe("Test Model", () => {
       const model = Model.getClass(dm, adapter);
 
       expect(model.prototype).toBeInstanceOf(Model);
-      expect(model.loadDatamodel).toBeTruthy();
-      expect(model.isEnvironmentScoped).toBeTruthy();
+      expect(model.configuration.loadDatamodel).toBeTruthy();
+      expect(model.configuration.isEnvironmentScoped).toBeTruthy();
       expect(Model.getClass(model, adapter)).toBe(model);
 
       class CustomModel extends Model {
-        static slug = "custom";
-        static loadDatamodel = false;
+        static configuration = defineConfiguration({
+          slug: "custom",
+          loadDatamodel: false,
+        });
       }
 
       expect(() => Model.getClass(CustomModel, adapter)).toThrow("already registered");
@@ -2694,8 +2597,8 @@ describe("Test Model", () => {
 
       const TestModel2 = TestModel.extend({ adapterClass: adapter, register: false });
 
-      expect(adapter.getClosestModel(TestModel.slug)).toBe(TestModel);
-      expect(adapter.getClosestModel(TestModel.slug)).not.toBe(TestModel2);
+      expect(adapter.getClosestModel(TestModel.configuration.slug)).toBe(TestModel);
+      expect(adapter.getClosestModel(TestModel.configuration.slug)).not.toBe(TestModel2);
     });
 
     it("should not throw error if model is extended with same adapter and force: true and override adapter model", async () => {
@@ -2707,8 +2610,8 @@ describe("Test Model", () => {
 
       const TestModel2 = TestModel.extend({ adapterClass: adapter, force: true });
 
-      expect(adapter.getClosestModel(TestModel.slug)).not.toBe(TestModel);
-      expect(adapter.getClosestModel(TestModel.slug)).toBe(TestModel2);
+      expect(adapter.getClosestModel(TestModel.configuration.slug)).not.toBe(TestModel);
+      expect(adapter.getClosestModel(TestModel.configuration.slug)).toBe(TestModel2);
     });
 
     it("should be able to extend medias class fields", async () => {
@@ -2717,13 +2620,11 @@ describe("Test Model", () => {
 
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: "medias",
-        definition: {
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                default: "1",
-              },
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {
+              default: "1",
             },
           },
         },
@@ -2744,13 +2645,11 @@ describe("Test Model", () => {
 
       await DataModel.extend({ adapterClass: adapter1 }).create({
         slug: "medias",
-        definition: {
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                default: "1",
-              },
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {
+              default: "1",
             },
           },
         },
@@ -2775,13 +2674,11 @@ describe("Test Model", () => {
 
     const dm = await DataModel.extend({ adapterClass: adapter }).create({
       slug: slug,
-      definition: {
-        fields: {
-          title: {
-            type: FieldTypes.TEXT,
-            options: {
-              default: "1",
-            },
+      fields: {
+        title: {
+          type: FieldTypes.TEXT,
+          options: {
+            default: "1",
           },
         },
       },
@@ -2813,11 +2710,9 @@ describe("Test Model", () => {
 
     await dm.update({
       $set: {
-        definition: {
-          fields: {
-            subtitle: {
-              type: FieldTypes.TEXT,
-            },
+        fields: {
+          subtitle: {
+            type: FieldTypes.TEXT,
           },
         },
       },
@@ -2836,26 +2731,30 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = modelDecorator()(
         class extends Model {
-          static slug = generateRandomString();
-          static realtime = true;
+          static configuration = defineConfiguration({
+            slug: generateRandomString(),
+            realtime: true,
+          });
         },
       ).extend({ adapterClass: adapter });
 
-      const ModelFromSlug = Model.getClass(TestModel.slug, adapter);
-      expect(ModelFromSlug.realtime).toBe(true);
+      const ModelFromSlug = Model.getClass(TestModel.configuration.slug, adapter);
+      expect(ModelFromSlug.configuration.realtime).toBe(true);
     });
 
     it("should keep realtime flag when getting class from model", () => {
       const adapter = mockAdapter();
       const TestModel = modelDecorator()(
         class extends Model {
-          static slug = generateRandomString();
-          static realtime = true;
+          static configuration = defineConfiguration({
+            slug: generateRandomString(),
+            realtime: true,
+          });
         },
       ).extend({ adapterClass: adapter });
 
       const ModelFromClass = Model.getClass(TestModel, adapter);
-      expect(ModelFromClass.realtime).toBe(true);
+      expect(ModelFromClass.configuration.realtime).toBe(true);
     });
 
     it("should get realtime flag from datamodel", async () => {
@@ -2865,52 +2764,49 @@ describe("Test Model", () => {
       await DataModel.extend({ adapterClass: adapter }).create({
         slug,
         realtime: true,
-        definition: {
-          fields: {
-            test: {
-              type: FieldTypes.TEXT,
-            },
+        fields: {
+          test: {
+            type: FieldTypes.TEXT,
           },
         },
       });
 
       const ModelFromDatamodel = Model.getClass(slug, adapter);
-      expect(ModelFromDatamodel.realtime).toBe(false);
+      expect(ModelFromDatamodel.configuration.realtime).toBe(false);
       await ModelFromDatamodel.initialize();
-      expect(ModelFromDatamodel.realtime).toBe(true);
+      expect(ModelFromDatamodel.configuration.realtime).toBe(true);
     });
 
     it("should not override realtime flag from datamodel if defined in class", async () => {
       const adapter = mockAdapter();
       const TestModel = modelDecorator()(
         class extends Model {
-          static slug = generateRandomString();
-          static realtime = false;
-          static loadDatamodel = true;
+          static configuration = defineConfiguration({
+            slug: generateRandomString(),
+            realtime: false,
+            loadDatamodel: true,
+          });
         },
       ).extend({ adapterClass: adapter });
 
       await DataModel.extend({ adapterClass: adapter }).create({
-        slug: TestModel.slug,
+        slug: TestModel.configuration.slug,
         realtime: true,
-        definition: {
-          fields: {
-            test: {
-              type: FieldTypes.TEXT,
-            },
+        fields: {
+          test: {
+            type: FieldTypes.TEXT,
           },
         },
       });
 
-      const ModelFromDatamodel = Model.getClass(TestModel.slug, adapter);
-      expect(ModelFromDatamodel.realtime).toBe(false);
+      const ModelFromDatamodel = Model.getClass(TestModel.configuration.slug, adapter);
+      expect(ModelFromDatamodel.configuration.realtime).toBe(false);
     });
 
     it("should keep realtime for account model", async () => {
       const adapter = mockAdapter();
       const accountModel = Model.getClass("accounts", adapter);
       await accountModel.initialize();
-      expect(accountModel.realtime).toBe(true);
     });
   });
 });

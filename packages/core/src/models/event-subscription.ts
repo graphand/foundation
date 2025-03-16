@@ -1,8 +1,7 @@
 import { FieldTypes } from "@/enums/field-types.js";
 import { SubscriptionChannels } from "@/enums/subscription-channels.js";
-import { Model } from "@/lib/model.js";
+import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { ModelDefinition } from "@/types/index.js";
 import { Account } from "./account.js";
 import { Role } from "./role.js";
 import { ValidatorTypes } from "../enums/validator-types.js";
@@ -11,9 +10,9 @@ import { Patterns } from "../enums/patterns.js";
 @modelDecorator()
 export class EventSubscription extends Model {
   static __name = "EventSubscription";
-  static slug = "eventSubscriptions" as const;
-  static loadDatamodel = false as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "eventSubscriptions",
+    loadDatamodel: false,
     keyField: "slug",
     fields: {
       slug: { type: FieldTypes.TEXT },
@@ -37,9 +36,9 @@ export class EventSubscription extends Model {
                     strict: true,
                     fields: {
                       email: { type: FieldTypes.TEXT },
-                      account: { type: FieldTypes.RELATION, options: { ref: Account.slug } },
+                      account: { type: FieldTypes.RELATION, options: { ref: Account.configuration.slug } },
                       accountField: { type: FieldTypes.TEXT },
-                      role: { type: FieldTypes.RELATION, options: { ref: Role.slug } },
+                      role: { type: FieldTypes.RELATION, options: { ref: Role.configuration.slug } },
                       slackWebhookUrl: { type: FieldTypes.TEXT },
                     },
                     conditionalFields: {
@@ -72,5 +71,5 @@ export class EventSubscription extends Model {
       },
     },
     validators: [{ type: ValidatorTypes.BOUNDARIES, options: { field: "channels", min: 1 } }],
-  } as const satisfies ModelDefinition;
+  });
 }

@@ -5,7 +5,7 @@ import { faker } from "@faker-js/faker";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Model } from "@/lib/model.js";
 import { Validator } from "@/lib/validator.js";
-import { ValidatorOptions, FieldDefinition, ModelDefinition } from "@/types/index.js";
+import { ValidatorOptions, ModelJSON } from "@/types/index.js";
 import { DataModel } from "@/models/data-model.js";
 
 describe("test validators", () => {
@@ -14,6 +14,7 @@ describe("test validators", () => {
 
   describe("required validator", () => {
     const model = mockModel({
+      slug: faker.random.alphaNumeric(10),
       fields: {
         title: {
           type: FieldTypes.TEXT,
@@ -267,6 +268,7 @@ describe("test validators", () => {
 
       it("should validate within array", async () => {
         const _model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -306,6 +308,7 @@ describe("test validators", () => {
   describe("regex validator", () => {
     const _mockModelWithRegexValidator = async (options: Partial<ValidatorOptions<ValidatorTypes.REGEX>> = {}) => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -397,6 +400,7 @@ describe("test validators", () => {
 
     it("should validate within array", async () => {
       const _model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arr: {
             type: FieldTypes.ARRAY,
@@ -437,6 +441,7 @@ describe("test validators", () => {
 
   describe("keyField validator", () => {
     const model = mockModel({
+      slug: faker.random.alphaNumeric(10),
       fields: {
         title: {
           type: FieldTypes.TEXT,
@@ -480,11 +485,9 @@ describe("test validators", () => {
     it("datamodel without keyField should not throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        definition: {
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-            },
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
           },
         },
       });
@@ -495,12 +498,10 @@ describe("test validators", () => {
     it("datamodel with keyField and valid keyField field should not throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        definition: {
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-            },
+        keyField: "title",
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
           },
         },
       });
@@ -511,9 +512,7 @@ describe("test validators", () => {
     it("datamodel with keyField and not existing field should throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        definition: {
-          keyField: "title",
-        },
+        keyField: "title",
       });
 
       await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
@@ -522,12 +521,10 @@ describe("test validators", () => {
     it("datamodel with keyField and invalid keyField field should throw error", async () => {
       const datamodel1 = DataModel_.create({
         slug: generateRandomString(),
-        definition: {
-          keyField: "test",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-            },
+        keyField: "test",
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
           },
         },
       });
@@ -536,14 +533,12 @@ describe("test validators", () => {
 
       const datamodel2 = DataModel_.create({
         slug: generateRandomString(),
-        definition: {
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                default: "default",
-              },
+        keyField: "title",
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {
+              default: "default",
             },
           },
         },
@@ -553,12 +548,10 @@ describe("test validators", () => {
 
       const datamodel3 = DataModel_.create({
         slug: generateRandomString(),
-        definition: {
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.NUMBER,
-            },
+        keyField: "title",
+        fields: {
+          title: {
+            type: FieldTypes.NUMBER,
           },
         },
       });
@@ -571,11 +564,9 @@ describe("test validators", () => {
     it("datamodel with invalid field name should throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        definition: {
-          fields: {
-            "invalid name": {
-              type: FieldTypes.TEXT,
-            },
+        fields: {
+          "invalid name": {
+            type: FieldTypes.TEXT,
           },
         },
       });
@@ -586,12 +577,10 @@ describe("test validators", () => {
     it("datamodel with invalid field type should throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        definition: {
-          fields: {
-            title: {
-              // @ts-expect-error invalid type
-              type: "invalid type",
-            },
+        fields: {
+          title: {
+            // @ts-expect-error invalid type
+            type: "invalid type",
           },
         },
       });
@@ -602,13 +591,10 @@ describe("test validators", () => {
     it("datamodel with invalid field options should throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        definition: {
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              // @ts-expect-error invalid options
-              options: "invalid options",
-            },
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: "invalid options",
           },
         },
       });
@@ -620,11 +606,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields: {
-              validname: {
-                type: FieldTypes.TEXT,
-              },
+          fields: {
+            validname: {
+              type: FieldTypes.TEXT,
             },
           },
         }),
@@ -633,11 +617,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields: {
-              "valid:name": {
-                type: FieldTypes.TEXT,
-              },
+          fields: {
+            "valid:name": {
+              type: FieldTypes.TEXT,
             },
           },
         }),
@@ -646,11 +628,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields: {
-              "valid-name": {
-                type: FieldTypes.TEXT,
-              },
+          fields: {
+            "valid-name": {
+              type: FieldTypes.TEXT,
             },
           },
         }),
@@ -659,11 +639,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields: {
-              valid_name: {
-                type: FieldTypes.TEXT,
-              },
+          fields: {
+            valid_name: {
+              type: FieldTypes.TEXT,
             },
           },
         }),
@@ -674,11 +652,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields: {
-              "invalid name": {
-                type: FieldTypes.TEXT,
-              },
+          fields: {
+            "invalid name": {
+              type: FieldTypes.TEXT,
             },
           },
         }),
@@ -687,11 +663,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields: {
-              "invalid.name": {
-                type: FieldTypes.TEXT,
-              },
+          fields: {
+            "invalid.name": {
+              type: FieldTypes.TEXT,
             },
           },
         }),
@@ -700,11 +674,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields: {
-              "invalid!name": {
-                type: FieldTypes.TEXT,
-              },
+          fields: {
+            "invalid!name": {
+              type: FieldTypes.TEXT,
             },
           },
         }),
@@ -713,11 +685,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields: {
-              _invalidName: {
-                type: FieldTypes.TEXT,
-              },
+          fields: {
+            _invalidName: {
+              type: FieldTypes.TEXT,
             },
           },
         }),
@@ -725,12 +695,10 @@ describe("test validators", () => {
     });
 
     it("datamodel with field name as reserved keyword should throw error", async () => {
-      const _create = async (fields: ModelDefinition["fields"]) => {
+      const _create = async (fields: ModelJSON<typeof DataModel>["fields"]) => {
         return DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields,
-          },
+          fields,
         });
       };
 
@@ -772,11 +740,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields: {
-              [fieldName]: {
-                type: FieldTypes.TEXT,
-              },
+          fields: {
+            [fieldName]: {
+              type: FieldTypes.TEXT,
             },
           },
         }),
@@ -785,7 +751,7 @@ describe("test validators", () => {
 
     it("datamodel with more than 100 fields should throw error", async () => {
       const _createModelWithFields = async (fieldsCount: number) => {
-        const fields: Record<string, FieldDefinition> = {};
+        const fields: ModelJSON<typeof DataModel>["fields"] = {};
         for (let i = 0; i < fieldsCount; i++) {
           fields[`field${i}`] = {
             type: FieldTypes.TEXT,
@@ -794,9 +760,7 @@ describe("test validators", () => {
 
         return DataModel_.create({
           slug: generateRandomString(),
-          definition: {
-            fields,
-          },
+          fields,
         });
       };
 
@@ -809,6 +773,7 @@ describe("test validators", () => {
   describe("length validator", () => {
     const _mockModelWithRegexValidator = async (options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {}) => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -844,6 +809,7 @@ describe("test validators", () => {
 
     it("should validate in nested array", async () => {
       const _model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arr: {
             type: FieldTypes.ARRAY,
@@ -1011,6 +977,7 @@ describe("test validators", () => {
     describe("on array", () => {
       const _mockModelWithArrayField = async (options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {}) => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -1079,6 +1046,7 @@ describe("test validators", () => {
 
       it("should validate in nested array", async () => {
         const _model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -1183,6 +1151,7 @@ describe("test validators", () => {
   describe("boundaries validator", () => {
     const _mockModelWithRegexValidator = async (options: Partial<ValidatorOptions<ValidatorTypes.BOUNDARIES>> = {}) => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -1289,6 +1258,7 @@ describe("test validators", () => {
 
   describe("unique validator", () => {
     const model = mockModel({
+      slug: faker.random.alphaNumeric(10),
       fields: {
         title: {
           type: FieldTypes.TEXT,
@@ -1434,6 +1404,7 @@ describe("test validators", () => {
   describe("length and required validators", () => {
     describe("on text field", () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -1482,6 +1453,7 @@ describe("test validators", () => {
 
     describe("on array field", () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arr: {
             type: FieldTypes.ARRAY,

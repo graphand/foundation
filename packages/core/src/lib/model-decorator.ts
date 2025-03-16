@@ -7,8 +7,7 @@ import type { ModelData } from "@/index.js";
  * @returns a decorator that extends the model class with the defineFieldsProperties function
  */
 export const modelDecorator = (_?: any) => {
-  return <T extends typeof Model>(model: T, _opts?: any) => {
-    // @ts-expect-error
+  return <T extends typeof Model>(model: T & {}, _opts?: any) => {
     return class extends model {
       static __isDecorated = true;
 

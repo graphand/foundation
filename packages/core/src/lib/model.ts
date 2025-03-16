@@ -8,7 +8,6 @@ import {
   HookCallbackArgs,
   HookPhase,
   JSONQuery,
-  ModelDefinition,
   Module,
   ModelInstance,
   UpdateObject,
@@ -21,9 +20,11 @@ import {
   Transaction,
   FieldsDefinition,
   ModelJSON,
-  ModelObject,
   InferModel,
   ModelData,
+  ValidatorsDefinition,
+  ModelObject,
+  InferModelDefInput,
 } from "@/types/index.js";
 import { Adapter } from "@/lib/adapter.js";
 import { Validator } from "@/lib/validator.js";
@@ -40,32 +41,52 @@ import {
 } from "@/lib/utils.js";
 import { CoreError } from "@/lib/core-error.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
-import type { DataModel } from "@/models/data-model.js";
+import { DataModel } from "@/models/data-model.js";
 import { ModelList } from "./model-list.js";
 import { FieldTypes } from "@/enums/field-types.js";
+
+export type TModelConfiguration<TSlug extends string = string> = {
+  slug: TSlug;
+  loadDatamodel?: boolean;
+  connectable?: boolean;
+  exposed?: boolean;
+  realtime?: boolean;
+  blockMultipleOperations?: boolean;
+  freeMode?: boolean;
+  fields?: FieldsDefinition | null;
+  keyField?: string;
+  single?: boolean | null;
+  validators?: ValidatorsDefinition;
+  isEnvironmentScoped?: boolean;
+  isDynamic?: boolean;
+};
+
+export const defineConfiguration = <const C extends TModelConfiguration>(configuration: C) => configuration;
 
 const noFieldSymbol = Symbol("noField");
 
 export class Model {
-  static loadDatamodel: boolean; // Whether the model can be extended with a DataModel with its slug
-  static connectable: boolean = false; // Whether the model is able to be used as a connector source
-  static exposed: boolean = true; // Whether the model is exposed in the API or not
-  static realtime: boolean = false; // Whether the model is realtime enabled
-  static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
-  static slug: string; // The slug of the model used to identify it
-  static freeMode: boolean = false; // Whether the model is free
-  static definition: ModelDefinition; // The definition of the model (use satisfies ModelDefinition)
+  static configuration: TModelConfiguration = { slug: "" };
+
+  // static loadDatamodel: boolean; // Whether the model can be extended with a DataModel with its slug
+  // static connectable: boolean = false; // Whether the model is able to be used as a connector source
+  // static exposed: boolean = true; // Whether the model is exposed in the API or not
+  // static realtime: boolean = false; // Whether the model is realtime enabled
+  // static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
+  // static slug: string; // The slug of the model used to identify it
+  // static freeMode: boolean = false; // Whether the model is free
+  // static definition: ModelDefinition; // The definition of the model (use satisfies ModelDefinition)
+  // static isEnvironmentScoped: boolean = false; // Whether the model is environment scoped or whole project scoped
+  // static isDynamic = false; // True if the model is created dynamically from just a slug
+
   static adapterClass: typeof Adapter; // The adapter class to use with the model and inherited models
-  static isEnvironmentScoped: boolean = false; // Whether the model is environment scoped or whole project scoped
-  static cacheAdapter = true;
-  static isDynamic = false; // True if the model is created dynamically from just a slug
 
   static __name: string = "Model";
   static __hooks: Set<Hook<HookPhase, keyof AdapterFetcher, typeof Model>>;
   static __initOptions: Parameters<typeof getModelInitPromise>[1];
   static __initPromise: Promise<void>;
   static __adapter: Adapter;
-  static __extendedClass: typeof Model;
+  static __extendedClass: any;
   static __memo: {
     fieldsMap?: Map<string, Field>;
     validatorsArray?: Array<Validator | null>;
@@ -100,18 +121,12 @@ export class Model {
     return this.constructor as InferModel<T>;
   }
 
-  static isSingle() {
-    const definition = this.definition as ModelDefinition;
-    return Boolean(definition?.single);
+  static getKeyField(): string {
+    return this.configuration?.keyField ?? "_id";
   }
 
-  static getKeyField() {
-    const definition = this.definition as ModelDefinition;
-    return definition?.keyField ?? definition?.keyField ?? "_id";
-  }
-
-  static hydrate<T extends typeof Model>(this: T, data?: ModelData<T>): ModelInstance<T> {
-    return new this((data ?? {}) as ModelData) as ModelInstance<T>;
+  static hydrate<T extends typeof Model>(this: T, data?: Partial<ModelData<T>>): ModelInstance<T> {
+    return new this((data ?? {}) as ModelData<T>) as ModelInstance<T>;
   }
 
   /**
@@ -135,7 +150,7 @@ export class Model {
     const i = new this((data ?? {}) as ModelData) as ModelInstance<T>;
 
     // Serialize the model instance into the specified format
-    return i.serialize(format, ctx, clean) as InferModelDef<T, S>;
+    return i.serialize(format, ctx, clean);
   }
 
   /**
@@ -151,14 +166,14 @@ export class Model {
 
     if (!keyField) {
       throw new CoreError({
-        message: `Invalid keyField for model ${model.slug} : ${keyField}`,
+        message: `Invalid keyField for model ${model.configuration.slug} : ${keyField}`,
       });
     }
 
     return this.get(model.getKeyField(), format) as string;
   }
 
-  getId(format?: SerializerFormat): string {
+  getId<T extends ModelInstance>(this: T, format?: SerializerFormat): string {
     return this.get("_id", format) as string;
   }
 
@@ -222,7 +237,7 @@ export class Model {
     opts: {
       adapterClass?: typeof Adapter;
       initOptions?: Parameters<typeof getModelInitPromise>[1];
-      modules?: Array<Module>;
+      modules?: Array<Module<T>>;
       register?: boolean;
       force?: boolean;
     },
@@ -231,7 +246,7 @@ export class Model {
     const extendedClass = this.getBaseClass();
 
     // If the base class does not have a slug and the force option is not set, throw an error
-    if (!extendedClass?.slug && !opts.force) {
+    if (!extendedClass?.configuration?.slug && !opts.force) {
       throw new CoreError({
         message: "Cannot extend a model without slug",
       });
@@ -254,7 +269,7 @@ export class Model {
     }
 
     // If the register option is set or an adapter class is provided and the model has a slug, register the model
-    if (opts?.register ?? (opts?.adapterClass && model.slug)) {
+    if (opts?.register ?? (opts?.adapterClass && model.configuration.slug)) {
       opts?.adapterClass?.registerModel(model, opts?.force);
     }
 
@@ -278,7 +293,7 @@ export class Model {
     const baseClass = this.getBaseClass();
     if (!baseClass.hasOwnProperty("__isDecorated")) {
       throw new CoreError({
-        message: `Model ${this.slug} is not decorated with modelDecorator. Please use the @modelDecorator() decorator on your model class.`,
+        message: `Model ${this.configuration.slug} is not decorated with modelDecorator. Please use the @modelDecorator() decorator on your model class.`,
       });
     }
 
@@ -305,7 +320,7 @@ export class Model {
 
     if (!datamodel) {
       datamodel = await Model.getClass("datamodels", adapter.base)
-        .get(this.slug, ctx)
+        .get(this.configuration.slug, ctx)
         .then(dm => dm?.toJSON())
         .catch(() => undefined);
     }
@@ -404,14 +419,14 @@ export class Model {
 
     // If no adapter class is provided, get the base adapter of the current model
     adapterClass ??= this.getAdapter(false)?.base;
-    let slug: string | undefined;
+    let slug: string | null | undefined;
     let realtime: boolean = false;
     let model: typeof Model | undefined;
 
     // If the input is a model class, get its slug and assign it to the model
     if (typeof input === "function" && "prototype" in input && input.prototype instanceof Model) {
-      slug = input.slug;
-      realtime = input.realtime;
+      slug = input.configuration.slug;
+      realtime = Boolean(input.configuration.realtime);
       model = input;
     }
 
@@ -447,23 +462,31 @@ export class Model {
       model ??= adapterModel;
     }
 
+    if (!model && !slug) {
+      throw new CoreError({
+        message: `Invalid slug: ${slug}`,
+      });
+    }
+
     // If the model is not fount yet, we deduce it to be a generic model extended with a datamodel instance (extensible and environment scoped)
     model ??= class extends Model {
       static __isDecorated = true;
       static __name = `Data<${slug}>`;
-      static slug = slug as string;
-      static realtime = realtime as boolean;
-      static connectable = true;
-      static loadDatamodel = true; // A data class is extensible as it should be linked to a datamodel with the same slug
-      static isEnvironmentScoped = true;
-      static isDynamic = true;
+      static configuration = defineConfiguration({
+        slug: slug!,
+        realtime,
+        connectable: true,
+        loadDatamodel: true,
+        isEnvironmentScoped: true,
+        isDynamic: true,
+      });
 
       constructor(data: object) {
         super(data);
 
         defineFieldsProperties(this);
       }
-    } as ReturnType<typeof Model.getClass<M, T>>;
+    };
 
     // If an adapter class is provided, extend the model with it
     if (adapterClass) {
@@ -522,7 +545,7 @@ export class Model {
     const value = override ?? this.getData() ?? {};
 
     if (!fieldsPaths?.length) {
-      if (model.freeMode) {
+      if (model.configuration.freeMode) {
         // @ts-ignore
         return value[path] as any;
       }
@@ -551,7 +574,7 @@ export class Model {
     const newData = await this.model().execute("get", [_id], ctx);
     if (!newData) {
       throw new CoreError({
-        message: `Unable to refresh data on model ${this.model().slug}. New data is ${newData}`,
+        message: `Unable to refresh data on model ${this.model().configuration.slug}. New data is ${newData}`,
       });
     }
 
@@ -574,7 +597,7 @@ export class Model {
     bindCtx: SerializerCtx = {},
     clean = false,
     fieldsKeys?: Array<string>,
-  ) {
+  ): InferModelDef<InferModel<T>, S> {
     const keys = fieldsKeys ?? this.model().fieldsKeys;
     const res: JSONObject = {};
 
@@ -585,7 +608,7 @@ export class Model {
       }
     });
 
-    return res as T extends ModelInstance<infer M> ? InferModelDef<M, S> : JSONObject;
+    return res as InferModelDef<InferModel<T>, S>;
   }
 
   /**
@@ -622,7 +645,7 @@ export class Model {
       try {
         await this.initialize();
 
-        if (this.isSingle()) {
+        if (this.configuration.single) {
           return resolve(1);
         }
 
@@ -704,7 +727,7 @@ export class Model {
    */
   static async create<T extends typeof Model>(
     this: T,
-    payload: InferModelDef<T, "json">,
+    payload: InferModelDefInput<T, "json">,
     ctx?: TransactionCtx,
   ): Promise<ModelInstance<T>> {
     if (Array.isArray(payload)) {
@@ -716,7 +739,30 @@ export class Model {
 
     await this.initialize();
 
-    const i = await this.execute("createOne", [payload], ctx);
+    const adapter = this.getAdapter(false);
+    const dataFormat = adapter?.base.dataFormat;
+
+    let data: InferModelDefInput<T, "data">;
+
+    if (dataFormat !== "json") {
+      // Transform json payload into data format
+      const tmp = new this(payload) as ModelInstance<T>;
+
+      if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
+        await this.validate([tmp], ctx);
+      }
+
+      data = tmp.serialize(dataFormat, { defaults: false }, true) as InferModelDefInput<T, "data">;
+    } else {
+      data = payload;
+    }
+
+    const i = await this.execute("createOne", [data], ctx);
+
+    if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
+      await this.validate([i], ctx);
+    }
+
     return i as ModelInstance<T>;
   }
 
@@ -736,12 +782,36 @@ export class Model {
    */
   static async createMultiple<T extends typeof Model>(
     this: T,
-    payload: Array<InferModelDef<T, "json">>,
+    payload: Array<InferModelDefInput<T, "json">>,
     ctx?: TransactionCtx,
   ): Promise<Array<ModelInstance<T>>> {
     await this.initialize();
 
-    const list = await this.execute("createMultiple", [payload], ctx);
+    const array = Array.isArray(payload) ? payload : [payload];
+
+    const adapter = this.getAdapter(false);
+    const dataFormat = adapter?.base.dataFormat;
+
+    let data: InferModelDefInput<T, "data">[];
+
+    if (dataFormat !== "json") {
+      const tmp = array.map(p => new this(p) as ModelInstance<T>);
+
+      if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
+        await this.validate(tmp, ctx);
+      }
+
+      data = tmp.map(i => i.serialize(dataFormat, { defaults: false }, true) as InferModelDefInput<T, "data">);
+    } else {
+      data = array;
+    }
+
+    const list = await this.execute("createMultiple", [data], ctx);
+
+    if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
+      await this.validate(list, ctx);
+    }
+
     return list as Array<ModelInstance<T>>;
   }
 
@@ -758,12 +828,18 @@ export class Model {
   async update<T extends ModelInstance>(this: T, update: UpdateObject, ctx?: TransactionCtx): Promise<T> {
     await this.model().initialize();
 
+    const adapter = this.model().getAdapter(false);
+
     const res = await this.model().execute("updateOne", [String(this.get("_id")), update], ctx);
 
     if (!res?.getData?.()) {
       throw new CoreError({
-        message: `Unable to update instance on model ${this.model().slug}`,
+        message: `Unable to update instance on model ${this.model().configuration.slug}`,
       });
+    }
+
+    if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
+      await this.model().validate([res], ctx);
     }
 
     this.setData(res.getData());
@@ -797,7 +873,7 @@ export class Model {
     if (!i) {
       throw new CoreError({
         code: ErrorCodes.NOT_FOUND,
-        message: `Unable to updateOne on model ${this.slug}: instance not found`,
+        message: `Unable to updateOne on model ${this.configuration.slug}: instance not found`,
       });
     }
 
@@ -830,12 +906,29 @@ export class Model {
   ): Promise<Array<ModelInstance<T>>> {
     await this.initialize();
 
+    const adapter = this.getAdapter(false);
+
     if (typeof query === "string") {
       const updated = await this.execute("updateOne", [query, update], ctx);
-      return [updated] as Array<ModelInstance<T>>;
+
+      if (!updated) {
+        return [];
+      }
+
+      if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
+        await this.validate([updated], ctx);
+      }
+
+      return [updated];
     }
 
-    return (await this.execute("updateMultiple", [query, update], ctx)) as Array<ModelInstance<T>>;
+    const list = await this.execute("updateMultiple", [query, update], ctx);
+
+    if (list && adapter?.base.runWriteValidators && !ctx?.disableValidation) {
+      await this.validate(list, ctx);
+    }
+
+    return list;
   }
 
   /**
@@ -908,9 +1001,12 @@ export class Model {
       adapterClass?: Hook<P, A, T>["adapterClass"];
     },
   ) {
-    if (!this.allowMultipleOperations && ["createMultiple", "updateMultiple", "deleteMultiple"].includes(action)) {
-      console.warn(`Useless hook ${action} on a model with allowMultipleOperations disabled (${this.slug})`);
-    }
+    // if (
+    //   this.configuration.blockMultipleOperations &&
+    //   ["createMultiple", "updateMultiple", "deleteMultiple"].includes(action)
+    // ) {
+    //   console.warn(`Useless hook ${action} on a model with blockMultipleOperations (${this.configuration?.slug})`);
+    // }
 
     if (!this.hasOwnProperty("__hooks") || !this.__hooks) {
       this.__hooks = new Set();
@@ -941,7 +1037,7 @@ export class Model {
    */
   static async validate<T extends typeof Model>(
     this: T,
-    list: Array<ModelData<T> | ModelInstance<T>>,
+    list: Array<Partial<ModelData<T>> | ModelInstance<T>>,
     ctx?: TransactionCtx,
   ): Promise<boolean> {
     return await validateModel(this, list, ctx);
@@ -993,7 +1089,7 @@ export class Model {
     return adapter.base !== this.adapterClass;
   }
 
-  static async executeHooks<M extends typeof Model, P extends HookPhase, A extends keyof AdapterFetcher<M>>(
+  static async executeHooks<M extends typeof Model, P extends HookPhase, A extends keyof AdapterFetcher>(
     this: M,
     phase: P,
     action: A,
@@ -1042,38 +1138,37 @@ export class Model {
     }
   }
 
-  static async execute<
-    M extends typeof Model,
-    A extends keyof AdapterFetcher<M>,
-    Args extends Parameters<NonNullable<AdapterFetcher<M>[A]>>[0],
-  >(
+  static async execute<M extends typeof Model, const A extends keyof AdapterFetcher>(
     this: M,
     action: A,
-    args: Args,
+    args: Parameters<NonNullable<AdapterFetcher<M>[A]>>[0],
     ctx: TransactionCtx = {},
-    transaction?: Transaction<M, A, Args>,
+    transaction?: Transaction<M, A, Parameters<NonNullable<AdapterFetcher<M>[A]>>[0]>,
   ): Promise<ReturnType<NonNullable<AdapterFetcher<M>[A]>>> {
     if (!ctx?.forceOperation) {
       if (
-        this.isSingle() &&
+        this.configuration.single &&
         ["getList", "createOne", "createMultiple", "updateMultiple", "deleteOne", "deleteMultiple"].includes(action)
       ) {
         throw new CoreError({
           code: ErrorCodes.INVALID_OPERATION,
-          message: `Cannot run ${action} operation on a single model (${this.slug})`,
+          message: `Cannot run ${action} operation on a single model (${this.configuration.slug})`,
         });
       }
 
-      if (!this.allowMultipleOperations && ["createMultiple", "updateMultiple", "deleteMultiple"].includes(action)) {
+      if (
+        this.configuration.blockMultipleOperations &&
+        ["createMultiple", "updateMultiple", "deleteMultiple"].includes(action)
+      ) {
         throw new CoreError({
           code: ErrorCodes.INVALID_OPERATION,
-          message: `Cannot run ${action} operation a model with allowMultipleOperations disabled (${this.slug})`,
+          message: `Cannot run ${action} operation a model with blockMultipleOperations (${this.configuration.slug})`,
         });
       }
     }
 
     transaction ??= {
-      model: this.slug,
+      model: this.configuration.slug,
       action,
       args,
       retryToken: Symbol("retry"),
@@ -1086,7 +1181,7 @@ export class Model {
     if (transaction.retries > 2) {
       throw new CoreError({
         // code: ErrorCodes.TOO_MANY_RETRIES,
-        message: `Too many retries on model ${this.slug} for action ${action}`,
+        message: `Too many retries on model ${this.configuration.slug} for action ${action}`,
       });
     }
 
@@ -1097,7 +1192,7 @@ export class Model {
       err: undefined,
     };
 
-    let res: Awaited<ReturnType<NonNullable<AdapterFetcher<M>[A]>>> | undefined;
+    let res: Awaited<ReturnType<NonNullable<AdapterFetcher[A]>>> | undefined;
 
     await this.executeHooks("before", action, payloadBefore, transaction);
 
@@ -1115,7 +1210,7 @@ export class Model {
       if (!fn) {
         throw new CoreError({
           code: ErrorCodes.INVALID_OPERATION,
-          message: `Invalid operation ${action} on model ${this.slug}. Action not found in adapter fetcher`,
+          message: `Invalid operation ${action} on model ${this.configuration.slug}. Action not found in adapter fetcher`,
         });
       }
 
@@ -1128,7 +1223,7 @@ export class Model {
 
     const payloadAfter: HookCallbackArgs<"after", A, M> = {
       ...payloadBefore,
-      res: res as Awaited<ReturnType<NonNullable<AdapterFetcher<M>[A]>>>,
+      res: res as Awaited<ReturnType<NonNullable<AdapterFetcher[A]>>>,
     };
 
     await this.executeHooks("after", action, payloadAfter, transaction);
@@ -1141,10 +1236,10 @@ export class Model {
       throw payloadAfter.err.at(-1);
     }
 
-    return payloadAfter.res as ReturnType<NonNullable<AdapterFetcher<M>[A]>>;
+    return payloadAfter.res as ReturnType<NonNullable<AdapterFetcher[A]>>;
   }
 
-  [Symbol.toPrimitive](hint: string): any {
+  [Symbol.toPrimitive]<T extends ModelInstance>(this: T, hint: string): any {
     if (hint === "string") {
       return String(this.getId());
     }
@@ -1152,3 +1247,17 @@ export class Model {
     return this.toJSON();
   }
 }
+
+// const dm = DataModel.validate([
+//   {
+//     slug: "test",
+//     name: "DataModel",
+//     fields: {
+//       name: { type: "string" },
+//     },
+//   },
+// ]);
+
+// const json = dm.toJSON();
+
+// console.log(json.name);

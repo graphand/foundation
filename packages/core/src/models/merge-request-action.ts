@@ -1,18 +1,17 @@
-import { Model } from "@/lib/model.js";
+import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Job } from "@/models/job.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { MergeRequestActionTypes } from "@/enums/merge-request-action-types.js";
 import { MergeRequest } from "@/models/merge-request.js";
-import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class MergeRequestAction extends Model {
   static __name = "MergeRequestAction";
-  static allowMultipleOperations = false as const;
-  static slug = "mergeRequestActions" as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "mergeRequestActions",
+    blockMultipleOperations: true,
     fields: {
       type: {
         type: FieldTypes.ENUM,
@@ -40,16 +39,16 @@ export class MergeRequestAction extends Model {
       request: {
         type: FieldTypes.RELATION,
         options: {
-          ref: MergeRequest.slug,
+          ref: MergeRequest.configuration.slug,
         },
       },
       _job: {
         type: FieldTypes.RELATION,
         options: {
-          ref: Job.slug,
+          ref: Job.configuration.slug,
         },
       },
     },
     validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "request" } }],
-  } as const satisfies ModelDefinition;
+  });
 }

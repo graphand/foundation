@@ -6,7 +6,6 @@ export enum ValidatorTypes {
   REGEX = "regex",
   SAMPLE = "sample",
   KEY_FIELD = "keyField",
-  DATAMODEL_SLUG = "datamodelSlug",
-  DATAMODEL_DEFINITION = "datamodelDefinition",
+  DATAMODEL = "datamodel",
   EXISTS = "exists",
 }

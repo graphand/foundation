@@ -18,7 +18,7 @@ import type { Event } from "@/models/event.js";
 import type { Invitation } from "@/models/invitation.js";
 import type { Snapshot } from "@/models/snapshot.js";
 import type { EventSubscription } from "@/models/event-subscription.js";
-import { FieldsDefinition, InferModelDef, ValidatorsDefinition } from "@/index.js";
+import { InferModelDef } from "@/index.js";
 export * from "./helpers.js";
 export * from "./fields.js";
 export * from "./validators.js";
@@ -27,40 +27,29 @@ export * from "./ctx.js";
 export interface ModelsOverrides {}
 
 export interface ModelsBase {
-  [Account.slug]: typeof Account;
-  [Aggregation.slug]: typeof Aggregation;
-  [AuthProvider.slug]: typeof AuthProvider;
-  [Connector.slug]: typeof Connector;
-  [DataModel.slug]: typeof DataModel;
-  [Environment.slug]: typeof Environment;
-  [Event.slug]: typeof Event;
-  [EventSubscription.slug]: typeof EventSubscription;
-  [Function.slug]: typeof Function;
-  [Invitation.slug]: typeof Invitation;
-  [Job.slug]: typeof Job;
-  [Media.slug]: typeof Media;
-  [MergeRequest.slug]: typeof MergeRequest;
-  [MergeRequestAction.slug]: typeof MergeRequestAction;
-  [Role.slug]: typeof Role;
-  [Secret.slug]: typeof Secret;
-  [Settings.slug]: typeof Settings;
-  [Snapshot.slug]: typeof Snapshot;
-  [TokenIssuer.slug]: typeof TokenIssuer;
+  [Account.configuration.slug]: typeof Account;
+  [Aggregation.configuration.slug]: typeof Aggregation;
+  [AuthProvider.configuration.slug]: typeof AuthProvider;
+  [Connector.configuration.slug]: typeof Connector;
+  [DataModel.configuration.slug]: typeof DataModel;
+  [Environment.configuration.slug]: typeof Environment;
+  [Event.configuration.slug]: typeof Event;
+  [EventSubscription.configuration.slug]: typeof EventSubscription;
+  [Function.configuration.slug]: typeof Function;
+  [Invitation.configuration.slug]: typeof Invitation;
+  [Job.configuration.slug]: typeof Job;
+  [Media.configuration.slug]: typeof Media;
+  [MergeRequest.configuration.slug]: typeof MergeRequest;
+  [MergeRequestAction.configuration.slug]: typeof MergeRequestAction;
+  [Role.configuration.slug]: typeof Role;
+  [Secret.configuration.slug]: typeof Secret;
+  [Settings.configuration.slug]: typeof Settings;
+  [Snapshot.configuration.slug]: typeof Snapshot;
+  [TokenIssuer.configuration.slug]: typeof TokenIssuer;
 }
 
 export type Models = Omit<ModelsBase, keyof ModelsOverrides> & ModelsOverrides;
 
 export type DecodeRefModel<T extends string | keyof Models> = T extends keyof Models ? Models[T] : typeof Model;
 
-export type ModelInstance<M extends typeof Model = typeof Model> = (M["definition"] extends ModelDefinition
-  ? InstanceType<typeof Model>
-  : unknown) &
-  InstanceType<M> &
-  InferModelDef<M, "object">;
-
-export type ModelDefinition = Readonly<{
-  keyField?: Readonly<string>;
-  single?: Readonly<boolean>;
-  fields?: Readonly<FieldsDefinition>;
-  validators?: Readonly<ValidatorsDefinition>;
-}>;
+export type ModelInstance<M extends typeof Model = typeof Model> = InstanceType<M> & InferModelDef<M, "object">;

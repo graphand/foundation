@@ -1,5 +1,4 @@
-import { ModelDefinition } from "@/types/index.js";
-import { Model } from "@/lib/model.js";
+import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { FieldTypes } from "@/enums/field-types.js";
@@ -9,16 +8,16 @@ import { Patterns } from "@/enums/patterns.js";
 @modelDecorator()
 export class Invitation extends Model {
   static __name = "Invitation";
-  static isEnvironmentScoped = true as const;
-  static allowMultipleOperations = false as const;
-  static loadDatamodel = false as const;
-  static slug = "invitations" as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "invitations",
+    isEnvironmentScoped: true,
+    blockMultipleOperations: true,
+    loadDatamodel: false,
     fields: {
       firstname: { type: FieldTypes.TEXT },
       lastname: { type: FieldTypes.TEXT },
       email: { type: FieldTypes.TEXT },
-      account: { type: FieldTypes.RELATION, options: { ref: Account.slug } },
+      account: { type: FieldTypes.RELATION, options: { ref: Account.configuration.slug } },
     },
     validators: [
       { type: ValidatorTypes.REQUIRED, options: { field: "firstname" } },
@@ -27,5 +26,5 @@ export class Invitation extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "account" } },
       { type: ValidatorTypes.REGEX, options: { field: "email", pattern: Patterns.EMAIL } },
     ],
-  } as const satisfies ModelDefinition;
+  });
 }

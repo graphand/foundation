@@ -1,2 +1,1 @@
-import "./src/modules/register-models.js";
-import "./src/modules/validators.js";
+import "./src/register-models.js";

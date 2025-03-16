@@ -1,18 +1,18 @@
-import { Model } from "@/lib/model.js";
+import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Role } from "@/models/role.js";
-import { ModelDefinition } from "@/types/index.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { AuthProviders } from "@/enums/auth-providers.js";
 
 @modelDecorator()
 export class AuthProvider extends Model {
   static __name = "AuthProvider";
-  static slug = "authProviders" as const;
-  static isEnvironmentScoped = true as const;
-  static loadDatamodel = false as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "authProviders",
+    isEnvironmentScoped: true,
+    realtime: true,
+    loadDatamodel: false,
     keyField: "type",
     fields: {
       type: {
@@ -94,7 +94,7 @@ export class AuthProvider extends Model {
             role: {
               type: FieldTypes.RELATION,
               options: {
-                ref: Role.slug,
+                ref: Role.configuration.slug,
               },
             },
             authorizedFields: {
@@ -105,5 +105,5 @@ export class AuthProvider extends Model {
         },
       },
     },
-  } as const satisfies ModelDefinition;
+  });
 }

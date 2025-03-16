@@ -9,7 +9,7 @@ import type { AuthProviders } from "@/enums/auth-providers.js";
 import type { AuthMethods } from "@/enums/auth-methods.js";
 import type { MergeRequestTypes } from "@/enums/merge-request-types.js";
 import type { MergeRequestActionTypes } from "@/enums/merge-request-action-types.js";
-import type { FieldDefinition, InferModelDef, ModelJSON, SerializerFieldsMap } from "@/types/fields.js";
+import type { FieldDefinition, InferModelDef, InferModelDefInput, ModelJSON } from "@/types/fields.js";
 import type { ValidatorDefinition } from "@/types/validators.js";
 import type { TransactionCtx } from "./ctx.js";
 import type { Account } from "@/models/account.js";
@@ -27,7 +27,7 @@ export * from "./gdx.js";
 
 export type Rule = NonNullable<ModelInstance<typeof Role>["rules"]>[number];
 export type FieldsRestriction = NonNullable<ModelInstance<typeof Role>["fieldsRestrictions"]>[number];
-export type SerializerFormat = keyof SerializerFieldsMap<FieldDefinition> | "data";
+export type SerializerFormat = "json" | "object" | "validation" | "data";
 export type FieldsDefinition = Record<string, FieldDefinition>;
 export type ValidatorsDefinition = Array<ValidatorDefinition>;
 
@@ -49,7 +49,7 @@ export type Transaction<
   A extends keyof AdapterFetcher<M> = keyof AdapterFetcher<M>,
   Args extends Parameters<NonNullable<AdapterFetcher<M>[A]>>[0] = Parameters<NonNullable<AdapterFetcher<M>[A]>>[0],
 > = {
-  model: M["slug"];
+  model: M["configuration"]["slug"];
   action: A;
   args: Args;
   retryToken?: symbol;
@@ -133,9 +133,12 @@ export type UpdateObject = {
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   count: (_args: [query: string | JSONQuery], _ctx: TransactionCtx) => Promise<number | null>;
   get: (_args: [query: string | JSONQuery], _ctx: TransactionCtx) => Promise<ModelInstance<T> | null>;
-  getList: (_args: [query: JSONQuery], _ctx: TransactionCtx) => Promise<ModelList<T>>;
-  createOne: (_args: [payload: ModelJSON<T>], _ctx: TransactionCtx) => Promise<ModelInstance<T>>;
-  createMultiple: (_args: [payload: Array<ModelJSON<T>>], _ctx: TransactionCtx) => Promise<Array<ModelInstance<T>>>;
+  getList: (_args: [query: JSONQuery], _ctx: TransactionCtx) => Promise<any>;
+  createOne: (_args: [payload: InferModelDefInput<T, "data">], _ctx: TransactionCtx) => Promise<ModelInstance<T>>;
+  createMultiple: (
+    _args: [payload: Array<InferModelDefInput<T, "data">>],
+    _ctx: TransactionCtx,
+  ) => Promise<Array<ModelInstance<T>>>;
   updateOne: (
     _args: [query: string | JSONQuery, update: UpdateObject],
     _ctx: TransactionCtx,
@@ -279,7 +282,7 @@ export type ConfigureData<P extends AuthProviders = AuthProviders> = {
 
 export type ModelCrudEvent<T extends "create" | "update" | "delete" = any, M extends typeof Model = typeof Model> = {
   operation: T;
-  model: M["slug"];
+  model: M["configuration"]["slug"];
   ids: Array<string>;
   data: T extends "create" | "update" ? Array<ModelJSON<M>> : null;
 };

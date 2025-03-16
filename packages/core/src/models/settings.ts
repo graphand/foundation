@@ -1,15 +1,14 @@
-import { Model } from "@/lib/model.js";
+import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Settings extends Model {
   static __name = "Settings";
-  static allowMultipleOperations = false as const;
-  static slug = "settings" as const;
-  static loadDatamodel = false as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "settings",
+    blockMultipleOperations: true,
+    loadDatamodel: false,
     keyField: "key",
     fields: {
       key: { type: FieldTypes.TEXT },
@@ -18,5 +17,5 @@ export class Settings extends Model {
         options: { default: {}, fields: {}, conditionalFields: { dependsOn: "$.key", mappings: {} } },
       },
     },
-  } as const satisfies ModelDefinition;
+  });
 }

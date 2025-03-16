@@ -13,8 +13,7 @@ export type ValidatorOptionsMap = {
   [ValidatorTypes.SAMPLE]: { field: Readonly<string> };
   [ValidatorTypes.KEY_FIELD]: { field: Readonly<string> };
   [ValidatorTypes.EXISTS]: { field: Readonly<string> };
-  [ValidatorTypes.DATAMODEL_SLUG]: never;
-  [ValidatorTypes.DATAMODEL_DEFINITION]: never;
+  [ValidatorTypes.DATAMODEL]: never;
 };
 
 export type ValidatorOptionsMapOmitField = {
@@ -34,7 +33,7 @@ export type ValidatorDefinitions = {
 }[ValidatorTypes];
 
 export type ValidatorDefinitionGeneric<T extends ValidatorTypes> = {
-  type: T | `${T}`;
+  type: T | `${T}` | string;
   options?: ValidatorOptionsMap[T];
 };
 

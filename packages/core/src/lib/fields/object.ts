@@ -190,6 +190,7 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
 
   serializerMap: Field<FieldTypes.OBJECT>["serializerMap"] = {
     json: this._sStatic,
+    data: this._sStatic,
     [Field.defaultSymbol]: this._sProxy,
   };
 }

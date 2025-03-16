@@ -1,20 +1,19 @@
-import { Model } from "@/lib/model.js";
+import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { FieldsRestriction, ModelInstance, Rule } from "@/types/index.js";
 import { RuleActions } from "@/enums/rule-actions.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Patterns } from "@/enums/patterns.js";
-import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Role extends Model {
   static __name = "Role";
-  static isEnvironmentScoped = true as const;
-  static realtime = true as const;
-  static loadDatamodel = false as const;
-  static slug = "roles" as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "roles",
+    isEnvironmentScoped: true,
+    realtime: true,
+    loadDatamodel: false,
     keyField: "slug",
     fields: {
       slug: { type: FieldTypes.TEXT },
@@ -28,7 +27,7 @@ export class Role extends Model {
           items: {
             type: FieldTypes.RELATION,
             options: {
-              ref: Role.slug,
+              ref: "roles",
             },
           },
         },
@@ -115,7 +114,7 @@ export class Role extends Model {
         options: { field: "slug", pattern: Patterns.SLUG },
       },
     ],
-  } as const satisfies ModelDefinition;
+  });
 
   async getRulesInherited(): Promise<Array<Rule>> {
     const i = this as ModelInstance<typeof Role>;

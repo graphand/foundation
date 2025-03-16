@@ -1,7 +1,6 @@
-import { Model } from "@/lib/model.js";
+import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { ModelDefinition } from "@/types/index.js";
 import { Job } from "./job.js";
 import { Role } from "./role.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
@@ -9,12 +8,11 @@ import { ValidatorTypes } from "@/enums/validator-types.js";
 @modelDecorator()
 export class Function extends Model {
   static __name = "Function";
-  static realtime = true as const;
-  static isEnvironmentScoped = true as const;
-  static allowMultipleOperations = false as const;
-  static loadDatamodel = false as const;
-  static slug = "functions" as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "functions",
+    isEnvironmentScoped: true,
+    realtime: true,
+    loadDatamodel: false,
     keyField: "name",
     fields: {
       name: { type: FieldTypes.TEXT },
@@ -35,7 +33,7 @@ export class Function extends Model {
       role: {
         type: FieldTypes.RELATION,
         options: {
-          ref: Role.slug,
+          ref: Role.configuration.slug,
         },
       },
       runtime: {
@@ -47,7 +45,7 @@ export class Function extends Model {
       _job: {
         type: FieldTypes.RELATION,
         options: {
-          ref: Job.slug,
+          ref: Job.configuration.slug,
         },
       },
       _checksum: { type: FieldTypes.TEXT },
@@ -59,5 +57,5 @@ export class Function extends Model {
         options: { field: "name" },
       },
     ],
-  } as const satisfies ModelDefinition;
+  });
 }

@@ -7,6 +7,7 @@ import { FieldTypes } from "@/enums/field-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { mockAdapter, mockModel } from "./test-utils.dev.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
+import { faker } from "@faker-js/faker";
 
 describe("ValidationError", () => {
   const adapterClass = mockAdapter();
@@ -195,6 +196,7 @@ describe("ValidationError", () => {
 
   it("should work with simple model and enum field", async () => {
     const model = mockModel({
+      slug: faker.random.alphaNumeric(10),
       fields: {
         enum: {
           type: FieldTypes.ENUM,
@@ -206,6 +208,7 @@ describe("ValidationError", () => {
       validators: [{ type: ValidatorTypes.REGEX, options: { field: "enum", pattern: "^d$" } }],
     }).extend({ adapterClass });
 
+    // @ts-expect-error
     const error = await model.validate([{ enum: "e" }]).catch(e => e);
 
     expect(error).toBeInstanceOf(ValidationError);
@@ -227,6 +230,7 @@ describe("ValidationError", () => {
 
   it("should work with nested model and enum field", async () => {
     const model = mockModel({
+      slug: faker.random.alphaNumeric(10),
       fields: {
         obj: {
           type: FieldTypes.OBJECT,
@@ -245,6 +249,7 @@ describe("ValidationError", () => {
       validators: [{ type: ValidatorTypes.REGEX, options: { field: "obj.enum", pattern: "^d$" } }],
     }).extend({ adapterClass });
 
+    // @ts-expect-error
     const error = await model.validate([{ obj: { enum: "e" } }]).catch(e => e);
 
     expect(error).toBeInstanceOf(ValidationError);
@@ -266,6 +271,7 @@ describe("ValidationError", () => {
 
   it("should work with nested model and array of enum fields", async () => {
     const model = mockModel({
+      slug: faker.random.alphaNumeric(10),
       fields: {
         obj: {
           type: FieldTypes.OBJECT,
@@ -296,6 +302,7 @@ describe("ValidationError", () => {
       validators: [{ type: ValidatorTypes.REGEX, options: { field: "obj.array.[].enum", pattern: "^d$" } }],
     }).extend({ adapterClass });
 
+    // @ts-expect-error
     const error = await model.validate([{ obj: { array: [{ enum: "e" }] } }]).catch(e => e);
 
     expect(error).toBeInstanceOf(ValidationError);

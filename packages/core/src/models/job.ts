@@ -1,17 +1,16 @@
-import { Model } from "@/lib/model.js";
+import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { JobTypes } from "@/enums/job-types.js";
 import { JobStatus } from "@/enums/job-status.js";
-import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class Job extends Model {
   static __name = "Job";
-  static slug = "jobs" as const;
-  static realtime = true as const;
-  static loadDatamodel = false as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "jobs",
+    realtime: true,
+    loadDatamodel: false,
     fields: {
       _type: {
         type: FieldTypes.ENUM,
@@ -44,5 +43,5 @@ export class Job extends Model {
         type: FieldTypes.OBJECT,
       },
     },
-  } as const satisfies ModelDefinition;
+  });
 }

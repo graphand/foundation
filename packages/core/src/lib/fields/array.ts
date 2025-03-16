@@ -70,7 +70,7 @@ export class FieldArray extends Field<FieldTypes.ARRAY> {
 
       let res;
 
-      if (model.isSingle()) {
+      if (model.configuration.single) {
         res = arrVal.map((v, i) => {
           const itemsField = getFieldFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
 

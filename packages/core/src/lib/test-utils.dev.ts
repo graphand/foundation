@@ -1,7 +1,7 @@
 import { Adapter } from "@/lib/adapter.js";
-import { AdapterFetcher, ModelData, ModelDefinition, ModelInstance } from "@/types/index.js";
+import { AdapterFetcher, ModelData, ModelInstance } from "@/types/index.js";
 import { ModelList } from "@/lib/model-list.js";
-import { Model } from "@/lib/model.js";
+import { defineConfiguration, Model, TModelConfiguration } from "@/lib/model.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { defineFieldsProperties, isObjectId } from "@/lib/utils.js";
 import { Validator } from "@/lib/validator.js";
@@ -30,6 +30,7 @@ export const mockAdapter = ({
     static runWriteValidators = true;
     static fieldsMap = fieldsMap;
     static validatorsMap = validatorsMap;
+    static dataFormat = "json" as const;
 
     get thisCache(): Set<ModelInstance<T>> {
       if (privateCache) {
@@ -90,6 +91,7 @@ export const mockAdapter = ({
         return Promise.resolve(new ModelList(this.model, Array.from(this.thisCache)));
       },
       createOne: async ([payload]) => {
+        // @ts-ignore
         payload._id ??= String(new ObjectId());
         const i = this.model.hydrate(payload as ModelData<T>);
         this.thisCache.add(i as ModelInstance<T>);
@@ -97,6 +99,7 @@ export const mockAdapter = ({
       },
       createMultiple: ([payload]) => {
         const created = payload.map(p => {
+          // @ts-ignore
           p._id ??= String(new ObjectId());
           return this.model.hydrate(p as ModelData<T>);
         });
@@ -200,11 +203,11 @@ export const mockAdapter = ({
   return MockAdapter;
 };
 
-export const mockModel = <D extends ModelDefinition>(def?: D): typeof Model & { definition: D } => {
+export const mockModel = <const C extends TModelConfiguration>(conf?: C): typeof Model & { configuration: C } => {
+  conf ??= { slug: generateRandomString() } as C;
   return modelDecorator()(
     class extends Model {
-      static slug = "a" + generateRandomString();
-      static definition = def as any;
+      static configuration = defineConfiguration(conf as C);
 
       constructor(doc: ModelData<typeof Model>) {
         super(doc);

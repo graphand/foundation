@@ -19,6 +19,7 @@ describe("test fields", () => {
       const defaultText = faker.lorem.word();
 
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -36,6 +37,7 @@ describe("test fields", () => {
 
     it("should return string value by default", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -52,6 +54,7 @@ describe("test fields", () => {
 
     it("should return string from array by default", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -62,12 +65,14 @@ describe("test fields", () => {
 
       const titleArray = [faker.lorem.word(), faker.lorem.word()];
 
-      const i = model.hydrate({ title: titleArray } as object);
+      // @ts-expect-error test
+      const i = model.hydrate({ title: titleArray });
       expect(typeof i.title).toBe("string");
     });
 
     it("should not be able to save an _id in a TEXT field", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -87,6 +92,7 @@ describe("test fields", () => {
       const defaultJSON = { default: true };
 
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           obj: {
             type: FieldTypes.OBJECT,
@@ -104,6 +110,7 @@ describe("test fields", () => {
 
     it("should return object value by default", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           obj: {
             type: FieldTypes.OBJECT,
@@ -120,6 +127,7 @@ describe("test fields", () => {
 
     it("should return object from array by default", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           obj: {
             type: FieldTypes.OBJECT,
@@ -130,7 +138,8 @@ describe("test fields", () => {
 
       const obj = [{ title: faker.lorem.word() }, { title: faker.lorem.word() }];
 
-      const i = model.hydrate({ obj } as object);
+      // @ts-expect-error test
+      const i = model.hydrate({ obj });
       expect(i.obj).toBeInstanceOf(Object);
       expect(Array.isArray(i.obj)).toBeFalsy();
     });
@@ -140,11 +149,9 @@ describe("test fields", () => {
 
       const i = await model.create({
         slug: generateRandomString(),
-        definition: {
-          fields: {
-            test: {
-              type: FieldTypes.OBJECT,
-            },
+        fields: {
+          test: {
+            type: FieldTypes.OBJECT,
           },
         },
       });
@@ -153,6 +160,7 @@ describe("test fields", () => {
 
     it("should not bind default values with defaults=false", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           obj: {
             type: FieldTypes.OBJECT,
@@ -172,6 +180,7 @@ describe("test fields", () => {
 
     it("should not bind default values with defaults=false in nested fields", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           obj: {
             type: FieldTypes.OBJECT,
@@ -200,6 +209,7 @@ describe("test fields", () => {
 
     it("should merge default values in json by default", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           obj: {
             type: FieldTypes.OBJECT,
@@ -239,6 +249,7 @@ describe("test fields", () => {
 
     it("should not merge default values in json with defaults=false", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           obj: {
             type: FieldTypes.OBJECT,
@@ -278,6 +289,7 @@ describe("test fields", () => {
     describe("Validation", () => {
       it("should throw error if value is not an object", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -299,6 +311,7 @@ describe("test fields", () => {
 
       it("should validate well with defaultField", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -326,6 +339,7 @@ describe("test fields", () => {
     describe("Proxy", () => {
       it("should return an object proxy", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -374,6 +388,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -434,6 +449,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -510,6 +526,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -557,6 +574,7 @@ describe("test fields", () => {
     describe("options.strict", () => {
       it("should return only defined fields in options when strict", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -604,6 +622,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -642,6 +661,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -688,6 +708,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -742,6 +763,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -794,6 +816,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           validators: [],
           fields: {
             obj: {
@@ -834,6 +857,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -874,6 +898,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           validators: [],
           fields: {
             obj: {
@@ -921,6 +946,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           validators: [],
           fields: {
             obj: {
@@ -966,6 +992,7 @@ describe("test fields", () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             channel: {
               type: FieldTypes.ENUM,
@@ -1014,6 +1041,7 @@ describe("test fields", () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             channel: {
               type: FieldTypes.ENUM,
@@ -1103,6 +1131,7 @@ describe("test fields", () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             type: {
               type: FieldTypes.ENUM,
@@ -1233,6 +1262,7 @@ describe("test fields", () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             settings: {
               type: FieldTypes.OBJECT,
@@ -1287,6 +1317,7 @@ describe("test fields", () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             items: {
               type: FieldTypes.ARRAY,
@@ -1355,6 +1386,7 @@ describe("test fields", () => {
 
       it("should validate only the fields specified in the conditionalFields mapping", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             channel: {
               type: FieldTypes.ENUM,
@@ -1457,6 +1489,7 @@ describe("test fields", () => {
 
       it("should ignore validators for fields not included in the conditionalFields mapping", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             channel: {
               type: FieldTypes.ENUM,
@@ -1523,6 +1556,7 @@ describe("test fields", () => {
 
       it("should default to defaultMapping when value not in mappings", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             channel: {
               type: FieldTypes.ENUM,
@@ -1577,6 +1611,7 @@ describe("test fields", () => {
 
       it("should handle conditionalFields without defaultMapping", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             channel: {
               type: FieldTypes.ENUM,
@@ -1630,6 +1665,7 @@ describe("test fields", () => {
 
       it("should support using '$' to reference parent fields", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             settings: {
               type: FieldTypes.OBJECT,
@@ -1681,6 +1717,7 @@ describe("test fields", () => {
 
       it("should work with conditionalFields in nested arrays", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             settings: {
               type: FieldTypes.ARRAY,
@@ -1748,6 +1785,7 @@ describe("test fields", () => {
 
       it("should apply validators conditionally in nested arrays", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             settings: {
               type: FieldTypes.ARRAY,
@@ -1837,6 +1875,7 @@ describe("test fields", () => {
 
       it("should ignore validators for unused fields in nested arrays", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             settings: {
               type: FieldTypes.ARRAY,
@@ -1920,6 +1959,7 @@ describe("test fields", () => {
 
       it("should handle conditionalFields with nested dependsOn paths", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             settings: {
               type: FieldTypes.OBJECT,
@@ -1993,6 +2033,7 @@ describe("test fields", () => {
 
       it("should ignore validators in fields not included by conditionalFields", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             paymentMethod: {
               type: FieldTypes.ENUM,
@@ -2077,6 +2118,7 @@ describe("test fields", () => {
 
       it("should work with multiple levels of conditionalFields", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             level1Type: {
               type: FieldTypes.ENUM,
@@ -2140,6 +2182,7 @@ describe("test fields", () => {
 
       it("should handle missing mappings in conditionalFields", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             status: {
               type: FieldTypes.ENUM,
@@ -2181,6 +2224,7 @@ describe("test fields", () => {
 
       it("should not include any fields when conditionalFields has no default and value is unmapped", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             type: {
               type: FieldTypes.ENUM,
@@ -2237,6 +2281,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -2273,6 +2318,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -2309,6 +2355,7 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -2328,7 +2375,7 @@ describe("test fields", () => {
         await model.initialize();
 
         const fakerNumber = parseFloat(faker.random.numeric());
-        const i = model.hydrate({ obj: { title: "test", test: fakerNumber } } as object);
+        const i = model.hydrate({ obj: { title: "test", test: fakerNumber } });
 
         const obj = i.obj as any;
 
@@ -2352,10 +2399,12 @@ describe("test fields", () => {
         });
 
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
               options: {
+                strict: true,
                 defaultField: {
                   type: FieldTypes.TEXT,
                 },
@@ -2370,10 +2419,10 @@ describe("test fields", () => {
         }).extend({ adapterClass: _adapter });
         await model.initialize();
 
-        const fakeNumber = faker.random.numeric();
+        const fakeNumber = Math.random();
         const i = model.hydrate({
           obj: { title: "test", title2: "test2", test: fakeNumber },
-        } as object);
+        });
 
         expect(i.obj).toBeInstanceOf(Object);
         expect(testValidator).toBeCalledTimes(0);
@@ -2396,6 +2445,7 @@ describe("test fields", () => {
 
       it("should be consistent with nested text field", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -2418,6 +2468,7 @@ describe("test fields", () => {
 
       it("should be consistent with nested number field", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -2440,6 +2491,7 @@ describe("test fields", () => {
 
       it("should be consistent with nested boolean field", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -2462,6 +2514,7 @@ describe("test fields", () => {
 
       it("should be consistent with nested date field", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -2484,6 +2537,7 @@ describe("test fields", () => {
 
       it("should be consistent with nested identity field", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -2506,6 +2560,7 @@ describe("test fields", () => {
 
       it("should be consistent with nested relation field", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -2531,6 +2586,7 @@ describe("test fields", () => {
 
       it("should be consistent with nested array field", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.ARRAY,
@@ -2560,6 +2616,7 @@ describe("test fields", () => {
 
       it("should be consistent with nested array field in nested object", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             obj: {
               type: FieldTypes.OBJECT,
@@ -2598,6 +2655,7 @@ describe("test fields", () => {
 
       it("should be consistent with nested array field in nested array", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -2635,6 +2693,7 @@ describe("test fields", () => {
   describe("Identity field", () => {
     it("should throw error if is invalid", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           identity: {
             type: FieldTypes.IDENTITY,
@@ -2650,6 +2709,7 @@ describe("test fields", () => {
 
     it("should not throw error if is valid", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           identity: {
             type: FieldTypes.IDENTITY,
@@ -2665,6 +2725,7 @@ describe("test fields", () => {
   describe("Relation field", () => {
     it("should return valid PromiseModel instance", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           rel: {
             type: FieldTypes.RELATION,
@@ -2686,6 +2747,7 @@ describe("test fields", () => {
 
     it("should return null if value is null", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           rel: {
             type: FieldTypes.RELATION,
@@ -2705,6 +2767,7 @@ describe("test fields", () => {
 
     it("should return null if value is invalid", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           rel: {
             type: FieldTypes.RELATION,
@@ -2723,6 +2786,7 @@ describe("test fields", () => {
 
     it("should return string in JSON format", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           rel: {
             type: FieldTypes.RELATION,
@@ -2744,6 +2808,7 @@ describe("test fields", () => {
   describe("Array field", () => {
     it("should throw error if is relation with invalid value", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arr: {
             type: FieldTypes.ARRAY,
@@ -2769,6 +2834,7 @@ describe("test fields", () => {
 
     it("should not throw error if is relation with valid value", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arr: {
             type: FieldTypes.ARRAY,
@@ -2794,6 +2860,7 @@ describe("test fields", () => {
 
     it("should return PromiseModelList for relation array with format object", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arrRel: {
             type: FieldTypes.ARRAY,
@@ -2823,6 +2890,7 @@ describe("test fields", () => {
 
     it("should fallback to default field if field not found and strict is false", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           obj: {
             type: FieldTypes.OBJECT,
@@ -2853,6 +2921,7 @@ describe("test fields", () => {
 
     it("should return array of ids for relation array with format json", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arrRel: {
             type: FieldTypes.ARRAY,
@@ -2881,6 +2950,7 @@ describe("test fields", () => {
 
     it("should return array of objects for json field", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arrJson: {
             type: FieldTypes.ARRAY,
@@ -2904,6 +2974,7 @@ describe("test fields", () => {
 
     it("should return array from non-array with json field", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arrJson: {
             type: FieldTypes.ARRAY,
@@ -2918,8 +2989,9 @@ describe("test fields", () => {
       await model.initialize();
 
       const i = model.hydrate({
+        // @ts-expect-error test
         arrJson: { test: "test" },
-      } as object);
+      });
 
       expect(i.arrJson).toBeInstanceOf(Array);
       expect(i.arrJson).toEqual([{ test: "test" }]);
@@ -2927,6 +2999,7 @@ describe("test fields", () => {
 
     it("should return serialized item from index", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arrJson: {
             type: FieldTypes.ARRAY,
@@ -2949,8 +3022,9 @@ describe("test fields", () => {
       await model.initialize();
 
       const i = model.hydrate({
+        // @ts-expect-error test
         arrJson: [{ title: 1, test: "1" }, { title: 2, test: "2" }, "invalid", { title: 3, test: "3" }],
-      } as object);
+      });
 
       expect(i.get("arrJson.[0].title")).toEqual("1");
       expect(i.get("arrJson.[0].test")).toBe(undefined);
@@ -2967,6 +3041,7 @@ describe("test fields", () => {
 
     it("should return serialized item from index within array", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arrRel: {
             type: FieldTypes.ARRAY,
@@ -3013,6 +3088,7 @@ describe("test fields", () => {
 
     it("should be able to set a default value", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           arr: {
             type: FieldTypes.ARRAY,
@@ -3036,6 +3112,7 @@ describe("test fields", () => {
     describe("options.distinct", () => {
       it("should be able to use duplicates values by default", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3055,6 +3132,7 @@ describe("test fields", () => {
 
       it("should detect duplicates values", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3081,6 +3159,7 @@ describe("test fields", () => {
 
       it("should be able to use distinct values", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3107,6 +3186,7 @@ describe("test fields", () => {
 
       it("should be able to use distinct values with nested array", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3141,6 +3221,7 @@ describe("test fields", () => {
 
       it("should be able to use distinct values with nested array in nested array", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3179,6 +3260,7 @@ describe("test fields", () => {
 
       it("should detect duplicates values with nested array in nested array", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3217,6 +3299,7 @@ describe("test fields", () => {
 
       it("should detect duplicates values in relation array", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3246,6 +3329,7 @@ describe("test fields", () => {
 
       it("should detect duplicates values in nested array", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3280,6 +3364,7 @@ describe("test fields", () => {
 
       it("should detect duplicates values in nested json array", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3313,6 +3398,7 @@ describe("test fields", () => {
 
       it("should detect duplicates values with number values", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3339,6 +3425,7 @@ describe("test fields", () => {
 
       it("should detect duplicates values with boolean values", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3365,6 +3452,7 @@ describe("test fields", () => {
 
       it("should detect duplicates values with date values", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3383,11 +3471,14 @@ describe("test fields", () => {
         const date1 = new Date("2023-06-01");
         const date2 = new Date("2023-06-02");
 
-        await expect(model.validate([{ arr: [date1, date2, date1] }])).rejects.toThrow(ValidationError);
+        await expect(model.validate([{ arr: [date1.toJSON(), date2.toJSON(), date1.toJSON()] }])).rejects.toThrow(
+          ValidationError,
+        );
       });
 
       it("should detect duplicates values with mixed types", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3403,6 +3494,7 @@ describe("test fields", () => {
 
         await model.initialize();
 
+        // @ts-expect-error test
         await expect(model.validate([{ arr: ["test", 123, true, "test"] }])).rejects.toThrow(ValidationError);
       });
     });
@@ -3410,6 +3502,7 @@ describe("test fields", () => {
     describe("Validation", () => {
       it("should validate field values", async () => {
         const model = mockModel({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             arr: {
               type: FieldTypes.ARRAY,
@@ -3432,7 +3525,9 @@ describe("test fields", () => {
         await model.initialize();
 
         await expect(model.validate([{ arr: [{ title: "test" }, { title: "test" }] }])).resolves.toBeTruthy();
+        // @ts-expect-error test
         await expect(model.validate([{ arr: true }])).rejects.toThrow(ValidationError);
+        // @ts-expect-error test
         await expect(model.validate([{ arr: [true] }])).rejects.toThrow(ValidationError);
       });
     });
@@ -3443,6 +3538,7 @@ describe("test fields", () => {
       const defaultValue = parseInt(faker.random.numeric(), 10);
 
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           value: {
             type: FieldTypes.INTEGER,
@@ -3460,6 +3556,7 @@ describe("test fields", () => {
 
     it("should parse string value to integer", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           value: {
             type: FieldTypes.INTEGER,
@@ -3469,12 +3566,14 @@ describe("test fields", () => {
       await model.initialize();
 
       const value = "123";
+      // @ts-expect-error test
       const i = model.hydrate({ value });
       expect(i.value).toEqual(123);
     });
 
     it("should parse float value to integer", async () => {
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           value: {
             type: FieldTypes.INTEGER,
@@ -3495,6 +3594,7 @@ describe("test fields", () => {
       const defaultValue = enumValues[0];
 
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           status: {
             type: FieldTypes.ENUM,
@@ -3516,6 +3616,7 @@ describe("test fields", () => {
       const value = enumValues[1];
 
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           status: {
             type: FieldTypes.ENUM,
@@ -3535,6 +3636,7 @@ describe("test fields", () => {
       const enumValues = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           status: {
             type: FieldTypes.ENUM,
@@ -3554,6 +3656,7 @@ describe("test fields", () => {
       const enumValues = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           status: {
             type: FieldTypes.ENUM,
@@ -3573,6 +3676,7 @@ describe("test fields", () => {
       const enumValues = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           status: {
             type: FieldTypes.ENUM,
@@ -3593,6 +3697,7 @@ describe("test fields", () => {
       const value = enumValues[0];
 
       const model = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           status: {
             type: FieldTypes.ENUM,
@@ -3604,6 +3709,7 @@ describe("test fields", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
+      // @ts-expect-error test
       const i = model.hydrate({ status: [value] });
       expect(i.status).toEqual(value);
     });

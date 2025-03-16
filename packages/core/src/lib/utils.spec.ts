@@ -1,7 +1,6 @@
 import { crossModelTree, getFieldsPathsFromPath, getRelationModelsFromPath } from "@/lib/utils.js";
-import { Model } from "@/lib/model.js";
+import { Model, defineConfiguration } from "@/lib/model.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { ModelDefinition } from "@/types/index.js";
 import { mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
 import { faker } from "@faker-js/faker";
 import { modelDecorator } from "@/lib/model-decorator.js";
@@ -31,7 +30,8 @@ describe("test utils", () => {
   describe("getFieldsPathsFromPath", () => {
     it("should return single array entry for one field", () => {
       const model = class extends Model {
-        static definition: ModelDefinition = {
+        static configuration = defineConfiguration({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             field1: {
               type: FieldTypes.ARRAY,
@@ -42,11 +42,11 @@ describe("test utils", () => {
               },
             },
           },
-        };
+        });
       };
 
-      // @ts-expect-error test
-      model.definition.fields.field1.options.__label = "field1";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.__label = "field1";
 
       const fPath = getFieldsPathsFromPath(model, "field1");
 
@@ -58,7 +58,8 @@ describe("test utils", () => {
 
     it("should decode nested array fields", () => {
       const model = class extends Model {
-        static definition: ModelDefinition = {
+        static configuration = defineConfiguration({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             field1: {
               type: FieldTypes.ARRAY,
@@ -82,15 +83,15 @@ describe("test utils", () => {
               },
             },
           },
-        };
+        });
       };
 
-      // @ts-expect-error test
-      model.definition.fields.field1.options.__label = "field1";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.__label = "field1bis";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.items.options.__label = "field1bisbis";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.__label = "field1";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.items.options.__label = "field1bisbis";
 
       const fPath1 = getFieldsPathsFromPath(model, "field1.field2");
 
@@ -124,7 +125,8 @@ describe("test utils", () => {
 
     it("should decode array items field", () => {
       const model = class extends Model {
-        static definition: ModelDefinition = {
+        static configuration = defineConfiguration({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             field1: {
               type: FieldTypes.ARRAY,
@@ -136,13 +138,13 @@ describe("test utils", () => {
               },
             },
           },
-        };
+        });
       };
 
-      // @ts-expect-error test
-      model.definition.fields.field1.options.__label = "field1";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.__label = "field1";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.__label = "field1bis";
 
       const fPath = getFieldsPathsFromPath(model, "field1.[]");
 
@@ -156,7 +158,8 @@ describe("test utils", () => {
 
     it("should decode array items field with index", () => {
       const model = class extends Model {
-        static definition: ModelDefinition = {
+        static configuration = defineConfiguration({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             field1: {
               type: FieldTypes.ARRAY,
@@ -168,13 +171,13 @@ describe("test utils", () => {
               },
             },
           },
-        };
+        });
       };
 
-      // @ts-expect-error test
-      model.definition.fields.field1.options.__label = "field1";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.__label = "field1";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.__label = "field1bis";
 
       const fPath = getFieldsPathsFromPath(model, "field1.[0]");
 
@@ -188,7 +191,8 @@ describe("test utils", () => {
 
     it("should decode json fields field", () => {
       const model = class extends Model {
-        static definition: ModelDefinition = {
+        static configuration = defineConfiguration({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             field1: {
               type: FieldTypes.OBJECT,
@@ -202,13 +206,13 @@ describe("test utils", () => {
               },
             },
           },
-        };
+        });
       };
 
-      // @ts-expect-error test
-      model.definition.fields.field1.options.__label = "field1";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.fields.field2.options.__label = "field2";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.__label = "field1";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.fields.field2.options.__label = "field2";
 
       const fPath = getFieldsPathsFromPath(model, "field1.field2");
 
@@ -222,7 +226,8 @@ describe("test utils", () => {
 
     it("should decode json in array items field", () => {
       const model = class extends Model {
-        static definition: ModelDefinition = {
+        static configuration = defineConfiguration({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             field1: {
               type: FieldTypes.ARRAY,
@@ -241,15 +246,15 @@ describe("test utils", () => {
               },
             },
           },
-        };
+        });
       };
 
-      // @ts-expect-error test
-      model.definition.fields.field1.options.__label = "field1";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.__label = "field1bis";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.fields.field2.options.__label = "field2";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.__label = "field1";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.fields.field2.options.__label = "field2";
 
       const fPath = getFieldsPathsFromPath(model, "field1.field2");
 
@@ -276,7 +281,8 @@ describe("test utils", () => {
 
     it("should return null field for invalid path if strict", () => {
       const model = class extends Model {
-        static definition: ModelDefinition = {
+        static configuration = defineConfiguration({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             field1: {
               type: FieldTypes.ARRAY,
@@ -296,15 +302,15 @@ describe("test utils", () => {
               },
             },
           },
-        };
+        });
       };
 
-      // @ts-expect-error test
-      model.definition.fields.field1.options.__label = "field1";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.__label = "field1bis";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.fields.field2.options.__label = "field2";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.__label = "field1";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.fields.field2.options.__label = "field2";
 
       const fPath = getFieldsPathsFromPath(model, "field1.field2.field3");
 
@@ -334,7 +340,8 @@ describe("test utils", () => {
 
     it("should return nested field for invalid path if not strict (allow to get nested keys for non-strict nested fields)", () => {
       const model = class extends Model {
-        static definition: ModelDefinition = {
+        static configuration = defineConfiguration({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             field1: {
               type: FieldTypes.ARRAY,
@@ -353,15 +360,15 @@ describe("test utils", () => {
               },
             },
           },
-        };
+        });
       };
 
-      // @ts-expect-error test
-      model.definition.fields.field1.options.__label = "field1";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.__label = "field1bis";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.fields.field2.options.__label = "field2";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.__label = "field1";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.fields.field2.options.__label = "field2";
 
       const fPath = getFieldsPathsFromPath(model, "field1.[]?.field3.field4");
 
@@ -377,7 +384,8 @@ describe("test utils", () => {
 
     it("should decode complex schema fields", () => {
       const model = class extends Model {
-        static definition: ModelDefinition = {
+        static configuration = defineConfiguration({
+          slug: faker.random.alphaNumeric(10),
           fields: {
             field1: {
               type: FieldTypes.ARRAY,
@@ -412,21 +420,21 @@ describe("test utils", () => {
               },
             },
           },
-        };
+        });
       };
 
-      // @ts-expect-error test
-      model.definition.fields.field1.options.__label = "field1";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.__label = "field1bis";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.fields.field2.options.__label = "field2";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.fields.field3.options.__label = "field3";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.fields.field3.options.items.options.__label = "field3bis";
-      // @ts-expect-error test
-      model.definition.fields.field1.options.items.options.fields.field3.options.items.options.fields.field4.options.__label =
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.__label = "field1";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.fields.field2.options.__label = "field2";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.fields.field3.options.__label = "field3";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.fields.field3.options.items.options.__label = "field3bis";
+      // @ts-expect-error Add label for testing
+      model.configuration.fields.field1.options.items.options.fields.field3.options.items.options.fields.field4.options.__label =
         "field4";
 
       const fPath = getFieldsPathsFromPath(model, "field1");
@@ -530,6 +538,7 @@ describe("test utils", () => {
     it("should decode nested relation field", async () => {
       const adapter = mockAdapter();
       const model1 = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -538,11 +547,12 @@ describe("test utils", () => {
       }).extend({ adapterClass: adapter });
 
       const model2 = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           rel: {
             type: FieldTypes.RELATION,
             options: {
-              ref: model1.slug,
+              ref: model1.configuration.slug,
             },
           },
           arrRel: {
@@ -551,7 +561,7 @@ describe("test utils", () => {
               items: {
                 type: FieldTypes.RELATION,
                 options: {
-                  ref: model1.slug,
+                  ref: model1.configuration.slug,
                 },
               },
             },
@@ -560,6 +570,7 @@ describe("test utils", () => {
       }).extend({ adapterClass: adapter });
 
       const model3 = mockModel({
+        slug: faker.random.alphaNumeric(10),
         fields: {
           nested: {
             type: FieldTypes.OBJECT,
@@ -568,7 +579,7 @@ describe("test utils", () => {
                 rel: {
                   type: FieldTypes.RELATION,
                   options: {
-                    ref: model2.slug,
+                    ref: model2.configuration.slug,
                   },
                 },
                 multiRel: {
@@ -577,7 +588,7 @@ describe("test utils", () => {
                     items: {
                       type: FieldTypes.RELATION,
                       options: {
-                        ref: model2.slug,
+                        ref: model2.configuration.slug,
                       },
                     },
                   },
@@ -608,14 +619,18 @@ describe("test utils", () => {
     it("should return empty array if no relations found", async () => {
       const model = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
+            fields: {
+              field1: {
+                type: FieldTypes.RELATION,
+              },
+            },
+          });
         },
       ).extend({ adapterClass: adapter });
 
-      const models = await getRelationModelsFromPath(model, "field1");
-
-      expect(models).toBeInstanceOf(Array);
-      expect(models.length).toBe(0);
+      await expect(getRelationModelsFromPath(model, "field1")).rejects.toThrow();
     });
 
     it("should work with single relation field", async () => {
@@ -623,8 +638,8 @@ describe("test utils", () => {
 
       const model = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
-          static definition: ModelDefinition = {
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
             fields: {
               field1: {
                 type: FieldTypes.RELATION,
@@ -633,7 +648,7 @@ describe("test utils", () => {
                 },
               },
             },
-          };
+          });
         },
       ).extend({ adapterClass: adapter });
 
@@ -641,7 +656,7 @@ describe("test utils", () => {
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(1);
-      expect(models[0]?.slug).toBe(model1);
+      expect(models[0]?.configuration.slug).toBe(model1);
     });
 
     it("should work with chained relation fields", async () => {
@@ -649,8 +664,8 @@ describe("test utils", () => {
 
       const model1 = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
-          static definition: ModelDefinition = {
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
             fields: {
               field1: {
                 type: FieldTypes.RELATION,
@@ -659,23 +674,23 @@ describe("test utils", () => {
                 },
               },
             },
-          };
+          });
         },
       ).extend({ adapterClass: adapter });
 
       const model = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
-          static definition: ModelDefinition = {
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
             fields: {
               field1: {
                 type: FieldTypes.RELATION,
                 options: {
-                  ref: model1.slug,
+                  ref: model1.configuration.slug,
                 },
               },
             },
-          };
+          });
         },
       ).extend({ adapterClass: adapter });
 
@@ -683,21 +698,23 @@ describe("test utils", () => {
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(2);
-      expect(models[0]?.slug).toBe(model1.slug);
-      expect(models[1]?.slug).toBe(model2);
+      expect(models[0]?.configuration.slug).toBe(model1.configuration.slug);
+      expect(models[1]?.configuration.slug).toBe(model2);
     });
 
     it("should work with nested relation fields", async () => {
       const model1 = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
+          });
         },
       ).extend({ adapterClass: adapter });
 
       const model = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
-          static definition: ModelDefinition = {
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
             fields: {
               nested: {
                 type: FieldTypes.OBJECT,
@@ -706,14 +723,14 @@ describe("test utils", () => {
                     rel: {
                       type: FieldTypes.RELATION,
                       options: {
-                        ref: model1.slug,
+                        ref: model1.configuration.slug,
                       },
                     },
                   },
                 },
               },
             },
-          };
+          });
         },
       ).extend({ adapterClass: adapter });
 
@@ -721,7 +738,7 @@ describe("test utils", () => {
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(1);
-      expect(models[0]?.slug).toBe(model1.slug);
+      expect(models[0]?.configuration.slug).toBe(model1.configuration.slug);
     });
 
     it("should work with nested field in nested array and chained relation fields", async () => {
@@ -729,8 +746,8 @@ describe("test utils", () => {
 
       const model1 = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
-          static definition: ModelDefinition = {
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
             fields: {
               arr: {
                 type: FieldTypes.ARRAY,
@@ -751,14 +768,14 @@ describe("test utils", () => {
                 },
               },
             },
-          };
+          });
         },
       ).extend({ adapterClass: adapter });
 
       const model = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
-          static definition: ModelDefinition = {
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
             fields: {
               nested: {
                 type: FieldTypes.OBJECT,
@@ -774,7 +791,7 @@ describe("test utils", () => {
                               rel: {
                                 type: FieldTypes.RELATION,
                                 options: {
-                                  ref: model1.slug,
+                                  ref: model1.configuration.slug,
                                 },
                               },
                             },
@@ -786,28 +803,28 @@ describe("test utils", () => {
                 },
               },
             },
-          };
+          });
         },
       ).extend({ adapterClass: adapter });
 
       const models = await getRelationModelsFromPath(model, "nested.arr.[].rel.arr.[].rel");
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(2);
-      expect(models[0]?.slug).toBe(model1.slug);
-      expect(models[1]?.slug).toBe(model2);
+      expect(models[0]?.configuration.slug).toBe(model1.configuration.slug);
+      expect(models[1]?.configuration.slug).toBe(model2);
     });
 
     it("should return empty array if no relations found in nested field", async () => {
       const model = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
-          static definition: ModelDefinition = {
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
             fields: {
               nested: {
                 type: FieldTypes.OBJECT,
               },
             },
-          };
+          });
         },
       ).extend({ adapterClass: adapter });
 
@@ -820,30 +837,30 @@ describe("test utils", () => {
     it("should work with nested array in chained relation field", async () => {
       const model1 = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
-          static definition: ModelDefinition = {
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
             fields: {
               nested: {
                 type: FieldTypes.OBJECT,
               },
             },
-          };
+          });
         },
       ).extend({ adapterClass: adapter });
 
       const model = modelDecorator()(
         class extends Model {
-          static slug = faker.random.alphaNumeric(10);
-          static definition: ModelDefinition = {
+          static configuration = defineConfiguration({
+            slug: faker.random.alphaNumeric(10),
             fields: {
               rel: {
                 type: FieldTypes.RELATION,
                 options: {
-                  ref: model1.slug,
+                  ref: model1.configuration.slug,
                 },
               },
             },
-          };
+          });
         },
       ).extend({ adapterClass: adapter });
 
@@ -851,7 +868,7 @@ describe("test utils", () => {
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(1);
-      expect(models[0]?.slug).toBe(model1.slug);
+      expect(models[0]?.configuration.slug).toBe(model1.configuration.slug);
     });
   });
 });

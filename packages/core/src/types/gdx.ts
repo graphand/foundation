@@ -1,7 +1,8 @@
-import { DataModel, Model, ModelDefinition, ModelJSON, Models } from "@/index.js";
+import { DataModel, Model, ModelJSON, Models } from "@/index.js";
+import { TModelConfiguration } from "@/lib/model.js";
 
-export type GDXEntryModelInput<T extends ModelDefinition> =
-  | (ModelJSON<typeof Model & { definition: T }> &
+export type GDXEntryModelInput<T extends TModelConfiguration> =
+  | (ModelJSON<typeof Model & { configuration: T }> &
       Partial<{
         $dependency: boolean;
         $force: boolean;
@@ -9,12 +10,9 @@ export type GDXEntryModelInput<T extends ModelDefinition> =
   | "$delete"
   | "$ignore";
 
-export type GDXEntryModel<T extends ModelJSON<typeof DataModel> | { definition: ModelDefinition }> =
-  T["definition"] extends ModelDefinition
-    ? T["definition"]["single"] extends true
-      ? GDXEntryModelInput<T["definition"]>
-      : Record<string, GDXEntryModelInput<T["definition"]>>
-    : never;
+export type GDXEntryModel<T extends TModelConfiguration> = T["single"] extends true
+  ? GDXEntryModelInput<T>
+  : Record<string, GDXEntryModelInput<T>>;
 
 export type GDXDatamodels = {
   [K: string]: ModelJSON<typeof DataModel>;
@@ -24,9 +22,16 @@ export type GDXType<D extends GDXDatamodels = {}> = {
   datamodels: D;
 } & Omit<
   {
-    [K in keyof D]?: D[K] extends ModelJSON<typeof DataModel> ? GDXEntryModel<D[K]> : never;
+    [K in keyof D]?: D[K] extends ModelJSON<typeof DataModel>
+      ? GDXEntryModel<{
+          slug: D[K]["slug"];
+          single: D[K]["single"];
+        }>
+      : never;
   } & {
-    [K in keyof Models]?: GDXEntryModel<Models[K]>;
+    [K in keyof Models]?: Models[K] extends { configuration: TModelConfiguration }
+      ? GDXEntryModel<Models[K]["configuration"]>
+      : never;
   },
   "datamodels"
 >;
@@ -34,6 +39,6 @@ export type GDXType<D extends GDXDatamodels = {}> = {
 // Extract the datamodels type from a GDX object
 export type InferGDXDatamodels<T> = T extends GDXType<infer D> ? D : never;
 
-export const defineDatamodels = <D extends GDXDatamodels = {}>(datamodels: D) => datamodels;
+export const defineDatamodels = <const D extends GDXDatamodels = {}>(datamodels: D) => datamodels;
 
-export const defineGDX = <D extends GDXDatamodels = {}>(gdx: GDXType<D>) => gdx;
+export const defineGDX = <const D extends GDXDatamodels = {}>(gdx: GDXType<D>) => gdx;

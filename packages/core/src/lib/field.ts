@@ -7,7 +7,6 @@ import {
   SerializerFormat,
   SerializerCtx,
   TransactionCtx,
-  SerializerFieldsMap,
   FieldSerializerInput,
   ModelData,
   FieldDefinitionGeneric,
@@ -19,16 +18,10 @@ export class Field<T extends FieldTypes = FieldTypes> {
   #definition: FieldDefinitionGeneric<T>; // The field definition
   #path: string; // The path of the field in the model
 
-  serializerMap: Partial<{
-    [S in SerializerFormat]: (_input: FieldSerializerInput<S>) => InferFieldType<FieldDefinitionGeneric<T>, S>;
-  }> & {
-    [Field.defaultSymbol]?: (
-      _input: FieldSerializerInput,
-    ) => T extends keyof SerializerFieldsMap<FieldDefinitionGeneric<T>>[keyof SerializerFieldsMap<
-      FieldDefinitionGeneric<T>
-    >]
-      ? SerializerFieldsMap<FieldDefinitionGeneric<T>>[keyof SerializerFieldsMap<FieldDefinitionGeneric<T>>][T]
-      : unknown;
+  serializerMap: {
+    [S in SerializerFormat]?: (_input: FieldSerializerInput<S>) => InferFieldType<FieldDefinitionGeneric<T>, S>;
+  } & {
+    [Field.defaultSymbol]?: (_input: FieldSerializerInput) => unknown;
   };
 
   constructor(definition: FieldDefinitionGeneric<T>, path: string) {

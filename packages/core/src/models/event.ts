@@ -1,7 +1,6 @@
-import { Model } from "@/lib/model.js";
+import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
-import { ModelDefinition } from "@/types/index.js";
 import { EventSources } from "@/enums/event-sources.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { EventSeverities } from "@/enums/event-severities.js";
@@ -9,9 +8,9 @@ import { EventSeverities } from "@/enums/event-severities.js";
 @modelDecorator()
 export class Event extends Model {
   static __name = "Event";
-  static slug = "events" as const;
-  static loadDatamodel = false as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "events",
+    loadDatamodel: false,
     fields: {
       type: { type: FieldTypes.TEXT },
       message: { type: FieldTypes.TEXT },
@@ -34,5 +33,5 @@ export class Event extends Model {
         options: { field: "severity", min: 0, max: 7 },
       },
     ],
-  } as const satisfies ModelDefinition;
+  });
 }

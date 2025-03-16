@@ -1,17 +1,16 @@
-import { Model } from "@/lib/model.js";
+import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Role } from "@/models/role.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class TokenIssuer extends Model {
   static __name = "TokenIssuer";
-  static slug = "tokenIssuers" as const;
-  static isEnvironmentScoped = true as const;
-  static loadDatamodel = false as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "tokenIssuers",
+    isEnvironmentScoped: true,
+    loadDatamodel: false,
     keyField: "name",
     fields: {
       name: { type: FieldTypes.TEXT },
@@ -22,7 +21,7 @@ export class TokenIssuer extends Model {
       role: {
         type: FieldTypes.RELATION,
         options: {
-          ref: Role.slug,
+          ref: Role.configuration.slug,
         },
       },
       _generation: {
@@ -37,5 +36,5 @@ export class TokenIssuer extends Model {
       { type: ValidatorTypes.BOUNDARIES, options: { field: "lifetime", min: 0 } },
       { type: ValidatorTypes.BOUNDARIES, options: { field: "maxGen", min: 0 } },
     ],
-  } as const satisfies ModelDefinition;
+  });
 }

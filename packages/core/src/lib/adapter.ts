@@ -1,4 +1,4 @@
-import { AdapterFetcher } from "@/types/index.js";
+import { AdapterFetcher, SerializerFormat } from "@/types/index.js";
 import { Model } from "@/lib/model.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Field } from "@/lib/field.js";
@@ -17,8 +17,7 @@ import { FieldArray } from "./fields/array.js";
 import { ValidatorUnique } from "./validators/unique.js";
 import { ValidatorRegex } from "./validators/regex.js";
 import { ValidatorKeyField } from "./validators/key-field.js";
-import { ValidatorDatamodelSlug } from "./validators/datamodel-slug.js";
-import { ValidatorDatamodelDefinition } from "./validators/datamodel-definition.js";
+import { ValidatorDatamodel } from "./validators/datamodel.js";
 import { ValidatorLength } from "./validators/length.js";
 import { ValidatorBoundaries } from "./validators/boundaries.js";
 import { ValidatorRequired } from "./validators/required.js";
@@ -28,7 +27,7 @@ import { FieldEnum } from "./fields/enum.js";
 export class Adapter<T extends typeof Model = typeof Model> {
   static __name = "Adapter";
 
-  static fieldsMap: { [T in FieldTypes]?: typeof Field<T> } = {
+  static fieldsMap: Partial<{ [T in FieldTypes]: typeof Field<T> }> = {
     [FieldTypes.ID]: FieldId,
     [FieldTypes.NUMBER]: FieldNumber,
     [FieldTypes.INTEGER]: FieldInteger,
@@ -41,20 +40,22 @@ export class Adapter<T extends typeof Model = typeof Model> {
     [FieldTypes.IDENTITY]: FieldIdentity,
     [FieldTypes.ARRAY]: FieldArray,
   };
-  static validatorsMap: { [T in ValidatorTypes]?: typeof Validator<T> } = {
+  static validatorsMap: Partial<{ [T in ValidatorTypes]: typeof Validator<T> }> = {
     [ValidatorTypes.REQUIRED]: ValidatorRequired,
     [ValidatorTypes.UNIQUE]: ValidatorUnique,
     [ValidatorTypes.REGEX]: ValidatorRegex,
     [ValidatorTypes.KEY_FIELD]: ValidatorKeyField,
-    [ValidatorTypes.DATAMODEL_SLUG]: ValidatorDatamodelSlug,
-    [ValidatorTypes.DATAMODEL_DEFINITION]: ValidatorDatamodelDefinition,
+    [ValidatorTypes.DATAMODEL]: ValidatorDatamodel,
     [ValidatorTypes.LENGTH]: ValidatorLength,
     [ValidatorTypes.BOUNDARIES]: ValidatorBoundaries,
   };
+
+  static dataFormat: SerializerFormat = "data";
   static runWriteValidators: boolean; // If the adapter should run validators after a model create/update
+
   static _modelsRegistry: Map<string, typeof Model>;
 
-  fetcher: AdapterFetcher<T> | undefined; // The adapter configuration = how the adapter should process
+  fetcher?: AdapterFetcher<T>; // The adapter configuration = how the adapter should process
   model: T; // The model of the current adapter instance
 
   #cacheFieldsMap: Map<string, Field<FieldTypes>> | undefined; // Cache the fields of the current model
@@ -71,7 +72,7 @@ export class Adapter<T extends typeof Model = typeof Model> {
     }
 
     this._modelsRegistry?.forEach(model => {
-      modelsMap.set(model.slug, model);
+      modelsMap.set(model.configuration.slug, model);
     });
 
     const parent = Object.getPrototypeOf(this) as typeof Adapter;
@@ -114,17 +115,14 @@ export class Adapter<T extends typeof Model = typeof Model> {
   }
 
   static registerModel(model: typeof Model, force = false) {
-    if (!model.cacheAdapter) {
-      return;
-    }
-
-    if (!force && this.hasModel(model.slug)) {
+    const slug = model.configuration.slug;
+    if (!force && this.hasModel(slug)) {
       throw new CoreError({
-        message: `Model ${model.slug} already registered on adapter ${this.__name}`,
+        message: `Model ${slug} already registered on adapter ${this.__name}`,
       });
     }
 
-    this.getModelsRegistry().set(model.slug, model);
+    this.getModelsRegistry().set(slug, model);
   }
 
   static clearModels() {

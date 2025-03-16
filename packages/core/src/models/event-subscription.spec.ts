@@ -10,6 +10,20 @@ describe("EventSubscription Model", () => {
   const EventSubscriptionModel = EventSubscription.extend({ adapterClass: adapter });
 
   it("should be able to create a simple event subscription", async () => {
+    await EventSubscriptionModel.create({
+      slug: generateRandomString(),
+      filter: { _id: { $exists: true } },
+      channels: [
+        {
+          channel: SubscriptionChannels.EMAIL,
+          options: { email: "test@test.com" },
+        },
+      ],
+    }).catch(e => {
+      console.log(e.message);
+      throw e;
+    });
+
     await expect(
       EventSubscriptionModel.create({
         slug: generateRandomString(),

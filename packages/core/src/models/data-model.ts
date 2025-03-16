@@ -1,8 +1,8 @@
-import { Model } from "@/lib/model.js";
+import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { FieldDefinition, ModelDefinition } from "@/types/index.js";
+import { FieldDefinition } from "@/types/index.js";
 import { Function } from "./function.js";
 
 const functionRelationField = {
@@ -16,7 +16,7 @@ const functionRelationField = {
           function: {
             type: FieldTypes.RELATION,
             options: {
-              ref: Function.slug,
+              ref: Function.configuration.slug,
             },
           },
           runInJob: {
@@ -40,146 +40,142 @@ const functionRelationField = {
 @modelDecorator()
 export class DataModel extends Model {
   static __name = "DataModel";
-  static isEnvironmentScoped = true as const;
-  static realtime = true as const;
-  static slug = "datamodels" as const;
-  static loadDatamodel = false as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "datamodels",
+    isEnvironmentScoped: true,
+    realtime: true,
+    loadDatamodel: false,
     keyField: "slug",
     fields: {
       name: { type: FieldTypes.TEXT },
-      slug: { type: FieldTypes.TEXT },
-      definition: {
+      slug: { type: FieldTypes.TEXT, required: true },
+      fields: {
         type: FieldTypes.OBJECT,
         options: {
-          fields: {
-            fields: {
-              type: FieldTypes.OBJECT,
-              options: {
-                defaultField: {
+          defaultField: {
+            type: FieldTypes.OBJECT,
+            options: {
+              fields: {
+                type: {
+                  type: FieldTypes.ENUM,
+                  options: {
+                    enum: Object.values(FieldTypes),
+                  },
+                },
+                options: {
                   type: FieldTypes.OBJECT,
                   options: {
+                    strict: true,
                     fields: {
-                      type: {
-                        type: FieldTypes.ENUM,
-                        options: {
-                          enum: Object.values(FieldTypes),
-                        },
-                      },
-                      options: {
-                        type: FieldTypes.OBJECT,
-                        options: {
-                          strict: true,
-                          fields: {
-                            default: { type: FieldTypes.DEFAULT },
-                            items: { type: FieldTypes.OBJECT },
-                            validators: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.OBJECT } } },
-                            distinct: { type: FieldTypes.BOOLEAN },
-                            enum: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
-                            strict: { type: FieldTypes.BOOLEAN },
-                            ref: { type: FieldTypes.TEXT },
-                            defaultField: { type: FieldTypes.OBJECT },
-                            conditionalFields: { type: FieldTypes.OBJECT },
-                            fields: { type: FieldTypes.OBJECT },
-                          },
-                          conditionalFields: {
-                            dependsOn: "$.type",
-                            mappings: {
-                              [FieldTypes.ARRAY]: ["items", "validators", "distinct"],
-                              [FieldTypes.TEXT]: ["default"],
-                              [FieldTypes.RELATION]: ["ref"],
-                              [FieldTypes.NUMBER]: ["default"],
-                              [FieldTypes.INTEGER]: ["default"],
-                              [FieldTypes.ENUM]: ["default", "enum"],
-                              [FieldTypes.OBJECT]: [
-                                "default",
-                                "defaultField",
-                                "conditionalFields",
-                                "fields",
-                                "strict",
-                                "validators",
-                              ],
-                              [FieldTypes.BOOLEAN]: ["default"],
-                            },
-                          },
-                        },
+                      default: { type: FieldTypes.DEFAULT },
+                      items: { type: FieldTypes.OBJECT },
+                      validators: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.OBJECT } } },
+                      distinct: { type: FieldTypes.BOOLEAN },
+                      enum: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
+                      strict: { type: FieldTypes.BOOLEAN },
+                      ref: { type: FieldTypes.TEXT },
+                      defaultField: { type: FieldTypes.OBJECT },
+                      conditionalFields: { type: FieldTypes.OBJECT },
+                      fields: { type: FieldTypes.OBJECT },
+                    },
+                    conditionalFields: {
+                      dependsOn: "$.type",
+                      mappings: {
+                        [FieldTypes.ARRAY]: ["items", "validators", "distinct"],
+                        [FieldTypes.TEXT]: ["default"],
+                        [FieldTypes.RELATION]: ["ref"],
+                        [FieldTypes.NUMBER]: ["default"],
+                        [FieldTypes.INTEGER]: ["default"],
+                        [FieldTypes.ENUM]: ["default", "enum"],
+                        [FieldTypes.OBJECT]: [
+                          "default",
+                          "defaultField",
+                          "conditionalFields",
+                          "fields",
+                          "strict",
+                          "validators",
+                        ],
+                        [FieldTypes.BOOLEAN]: ["default"],
                       },
                     },
-                    validators: [
-                      {
-                        type: ValidatorTypes.REQUIRED,
-                        options: {
-                          field: "type",
-                        },
-                      },
-                    ],
                   },
                 },
               },
-            },
-            validators: {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.OBJECT,
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
                   options: {
-                    fields: {
-                      type: {
-                        type: FieldTypes.ENUM,
-                        options: {
-                          enum: Object.values(ValidatorTypes),
-                        },
-                      },
-                      options: {
-                        type: FieldTypes.OBJECT,
-                        options: {
-                          strict: true,
-                          fields: {
-                            field: { type: FieldTypes.TEXT },
-                            min: { type: FieldTypes.NUMBER },
-                            max: { type: FieldTypes.NUMBER },
-                            pattern: { type: FieldTypes.TEXT },
-                            options: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
-                          },
-                          conditionalFields: {
-                            dependsOn: "$.type",
-                            mappings: {
-                              [ValidatorTypes.REQUIRED]: ["field"],
-                              [ValidatorTypes.UNIQUE]: ["field"],
-                              [ValidatorTypes.BOUNDARIES]: ["field", "min", "max"],
-                              [ValidatorTypes.LENGTH]: ["field", "min", "max"],
-                              [ValidatorTypes.REGEX]: ["field", "pattern", "options"],
-                              [ValidatorTypes.SAMPLE]: ["field"],
-                              [ValidatorTypes.KEY_FIELD]: ["field"],
-                              [ValidatorTypes.EXISTS]: ["field"],
-                            },
-                          },
-                        },
-                      },
-                    },
-                    validators: [
-                      {
-                        type: ValidatorTypes.REQUIRED,
-                        options: {
-                          field: "type",
-                        },
-                      },
-                    ],
+                    field: "type",
                   },
                 },
-              },
-            },
-            single: {
-              type: FieldTypes.BOOLEAN,
-              options: {
-                default: false,
-              },
-            },
-            keyField: {
-              type: FieldTypes.TEXT,
+              ],
             },
           },
         },
+      },
+      validators: {
+        type: FieldTypes.ARRAY,
+        options: {
+          items: {
+            type: FieldTypes.OBJECT,
+            options: {
+              strict: true,
+              fields: {
+                type: {
+                  type: FieldTypes.ENUM,
+                  required: true,
+                  options: {
+                    enum: Object.values(ValidatorTypes),
+                  },
+                },
+                options: {
+                  type: FieldTypes.OBJECT,
+                  required: true,
+                  options: {
+                    strict: true,
+                    fields: {
+                      field: { type: FieldTypes.TEXT, required: true },
+                      min: { type: FieldTypes.NUMBER },
+                      max: { type: FieldTypes.NUMBER },
+                      pattern: { type: FieldTypes.TEXT },
+                      options: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
+                    },
+                    conditionalFields: {
+                      dependsOn: "$.type",
+                      mappings: {
+                        [ValidatorTypes.REQUIRED]: ["field"],
+                        [ValidatorTypes.UNIQUE]: ["field"],
+                        [ValidatorTypes.BOUNDARIES]: ["field", "min", "max"],
+                        [ValidatorTypes.LENGTH]: ["field", "min", "max"],
+                        [ValidatorTypes.REGEX]: ["field", "pattern", "options"],
+                        [ValidatorTypes.SAMPLE]: ["field"],
+                        [ValidatorTypes.KEY_FIELD]: ["field"],
+                        [ValidatorTypes.EXISTS]: ["field"],
+                      },
+                    },
+                  },
+                },
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: {
+                    field: "type",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+      single: {
+        type: FieldTypes.BOOLEAN,
+        options: {
+          default: false,
+        },
+      },
+      keyField: {
+        type: FieldTypes.TEXT,
       },
       hooks: {
         type: FieldTypes.OBJECT,
@@ -229,6 +225,6 @@ export class DataModel extends Model {
       },
       _doc: { type: FieldTypes.OBJECT },
     },
-    validators: [{ type: ValidatorTypes.DATAMODEL_SLUG }, { type: ValidatorTypes.DATAMODEL_DEFINITION }],
-  } as const satisfies ModelDefinition;
+    validators: [{ type: ValidatorTypes.DATAMODEL }],
+  });
 }

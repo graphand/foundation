@@ -1,5 +1,4 @@
-import { ModelDefinition } from "@/types/index.js";
-import { Model } from "@/lib/model.js";
+import { defineConfiguration, Model } from "@/lib/model.js";
 import { Role } from "@/models/role.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
@@ -9,17 +8,17 @@ import { Patterns } from "@/enums/patterns.js";
 @modelDecorator()
 export class Account extends Model {
   static __name = "Account";
-  static connectable = true as const;
-  static loadDatamodel = true as const;
-  static realtime = true as const;
-  static isEnvironmentScoped = true as const;
-  static slug = "accounts" as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "accounts",
+    connectable: true,
+    loadDatamodel: true,
+    realtime: true,
+    isEnvironmentScoped: true,
     fields: {
       role: {
         type: FieldTypes.RELATION,
         options: {
-          ref: Role.slug,
+          ref: Role.configuration.slug,
         },
       },
       _email: { type: FieldTypes.TEXT },
@@ -30,5 +29,5 @@ export class Account extends Model {
       { type: ValidatorTypes.UNIQUE, options: { field: "_email" } },
       { type: ValidatorTypes.REGEX, options: { field: "_email", pattern: Patterns.EMAIL } },
     ],
-  } as const satisfies ModelDefinition;
+  });
 }

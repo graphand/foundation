@@ -1,19 +1,18 @@
-import { Model } from "@/lib/model.js";
+import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { FieldTypes } from "@/enums/field-types.js";
 import { Job } from "@/models/job.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { MergeRequestTypes } from "@/enums/merge-request-types.js";
-import { ModelDefinition } from "@/types/index.js";
 
 @modelDecorator()
 export class MergeRequest extends Model {
   static __name = "MergeRequest";
-  static allowMultipleOperations = false as const;
-  static realtime = true as const;
-  static loadDatamodel = false as const;
-  static slug = "mergeRequests" as const;
-  static definition = {
+  static configuration = defineConfiguration({
+    slug: "mergeRequests",
+    blockMultipleOperations: true,
+    realtime: true,
+    loadDatamodel: false,
     keyField: "slug",
     fields: {
       slug: { type: FieldTypes.TEXT },
@@ -50,7 +49,7 @@ export class MergeRequest extends Model {
       _job: {
         type: FieldTypes.RELATION,
         options: {
-          ref: Job.slug,
+          ref: Job.configuration.slug,
         },
       },
     },
@@ -58,5 +57,5 @@ export class MergeRequest extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "options" } },
       { type: ValidatorTypes.REQUIRED, options: { field: "target" } },
     ],
-  } as const satisfies ModelDefinition;
+  });
 }
