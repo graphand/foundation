@@ -36,7 +36,7 @@ export class Validator<T extends ValidatorTypes = ValidatorTypes> {
   }
 
   getFullPath() {
-    return [this.#path, this.options.field].filter(Boolean).join(".");
+    return [this.#path, this.options.property].filter(Boolean).join(".");
   }
 
   getKey() {

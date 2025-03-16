@@ -1,13 +1,13 @@
-import { FieldTypes } from "@/enums/field-types.js";
-import { Field } from "@/lib/field.js";
+import { PropertyTypes } from "@/enums/property-types.js";
+import { Property } from "@/lib/property.js";
 import { Model } from "@/lib/model.js";
 import { getValidationValues, isObjectId } from "@/lib/utils.js";
 import { PromiseModel } from "@/lib/promise-model.js";
-import { FieldSerializerInput } from "@/types/index.js";
+import { PropertySerializerInput } from "@/types/index.js";
 import { CoreError } from "../core-error.js";
 
-export class FieldRelation extends Field<FieldTypes.RELATION> {
-  validate: Field<FieldTypes.RELATION>["validate"] = async ({ list }) => {
+export class PropertyRelation extends Property<PropertyTypes.RELATION> {
+  validate: Property<PropertyTypes.RELATION>["validate"] = async ({ list }) => {
     const values = getValidationValues(list, this.path);
 
     values.forEach(v => {
@@ -23,7 +23,7 @@ export class FieldRelation extends Field<FieldTypes.RELATION> {
     return true;
   };
 
-  _sString = ({ value, format }: FieldSerializerInput) => {
+  _sString = ({ value, format }: PropertySerializerInput) => {
     if (!value) {
       return null;
     }
@@ -45,7 +45,7 @@ export class FieldRelation extends Field<FieldTypes.RELATION> {
     return id;
   };
 
-  _sObject = (input: FieldSerializerInput) => {
+  _sObject = (input: PropertySerializerInput) => {
     const id = this._sString(input);
 
     if (!isObjectId(id)) {
@@ -64,9 +64,9 @@ export class FieldRelation extends Field<FieldTypes.RELATION> {
     return model.get(id as string, Object.assign({}, ctx?.transactionCtx));
   };
 
-  serializerMap: Field<FieldTypes.RELATION>["serializerMap"] = {
+  serializerMap: Property<PropertyTypes.RELATION>["serializerMap"] = {
     object: this._sObject,
     validation: ({ value }) => value,
-    [Field.defaultSymbol]: this._sString,
+    [Property.defaultSymbol]: this._sString,
   };
 }

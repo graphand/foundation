@@ -1,9 +1,9 @@
 import { ValidationError } from "./validation-error.js";
-import { ValidationFieldError } from "./validation-field-error.js";
+import { ValidationPropertyError } from "./validation-property-error.js";
 import { ValidationValidatorError } from "./validation-validator-error.js";
-import { Field } from "./field.js";
+import { Property } from "./property.js";
 import { Validator } from "./validator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { mockAdapter, mockModel } from "./test-utils.dev.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
@@ -12,44 +12,44 @@ import { faker } from "@faker-js/faker";
 describe("ValidationError", () => {
   const adapterClass = mockAdapter();
 
-  it("should create ValidationError with empty fields and validators", () => {
+  it("should create ValidationError with empty properties and validators", () => {
     const error = new ValidationError({});
     expect(error).toBeInstanceOf(ValidationError);
-    expect(error.fields).toEqual([]);
+    expect(error.properties).toEqual([]);
     expect(error.validators).toEqual([]);
     expect(error.model).toBeUndefined();
     expect(error.message).toBe("Validation failed");
   });
 
-  it("should return correct message when no fields or validators", () => {
+  it("should return correct message when no properties or validators", () => {
     const error = new ValidationError({});
     expect(error.message).toBe("Validation failed");
   });
 
-  it("should return correct message with multiple fields and validators", () => {
-    const field1 = new Field({ type: FieldTypes.TEXT }, "field1");
-    const field2 = new Field({ type: FieldTypes.NUMBER }, "field2");
+  it("should return correct message with multiple properties and validators", () => {
+    const property1 = new Property({ type: PropertyTypes.TEXT }, "property1");
+    const property2 = new Property({ type: PropertyTypes.NUMBER }, "property2");
 
-    const fieldError1 = new ValidationFieldError({
-      slug: "field1",
-      field: field1,
+    const propertyError1 = new ValidationPropertyError({
+      slug: "property1",
+      property: property1,
     });
-    const fieldError2 = new ValidationFieldError({
-      slug: "field2",
-      field: field2,
+    const propertyError2 = new ValidationPropertyError({
+      slug: "property2",
+      property: property2,
     });
 
     const validator1 = new Validator({
       type: ValidatorTypes.REGEX,
-      options: { field: "field1", pattern: "^d$" },
+      options: { property: "property1", pattern: "^d$" },
     });
-    validator1.getFullPath = () => "field1";
+    validator1.getFullPath = () => "property1";
 
     const validator2 = new Validator({
       type: ValidatorTypes.LENGTH,
-      options: { field: "field2", min: 5 },
+      options: { property: "property2", min: 5 },
     });
-    validator2.getFullPath = () => "field2";
+    validator2.getFullPath = () => "property2";
 
     const validatorError1 = new ValidationValidatorError({
       validator: validator1,
@@ -59,36 +59,36 @@ describe("ValidationError", () => {
     });
 
     const error = new ValidationError({
-      fields: [fieldError1, fieldError2],
+      properties: [propertyError1, propertyError2],
       validators: [validatorError1, validatorError2],
       model: "TestModel",
     });
 
     expect(error.message).toContain("Validation failed");
-    expect(error.message).toContain("2 fields validators");
+    expect(error.message).toContain("2 properties validators");
     expect(error.message).toContain("2 model validators");
-    expect(error.message).toContain("on paths field1, field2");
+    expect(error.message).toContain("on paths property1, property2");
     expect(error.message).toContain("on model TestModel");
   });
 
-  it("should return correct fieldsPaths with multiple fields", () => {
-    const field1 = new Field({ type: FieldTypes.TEXT }, "field1");
-    const field2 = new Field({ type: FieldTypes.NUMBER }, "field2");
+  it("should return correct propertiesPaths with multiple properties", () => {
+    const property1 = new Property({ type: PropertyTypes.TEXT }, "property1");
+    const property2 = new Property({ type: PropertyTypes.NUMBER }, "property2");
 
-    const fieldError1 = new ValidationFieldError({
-      slug: "field1",
-      field: field1,
+    const propertyError1 = new ValidationPropertyError({
+      slug: "property1",
+      property: property1,
     });
-    const fieldError2 = new ValidationFieldError({
-      slug: "field2",
-      field: field2,
+    const propertyError2 = new ValidationPropertyError({
+      slug: "property2",
+      property: property2,
     });
 
     const error = new ValidationError({
-      fields: [fieldError1, fieldError2],
+      properties: [propertyError1, propertyError2],
     });
 
-    expect(error.fieldsPaths).toEqual(["field1", "field2"]);
+    expect(error.propertiesPaths).toEqual(["property1", "property2"]);
   });
 
   it("should return correct code", () => {
@@ -97,44 +97,44 @@ describe("ValidationError", () => {
   });
 
   it("should return errors on existing path using onPath", () => {
-    const field = new Field({ type: FieldTypes.TEXT }, "field1");
+    const property = new Property({ type: PropertyTypes.TEXT }, "property1");
 
-    const fieldError = new ValidationFieldError({
-      slug: "field1",
-      field: field,
+    const propertyError = new ValidationPropertyError({
+      slug: "property1",
+      property: property,
     });
 
     const validator = new Validator({
       type: ValidatorTypes.REGEX,
-      options: { field: "field1", pattern: "^d$" },
+      options: { property: "property1", pattern: "^d$" },
     });
-    validator.getFullPath = () => "field1";
+    validator.getFullPath = () => "property1";
 
     const validatorError = new ValidationValidatorError({
       validator: validator,
     });
 
     const error = new ValidationError({
-      fields: [fieldError],
+      properties: [propertyError],
       validators: [validatorError],
     });
 
-    const errorsOnPath = error.onPath("field1");
+    const errorsOnPath = error.onPath("property1");
     expect(errorsOnPath).toHaveLength(2);
-    expect(errorsOnPath).toContain(fieldError);
+    expect(errorsOnPath).toContain(propertyError);
     expect(errorsOnPath).toContain(validatorError);
   });
 
   it("should return empty array for non-existing path using onPath", () => {
-    const field = new Field({ type: FieldTypes.TEXT }, "field1");
+    const property = new Property({ type: PropertyTypes.TEXT }, "property1");
 
-    const fieldError = new ValidationFieldError({
-      slug: "field1",
-      field: field,
+    const propertyError = new ValidationPropertyError({
+      slug: "property1",
+      property: property,
     });
 
     const error = new ValidationError({
-      fields: [fieldError],
+      properties: [propertyError],
     });
 
     const errorsOnPath = error.onPath("nonExistingPath");
@@ -142,20 +142,20 @@ describe("ValidationError", () => {
   });
 
   it("should correctly serialize and deserialize with toJSON and fromJSON", () => {
-    const fieldError = new ValidationFieldError({
-      slug: "field1",
-      field: new Field({ type: FieldTypes.TEXT }, "field1"),
+    const propertyError = new ValidationPropertyError({
+      slug: "property1",
+      property: new Property({ type: PropertyTypes.TEXT }, "property1"),
     });
     const validatorError = new ValidationValidatorError({
       validator: new Validator({
         type: ValidatorTypes.REGEX,
-        options: { field: "field1", pattern: "^d$" },
+        options: { property: "property1", pattern: "^d$" },
       }),
     });
-    validatorError.validator.getFullPath = () => "field1";
+    validatorError.validator.getFullPath = () => "property1";
 
     const error = new ValidationError({
-      fields: [fieldError],
+      properties: [propertyError],
       validators: [validatorError],
       model: "TestModel",
       message: "Custom message",
@@ -166,8 +166,8 @@ describe("ValidationError", () => {
     expect(restoredError).toBeInstanceOf(ValidationError);
     expect(restoredError.message).toBe(error.message);
     expect(restoredError.model).toBe(error.model);
-    expect(restoredError.fieldsPaths).toEqual(error.fieldsPaths);
-    expect(restoredError.fields).toHaveLength(error.fields.length);
+    expect(restoredError.propertiesPaths).toEqual(error.propertiesPaths);
+    expect(restoredError.properties).toHaveLength(error.properties.length);
     expect(restoredError.validators).toHaveLength(error.validators.length);
   });
 
@@ -189,30 +189,30 @@ describe("ValidationError", () => {
     });
     expect(error.message).toContain("Validation failed");
     expect(error.model).toBe("TestModel");
-    expect(error.fields).toEqual([]);
+    expect(error.properties).toEqual([]);
     expect(error.validators).toEqual([]);
-    expect(error.fieldsPaths).toEqual([]);
+    expect(error.propertiesPaths).toEqual([]);
   });
 
-  it("should work with simple model and enum field", async () => {
+  it("should work with simple model and enum property", async () => {
     const model = mockModel({
       slug: faker.random.alphaNumeric(10),
-      fields: {
+      properties: {
         enum: {
-          type: FieldTypes.ENUM,
+          type: PropertyTypes.ENUM,
           options: {
             enum: ["a", "b", "c"],
           },
         },
       },
-      validators: [{ type: ValidatorTypes.REGEX, options: { field: "enum", pattern: "^d$" } }],
+      validators: [{ type: ValidatorTypes.REGEX, options: { property: "enum", pattern: "^d$" } }],
     }).extend({ adapterClass });
 
     // @ts-expect-error
     const error = await model.validate([{ enum: "e" }]).catch(e => e);
 
     expect(error).toBeInstanceOf(ValidationError);
-    expect(error.fieldsPaths).toEqual(["enum"]);
+    expect(error.propertiesPaths).toEqual(["enum"]);
 
     const errorsOnPath = error.onPath("enum");
     expect(errorsOnPath).toHaveLength(2);
@@ -228,16 +228,16 @@ describe("ValidationError", () => {
     expect(json1).toEqual(json2);
   });
 
-  it("should work with nested model and enum field", async () => {
+  it("should work with nested model and enum property", async () => {
     const model = mockModel({
       slug: faker.random.alphaNumeric(10),
-      fields: {
+      properties: {
         obj: {
-          type: FieldTypes.OBJECT,
+          type: PropertyTypes.OBJECT,
           options: {
-            fields: {
+            properties: {
               enum: {
-                type: FieldTypes.ENUM,
+                type: PropertyTypes.ENUM,
                 options: {
                   enum: ["a", "b", "c"],
                 },
@@ -246,14 +246,14 @@ describe("ValidationError", () => {
           },
         },
       },
-      validators: [{ type: ValidatorTypes.REGEX, options: { field: "obj.enum", pattern: "^d$" } }],
+      validators: [{ type: ValidatorTypes.REGEX, options: { property: "obj.enum", pattern: "^d$" } }],
     }).extend({ adapterClass });
 
     // @ts-expect-error
     const error = await model.validate([{ obj: { enum: "e" } }]).catch(e => e);
 
     expect(error).toBeInstanceOf(ValidationError);
-    expect(error.fieldsPaths).toEqual(["obj.enum"]);
+    expect(error.propertiesPaths).toEqual(["obj.enum"]);
 
     const errorsOnPath = error.onPath("obj.enum");
     expect(errorsOnPath).toHaveLength(2);
@@ -269,23 +269,23 @@ describe("ValidationError", () => {
     expect(json1).toEqual(json2);
   });
 
-  it("should work with nested model and array of enum fields", async () => {
+  it("should work with nested model and array of enum properties", async () => {
     const model = mockModel({
       slug: faker.random.alphaNumeric(10),
-      fields: {
+      properties: {
         obj: {
-          type: FieldTypes.OBJECT,
+          type: PropertyTypes.OBJECT,
           options: {
-            fields: {
+            properties: {
               array: {
-                type: FieldTypes.ARRAY,
+                type: PropertyTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
-                      fields: {
+                      properties: {
                         enum: {
-                          type: FieldTypes.ENUM,
+                          type: PropertyTypes.ENUM,
                           options: {
                             enum: ["a", "b", "c"],
                           },
@@ -299,14 +299,14 @@ describe("ValidationError", () => {
           },
         },
       },
-      validators: [{ type: ValidatorTypes.REGEX, options: { field: "obj.array.[].enum", pattern: "^d$" } }],
+      validators: [{ type: ValidatorTypes.REGEX, options: { property: "obj.array.[].enum", pattern: "^d$" } }],
     }).extend({ adapterClass });
 
     // @ts-expect-error
     const error = await model.validate([{ obj: { array: [{ enum: "e" }] } }]).catch(e => e);
 
     expect(error).toBeInstanceOf(ValidationError);
-    expect(error.fieldsPaths).toEqual(["obj.array.[].enum"]);
+    expect(error.propertiesPaths).toEqual(["obj.array.[].enum"]);
 
     const errorsOnPath = error.onPath("obj.array.[].enum");
     expect(errorsOnPath).toHaveLength(2);

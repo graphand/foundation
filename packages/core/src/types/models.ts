@@ -20,7 +20,7 @@ import type { Snapshot } from "@/models/snapshot.js";
 import type { EventSubscription } from "@/models/event-subscription.js";
 import { InferModelDef } from "@/index.js";
 export * from "./helpers.js";
-export * from "./fields.js";
+export * from "./properties.js";
 export * from "./validators.js";
 export * from "./ctx.js";
 

@@ -1,8 +1,8 @@
 import { vi } from "vitest";
 import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev.js";
-import { Field } from "@/lib/field.js";
+import { Property } from "@/lib/property.js";
 import { defineConfiguration, Model } from "@/lib/model.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { Validator } from "@/lib/validator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Account } from "@/models/account.js";
@@ -10,7 +10,7 @@ import { CoreError } from "@/lib/core-error.js";
 import { DataModel } from "@/models/data-model.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
 import { Media } from "@/models/media.js";
-import { ModelInstance, SerializerFieldsMap } from "@/types/index.js";
+import { ModelInstance, SerializerPropertiesMap } from "@/types/index.js";
 import { PromiseModelList } from "@/lib/promise-model-list.js";
 import { PromiseModel } from "@/lib/promise-model.js";
 import { faker } from "@faker-js/faker";
@@ -21,16 +21,16 @@ import { modelDecorator } from "./model-decorator.js";
 describe("Test Model", () => {
   const BaseModel = mockModel({
     slug: faker.random.alphaNumeric(10),
-    fields: {
+    properties: {
       title: {
-        type: FieldTypes.TEXT,
+        type: PropertyTypes.TEXT,
       },
     },
     validators: [
       {
         type: ValidatorTypes.SAMPLE,
         options: {
-          field: "title",
+          property: "title",
         },
       },
     ],
@@ -89,26 +89,26 @@ describe("Test Model", () => {
   });
 
   describe("Model initialization", () => {
-    it("should be able to manually define fields", () => {
+    it("should be able to manually define properties", () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
             options: {},
           },
         },
       }).extend({ adapterClass: adapter });
 
-      expect(model.fieldsKeys).toContain("title");
+      expect(model.propertiesKeys).toContain("title");
     });
 
-    it("Model should load fields from adapter", async () => {
+    it("Model should load properties from adapter", async () => {
       const adapter = mockAdapter();
       const TestModel = BaseModel.extend({ adapterClass: adapter });
       const created = await TestModel.create({});
-      expect(created.model().fieldsMap.get("title")).toBeInstanceOf(Field);
+      expect(created.model().propertiesMap.get("title")).toBeInstanceOf(Property);
     });
 
     it("Model should load validators from adapter", async () => {
@@ -214,7 +214,7 @@ describe("Test Model", () => {
       const model2 = model.extend({
         initOptions: {
           datamodel: DataModel.hydrate({
-            keyField: "test",
+            keyProperty: "test",
           }).toJSON(),
         },
         adapterClass: mockAdapter(),
@@ -230,13 +230,13 @@ describe("Test Model", () => {
 
       const lastCall2Args = initFn2.mock.calls?.[0]?.[0];
 
-      expect(lastCall2Args?.datamodel).toHaveProperty("fields");
+      expect(lastCall2Args?.datamodel).toHaveProperty("properties");
 
-      expect(model.getKeyField()).toEqual("_id");
-      expect(model2.getKeyField()).toEqual("test");
+      expect(model.getKeyProperty()).toEqual("_id");
+      expect(model2.getKeyProperty()).toEqual("test");
     });
 
-    it("Model.keyField is not overriden by datamodel if declared in inherited class", async () => {
+    it("Model.keyProperty is not overriden by datamodel if declared in inherited class", async () => {
       const adapter = mockAdapter();
       const slug1 = generateRandomString();
       const slug2 = generateRandomString();
@@ -247,17 +247,17 @@ describe("Test Model", () => {
             connectable: true,
             loadDatamodel: true,
             isEnvironmentScoped: true,
-            keyField: "test",
+            keyProperty: "test",
           });
         },
       ).extend({ adapterClass: adapter });
 
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: slug2,
-        keyField: "test2",
-        fields: {
+        keyProperty: "test2",
+        properties: {
           test2: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -276,17 +276,17 @@ describe("Test Model", () => {
 
       await model2.initialize();
 
-      expect(model2.getKeyField()).toEqual("test");
+      expect(model2.getKeyProperty()).toEqual("test");
     });
 
-    it("Medias keyField is not overriden by datamodel", async () => {
+    it("Medias keyProperty is not overriden by datamodel", async () => {
       const adapter = mockAdapter();
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: Media.configuration.slug,
-        keyField: "test2",
-        fields: {
+        keyProperty: "test2",
+        properties: {
           test2: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -294,8 +294,8 @@ describe("Test Model", () => {
       const model = Media.extend({ adapterClass: adapter });
       await model.initialize();
 
-      expect(model.fieldsMap.get("test2")).toBeInstanceOf(Field);
-      expect(model.getKeyField()).toEqual("name");
+      expect(model.propertiesMap.get("test2")).toBeInstanceOf(Property);
+      expect(model.getKeyProperty()).toEqual("name");
     });
 
     it("Medias singularity is not overriden by datamodel", async () => {
@@ -303,9 +303,9 @@ describe("Test Model", () => {
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: Media.configuration.slug,
         single: true,
-        fields: {
+        properties: {
           test2: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -313,17 +313,17 @@ describe("Test Model", () => {
       const model = Media.extend({ adapterClass: adapter });
       await model.initialize();
 
-      expect(model.fieldsMap.get("test2")).toBeInstanceOf(Field);
+      expect(model.propertiesMap.get("test2")).toBeInstanceOf(Property);
     });
 
-    it("Medias base fields are not overriden by datamodel", async () => {
+    it("Medias base properties are not overriden by datamodel", async () => {
       const adapter = mockAdapter();
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: Media.configuration.slug,
         single: true,
-        fields: {
+        properties: {
           name: {
-            type: FieldTypes.NUMBER,
+            type: PropertyTypes.NUMBER,
           },
         },
       });
@@ -331,19 +331,19 @@ describe("Test Model", () => {
       const model = Media.extend({ adapterClass: adapter });
       await model.initialize();
 
-      expect(model.fieldsMap.get("name")).toBeInstanceOf(Field);
-      expect(model.fieldsMap.get("name")?.type).toBe(FieldTypes.TEXT);
+      expect(model.propertiesMap.get("name")).toBeInstanceOf(Property);
+      expect(model.propertiesMap.get("name")?.type).toBe(PropertyTypes.TEXT);
     });
   });
 
   describe("Model getter", () => {
-    it("Model should return field default value if undefined", async () => {
+    it("Model should return property default value if undefined", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
             options: {
               default: "default",
             },
@@ -355,13 +355,13 @@ describe("Test Model", () => {
       expect(created.get("test")).toBe("default");
     });
 
-    it("should serialize with field from adapter", async () => {
+    it("should serialize with property from adapter", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -373,17 +373,17 @@ describe("Test Model", () => {
       expect(created.get("test")).toBe("123");
     });
 
-    it("should serialize with nested fields in json", async () => {
+    it("should serialize with nested properties in json", async () => {
       const adapter = mockAdapter();
       const _model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
+              properties: {
                 nested: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -402,16 +402,16 @@ describe("Test Model", () => {
       expect(created.test?.nested).toBe("123");
     });
 
-    it("should serialize with nested fields in array", async () => {
+    it("should serialize with nested properties in array", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.TEXT,
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -430,19 +430,19 @@ describe("Test Model", () => {
       expect(created.test?.[0]).toEqual("123");
     });
 
-    it("should serialize with nested fields in array of array", async () => {
+    it("should serialize with nested properties in array of array", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.ARRAY,
+                type: PropertyTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.TEXT,
+                    type: PropertyTypes.TEXT,
                   },
                 },
               },
@@ -459,23 +459,23 @@ describe("Test Model", () => {
       expect(created.get("test.[]")).toEqual([["123"], ["456"]]);
     });
 
-    it("should serialize with nested json field in array of array", async () => {
+    it("should serialize with nested json property in array of array", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.ARRAY,
+                type: PropertyTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
-                      fields: {
+                      properties: {
                         nested: {
-                          type: FieldTypes.TEXT,
+                          type: PropertyTypes.TEXT,
                         },
                       },
                     },
@@ -561,20 +561,20 @@ describe("Test Model", () => {
       expect(created.get("test.[].[].nested.[]")).toEqual(undefined);
     });
 
-    it("should serialize with nested fields in array of json", async () => {
+    it("should serialize with nested properties in array of json", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
                 options: {
-                  fields: {
+                  properties: {
                     nested: {
-                      type: FieldTypes.TEXT,
+                      type: PropertyTypes.TEXT,
                     },
                   },
                 },
@@ -620,30 +620,30 @@ describe("Test Model", () => {
       expect(created.get("test.nested.undefined")).toEqual(undefined);
     });
 
-    it("should serialize with complex schema fields", async () => {
+    it("should serialize with complex schema properties", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
-          field1: {
-            type: FieldTypes.ARRAY,
+        properties: {
+          property1: {
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
                 options: {
-                  fields: {
-                    field2: {
-                      type: FieldTypes.TEXT,
+                  properties: {
+                    property2: {
+                      type: PropertyTypes.TEXT,
                     },
-                    field3: {
-                      type: FieldTypes.ARRAY,
+                    property3: {
+                      type: PropertyTypes.ARRAY,
                       options: {
                         items: {
-                          type: FieldTypes.OBJECT,
+                          type: PropertyTypes.OBJECT,
                           options: {
-                            fields: {
-                              field4: {
-                                type: FieldTypes.TEXT,
+                            properties: {
+                              property4: {
+                                type: PropertyTypes.TEXT,
                               },
                             },
                           },
@@ -659,106 +659,106 @@ describe("Test Model", () => {
       }).extend({ adapterClass: adapter });
 
       const created = await model.create({
-        field1: [
+        property1: [
           {
-            field2: "test1",
-            field3: [
+            property2: "test1",
+            property3: [
               {
-                field4: "test1.1",
+                property4: "test1.1",
               },
               {
-                field4: "test1.2",
+                property4: "test1.2",
               },
             ],
           },
           {
-            field2: "test2",
-            field3: [
+            property2: "test2",
+            property3: [
               {
-                field4: "test2.1",
+                property4: "test2.1",
               },
               {
-                field4: "test2.2",
+                property4: "test2.2",
               },
             ],
           },
         ],
       });
 
-      expect(created.get("field1")).toEqual([
+      expect(created.get("property1")).toEqual([
         {
-          field2: "test1",
-          field3: [
+          property2: "test1",
+          property3: [
             {
-              field4: "test1.1",
+              property4: "test1.1",
             },
             {
-              field4: "test1.2",
+              property4: "test1.2",
             },
           ],
         },
         {
-          field2: "test2",
-          field3: [
+          property2: "test2",
+          property3: [
             {
-              field4: "test2.1",
+              property4: "test2.1",
             },
             {
-              field4: "test2.2",
+              property4: "test2.2",
             },
           ],
         },
       ]);
 
-      expect(created.get("field1.field2")).toEqual(["test1", "test2"]);
-      expect(created.get("field1.[].field2")).toEqual(["test1", "test2"]);
-      expect(created.get("field1.field3")).toEqual([
+      expect(created.get("property1.property2")).toEqual(["test1", "test2"]);
+      expect(created.get("property1.[].property2")).toEqual(["test1", "test2"]);
+      expect(created.get("property1.property3")).toEqual([
         [
           {
-            field4: "test1.1",
+            property4: "test1.1",
           },
           {
-            field4: "test1.2",
+            property4: "test1.2",
           },
         ],
         [
           {
-            field4: "test2.1",
+            property4: "test2.1",
           },
           {
-            field4: "test2.2",
+            property4: "test2.2",
           },
         ],
       ]);
 
-      expect(created.get("field1.field3.field4")).toEqual([
+      expect(created.get("property1.property3.property4")).toEqual([
         ["test1.1", "test1.2"],
         ["test2.1", "test2.2"],
       ]);
 
-      expect(created.get("field1.[].field3.field4")).toEqual([
+      expect(created.get("property1.[].property3.property4")).toEqual([
         ["test1.1", "test1.2"],
         ["test2.1", "test2.2"],
       ]);
 
-      expect(created.get("field1.[].field3.[].field4")).toEqual([
+      expect(created.get("property1.[].property3.[].property4")).toEqual([
         ["test1.1", "test1.2"],
         ["test2.1", "test2.2"],
       ]);
 
-      expect(created.get("field1.[].field3.[].field4.undefined")).toEqual(undefined);
+      expect(created.get("property1.[].property3.[].property4.undefined")).toEqual(undefined);
     });
 
     it("should serialize array of relation to PromiseModelList", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.RELATION,
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: "accounts",
                 },
@@ -779,19 +779,19 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arr: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
                 options: {
-                  fields: {
+                  properties: {
                     arrRel: {
-                      type: FieldTypes.ARRAY,
+                      type: PropertyTypes.ARRAY,
                       options: {
                         items: {
-                          type: FieldTypes.RELATION,
+                          type: PropertyTypes.RELATION,
                           options: {
                             ref: "accounts",
                           },
@@ -799,7 +799,7 @@ describe("Test Model", () => {
                       },
                     },
                     rel: {
-                      type: FieldTypes.RELATION,
+                      type: PropertyTypes.RELATION,
                       options: {
                         ref: "accounts",
                       },
@@ -836,17 +836,17 @@ describe("Test Model", () => {
       expect(arrRels.every((r: unknown) => r instanceof PromiseModelList)).toBeTruthy();
     });
 
-    it("should serialize to undefined nested fields of null", async () => {
+    it("should serialize to undefined nested properties of null", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
+              properties: {
                 test: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -859,20 +859,20 @@ describe("Test Model", () => {
       expect(created.get("test.test")).toBe(undefined);
     });
 
-    it("should serialize to undefined nested fields of null array", async () => {
+    it("should serialize to undefined nested properties of null array", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
                 options: {
-                  fields: {
+                  properties: {
                     test: {
-                      type: FieldTypes.TEXT,
+                      type: PropertyTypes.TEXT,
                     },
                   },
                 },
@@ -888,11 +888,11 @@ describe("Test Model", () => {
       expect(created.get("test.test2")).toEqual([]);
     });
 
-    it("should serialize to undefined nested fields of nested unexisting field", async () => {
+    it("should serialize to undefined nested properties of nested unexisting property", async () => {
       const adapter = mockAdapter();
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {},
+        properties: {},
       }).extend({ adapterClass: adapter });
 
       const created = await model.create({});
@@ -905,31 +905,31 @@ describe("Test Model", () => {
     const adapter = mockAdapter();
     const model = mockModel({
       slug: faker.random.alphaNumeric(10),
-      fields: {
+      properties: {
         text: {
-          type: FieldTypes.TEXT,
+          type: PropertyTypes.TEXT,
         },
         obj: {
-          type: FieldTypes.OBJECT,
+          type: PropertyTypes.OBJECT,
           options: {
-            fields: {
+            properties: {
               nested: {
-                type: FieldTypes.TEXT,
+                type: PropertyTypes.TEXT,
               },
             },
           },
         },
         relSingle: {
-          type: FieldTypes.RELATION,
+          type: PropertyTypes.RELATION,
           options: {
             ref: "accounts",
           },
         },
         relArray: {
-          type: FieldTypes.ARRAY,
+          type: PropertyTypes.ARRAY,
           options: {
             items: {
-              type: FieldTypes.RELATION,
+              type: PropertyTypes.RELATION,
               options: {
                 ref: "accounts",
               },
@@ -937,26 +937,26 @@ describe("Test Model", () => {
           },
         },
         arrOfText: {
-          type: FieldTypes.ARRAY,
+          type: PropertyTypes.ARRAY,
           options: {
             items: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         },
         complex: {
-          type: FieldTypes.OBJECT,
+          type: PropertyTypes.OBJECT,
           options: {
-            fields: {
+            properties: {
               nestedArr: {
-                type: FieldTypes.ARRAY,
+                type: PropertyTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
-                      fields: {
+                      properties: {
                         nested: {
-                          type: FieldTypes.TEXT,
+                          type: PropertyTypes.TEXT,
                         },
                       },
                     },
@@ -970,25 +970,25 @@ describe("Test Model", () => {
     }).extend({ adapterClass: adapter });
 
     const _testWith = async (opts: {
-      field: string;
+      property: string;
       value: unknown;
       create?: Record<string, unknown>;
-      format?: keyof SerializerFieldsMap;
+      format?: keyof SerializerPropertiesMap;
       primitive?: boolean;
     }) => {
-      const { field, value, primitive } = opts;
+      const { property, value, primitive } = opts;
       let { create, format } = opts;
 
       format ??= "json";
-      create ??= { [field]: value };
+      create ??= { [property]: value };
       const created = await model.create(create);
-      const v = created.get(field);
+      const v = created.get(property);
 
       const data = { ...(created.getData() as any) };
-      data[field] = v;
+      data[property] = v;
       created.setData(data);
 
-      const v2 = created.get(field, format);
+      const v2 = created.get(property, format);
       if (primitive) {
         expect(String(v2)).toEqual(String(value));
       } else {
@@ -997,21 +997,21 @@ describe("Test Model", () => {
     };
 
     describe("json", () => {
-      it("with simple text field", async () => {
-        await _testWith({ field: "text", value: "test" });
+      it("with simple text property", async () => {
+        await _testWith({ property: "text", value: "test" });
       });
 
-      it("with array of text field", async () => {
-        await _testWith({ field: "arrOfText", value: ["test1", "test2"] });
+      it("with array of text property", async () => {
+        await _testWith({ property: "arrOfText", value: ["test1", "test2"] });
       });
 
-      it("with json field", async () => {
-        await _testWith({ field: "obj", value: { nested: "test" } });
+      it("with json property", async () => {
+        await _testWith({ property: "obj", value: { nested: "test" } });
       });
 
-      it("with json field nested", async () => {
+      it("with json property nested", async () => {
         await _testWith({
-          field: "obj.nested",
+          property: "obj.nested",
           value: "test",
           create: {
             obj: { nested: "test" },
@@ -1019,27 +1019,27 @@ describe("Test Model", () => {
         });
       });
 
-      it("with relation field", async () => {
-        await _testWith({ field: "relSingle", value: "507f191e810c19729de860ea" });
+      it("with relation property", async () => {
+        await _testWith({ property: "relSingle", value: "507f191e810c19729de860ea" });
       });
 
-      it("with array of relation field", async () => {
+      it("with array of relation property", async () => {
         await _testWith({
-          field: "relArray",
+          property: "relArray",
           value: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
         });
       });
 
-      it("with complex nested fields", async () => {
+      it("with complex nested properties", async () => {
         await _testWith({
-          field: "complex",
+          property: "complex",
           value: {
             nestedArr: [],
           },
         });
 
         await _testWith({
-          field: "complex.nestedArr",
+          property: "complex.nestedArr",
           value: [],
           create: {
             complex: {
@@ -1066,17 +1066,22 @@ describe("Test Model", () => {
     });
 
     describe("object", () => {
-      it("with simple text field", async () => {
-        await _testWith({ field: "text", value: "test", format: "object" });
+      it("with simple text property", async () => {
+        await _testWith({ property: "text", value: "test", format: "object" });
       });
 
-      it("with relation field", async () => {
-        await _testWith({ field: "relSingle", value: "507f191e810c19729de860ea", format: "object", primitive: true });
-      });
-
-      it("with array of relation field", async () => {
+      it("with relation property", async () => {
         await _testWith({
-          field: "relArray",
+          property: "relSingle",
+          value: "507f191e810c19729de860ea",
+          format: "object",
+          primitive: true,
+        });
+      });
+
+      it("with array of relation property", async () => {
+        await _testWith({
+          property: "relArray",
           value: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
           format: "object",
           primitive: true,
@@ -1086,47 +1091,47 @@ describe("Test Model", () => {
   });
 
   describe("Model validation", () => {
-    it("Model should have keyField validator if keyField is defined", async () => {
+    it("Model should have keyProperty validator if keyProperty is defined", async () => {
       const adapter = mockAdapter();
-      const BaseModelWithKeyField = mockModel({
+      const BaseModelWithKeyProperty = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
-      Object.assign(BaseModelWithKeyField.configuration, { keyField: "title" });
-      const TestModel = BaseModelWithKeyField.extend({ adapterClass: adapter });
+      Object.assign(BaseModelWithKeyProperty.configuration, { keyProperty: "title" });
+      const TestModel = BaseModelWithKeyProperty.extend({ adapterClass: adapter });
 
-      const keyFieldValidator = TestModel.validatorsArray.find(v => v?.type === ValidatorTypes.KEY_FIELD);
-      expect(keyFieldValidator).toBeDefined();
+      const keyPropertyValidator = TestModel.validatorsArray.find(v => v?.type === ValidatorTypes.KEY_PROPERTY);
+      expect(keyPropertyValidator).toBeDefined();
     });
 
-    it("Model should have keyField validator if keyField is defined and should filter unique and required validators", async () => {
+    it("Model should have keyProperty validator if keyProperty is defined and should filter unique and required validators", async () => {
       const adapter = mockAdapter();
-      const BaseModelWithKeyField = mockModel({
+      const BaseModelWithKeyProperty = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
         validators: [
-          { type: ValidatorTypes.UNIQUE, options: { field: "title" } },
-          { type: ValidatorTypes.REQUIRED, options: { field: "title" } },
+          { type: ValidatorTypes.UNIQUE, options: { property: "title" } },
+          { type: ValidatorTypes.REQUIRED, options: { property: "title" } },
         ],
       });
-      Object.assign(BaseModelWithKeyField.configuration, { keyField: "title" });
-      const TestModel = BaseModelWithKeyField.extend({ adapterClass: adapter });
+      Object.assign(BaseModelWithKeyProperty.configuration, { keyProperty: "title" });
+      const TestModel = BaseModelWithKeyProperty.extend({ adapterClass: adapter });
 
       const validators = TestModel.validatorsArray;
 
-      const keyFieldValidator = validators.find(v => v?.type === ValidatorTypes.KEY_FIELD);
+      const keyPropertyValidator = validators.find(v => v?.type === ValidatorTypes.KEY_PROPERTY);
       const uniqueValidator = validators.find(v => v?.type === ValidatorTypes.UNIQUE);
       const requiredValidator = validators.find(v => v?.type === ValidatorTypes.REQUIRED);
 
-      expect(keyFieldValidator).toBeDefined();
+      expect(keyPropertyValidator).toBeDefined();
       expect(uniqueValidator).toBeUndefined();
       expect(requiredValidator).toBeUndefined();
     });
@@ -1180,16 +1185,16 @@ describe("Test Model", () => {
       }
     });
 
-    it("Model should validate with field from adapter", async () => {
+    it("Model should validate with property from adapter", async () => {
       const testValidate = vi.fn(() => Promise.resolve(true));
 
-      class TestFieldText extends Field<FieldTypes.TEXT> {
+      class TestPropertyText extends Property<PropertyTypes.TEXT> {
         validate = testValidate;
       }
 
       const _adapter = mockAdapter({
-        fieldsMap: {
-          [FieldTypes.TEXT]: TestFieldText,
+        propertiesMap: {
+          [PropertyTypes.TEXT]: TestPropertyText,
         },
       });
 
@@ -1203,16 +1208,16 @@ describe("Test Model", () => {
       expect(testValidate).toHaveBeenCalledTimes(1);
     });
 
-    it("Model should throw error with field validator returning false", async () => {
+    it("Model should throw error with property validator returning false", async () => {
       const testValidate = vi.fn(() => Promise.resolve(false));
 
-      class TestFieldText extends Field<FieldTypes.TEXT> {
+      class TestPropertyText extends Property<PropertyTypes.TEXT> {
         validate = testValidate;
       }
 
       const _adapter = mockAdapter({
-        fieldsMap: {
-          [FieldTypes.TEXT]: TestFieldText,
+        propertiesMap: {
+          [PropertyTypes.TEXT]: TestPropertyText,
         },
       });
 
@@ -1229,12 +1234,12 @@ describe("Test Model", () => {
       }
     });
 
-    it("Model should validate validators & fields on create", async () => {
-      const testValidateField = vi.fn(() => Promise.resolve(true));
+    it("Model should validate validators & properties on create", async () => {
+      const testValidateProperty = vi.fn(() => Promise.resolve(true));
       const testValidateValidator = vi.fn(() => Promise.resolve(true));
 
-      class TestFieldText extends Field<FieldTypes.TEXT> {
-        validate = testValidateField;
+      class TestPropertyText extends Property<PropertyTypes.TEXT> {
+        validate = testValidateProperty;
       }
 
       class TestValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
@@ -1242,8 +1247,8 @@ describe("Test Model", () => {
       }
 
       const _adapter = mockAdapter({
-        fieldsMap: {
-          [FieldTypes.TEXT]: TestFieldText,
+        propertiesMap: {
+          [PropertyTypes.TEXT]: TestPropertyText,
         },
         validatorsMap: {
           [ValidatorTypes.SAMPLE]: TestValidatorSample,
@@ -1252,21 +1257,21 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
 
-      expect(testValidateField).toHaveBeenCalledTimes(0);
+      expect(testValidateProperty).toHaveBeenCalledTimes(0);
       expect(testValidateValidator).toHaveBeenCalledTimes(0);
 
       await TestModel.create({});
 
-      expect(testValidateField).toHaveBeenCalledTimes(1);
+      expect(testValidateProperty).toHaveBeenCalledTimes(1);
       expect(testValidateValidator).toHaveBeenCalledTimes(1);
     });
 
-    it("Model should validate validators & fields once by value on createMultiple", async () => {
-      const testValidateField = vi.fn(() => Promise.resolve(true));
+    it("Model should validate validators & properties once by value on createMultiple", async () => {
+      const testValidateProperty = vi.fn(() => Promise.resolve(true));
       const testValidateValidator = vi.fn(() => Promise.resolve(true));
 
-      class TestFieldText extends Field<FieldTypes.TEXT> {
-        validate = testValidateField;
+      class TestPropertyText extends Property<PropertyTypes.TEXT> {
+        validate = testValidateProperty;
       }
 
       class TestValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
@@ -1274,8 +1279,8 @@ describe("Test Model", () => {
       }
 
       const _adapter = mockAdapter({
-        fieldsMap: {
-          [FieldTypes.TEXT]: TestFieldText,
+        propertiesMap: {
+          [PropertyTypes.TEXT]: TestPropertyText,
         },
         validatorsMap: {
           [ValidatorTypes.SAMPLE]: TestValidatorSample,
@@ -1284,21 +1289,21 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
 
-      expect(testValidateField).toHaveBeenCalledTimes(0);
+      expect(testValidateProperty).toHaveBeenCalledTimes(0);
       expect(testValidateValidator).toHaveBeenCalledTimes(0);
 
       await TestModel.createMultiple([{}, {}, {}]);
 
-      expect(testValidateField).toHaveBeenCalledTimes(1);
+      expect(testValidateProperty).toHaveBeenCalledTimes(1);
       expect(testValidateValidator).toHaveBeenCalledTimes(1);
     });
 
-    it("Model should validate validators & fields once on createMultiple", async () => {
-      const testValidateField = vi.fn(() => Promise.resolve(true));
+    it("Model should validate validators & properties once on createMultiple", async () => {
+      const testValidateProperty = vi.fn(() => Promise.resolve(true));
       const testValidateValidator = vi.fn(() => Promise.resolve(true));
 
-      class TestFieldText extends Field<FieldTypes.TEXT> {
-        validate = testValidateField;
+      class TestPropertyText extends Property<PropertyTypes.TEXT> {
+        validate = testValidateProperty;
       }
 
       class TestValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
@@ -1306,8 +1311,8 @@ describe("Test Model", () => {
       }
 
       const _adapter = mockAdapter({
-        fieldsMap: {
-          [FieldTypes.TEXT]: TestFieldText,
+        propertiesMap: {
+          [PropertyTypes.TEXT]: TestPropertyText,
         },
         validatorsMap: {
           [ValidatorTypes.SAMPLE]: TestValidatorSample,
@@ -1316,7 +1321,7 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
 
-      expect(testValidateField).toHaveBeenCalledTimes(0);
+      expect(testValidateProperty).toHaveBeenCalledTimes(0);
       expect(testValidateValidator).toHaveBeenCalledTimes(0);
 
       await TestModel.createMultiple([
@@ -1331,7 +1336,7 @@ describe("Test Model", () => {
         },
       ]);
 
-      expect(testValidateField).toHaveBeenCalledTimes(1);
+      expect(testValidateProperty).toHaveBeenCalledTimes(1);
       expect(testValidateValidator).toHaveBeenCalledTimes(1);
     });
   });
@@ -1385,9 +1390,9 @@ describe("Test Model", () => {
 
       const TestModel = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -1420,9 +1425,9 @@ describe("Test Model", () => {
 
       const TestModel = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -1456,9 +1461,9 @@ describe("Test Model", () => {
 
       const TestModel = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -1541,19 +1546,19 @@ describe("Test Model", () => {
     const DocModel = mockModel({
       slug: faker.random.alphaNumeric(10),
       single: true,
-      fields: {
+      properties: {
         test: {
-          type: FieldTypes.TEXT,
+          type: PropertyTypes.TEXT,
           options: {
             default: "defaultValue",
           },
         },
         nested: {
-          type: FieldTypes.OBJECT,
+          type: PropertyTypes.OBJECT,
           options: {
-            fields: {
+            properties: {
               subtitle: {
-                type: FieldTypes.TEXT,
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -1977,13 +1982,13 @@ describe("Test Model", () => {
   });
 
   describe("Model reload", () => {
-    it("should load fields from datamodel", async () => {
+    it("should load properties from datamodel", async () => {
       const adapter = mockAdapter();
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: generateRandomString(),
-        fields: {
-          field1: {
-            type: FieldTypes.TEXT,
+        properties: {
+          property1: {
+            type: PropertyTypes.TEXT,
             options: {
               default: "defaultValue",
             },
@@ -1997,34 +2002,34 @@ describe("Test Model", () => {
 
       await TestModel.reloadModel();
 
-      expect(TestModel.fieldsKeys).toContain("field1");
+      expect(TestModel.propertiesKeys).toContain("property1");
 
       const i = TestModel.hydrate({});
       // @ts-ignore
-      expect(i.field1).toEqual("defaultValue");
+      expect(i.property1).toEqual("defaultValue");
 
       Object.assign(dm.getData(), {
-        fields: {
-          field2: {
-            type: FieldTypes.TEXT,
+        properties: {
+          property2: {
+            type: PropertyTypes.TEXT,
           },
         },
       });
 
       await TestModel.reloadModel();
 
-      expect(TestModel.fieldsKeys).not.toContain("field1");
-      expect(TestModel.fieldsKeys).toContain("field2");
+      expect(TestModel.propertiesKeys).not.toContain("property1");
+      expect(TestModel.propertiesKeys).toContain("property2");
     });
 
-    it("should load fields from single datamodel", async () => {
+    it("should load properties from single datamodel", async () => {
       const adapter = mockAdapter();
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: generateRandomString(),
         single: true,
-        fields: {
-          field1: {
-            type: FieldTypes.TEXT,
+        properties: {
+          property1: {
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -2039,36 +2044,36 @@ describe("Test Model", () => {
 
       await TestModel.reloadModel();
 
-      expect(TestModel.fieldsKeys).toContain("field1");
+      expect(TestModel.propertiesKeys).toContain("property1");
 
       Object.assign(dm.getData(), {
-        fields: {
-          field2: {
-            type: FieldTypes.TEXT,
+        properties: {
+          property2: {
+            type: PropertyTypes.TEXT,
           },
         },
       });
 
       await TestModel.reloadModel();
 
-      expect(TestModel.fieldsKeys).not.toContain("field1");
-      expect(TestModel.fieldsKeys).toContain("field2");
+      expect(TestModel.propertiesKeys).not.toContain("property1");
+      expect(TestModel.propertiesKeys).toContain("property2");
     });
 
-    it("should support for keyField change", async () => {
+    it("should support for keyProperty change", async () => {
       const adapter = mockAdapter();
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: generateRandomString(),
-        keyField: "field1",
-        fields: {
-          field1: {
-            type: FieldTypes.TEXT,
+        keyProperty: "property1",
+        properties: {
+          property1: {
+            type: PropertyTypes.TEXT,
           },
         },
         validators: [
           {
             type: ValidatorTypes.REQUIRED,
-            options: { field: "field1" },
+            options: { property: "property1" },
           },
         ],
       });
@@ -2077,26 +2082,26 @@ describe("Test Model", () => {
 
       await TestModel.reloadModel();
 
-      expect(TestModel.getKeyField()).toEqual("field1");
+      expect(TestModel.getKeyProperty()).toEqual("property1");
 
-      expect(TestModel.fieldsKeys).toContain("field1");
+      expect(TestModel.propertiesKeys).toContain("property1");
 
       Object.assign(dm.getData(), {
-        keyField: "field2",
-        fields: {
-          field2: {
-            type: FieldTypes.TEXT,
+        keyProperty: "property2",
+        properties: {
+          property2: {
+            type: PropertyTypes.TEXT,
           },
         },
       });
 
       await TestModel.reloadModel();
 
-      expect(TestModel.getKeyField()).toEqual("field2");
+      expect(TestModel.getKeyProperty()).toEqual("property2");
 
-      expect(TestModel.fieldsKeys).not.toContain("field1");
+      expect(TestModel.propertiesKeys).not.toContain("property1");
 
-      expect(TestModel.fieldsKeys).toContain("field2");
+      expect(TestModel.propertiesKeys).toContain("property2");
     });
   });
 
@@ -2249,7 +2254,7 @@ describe("Test Model", () => {
       expect(modelFromDM).not.toBe(modelFromSlug);
     });
 
-    it("should cache class on adapter by slug and use these models in relation fields", async () => {
+    it("should cache class on adapter by slug and use these models in relation properties", async () => {
       const adapter = mockAdapter();
 
       const slug1 = generateRandomString();
@@ -2261,9 +2266,9 @@ describe("Test Model", () => {
         },
         {
           slug: slug2,
-          fields: {
+          properties: {
             rel: {
-              type: FieldTypes.RELATION,
+              type: PropertyTypes.RELATION,
               options: {
                 ref: slug1,
               },
@@ -2290,9 +2295,9 @@ describe("Test Model", () => {
       const i2 = await Model.getClass<
         typeof Model & {
           configuration: {
-            fields: {
+            properties: {
               rel: {
-                type: FieldTypes.RELATION;
+                type: PropertyTypes.RELATION;
                 options: {
                   ref: "accounts";
                 };
@@ -2305,7 +2310,7 @@ describe("Test Model", () => {
       expect(i2.rel?.model).toBe(Model1);
     });
 
-    it("should cache class on adapter by slug and use these models in relation fields", async () => {
+    it("should cache class on adapter by slug and use these models in relation properties", async () => {
       const adapter = mockAdapter();
 
       const slug1 = generateRandomString();
@@ -2317,9 +2322,9 @@ describe("Test Model", () => {
         },
         {
           slug: slug2,
-          fields: {
+          properties: {
             rel: {
-              type: FieldTypes.RELATION,
+              type: PropertyTypes.RELATION,
               options: {
                 ref: slug1,
               },
@@ -2333,8 +2338,8 @@ describe("Test Model", () => {
       const i2 = await Model.getClass<
         typeof Model & {
           configuration: {
-            fields: {
-              rel: { type: FieldTypes.RELATION };
+            properties: {
+              rel: { type: PropertyTypes.RELATION };
             };
           };
         }
@@ -2356,8 +2361,8 @@ describe("Test Model", () => {
       const i3 = await Model.getClass<
         typeof Model & {
           configuration: {
-            fields: {
-              rel: { type: FieldTypes.RELATION };
+            properties: {
+              rel: { type: PropertyTypes.RELATION };
             };
           };
         }
@@ -2366,7 +2371,7 @@ describe("Test Model", () => {
       expect(i3.rel?.model).toBe(Model1);
     });
 
-    it("should cache class on adapter by slug and use these models in array relation fields", async () => {
+    it("should cache class on adapter by slug and use these models in array relation properties", async () => {
       const adapter = mockAdapter();
 
       const slug1 = generateRandomString();
@@ -2378,12 +2383,12 @@ describe("Test Model", () => {
         },
         {
           slug: slug2,
-          fields: {
+          properties: {
             rel: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.RELATION,
+                  type: PropertyTypes.RELATION,
                   options: {
                     ref: slug1,
                   },
@@ -2412,11 +2417,11 @@ describe("Test Model", () => {
       const i2 = await Model.getClass<
         typeof Model & {
           configuration: {
-            fields: {
+            properties: {
               rel: {
-                type: FieldTypes.ARRAY;
+                type: PropertyTypes.ARRAY;
                 options: {
-                  items: { type: FieldTypes.RELATION };
+                  items: { type: PropertyTypes.RELATION };
                 };
               };
             };
@@ -2434,9 +2439,9 @@ describe("Test Model", () => {
         static configuration = defineConfiguration({
           slug: "custom",
           loadDatamodel: false,
-          fields: {
-            customField: {
-              type: FieldTypes.TEXT,
+          properties: {
+            customProperty: {
+              type: PropertyTypes.TEXT,
             },
           },
         });
@@ -2458,9 +2463,9 @@ describe("Test Model", () => {
         static configuration = defineConfiguration({
           slug: "custom",
           loadDatamodel: false,
-          fields: {
-            customField: {
-              type: FieldTypes.TEXT,
+          properties: {
+            customProperty: {
+              type: PropertyTypes.TEXT,
             },
           },
         });
@@ -2482,9 +2487,9 @@ describe("Test Model", () => {
         static configuration = defineConfiguration({
           slug: "custom",
           loadDatamodel: false,
-          fields: {
-            customField: {
-              type: FieldTypes.TEXT,
+          properties: {
+            customProperty: {
+              type: PropertyTypes.TEXT,
             },
           },
         });
@@ -2507,9 +2512,9 @@ describe("Test Model", () => {
         static configuration = defineConfiguration({
           slug: "custom",
           loadDatamodel: false,
-          fields: {
-            customField: {
-              type: FieldTypes.TEXT,
+          properties: {
+            customProperty: {
+              type: PropertyTypes.TEXT,
             },
           },
         });
@@ -2529,9 +2534,9 @@ describe("Test Model", () => {
 
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: "custom",
-        fields: {
-          customField: {
-            type: FieldTypes.TEXT,
+        properties: {
+          customProperty: {
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -2614,15 +2619,15 @@ describe("Test Model", () => {
       expect(adapter.getClosestModel(TestModel.configuration.slug)).toBe(TestModel2);
     });
 
-    it("should be able to extend medias class fields", async () => {
+    it("should be able to extend medias class properties", async () => {
       const cache = new Set<ModelInstance<typeof Model>>();
       const adapter = mockAdapter({ privateCache: cache });
 
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: "medias",
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
             options: {
               default: "1",
             },
@@ -2634,7 +2639,7 @@ describe("Test Model", () => {
 
       await model.initialize();
 
-      expect(model.fieldsMap.has("title")).toBeTruthy();
+      expect(model.propertiesMap.has("title")).toBeTruthy();
     });
 
     it("should be able to extend multiple medias classes", async () => {
@@ -2645,9 +2650,9 @@ describe("Test Model", () => {
 
       await DataModel.extend({ adapterClass: adapter1 }).create({
         slug: "medias",
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
             options: {
               default: "1",
             },
@@ -2663,8 +2668,8 @@ describe("Test Model", () => {
       await medias1.initialize();
       await medias2.initialize();
 
-      expect(medias1.fieldsMap.has("title")).toBeTruthy();
-      expect(medias2.fieldsMap.has("title")).toBeTruthy();
+      expect(medias1.propertiesMap.has("title")).toBeTruthy();
+      expect(medias2.propertiesMap.has("title")).toBeTruthy();
     });
   });
 
@@ -2674,9 +2679,9 @@ describe("Test Model", () => {
 
     const dm = await DataModel.extend({ adapterClass: adapter }).create({
       slug: slug,
-      fields: {
+      properties: {
         title: {
-          type: FieldTypes.TEXT,
+          type: PropertyTypes.TEXT,
           options: {
             default: "1",
           },
@@ -2694,7 +2699,7 @@ describe("Test Model", () => {
 
     expect(spyReload).toHaveBeenCalledTimes(1);
 
-    expect(model1.fieldsMap.has("title")).toBeTruthy();
+    expect(model1.propertiesMap.has("title")).toBeTruthy();
 
     const model2 = Model.getClass(slug, adapter);
 
@@ -2706,24 +2711,24 @@ describe("Test Model", () => {
 
     expect(spyReload2).toHaveBeenCalledTimes(0);
 
-    expect(model2.fieldsMap.has("title")).toBeTruthy();
+    expect(model2.propertiesMap.has("title")).toBeTruthy();
 
     await dm.update({
       $set: {
-        fields: {
+        properties: {
           subtitle: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       },
     });
 
-    expect(model2.fieldsMap.has("title")).toBeTruthy();
+    expect(model2.propertiesMap.has("title")).toBeTruthy();
 
     await model2.reloadModel();
 
-    expect(model2.fieldsMap.has("subtitle")).toBeTruthy();
-    expect(model2.fieldsMap.has("title")).toBeFalsy();
+    expect(model2.propertiesMap.has("subtitle")).toBeTruthy();
+    expect(model2.propertiesMap.has("title")).toBeFalsy();
   });
 
   describe("Model realtime", () => {
@@ -2764,9 +2769,9 @@ describe("Test Model", () => {
       await DataModel.extend({ adapterClass: adapter }).create({
         slug,
         realtime: true,
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -2792,9 +2797,9 @@ describe("Test Model", () => {
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: TestModel.configuration.slug,
         realtime: true,
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });

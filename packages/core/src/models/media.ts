@@ -1,6 +1,6 @@
 import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 
 @modelDecorator()
 export class Media extends Model {
@@ -11,13 +11,13 @@ export class Media extends Model {
     connectable: true,
     realtime: true,
     isEnvironmentScoped: true,
-    keyField: "name",
-    fields: {
-      name: { type: FieldTypes.TEXT },
-      private: { type: FieldTypes.BOOLEAN, options: { default: false } },
-      _mimetype: { type: FieldTypes.TEXT },
-      _originalname: { type: FieldTypes.TEXT },
-      _size: { type: FieldTypes.INTEGER },
+    keyProperty: "name",
+    properties: {
+      name: { type: PropertyTypes.TEXT },
+      private: { type: PropertyTypes.BOOLEAN, options: { default: false } },
+      _mimetype: { type: PropertyTypes.TEXT },
+      _originalname: { type: PropertyTypes.TEXT },
+      _size: { type: PropertyTypes.INTEGER },
     },
   });
 }

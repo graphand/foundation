@@ -15,7 +15,7 @@ describe("EventSubscription Model", () => {
         },
         register: {
           enabled: true,
-          authorizedFields: ["firstname", "lastname"],
+          authorizedProperties: ["firstname", "lastname"],
         },
       }),
     ).resolves.toBeInstanceOf(AuthProvider);

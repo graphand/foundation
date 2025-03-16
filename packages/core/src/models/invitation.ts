@@ -1,7 +1,7 @@
 import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { Account } from "@/models/account.js";
 import { Patterns } from "@/enums/patterns.js";
 
@@ -13,18 +13,18 @@ export class Invitation extends Model {
     isEnvironmentScoped: true,
     blockMultipleOperations: true,
     loadDatamodel: false,
-    fields: {
-      firstname: { type: FieldTypes.TEXT },
-      lastname: { type: FieldTypes.TEXT },
-      email: { type: FieldTypes.TEXT },
-      account: { type: FieldTypes.RELATION, options: { ref: Account.configuration.slug } },
+    properties: {
+      firstname: { type: PropertyTypes.TEXT },
+      lastname: { type: PropertyTypes.TEXT },
+      email: { type: PropertyTypes.TEXT },
+      account: { type: PropertyTypes.RELATION, options: { ref: Account.configuration.slug } },
     },
     validators: [
-      { type: ValidatorTypes.REQUIRED, options: { field: "firstname" } },
-      { type: ValidatorTypes.REQUIRED, options: { field: "lastname" } },
-      { type: ValidatorTypes.REQUIRED, options: { field: "email" } },
-      { type: ValidatorTypes.REQUIRED, options: { field: "account" } },
-      { type: ValidatorTypes.REGEX, options: { field: "email", pattern: Patterns.EMAIL } },
+      { type: ValidatorTypes.REQUIRED, options: { property: "firstname" } },
+      { type: ValidatorTypes.REQUIRED, options: { property: "lastname" } },
+      { type: ValidatorTypes.REQUIRED, options: { property: "email" } },
+      { type: ValidatorTypes.REQUIRED, options: { property: "account" } },
+      { type: ValidatorTypes.REGEX, options: { property: "email", pattern: Patterns.EMAIL } },
     ],
   });
 }

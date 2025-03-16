@@ -76,7 +76,7 @@ describe("test ModelList", () => {
     expect(_list.lastUpdated?._id).toBe("b");
   });
 
-  it("lastUpdated should use createdAt field if updatedAt is empty", async () => {
+  it("lastUpdated should use createdAt property if updatedAt is empty", async () => {
     const _list = new ModelList(model, [
       model.hydrate({
         _id: "a",

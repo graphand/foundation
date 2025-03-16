@@ -2,7 +2,7 @@ import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.d
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { ValidationError } from "@/lib/validation-error.js";
 import { faker } from "@faker-js/faker";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { Model } from "@/lib/model.js";
 import { Validator } from "@/lib/validator.js";
 import { ValidatorOptions, ModelJSON } from "@/types/index.js";
@@ -15,16 +15,16 @@ describe("test validators", () => {
   describe("required validator", () => {
     const model = mockModel({
       slug: faker.random.alphaNumeric(10),
-      fields: {
+      properties: {
         title: {
-          type: FieldTypes.TEXT,
+          type: PropertyTypes.TEXT,
         },
         obj: {
-          type: FieldTypes.OBJECT,
+          type: PropertyTypes.OBJECT,
           options: {
-            fields: {
+            properties: {
               title: {
-                type: FieldTypes.TEXT,
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -34,7 +34,7 @@ describe("test validators", () => {
         {
           type: ValidatorTypes.REQUIRED,
           options: {
-            field: "title",
+            property: "title",
           },
         },
       ],
@@ -47,12 +47,12 @@ describe("test validators", () => {
     const _containsValidator = (e: ValidationError) => {
       return e.validators.some(err => {
         const v = err.validator as Validator<ValidatorTypes.REQUIRED>;
-        return v.type === ValidatorTypes.REQUIRED && v.options.field === "title";
+        return v.type === ValidatorTypes.REQUIRED && v.options.property === "title";
       });
     };
 
     describe("create", () => {
-      it("create without field title should throw error", async () => {
+      it("create without property title should throw error", async () => {
         expect.assertions(2);
 
         try {
@@ -64,13 +64,13 @@ describe("test validators", () => {
         }
       });
 
-      it("create with field title should not throw error", async () => {
+      it("create with property title should not throw error", async () => {
         const title = faker.lorem.word();
         const i = await model.create({ title });
         expect(i).toBeInstanceOf(model);
       });
 
-      it("create with null or empty field title should throw error", async () => {
+      it("create with null or empty property title should throw error", async () => {
         expect.assertions(2);
 
         try {
@@ -84,7 +84,7 @@ describe("test validators", () => {
     });
 
     describe("createMultiple", () => {
-      it("createMultiple without field title in list should throw error", async () => {
+      it("createMultiple without property title in list should throw error", async () => {
         expect.assertions(2);
         const title = faker.lorem.word();
 
@@ -97,14 +97,14 @@ describe("test validators", () => {
         }
       });
 
-      it("createMultiple with field title in every item of list should not throw error", async () => {
+      it("createMultiple with property title in every item of list should not throw error", async () => {
         const title = faker.lorem.word();
         const list = await model.createMultiple([{ title }, { title }]);
         expect(list).toBeInstanceOf(Array);
         expect(list.every(i => i instanceof model)).toBeTruthy();
       });
 
-      it("createMultiple with one null or empty field title in list should throw error", async () => {
+      it("createMultiple with one null or empty property title in list should throw error", async () => {
         expect.assertions(2);
         const title = faker.lorem.word();
 
@@ -117,7 +117,7 @@ describe("test validators", () => {
         }
       });
 
-      it("createMultiple with nested field title in every item of list should not throw error", async () => {
+      it("createMultiple with nested property title in every item of list should not throw error", async () => {
         const title = faker.lorem.word();
         const list = await model.createMultiple([
           { title, obj: { title } },
@@ -129,7 +129,7 @@ describe("test validators", () => {
     });
 
     describe("update prototype", () => {
-      it("update title field to null should throw error", async () => {
+      it("update title property to null should throw error", async () => {
         expect.assertions(2);
         const title = faker.lorem.word();
         const i = await model.create({ title });
@@ -143,7 +143,7 @@ describe("test validators", () => {
         }
       });
 
-      it("unset title field should throw error", async () => {
+      it("unset title property should throw error", async () => {
         expect.assertions(2);
         const title = faker.lorem.word();
         const i = await model.create({ title });
@@ -157,7 +157,7 @@ describe("test validators", () => {
         }
       });
 
-      it("update title field should not throw error", async () => {
+      it("update title property should not throw error", async () => {
         const title = faker.lorem.word();
         const i = await model.create({ title });
 
@@ -168,7 +168,7 @@ describe("test validators", () => {
     });
 
     describe("update model", () => {
-      it("update title field on model to null should throw error", async () => {
+      it("update title property on model to null should throw error", async () => {
         expect.assertions(2);
         const title = faker.lorem.word();
         const i = await model.create({ title });
@@ -183,7 +183,7 @@ describe("test validators", () => {
         }
       });
 
-      it("unset title field on model should throw error", async () => {
+      it("unset title property on model should throw error", async () => {
         expect.assertions(2);
         const title = faker.lorem.word();
         const i = await model.create({ title });
@@ -198,7 +198,7 @@ describe("test validators", () => {
         }
       });
 
-      it("update title field on model should not throw error", async () => {
+      it("update title property on model should not throw error", async () => {
         const title = faker.lorem.word();
         const updateTitle = faker.lorem.word();
         const i = await model.create({ title });
@@ -212,7 +212,7 @@ describe("test validators", () => {
     });
 
     describe("validate", () => {
-      it("should throw error if no field", async () => {
+      it("should throw error if no property", async () => {
         expect.assertions(2);
 
         try {
@@ -224,7 +224,7 @@ describe("test validators", () => {
         }
       });
 
-      it("should throw error if field is empty string", async () => {
+      it("should throw error if property is empty string", async () => {
         expect.assertions(2);
 
         try {
@@ -236,7 +236,7 @@ describe("test validators", () => {
         }
       });
 
-      it("should throw error if field is specified as undefined", async () => {
+      it("should throw error if property is specified as undefined", async () => {
         expect.assertions(2);
 
         try {
@@ -248,7 +248,7 @@ describe("test validators", () => {
         }
       });
 
-      it("should throw error if field is null", async () => {
+      it("should throw error if property is null", async () => {
         expect.assertions(2);
 
         try {
@@ -260,7 +260,7 @@ describe("test validators", () => {
         }
       });
 
-      it("should not throw error if field is valid", async () => {
+      it("should not throw error if property is valid", async () => {
         const title = faker.lorem.word();
         const validated = await model.validate([{ title }]);
         expect(validated).toBeTruthy();
@@ -269,12 +269,12 @@ describe("test validators", () => {
       it("should validate within array", async () => {
         const _model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
                 validators: [
                   {
@@ -309,16 +309,16 @@ describe("test validators", () => {
     const _mockModelWithRegexValidator = async (options: Partial<ValidatorOptions<ValidatorTypes.REGEX>> = {}) => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
         validators: [
           {
             type: ValidatorTypes.REGEX,
             options: {
-              field: "title",
+              property: "title",
               ...options,
             } as ValidatorOptions<ValidatorTypes.REGEX>,
           },
@@ -401,12 +401,12 @@ describe("test validators", () => {
     it("should validate within array", async () => {
       const _model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arr: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.TEXT,
+                type: PropertyTypes.TEXT,
               },
               validators: [
                 {
@@ -439,19 +439,19 @@ describe("test validators", () => {
     });
   });
 
-  describe("keyField validator", () => {
+  describe("keyProperty validator", () => {
     const model = mockModel({
       slug: faker.random.alphaNumeric(10),
-      fields: {
+      properties: {
         title: {
-          type: FieldTypes.TEXT,
+          type: PropertyTypes.TEXT,
         },
       },
       validators: [
         {
-          type: ValidatorTypes.KEY_FIELD,
+          type: ValidatorTypes.KEY_PROPERTY,
           options: {
-            field: "title",
+            property: "title",
           },
         },
       ],
@@ -461,33 +461,33 @@ describe("test validators", () => {
       await model.initialize();
     });
 
-    it("create with no keyField should throw error", async () => {
+    it("create with no keyProperty should throw error", async () => {
       await expect(model.create({})).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("create with valid keyField should not throw error", async () => {
+    it("create with valid keyProperty should not throw error", async () => {
       const i = await model.create({ title: "validKey" });
       expect(i).toBeInstanceOf(model);
     });
 
-    it("create with invalid format keyField should throw error", async () => {
+    it("create with invalid format keyProperty should throw error", async () => {
       await expect(model.create({ title: "invalid key" })).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("create multiple with duplicated keyField should throw error", async () => {
+    it("create multiple with duplicated keyProperty should throw error", async () => {
       await expect(model.createMultiple([{ title: "test" }, { title: "test" }])).rejects.toBeInstanceOf(
         ValidationError,
       );
     });
   });
 
-  describe("datamodelKeyField validator", () => {
-    it("datamodel without keyField should not throw error", async () => {
+  describe("datamodelKeyProperty validator", () => {
+    it("datamodel without keyProperty should not throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -495,13 +495,13 @@ describe("test validators", () => {
       await expect(datamodel).resolves.toBeInstanceOf(DataModel);
     });
 
-    it("datamodel with keyField and valid keyField field should not throw error", async () => {
+    it("datamodel with keyProperty and valid keyProperty property should not throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        keyField: "title",
-        fields: {
+        keyProperty: "title",
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -509,22 +509,22 @@ describe("test validators", () => {
       await expect(datamodel).resolves.toBeInstanceOf(DataModel);
     });
 
-    it("datamodel with keyField and not existing field should throw error", async () => {
+    it("datamodel with keyProperty and not existing property should throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        keyField: "title",
+        keyProperty: "title",
       });
 
       await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("datamodel with keyField and invalid keyField field should throw error", async () => {
+    it("datamodel with keyProperty and invalid keyProperty property should throw error", async () => {
       const datamodel1 = DataModel_.create({
         slug: generateRandomString(),
-        keyField: "test",
-        fields: {
+        keyProperty: "test",
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -533,10 +533,10 @@ describe("test validators", () => {
 
       const datamodel2 = DataModel_.create({
         slug: generateRandomString(),
-        keyField: "title",
-        fields: {
+        keyProperty: "title",
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
             options: {
               default: "default",
             },
@@ -548,10 +548,10 @@ describe("test validators", () => {
 
       const datamodel3 = DataModel_.create({
         slug: generateRandomString(),
-        keyField: "title",
-        fields: {
+        keyProperty: "title",
+        properties: {
           title: {
-            type: FieldTypes.NUMBER,
+            type: PropertyTypes.NUMBER,
           },
         },
       });
@@ -561,12 +561,12 @@ describe("test validators", () => {
   });
 
   describe("datamodelDefinition validator", () => {
-    it("datamodel with invalid field name should throw error", async () => {
+    it("datamodel with invalid property name should throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        fields: {
+        properties: {
           "invalid name": {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       });
@@ -574,10 +574,10 @@ describe("test validators", () => {
       await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("datamodel with invalid field type should throw error", async () => {
+    it("datamodel with invalid property type should throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        fields: {
+        properties: {
           title: {
             // @ts-expect-error invalid type
             type: "invalid type",
@@ -588,12 +588,12 @@ describe("test validators", () => {
       await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("datamodel with invalid field options should throw error", async () => {
+    it("datamodel with invalid property options should throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
             options: "invalid options",
           },
         },
@@ -602,13 +602,13 @@ describe("test validators", () => {
       await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("datamodel with valid field name should not throw", async () => {
+    it("datamodel with valid property name should not throw", async () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          fields: {
+          properties: {
             validname: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         }),
@@ -617,9 +617,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          fields: {
+          properties: {
             "valid:name": {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         }),
@@ -628,9 +628,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          fields: {
+          properties: {
             "valid-name": {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         }),
@@ -639,22 +639,22 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          fields: {
+          properties: {
             valid_name: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         }),
       ).resolves.toBeTruthy();
     });
 
-    it("datamodel with invalid field name should throw error", async () => {
+    it("datamodel with invalid property name should throw error", async () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          fields: {
+          properties: {
             "invalid name": {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         }),
@@ -663,9 +663,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          fields: {
+          properties: {
             "invalid.name": {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         }),
@@ -674,9 +674,9 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          fields: {
+          properties: {
             "invalid!name": {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         }),
@@ -685,27 +685,27 @@ describe("test validators", () => {
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          fields: {
+          properties: {
             _invalidName: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("datamodel with field name as reserved keyword should throw error", async () => {
-      const _create = async (fields: ModelJSON<typeof DataModel>["fields"]) => {
+    it("datamodel with property name as reserved keyword should throw error", async () => {
+      const _create = async (properties: ModelJSON<typeof DataModel>["properties"]) => {
         return DataModel_.create({
           slug: generateRandomString(),
-          fields,
+          properties,
         });
       };
 
       await expect(
         _create({
           _id: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
@@ -713,7 +713,7 @@ describe("test validators", () => {
       await expect(
         _create({
           model: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
@@ -721,7 +721,7 @@ describe("test validators", () => {
       await expect(
         _create({
           getData: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
@@ -729,44 +729,44 @@ describe("test validators", () => {
       await expect(
         _create({
           get: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("datamodel with field name longer than 100 characters should throw error", async () => {
-      const fieldName = "a".repeat(101);
+    it("datamodel with property name longer than 100 characters should throw error", async () => {
+      const propertyName = "a".repeat(101);
       await expect(
         DataModel_.create({
           slug: generateRandomString(),
-          fields: {
-            [fieldName]: {
-              type: FieldTypes.TEXT,
+          properties: {
+            [propertyName]: {
+              type: PropertyTypes.TEXT,
             },
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("datamodel with more than 100 fields should throw error", async () => {
-      const _createModelWithFields = async (fieldsCount: number) => {
-        const fields: ModelJSON<typeof DataModel>["fields"] = {};
-        for (let i = 0; i < fieldsCount; i++) {
-          fields[`field${i}`] = {
-            type: FieldTypes.TEXT,
+    it("datamodel with more than 100 properties should throw error", async () => {
+      const _createModelWithProperties = async (propertiesCount: number) => {
+        const properties: ModelJSON<typeof DataModel>["properties"] = {};
+        for (let i = 0; i < propertiesCount; i++) {
+          properties[`property${i}`] = {
+            type: PropertyTypes.TEXT,
           };
         }
 
         return DataModel_.create({
           slug: generateRandomString(),
-          fields,
+          properties,
         });
       };
 
-      await expect(_createModelWithFields(99)).resolves.toBeInstanceOf(DataModel);
-      await expect(_createModelWithFields(100)).resolves.toBeInstanceOf(DataModel);
-      await expect(_createModelWithFields(101)).rejects.toBeInstanceOf(ValidationError);
+      await expect(_createModelWithProperties(99)).resolves.toBeInstanceOf(DataModel);
+      await expect(_createModelWithProperties(100)).resolves.toBeInstanceOf(DataModel);
+      await expect(_createModelWithProperties(101)).rejects.toBeInstanceOf(ValidationError);
     });
   });
 
@@ -774,16 +774,16 @@ describe("test validators", () => {
     const _mockModelWithRegexValidator = async (options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {}) => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
         validators: [
           {
             type: ValidatorTypes.LENGTH,
             options: {
-              field: "title",
+              property: "title",
               ...options,
             },
           },
@@ -810,22 +810,22 @@ describe("test validators", () => {
     it("should validate in nested array", async () => {
       const _model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arr: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.ARRAY,
+                type: PropertyTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
-                      fields: {
+                      properties: {
                         nested: {
-                          type: FieldTypes.ARRAY,
+                          type: PropertyTypes.ARRAY,
                           options: {
                             items: {
-                              type: FieldTypes.TEXT,
+                              type: PropertyTypes.TEXT,
                             },
                             validators: [
                               {
@@ -975,15 +975,15 @@ describe("test validators", () => {
     });
 
     describe("on array", () => {
-      const _mockModelWithArrayField = async (options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {}) => {
+      const _mockModelWithArrayProperty = async (options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {}) => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -992,7 +992,7 @@ describe("test validators", () => {
             {
               type: ValidatorTypes.LENGTH,
               options: {
-                field: "arr",
+                property: "arr",
                 ...options,
               },
             },
@@ -1005,7 +1005,7 @@ describe("test validators", () => {
       };
 
       it("create without validator config should not throw error", async () => {
-        const model = await _mockModelWithArrayField();
+        const model = await _mockModelWithArrayProperty();
 
         await expect(model.create({})).resolves.toBeInstanceOf(model);
 
@@ -1019,7 +1019,7 @@ describe("test validators", () => {
       });
 
       it("create with undefined should not throw error", async () => {
-        const model = await _mockModelWithArrayField({ min: 2 });
+        const model = await _mockModelWithArrayProperty({ min: 2 });
 
         await expect(model.create({ arr: undefined })).resolves.toBeInstanceOf(model);
 
@@ -1027,7 +1027,7 @@ describe("test validators", () => {
       });
 
       it("create with invalid length should throw error", async () => {
-        const model = await _mockModelWithArrayField({ min: 2 });
+        const model = await _mockModelWithArrayProperty({ min: 2 });
 
         await expect(model.create({ arr: [] })).rejects.toThrow(ValidationError);
 
@@ -1037,7 +1037,7 @@ describe("test validators", () => {
       });
 
       it("create with invalid length should throw error", async () => {
-        const model = await _mockModelWithArrayField({ max: 2 });
+        const model = await _mockModelWithArrayProperty({ max: 2 });
 
         await expect(model.create({ arr: ["test", "test", "test"] })).rejects.toThrow(ValidationError);
 
@@ -1047,22 +1047,22 @@ describe("test validators", () => {
       it("should validate in nested array", async () => {
         const _model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.ARRAY,
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.OBJECT,
+                      type: PropertyTypes.OBJECT,
                       options: {
-                        fields: {
+                        properties: {
                           nested: {
-                            type: FieldTypes.ARRAY,
+                            type: PropertyTypes.ARRAY,
                             options: {
                               items: {
-                                type: FieldTypes.TEXT,
+                                type: PropertyTypes.TEXT,
                               },
                             },
                           },
@@ -1071,7 +1071,7 @@ describe("test validators", () => {
                           {
                             type: ValidatorTypes.LENGTH,
                             options: {
-                              field: "nested",
+                              property: "nested",
                               min: 2,
                               max: 3,
                             },
@@ -1152,16 +1152,16 @@ describe("test validators", () => {
     const _mockModelWithRegexValidator = async (options: Partial<ValidatorOptions<ValidatorTypes.BOUNDARIES>> = {}) => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
         validators: [
           {
             type: ValidatorTypes.BOUNDARIES,
             options: {
-              field: "title",
+              property: "title",
               ...options,
             },
           },
@@ -1259,15 +1259,15 @@ describe("test validators", () => {
   describe("unique validator", () => {
     const model = mockModel({
       slug: faker.random.alphaNumeric(10),
-      fields: {
+      properties: {
         title: {
-          type: FieldTypes.TEXT,
+          type: PropertyTypes.TEXT,
         },
         arr: {
-          type: FieldTypes.ARRAY,
+          type: PropertyTypes.ARRAY,
           options: {
             items: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
             validators: [
               {
@@ -1277,21 +1277,21 @@ describe("test validators", () => {
           },
         },
         arrObj: {
-          type: FieldTypes.ARRAY,
+          type: PropertyTypes.ARRAY,
           options: {
             items: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   label: {
-                    type: FieldTypes.TEXT,
+                    type: PropertyTypes.TEXT,
                   },
                 },
                 validators: [
                   {
                     type: ValidatorTypes.UNIQUE,
                     options: {
-                      field: "label",
+                      property: "label",
                     },
                   },
                 ],
@@ -1309,7 +1309,7 @@ describe("test validators", () => {
         {
           type: ValidatorTypes.UNIQUE,
           options: {
-            field: "title",
+            property: "title",
           },
         },
       ],
@@ -1345,7 +1345,7 @@ describe("test validators", () => {
       ).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("same value in nested array field should throw error", async () => {
+    it("same value in nested array property should throw error", async () => {
       await expect(
         model.create({
           arrObj: [
@@ -1373,7 +1373,7 @@ describe("test validators", () => {
       ).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("same value in nested array field in different instances should throw error", async () => {
+    it("same value in nested array property in different instances should throw error", async () => {
       await expect(
         model.createMultiple([
           {
@@ -1402,19 +1402,19 @@ describe("test validators", () => {
   });
 
   describe("length and required validators", () => {
-    describe("on text field", () => {
+    describe("on text property", () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
         validators: [
           {
             type: ValidatorTypes.LENGTH,
             options: {
-              field: "title",
+              property: "title",
               min: 2,
               max: 5,
             },
@@ -1422,7 +1422,7 @@ describe("test validators", () => {
           {
             type: ValidatorTypes.REQUIRED,
             options: {
-              field: "title",
+              property: "title",
             },
           },
         ],
@@ -1451,15 +1451,15 @@ describe("test validators", () => {
       });
     });
 
-    describe("on array field", () => {
+    describe("on array property", () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arr: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.TEXT,
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -1468,7 +1468,7 @@ describe("test validators", () => {
           {
             type: ValidatorTypes.LENGTH,
             options: {
-              field: "arr",
+              property: "arr",
               min: 2,
               max: 3,
             },
@@ -1476,7 +1476,7 @@ describe("test validators", () => {
           {
             type: ValidatorTypes.REQUIRED,
             options: {
-              field: "arr",
+              property: "arr",
             },
           },
         ],

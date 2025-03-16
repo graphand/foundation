@@ -1,9 +1,9 @@
 import { vi } from "vitest";
 import { ObjectId } from "bson";
 import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { faker } from "@faker-js/faker";
-import { Field } from "@/lib/field.js";
+import { Property } from "@/lib/property.js";
 import { Validator } from "@/lib/validator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { ValidationError } from "@/lib/validation-error.js";
@@ -11,18 +11,18 @@ import { PromiseModel } from "@/lib/promise-model.js";
 import { Account, DataModel, JSONType, Model, Patterns } from "@/index.js";
 import { PromiseModelList } from "@/lib/promise-model-list.js";
 
-describe("test fields", () => {
+describe("test properties", () => {
   const adapter = mockAdapter({});
 
-  describe("Text field", () => {
+  describe("Text property", () => {
     it("should return default value if undefined", async () => {
       const defaultText = faker.lorem.word();
 
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
             options: {
               default: defaultText,
             },
@@ -38,9 +38,9 @@ describe("test fields", () => {
     it("should return string value by default", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -55,9 +55,9 @@ describe("test fields", () => {
     it("should return string from array by default", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -70,12 +70,12 @@ describe("test fields", () => {
       expect(typeof i.title).toBe("string");
     });
 
-    it("should not be able to save an _id in a TEXT field", async () => {
+    it("should not be able to save an _id in a TEXT property", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -87,15 +87,15 @@ describe("test fields", () => {
     });
   });
 
-  describe("Nested field", () => {
+  describe("Nested property", () => {
     it("should return default value if undefined", async () => {
       const defaultJSON = { default: true };
 
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
               default: defaultJSON,
             },
@@ -111,9 +111,9 @@ describe("test fields", () => {
     it("should return object value by default", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -128,9 +128,9 @@ describe("test fields", () => {
     it("should return object from array by default", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -149,21 +149,21 @@ describe("test fields", () => {
 
       const i = await model.create({
         slug: generateRandomString(),
-        fields: {
+        properties: {
           test: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
           },
         },
       });
-      expect(i.get("definition.fields.test.options", "json")).toBe(undefined);
+      expect(i.get("definition.properties.test.options", "json")).toBe(undefined);
     });
 
     it("should not bind default values with defaults=false", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
               default: { test: 1 },
             },
@@ -178,16 +178,16 @@ describe("test fields", () => {
       expect(i.get("obj", undefined, { defaults: false })).toEqual(undefined);
     });
 
-    it("should not bind default values with defaults=false in nested fields", async () => {
+    it("should not bind default values with defaults=false in nested properties", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
+              properties: {
                 foo: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                   options: {
                     default: "bar",
                   },
@@ -210,19 +210,19 @@ describe("test fields", () => {
     it("should merge default values in json by default", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
-                field1: {
-                  type: FieldTypes.TEXT,
+              properties: {
+                property1: {
+                  type: PropertyTypes.TEXT,
                   options: {
                     default: "foo",
                   },
                 },
-                field2: {
-                  type: FieldTypes.TEXT,
+                property2: {
+                  type: PropertyTypes.TEXT,
                   options: {
                     default: "bar",
                   },
@@ -236,33 +236,33 @@ describe("test fields", () => {
 
       const i = model.hydrate({
         obj: {
-          field1: "test",
+          property1: "test",
         },
       });
 
-      expect(i.get("obj")).toEqual({ field1: "test" });
+      expect(i.get("obj")).toEqual({ property1: "test" });
       expect(i.get("obj", "json")).toEqual({
-        field1: "test",
-        field2: "bar",
+        property1: "test",
+        property2: "bar",
       });
     });
 
     it("should not merge default values in json with defaults=false", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
-                field1: {
-                  type: FieldTypes.TEXT,
+              properties: {
+                property1: {
+                  type: PropertyTypes.TEXT,
                   options: {
                     default: "foo",
                   },
                 },
-                field2: {
-                  type: FieldTypes.TEXT,
+                property2: {
+                  type: PropertyTypes.TEXT,
                   options: {
                     default: "bar",
                   },
@@ -276,13 +276,13 @@ describe("test fields", () => {
 
       const i = model.hydrate({
         obj: {
-          field1: "test",
+          property1: "test",
         },
       });
 
-      expect(i.get("obj")).toEqual({ field1: "test" });
+      expect(i.get("obj")).toEqual({ property1: "test" });
       expect(i.get("obj", "json", { defaults: false })).toEqual({
-        field1: "test",
+        property1: "test",
       });
     });
 
@@ -290,13 +290,13 @@ describe("test fields", () => {
       it("should throw error if value is not an object", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   title: {
-                    type: FieldTypes.TEXT,
+                    type: PropertyTypes.TEXT,
                   },
                 },
               },
@@ -309,18 +309,18 @@ describe("test fields", () => {
         await expect(() => model.validate([obj])).rejects.toThrow(ValidationError);
       });
 
-      it("should validate well with defaultField", async () => {
+      it("should validate well with defaultProperty", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                defaultField: {
-                  type: FieldTypes.ARRAY,
+                defaultProperty: {
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.TEXT,
+                      type: PropertyTypes.TEXT,
                     },
                   },
                 },
@@ -331,7 +331,7 @@ describe("test fields", () => {
         await model.initialize();
 
         await expect(
-          model.validate([{ obj: { field1: ["test1", "test2"], field2: ["test3", "test4", "test5"] } }]),
+          model.validate([{ obj: { property1: ["test1", "test2"], property2: ["test3", "test4", "test5"] } }]),
         ).resolves.toBeTruthy();
       });
     });
@@ -340,13 +340,13 @@ describe("test fields", () => {
       it("should return an object proxy", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   title: {
-                    type: FieldTypes.TEXT,
+                    type: PropertyTypes.TEXT,
                   },
                 },
               },
@@ -363,7 +363,7 @@ describe("test fields", () => {
         expect(i.obj?.__isProxy).toBe(true);
       });
 
-      it("should not call other fields serializers thanks to the proxy", async () => {
+      it("should not call other properties serializers thanks to the proxy", async () => {
         const serializeText = vi.fn(({ value }) => {
           return typeof value === "string" ? value : String(value);
         });
@@ -373,15 +373,15 @@ describe("test fields", () => {
         });
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+          propertiesMap: {
+            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
               serializerMap = {
-                [Field.defaultSymbol]: serializeText,
+                [Property.defaultSymbol]: serializeText,
               };
             },
-            [FieldTypes.NUMBER]: class extends Field<FieldTypes.NUMBER> {
+            [PropertyTypes.NUMBER]: class extends Property<PropertyTypes.NUMBER> {
               serializerMap = {
-                [Field.defaultSymbol]: serializeNumber,
+                [Property.defaultSymbol]: serializeNumber,
               };
             },
           },
@@ -389,16 +389,16 @@ describe("test fields", () => {
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   title: {
-                    type: FieldTypes.TEXT,
+                    type: PropertyTypes.TEXT,
                   },
                   value: {
-                    type: FieldTypes.NUMBER,
+                    type: PropertyTypes.NUMBER,
                   },
                 },
               },
@@ -424,7 +424,7 @@ describe("test fields", () => {
         expect(serializeNumber).not.toHaveBeenCalled();
       });
 
-      it("should not call other fields serializers thanks to the proxy even in nested objects", async () => {
+      it("should not call other properties serializers thanks to the proxy even in nested objects", async () => {
         const serializeText = vi.fn(({ value }) => {
           return typeof value === "string" ? value : String(value);
         });
@@ -434,15 +434,15 @@ describe("test fields", () => {
         });
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+          propertiesMap: {
+            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
               serializerMap = {
-                [Field.defaultSymbol]: serializeText,
+                [Property.defaultSymbol]: serializeText,
               };
             },
-            [FieldTypes.NUMBER]: class extends Field<FieldTypes.NUMBER> {
+            [PropertyTypes.NUMBER]: class extends Property<PropertyTypes.NUMBER> {
               serializerMap = {
-                [Field.defaultSymbol]: serializeNumber,
+                [Property.defaultSymbol]: serializeNumber,
               };
             },
           },
@@ -450,26 +450,26 @@ describe("test fields", () => {
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   subObj: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
-                      fields: {
+                      properties: {
                         title: {
-                          type: FieldTypes.TEXT,
+                          type: PropertyTypes.TEXT,
                         },
                         value: {
-                          type: FieldTypes.NUMBER,
+                          type: PropertyTypes.NUMBER,
                         },
                       },
                     },
                   },
                   subValue: {
-                    type: FieldTypes.NUMBER,
+                    type: PropertyTypes.NUMBER,
                   },
                 },
               },
@@ -501,7 +501,7 @@ describe("test fields", () => {
         expect(serializeNumber).not.toHaveBeenCalled();
       });
 
-      it("should not call other fields serializers thanks to the proxy even in nested array", async () => {
+      it("should not call other properties serializers thanks to the proxy even in nested array", async () => {
         const serializeText = vi.fn(({ value }) => {
           return typeof value === "string" ? value : String(value);
         });
@@ -511,15 +511,15 @@ describe("test fields", () => {
         });
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+          propertiesMap: {
+            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
               serializerMap = {
-                [Field.defaultSymbol]: serializeText,
+                [Property.defaultSymbol]: serializeText,
               };
             },
-            [FieldTypes.NUMBER]: class extends Field<FieldTypes.NUMBER> {
+            [PropertyTypes.NUMBER]: class extends Property<PropertyTypes.NUMBER> {
               serializerMap = {
-                [Field.defaultSymbol]: serializeNumber,
+                [Property.defaultSymbol]: serializeNumber,
               };
             },
           },
@@ -527,19 +527,19 @@ describe("test fields", () => {
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       title: {
-                        type: FieldTypes.TEXT,
+                        type: PropertyTypes.TEXT,
                       },
                       value: {
-                        type: FieldTypes.NUMBER,
+                        type: PropertyTypes.NUMBER,
                       },
                     },
                   },
@@ -572,17 +572,17 @@ describe("test fields", () => {
     });
 
     describe("options.strict", () => {
-      it("should return only defined fields in options when strict", async () => {
+      it("should return only defined properties in options when strict", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 strict: true,
-                fields: {
+                properties: {
                   title: {
-                    type: FieldTypes.TEXT,
+                    type: PropertyTypes.TEXT,
                   },
                 },
               },
@@ -593,7 +593,7 @@ describe("test fields", () => {
 
         const obj = {
           title: faker.lorem.word(),
-          fieldNotDefined: faker.lorem.word(),
+          propertyNotDefined: faker.lorem.word(),
         };
 
         const i = model.hydrate({ obj });
@@ -602,20 +602,20 @@ describe("test fields", () => {
 
         expect(_obj).toBeInstanceOf(Object);
         expect(_obj.title).toEqual(obj.title);
-        expect(_obj.fieldNotDefined).toBe(undefined);
+        expect(_obj.propertyNotDefined).toBe(undefined);
       });
     });
 
-    describe("options.fields", () => {
-      it("should serialize from fields defined in options", async () => {
+    describe("options.properties", () => {
+      it("should serialize from properties defined in options", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = vi.fn(() => serializedText);
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+          propertiesMap: {
+            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
               serializerMap = {
-                [Field.defaultSymbol]: testSerializer,
+                [Property.defaultSymbol]: testSerializer,
               };
             },
           },
@@ -623,13 +623,13 @@ describe("test fields", () => {
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   title: {
-                    type: FieldTypes.TEXT,
+                    type: PropertyTypes.TEXT,
                   },
                 },
               },
@@ -647,28 +647,28 @@ describe("test fields", () => {
         expect(i.obj?.title).toEqual(serializedText);
       });
 
-      it("should validate fields defined in options", async () => {
+      it("should validate properties defined in options", async () => {
         const testValidator = vi.fn(() => Promise.resolve(true));
 
-        class TestFieldText extends Field<FieldTypes.TEXT> {
+        class TestPropertyText extends Property<PropertyTypes.TEXT> {
           validate = testValidator;
         }
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: TestFieldText,
+          propertiesMap: {
+            [PropertyTypes.TEXT]: TestPropertyText,
           },
         });
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   title: {
-                    type: FieldTypes.TEXT,
+                    type: PropertyTypes.TEXT,
                   },
                 },
               },
@@ -688,38 +688,38 @@ describe("test fields", () => {
         expect(testValidator).toBeCalledTimes(1);
       });
 
-      it("should support nested JSON fields", async () => {
+      it("should support nested JSON properties", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = vi.fn(() => serializedText);
         const testValidator = vi.fn(() => Promise.resolve(true));
 
-        class TestFieldText extends Field<FieldTypes.TEXT> {
+        class TestPropertyText extends Property<PropertyTypes.TEXT> {
           validate = testValidator;
 
           serializerMap = {
-            [Field.defaultSymbol]: testSerializer,
+            [Property.defaultSymbol]: testSerializer,
           };
         }
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: TestFieldText,
+          propertiesMap: {
+            [PropertyTypes.TEXT]: TestPropertyText,
           },
         });
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   nested: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
-                      fields: {
+                      properties: {
                         title: {
-                          type: FieldTypes.TEXT,
+                          type: PropertyTypes.TEXT,
                         },
                       },
                     },
@@ -749,32 +749,32 @@ describe("test fields", () => {
         expect(testValidator).toBeCalledTimes(1);
       });
 
-      it("should throw error if error happens in field validation", async () => {
+      it("should throw error if error happens in property validation", async () => {
         const testValidator = vi.fn(() => Promise.resolve(false));
 
-        class TestFieldText extends Field<FieldTypes.TEXT> {
+        class TestPropertyText extends Property<PropertyTypes.TEXT> {
           validate = testValidator;
         }
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: TestFieldText,
+          propertiesMap: {
+            [PropertyTypes.TEXT]: TestPropertyText,
           },
         });
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   nested: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
-                      fields: {
+                      properties: {
                         title: {
-                          type: FieldTypes.TEXT,
+                          type: PropertyTypes.TEXT,
                         },
                       },
                     },
@@ -798,7 +798,7 @@ describe("test fields", () => {
           await model.validate([i.getData()]);
         } catch (e) {
           expect(e).toBeInstanceOf(ValidationError);
-          expect((e as ValidationError).fieldsPaths.includes("obj.nested.title")).toBeTruthy();
+          expect((e as ValidationError).propertiesPaths.includes("obj.nested.title")).toBeTruthy();
         }
       });
     });
@@ -818,14 +818,14 @@ describe("test fields", () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
           validators: [],
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "title" },
+                    options: { property: "title" },
                   },
                 ],
               },
@@ -858,14 +858,14 @@ describe("test fields", () => {
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "title" },
+                    options: { property: "title" },
                   },
                 ],
               },
@@ -886,7 +886,7 @@ describe("test fields", () => {
         }
       });
 
-      it("should support nested JSON fields and should not validate if nested value undefined", async () => {
+      it("should support nested JSON properties and should not validate if nested value undefined", async () => {
         const testValidate = vi.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
@@ -900,18 +900,18 @@ describe("test fields", () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
           validators: [],
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   nested: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
                       validators: [
                         {
                           type: ValidatorTypes.REQUIRED,
-                          options: { field: "title" },
+                          options: { property: "title" },
                         },
                       ],
                     },
@@ -934,7 +934,7 @@ describe("test fields", () => {
         expect(testValidate).toBeCalledTimes(0);
       });
 
-      it("should support nested JSON fields and should validate if nested value is not undefined", async () => {
+      it("should support nested JSON properties and should validate if nested value is not undefined", async () => {
         const testValidate = vi.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
@@ -948,18 +948,18 @@ describe("test fields", () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
           validators: [],
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   nested: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
                       validators: [
                         {
                           type: ValidatorTypes.REQUIRED,
-                          options: { field: "title" },
+                          options: { property: "title" },
                         },
                       ],
                     },
@@ -983,32 +983,32 @@ describe("test fields", () => {
       });
     });
 
-    // The `conditionalFields` option allows certain fields to be included or excluded based on the value of another field.
-    // It uses `dependsOn` to specify the reference field and defines `mappings` to determine which sub-fields to activate.
+    // The `conditionalProperties` option allows certain properties to be included or excluded based on the value of another property.
+    // It uses `dependsOn` to specify the reference property and defines `mappings` to determine which sub-properties to activate.
     // An optional `defaultMapping` can be provided for cases where the `dependsOn` value doesn't match any mapping.
-    // Validators and serializers are applied only to the active fields as defined by the current mapping.
-    describe("options.conditionalFields", () => {
-      it("should use conditionalFields to determine which fields to include based on a field value", async () => {
+    // Validators and serializers are applied only to the active properties as defined by the current mapping.
+    describe("options.conditionalProperties", () => {
+      it("should use conditionalProperties to determine which properties to include based on a property value", async () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             channel: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["email", "slack"],
               },
             },
             options: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 strict: true,
-                fields: {
-                  email: { type: FieldTypes.TEXT },
-                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                properties: {
+                  email: { type: PropertyTypes.TEXT },
+                  slackWebhookUrl: { type: PropertyTypes.TEXT },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "channel",
                   defaultMapping: "email",
                   mappings: {
@@ -1037,28 +1037,28 @@ describe("test fields", () => {
         expect(i.options?.slackWebhookUrl).toBeUndefined();
       });
 
-      it("should apply validators conditionally based on conditionalFields", async () => {
+      it("should apply validators conditionally based on conditionalProperties", async () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             channel: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["email", "slack"],
                 blbal: true,
               },
             },
             options: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 strict: true,
-                fields: {
-                  email: { type: FieldTypes.TEXT },
-                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                properties: {
+                  email: { type: PropertyTypes.TEXT },
+                  slackWebhookUrl: { type: PropertyTypes.TEXT },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "channel",
                   defaultMapping: "email",
                   mappings: {
@@ -1069,11 +1069,11 @@ describe("test fields", () => {
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "email" },
+                    options: { property: "email" },
                   },
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "slackWebhookUrl" },
+                    options: { property: "slackWebhookUrl" },
                   },
                 ],
               },
@@ -1127,61 +1127,61 @@ describe("test fields", () => {
         ).rejects.toThrow(ValidationError);
       });
 
-      it("should apply nested validators conditionally based on conditionalFields", async () => {
+      it("should apply nested validators conditionally based on conditionalProperties", async () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             type: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["type1", "type2"],
               },
             },
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 strict: true,
-                fields: {
-                  field1: {
-                    type: FieldTypes.OBJECT,
+                properties: {
+                  property1: {
+                    type: PropertyTypes.OBJECT,
                     options: {
                       strict: true,
-                      fields: {
-                        field11: { type: FieldTypes.TEXT },
-                        field12: { type: FieldTypes.TEXT },
+                      properties: {
+                        property11: { type: PropertyTypes.TEXT },
+                        property12: { type: PropertyTypes.TEXT },
                       },
                       validators: [
                         {
                           type: ValidatorTypes.REQUIRED,
-                          options: { field: "field12" },
+                          options: { property: "property12" },
                         },
                       ],
                     },
                   },
-                  field2: {
-                    type: FieldTypes.OBJECT,
+                  property2: {
+                    type: PropertyTypes.OBJECT,
                     options: {
                       strict: true,
-                      fields: {
-                        field21: { type: FieldTypes.TEXT },
-                        field22: { type: FieldTypes.TEXT },
+                      properties: {
+                        property21: { type: PropertyTypes.TEXT },
+                        property22: { type: PropertyTypes.TEXT },
                       },
                       validators: [
                         {
                           type: ValidatorTypes.REQUIRED,
-                          options: { field: "field22" },
+                          options: { property: "property22" },
                         },
                       ],
                     },
                   },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "$.type",
                   mappings: {
-                    type1: ["field1"],
-                    type2: ["field2"],
+                    type1: ["property1"],
+                    type2: ["property2"],
                   },
                 },
               },
@@ -1190,11 +1190,11 @@ describe("test fields", () => {
           validators: [
             {
               type: ValidatorTypes.REQUIRED,
-              options: { field: "obj.field1.field11" },
+              options: { property: "obj.property1.property11" },
             },
             {
               type: ValidatorTypes.REQUIRED,
-              options: { field: "obj.field2.field21" },
+              options: { property: "obj.property2.property21" },
             },
           ],
         }).extend({ adapterClass: _adapter });
@@ -1205,9 +1205,9 @@ describe("test fields", () => {
             {
               type: "type1",
               obj: {
-                field1: {
-                  field11: "value",
-                  field12: "value",
+                property1: {
+                  property11: "value",
+                  property12: "value",
                 },
               },
             },
@@ -1219,9 +1219,9 @@ describe("test fields", () => {
             {
               type: "type2",
               obj: {
-                field2: {
-                  field21: "value",
-                  field22: "value",
+                property2: {
+                  property21: "value",
+                  property22: "value",
                 },
               },
             },
@@ -1235,8 +1235,8 @@ describe("test fields", () => {
             {
               type: "type1",
               obj: {
-                field1: {
-                  field11: "value",
+                property1: {
+                  property11: "value",
                 },
               },
             },
@@ -1248,9 +1248,9 @@ describe("test fields", () => {
             {
               type: "type1",
               obj: {
-                field2: {
-                  field21: "value",
-                  field22: "value",
+                property2: {
+                  property21: "value",
+                  property22: "value",
                 },
               },
             },
@@ -1258,31 +1258,31 @@ describe("test fields", () => {
         ).rejects.toThrow(ValidationError);
       });
 
-      it("should work with nested conditionalFields", async () => {
+      it("should work with nested conditionalProperties", async () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             settings: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   mode: {
-                    type: FieldTypes.ENUM,
+                    type: PropertyTypes.ENUM,
                     options: {
                       enum: ["simple", "advanced"],
                     },
                   },
                   config: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
                       strict: true,
-                      fields: {
-                        simpleOption: { type: FieldTypes.TEXT },
-                        advancedOption: { type: FieldTypes.NUMBER },
+                      properties: {
+                        simpleOption: { type: PropertyTypes.TEXT },
+                        advancedOption: { type: PropertyTypes.NUMBER },
                       },
-                      conditionalFields: {
+                      conditionalProperties: {
                         dependsOn: "$.mode",
                         defaultMapping: "simple",
                         mappings: {
@@ -1313,39 +1313,39 @@ describe("test fields", () => {
         expect(i.settings?.config?.advancedOption).toBeUndefined();
       });
 
-      it("should work with conditionalFields in arrays", async () => {
+      it("should work with conditionalProperties in arrays", async () => {
         const _adapter = mockAdapter();
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             items: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       type: {
-                        type: FieldTypes.ENUM,
+                        type: PropertyTypes.ENUM,
                         options: {
                           enum: ["A", "B"],
                         },
                       },
                       data: {
-                        type: FieldTypes.OBJECT,
+                        type: PropertyTypes.OBJECT,
                         options: {
                           strict: true,
-                          fields: {
-                            fieldA: { type: FieldTypes.TEXT },
-                            fieldB: { type: FieldTypes.NUMBER },
+                          properties: {
+                            propertyA: { type: PropertyTypes.TEXT },
+                            propertyB: { type: PropertyTypes.NUMBER },
                           },
-                          conditionalFields: {
+                          conditionalProperties: {
                             dependsOn: "$.type",
                             defaultMapping: "A",
                             mappings: {
-                              A: ["fieldA"],
-                              B: ["fieldB"],
+                              A: ["propertyA"],
+                              B: ["propertyB"],
                             },
                           },
                         },
@@ -1364,45 +1364,45 @@ describe("test fields", () => {
             {
               type: "A",
               data: {
-                fieldA: "valueA",
-                fieldB: 100,
+                propertyA: "valueA",
+                propertyB: 100,
               },
             },
             {
               type: "B",
               data: {
-                fieldA: "valueB",
-                fieldB: 200,
+                propertyA: "valueB",
+                propertyB: 200,
               },
             },
           ],
         });
 
-        expect(i.items?.[0]?.data?.fieldA).toBe("valueA");
-        expect(i.items?.[0]?.data?.fieldB).toBeUndefined();
-        expect(i.items?.[1]?.data?.fieldA).toBeUndefined();
-        expect(i.items?.[1]?.data?.fieldB).toBe(200);
+        expect(i.items?.[0]?.data?.propertyA).toBe("valueA");
+        expect(i.items?.[0]?.data?.propertyB).toBeUndefined();
+        expect(i.items?.[1]?.data?.propertyA).toBeUndefined();
+        expect(i.items?.[1]?.data?.propertyB).toBe(200);
       });
 
-      it("should validate only the fields specified in the conditionalFields mapping", async () => {
+      it("should validate only the properties specified in the conditionalProperties mapping", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             channel: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["email", "slack"],
               },
             },
             options: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 strict: true,
-                fields: {
-                  email: { type: FieldTypes.TEXT },
-                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                properties: {
+                  email: { type: PropertyTypes.TEXT },
+                  slackWebhookUrl: { type: PropertyTypes.TEXT },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "channel",
                   defaultMapping: "email",
                   mappings: {
@@ -1413,15 +1413,15 @@ describe("test fields", () => {
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "email" },
+                    options: { property: "email" },
                   },
                   {
                     type: ValidatorTypes.REGEX,
-                    options: { field: "email", pattern: Patterns.EMAIL },
+                    options: { property: "email", pattern: Patterns.EMAIL },
                   },
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "slackWebhookUrl" },
+                    options: { property: "slackWebhookUrl" },
                   },
                 ],
               },
@@ -1487,25 +1487,25 @@ describe("test fields", () => {
         ).rejects.toThrow(ValidationError);
       });
 
-      it("should ignore validators for fields not included in the conditionalFields mapping", async () => {
+      it("should ignore validators for properties not included in the conditionalProperties mapping", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             channel: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["email", "slack"],
               },
             },
             options: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 strict: true,
-                fields: {
-                  email: { type: FieldTypes.TEXT },
-                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                properties: {
+                  email: { type: PropertyTypes.TEXT },
+                  slackWebhookUrl: { type: PropertyTypes.TEXT },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "channel",
                   defaultMapping: "email",
                   mappings: {
@@ -1516,11 +1516,11 @@ describe("test fields", () => {
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "email" },
+                    options: { property: "email" },
                   },
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "slackWebhookUrl" },
+                    options: { property: "slackWebhookUrl" },
                   },
                 ],
               },
@@ -1557,22 +1557,22 @@ describe("test fields", () => {
       it("should default to defaultMapping when value not in mappings", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             channel: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["email", "slack", "unknown"],
               },
             },
             options: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 strict: true,
-                fields: {
-                  email: { type: FieldTypes.TEXT },
-                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                properties: {
+                  email: { type: PropertyTypes.TEXT },
+                  slackWebhookUrl: { type: PropertyTypes.TEXT },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "channel",
                   defaultMapping: "email",
                   mappings: {
@@ -1583,11 +1583,11 @@ describe("test fields", () => {
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "email" },
+                    options: { property: "email" },
                   },
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "slackWebhookUrl" },
+                    options: { property: "slackWebhookUrl" },
                   },
                 ],
               },
@@ -1609,25 +1609,25 @@ describe("test fields", () => {
         expect(i.options?.slackWebhookUrl).toBeUndefined();
       });
 
-      it("should handle conditionalFields without defaultMapping", async () => {
+      it("should handle conditionalProperties without defaultMapping", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             channel: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["email", "slack", "unknown"],
               },
             },
             options: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 strict: true,
-                fields: {
-                  email: { type: FieldTypes.TEXT },
-                  slackWebhookUrl: { type: FieldTypes.TEXT },
+                properties: {
+                  email: { type: PropertyTypes.TEXT },
+                  slackWebhookUrl: { type: PropertyTypes.TEXT },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "channel",
                   mappings: {
                     email: ["email"],
@@ -1637,11 +1637,11 @@ describe("test fields", () => {
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "email" },
+                    options: { property: "email" },
                   },
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "slackWebhookUrl" },
+                    options: { property: "slackWebhookUrl" },
                   },
                 ],
               },
@@ -1650,7 +1650,7 @@ describe("test fields", () => {
         }).extend({ adapterClass: mockAdapter() });
         await model.initialize();
 
-        // Should include no fields when channel is unknown
+        // Should include no properties when channel is unknown
         const i = model.hydrate({
           channel: "unknown",
           options: {
@@ -1663,29 +1663,29 @@ describe("test fields", () => {
         expect(i.options?.slackWebhookUrl).toBeUndefined();
       });
 
-      it("should support using '$' to reference parent fields", async () => {
+      it("should support using '$' to reference parent properties", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             settings: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   mode: {
-                    type: FieldTypes.ENUM,
+                    type: PropertyTypes.ENUM,
                     options: {
                       enum: ["light", "dark"],
                     },
                   },
                   theme: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
                       strict: true,
-                      fields: {
-                        lightOption: { type: FieldTypes.TEXT },
-                        darkOption: { type: FieldTypes.TEXT },
+                      properties: {
+                        lightOption: { type: PropertyTypes.TEXT },
+                        darkOption: { type: PropertyTypes.TEXT },
                       },
-                      conditionalFields: {
+                      conditionalProperties: {
                         dependsOn: "$.mode",
                         mappings: {
                           light: ["lightOption"],
@@ -1715,32 +1715,32 @@ describe("test fields", () => {
         expect(i.settings?.theme?.darkOption).toBeUndefined();
       });
 
-      it("should work with conditionalFields in nested arrays", async () => {
+      it("should work with conditionalProperties in nested arrays", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             settings: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       type: {
-                        type: FieldTypes.ENUM,
+                        type: PropertyTypes.ENUM,
                         options: {
                           enum: ["A", "B"],
                         },
                       },
                       config: {
-                        type: FieldTypes.OBJECT,
+                        type: PropertyTypes.OBJECT,
                         options: {
                           strict: true,
-                          fields: {
-                            optionA: { type: FieldTypes.TEXT },
-                            optionB: { type: FieldTypes.TEXT },
+                          properties: {
+                            optionA: { type: PropertyTypes.TEXT },
+                            optionB: { type: PropertyTypes.TEXT },
                           },
-                          conditionalFields: {
+                          conditionalProperties: {
                             dependsOn: "$.type",
                             mappings: {
                               A: ["optionA"],
@@ -1786,29 +1786,29 @@ describe("test fields", () => {
       it("should apply validators conditionally in nested arrays", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             settings: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       type: {
-                        type: FieldTypes.ENUM,
+                        type: PropertyTypes.ENUM,
                         options: {
                           enum: ["A", "B"],
                         },
                       },
                       config: {
-                        type: FieldTypes.OBJECT,
+                        type: PropertyTypes.OBJECT,
                         options: {
                           strict: true,
-                          fields: {
-                            optionA: { type: FieldTypes.TEXT },
-                            optionB: { type: FieldTypes.TEXT },
+                          properties: {
+                            optionA: { type: PropertyTypes.TEXT },
+                            optionB: { type: PropertyTypes.TEXT },
                           },
-                          conditionalFields: {
+                          conditionalProperties: {
                             dependsOn: "$.type",
                             mappings: {
                               A: ["optionA"],
@@ -1818,11 +1818,11 @@ describe("test fields", () => {
                           validators: [
                             {
                               type: ValidatorTypes.REQUIRED,
-                              options: { field: "optionA" },
+                              options: { property: "optionA" },
                             },
                             {
                               type: ValidatorTypes.REQUIRED,
-                              options: { field: "optionB" },
+                              options: { property: "optionB" },
                             },
                           ],
                         },
@@ -1858,7 +1858,7 @@ describe("test fields", () => {
           ]),
         ).resolves.toBeTruthy();
 
-        // Should fail validation when required fields are missing
+        // Should fail validation when required properties are missing
         await expect(
           model.validate([
             {
@@ -1873,32 +1873,32 @@ describe("test fields", () => {
         ).rejects.toThrow(ValidationError);
       });
 
-      it("should ignore validators for unused fields in nested arrays", async () => {
+      it("should ignore validators for unused properties in nested arrays", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             settings: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       type: {
-                        type: FieldTypes.ENUM,
+                        type: PropertyTypes.ENUM,
                         options: {
                           enum: ["A", "B"],
                         },
                       },
                       config: {
-                        type: FieldTypes.OBJECT,
+                        type: PropertyTypes.OBJECT,
                         options: {
                           strict: true,
-                          fields: {
-                            optionA: { type: FieldTypes.TEXT },
-                            optionB: { type: FieldTypes.TEXT },
+                          properties: {
+                            optionA: { type: PropertyTypes.TEXT },
+                            optionB: { type: PropertyTypes.TEXT },
                           },
-                          conditionalFields: {
+                          conditionalProperties: {
                             dependsOn: "$.type",
                             mappings: {
                               A: ["optionA"],
@@ -1908,11 +1908,11 @@ describe("test fields", () => {
                           validators: [
                             {
                               type: ValidatorTypes.REQUIRED,
-                              options: { field: "optionA" },
+                              options: { property: "optionA" },
                             },
                             {
                               type: ValidatorTypes.REQUIRED,
-                              options: { field: "optionB" },
+                              options: { property: "optionB" },
                             },
                           ],
                         },
@@ -1957,39 +1957,39 @@ describe("test fields", () => {
         ).rejects.toThrow(ValidationError);
       });
 
-      it("should handle conditionalFields with nested dependsOn paths", async () => {
+      it("should handle conditionalProperties with nested dependsOn paths", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             settings: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   mode: {
-                    type: FieldTypes.ENUM,
+                    type: PropertyTypes.ENUM,
                     options: {
                       enum: ["simple", "complex"],
                     },
                   },
                   config: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
-                      fields: {
+                      properties: {
                         subMode: {
-                          type: FieldTypes.ENUM,
+                          type: PropertyTypes.ENUM,
                           options: {
                             enum: ["A", "B"],
                           },
                         },
                         options: {
-                          type: FieldTypes.OBJECT,
+                          type: PropertyTypes.OBJECT,
                           options: {
                             strict: true,
-                            fields: {
-                              optionA: { type: FieldTypes.TEXT },
-                              optionB: { type: FieldTypes.TEXT },
+                            properties: {
+                              optionA: { type: PropertyTypes.TEXT },
+                              optionB: { type: PropertyTypes.TEXT },
                             },
-                            conditionalFields: {
+                            conditionalProperties: {
                               dependsOn: "$.subMode",
                               mappings: {
                                 A: ["optionA"],
@@ -1999,7 +1999,7 @@ describe("test fields", () => {
                           },
                         },
                       },
-                      conditionalFields: {
+                      conditionalProperties: {
                         dependsOn: "$.mode",
                         mappings: {
                           simple: ["subMode", "options"],
@@ -2031,24 +2031,24 @@ describe("test fields", () => {
         expect(i.settings?.config?.options?.optionB).toBeUndefined();
       });
 
-      it("should ignore validators in fields not included by conditionalFields", async () => {
+      it("should ignore validators in properties not included by conditionalProperties", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             paymentMethod: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["creditCard", "paypal"],
               },
             },
             paymentDetails: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
-                  cardNumber: { type: FieldTypes.TEXT },
-                  paypalEmail: { type: FieldTypes.TEXT },
+                properties: {
+                  cardNumber: { type: PropertyTypes.TEXT },
+                  paypalEmail: { type: PropertyTypes.TEXT },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "paymentMethod",
                   mappings: {
                     creditCard: ["cardNumber"],
@@ -2058,11 +2058,11 @@ describe("test fields", () => {
                 validators: [
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "cardNumber" },
+                    options: { property: "cardNumber" },
                   },
                   {
                     type: ValidatorTypes.REQUIRED,
-                    options: { field: "paypalEmail" },
+                    options: { property: "paypalEmail" },
                   },
                 ],
               },
@@ -2116,44 +2116,44 @@ describe("test fields", () => {
         ).rejects.toThrow(ValidationError);
       });
 
-      it("should work with multiple levels of conditionalFields", async () => {
+      it("should work with multiple levels of conditionalProperties", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             level1Type: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["typeA", "typeB"],
               },
             },
             level1: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   level2Type: {
-                    type: FieldTypes.ENUM,
+                    type: PropertyTypes.ENUM,
                     options: {
                       enum: ["subType1", "subType2"],
                     },
                   },
                   level2: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
-                      fields: {
-                        field1: { type: FieldTypes.TEXT },
-                        field2: { type: FieldTypes.NUMBER },
+                      properties: {
+                        property1: { type: PropertyTypes.TEXT },
+                        property2: { type: PropertyTypes.NUMBER },
                       },
-                      conditionalFields: {
+                      conditionalProperties: {
                         dependsOn: "$.level2Type",
                         mappings: {
-                          subType1: ["field1"],
-                          subType2: ["field2"],
+                          subType1: ["property1"],
+                          subType2: ["property2"],
                         },
                       },
                     },
                   },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "level1Type",
                   mappings: {
                     typeA: ["level2Type", "level2"],
@@ -2170,38 +2170,38 @@ describe("test fields", () => {
           level1: {
             level2Type: "subType1",
             level2: {
-              field1: "value1",
-              field2: 100,
+              property1: "value1",
+              property2: 100,
             },
           },
         });
 
-        expect(i.level1?.level2?.field1).toBe("value1");
-        expect(i.level1?.level2?.field2).toBeUndefined();
+        expect(i.level1?.level2?.property1).toBe("value1");
+        expect(i.level1?.level2?.property2).toBeUndefined();
       });
 
-      it("should handle missing mappings in conditionalFields", async () => {
+      it("should handle missing mappings in conditionalProperties", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             status: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["active", "inactive", "unknown"],
               },
             },
             details: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
-                  activeField: { type: FieldTypes.TEXT },
-                  inactiveField: { type: FieldTypes.TEXT },
+                properties: {
+                  activeProperty: { type: PropertyTypes.TEXT },
+                  inactiveProperty: { type: PropertyTypes.TEXT },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "status",
                   mappings: {
-                    active: ["activeField"],
-                    inactive: ["inactiveField"],
+                    active: ["activeProperty"],
+                    inactive: ["inactiveProperty"],
                   },
                 },
               },
@@ -2213,37 +2213,37 @@ describe("test fields", () => {
         const i = model.hydrate({
           status: "unknown",
           details: {
-            activeField: "active",
-            inactiveField: "inactive",
+            activeProperty: "active",
+            inactiveProperty: "inactive",
           },
         });
 
-        expect(i.details?.activeField).toBeUndefined();
-        expect(i.details?.inactiveField).toBeUndefined();
+        expect(i.details?.activeProperty).toBeUndefined();
+        expect(i.details?.inactiveProperty).toBeUndefined();
       });
 
-      it("should not include any fields when conditionalFields has no default and value is unmapped", async () => {
+      it("should not include any properties when conditionalProperties has no default and value is unmapped", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             type: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["type1", "type2", "type3"],
               },
             },
             data: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
-                  field1: { type: FieldTypes.TEXT },
-                  field2: { type: FieldTypes.TEXT },
+                properties: {
+                  property1: { type: PropertyTypes.TEXT },
+                  property2: { type: PropertyTypes.TEXT },
                 },
-                conditionalFields: {
+                conditionalProperties: {
                   dependsOn: "type",
                   mappings: {
-                    type1: ["field1"],
-                    type2: ["field2"],
+                    type1: ["property1"],
+                    type2: ["property2"],
                   },
                 },
               },
@@ -2255,26 +2255,26 @@ describe("test fields", () => {
         const i = model.hydrate({
           type: "type3",
           data: {
-            field1: "value1",
-            field2: "value2",
+            property1: "value1",
+            property2: "value2",
           },
         });
 
-        expect(i.data?.field1).toBeUndefined();
-        expect(i.data?.field2).toBeUndefined();
+        expect(i.data?.property1).toBeUndefined();
+        expect(i.data?.property2).toBeUndefined();
       });
     });
 
-    describe("options.defaultField", () => {
-      it("should use defaultField by default to serialize", async () => {
+    describe("options.defaultProperty", () => {
+      it("should use defaultProperty by default to serialize", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = vi.fn(() => serializedText);
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+          propertiesMap: {
+            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
               serializerMap = {
-                [Field.defaultSymbol]: testSerializer,
+                [Property.defaultSymbol]: testSerializer,
               };
             },
           },
@@ -2282,12 +2282,12 @@ describe("test fields", () => {
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                defaultField: {
-                  type: FieldTypes.TEXT,
+                defaultProperty: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -2303,15 +2303,15 @@ describe("test fields", () => {
         expect(obj.title).toEqual(serializedText);
       });
 
-      it("should use defaultField by default to serialize in json", async () => {
+      it("should use defaultProperty by default to serialize in json", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = vi.fn(() => serializedText);
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: class TestFieldText extends Field<FieldTypes.TEXT> {
+          propertiesMap: {
+            [PropertyTypes.TEXT]: class TestPropertyText extends Property<PropertyTypes.TEXT> {
               serializerMap = {
-                [Field.defaultSymbol]: testSerializer,
+                [Property.defaultSymbol]: testSerializer,
               };
             },
           },
@@ -2319,12 +2319,12 @@ describe("test fields", () => {
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                defaultField: {
-                  type: FieldTypes.TEXT,
+                defaultProperty: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -2340,15 +2340,15 @@ describe("test fields", () => {
         expect(json.obj?.title).toEqual(serializedText);
       });
 
-      it("should use defaultField only for not defined fields", async () => {
+      it("should use defaultProperty only for not defined properties", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = vi.fn(() => serializedText);
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+          propertiesMap: {
+            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
               serializerMap = {
-                [Field.defaultSymbol]: testSerializer,
+                [Property.defaultSymbol]: testSerializer,
               };
             },
           },
@@ -2356,16 +2356,16 @@ describe("test fields", () => {
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                defaultField: {
-                  type: FieldTypes.TEXT,
+                defaultProperty: {
+                  type: PropertyTypes.TEXT,
                 },
-                fields: {
+                properties: {
                   test: {
-                    type: FieldTypes.NUMBER,
+                    type: PropertyTypes.NUMBER,
                   },
                 },
               },
@@ -2384,15 +2384,15 @@ describe("test fields", () => {
         expect(obj.test).toEqual(fakerNumber);
       });
 
-      it("should use defaultField by default to validate", async () => {
+      it("should use defaultProperty by default to validate", async () => {
         const testValidator = vi.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
-          fieldsMap: {
-            [FieldTypes.TEXT]: class TestFieldText extends Field<FieldTypes.TEXT> {
+          propertiesMap: {
+            [PropertyTypes.TEXT]: class TestPropertyText extends Property<PropertyTypes.TEXT> {
               validate = testValidator;
               serializerMap = {
-                [Field.defaultSymbol]: ({ value }: any) => value,
+                [Property.defaultSymbol]: ({ value }: any) => value,
               };
             },
           },
@@ -2400,17 +2400,17 @@ describe("test fields", () => {
 
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
                 strict: true,
-                defaultField: {
-                  type: FieldTypes.TEXT,
+                defaultProperty: {
+                  type: PropertyTypes.TEXT,
                 },
-                fields: {
+                properties: {
                   test: {
-                    type: FieldTypes.NUMBER,
+                    type: PropertyTypes.NUMBER,
                   },
                 },
               },
@@ -2443,16 +2443,16 @@ describe("test fields", () => {
         expect(obj1).toEqual(obj2);
       };
 
-      it("should be consistent with nested text field", async () => {
+      it("should be consistent with nested text property", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   title: {
-                    type: FieldTypes.TEXT,
+                    type: PropertyTypes.TEXT,
                   },
                 },
               },
@@ -2466,16 +2466,16 @@ describe("test fields", () => {
         });
       });
 
-      it("should be consistent with nested number field", async () => {
+      it("should be consistent with nested number property", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   value: {
-                    type: FieldTypes.NUMBER,
+                    type: PropertyTypes.NUMBER,
                   },
                 },
               },
@@ -2489,16 +2489,16 @@ describe("test fields", () => {
         });
       });
 
-      it("should be consistent with nested boolean field", async () => {
+      it("should be consistent with nested boolean property", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   value: {
-                    type: FieldTypes.BOOLEAN,
+                    type: PropertyTypes.BOOLEAN,
                   },
                 },
               },
@@ -2512,16 +2512,16 @@ describe("test fields", () => {
         });
       });
 
-      it("should be consistent with nested date field", async () => {
+      it("should be consistent with nested date property", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   value: {
-                    type: FieldTypes.DATE,
+                    type: PropertyTypes.DATE,
                   },
                 },
               },
@@ -2535,16 +2535,16 @@ describe("test fields", () => {
         });
       });
 
-      it("should be consistent with nested identity field", async () => {
+      it("should be consistent with nested identity property", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   value: {
-                    type: FieldTypes.IDENTITY,
+                    type: PropertyTypes.IDENTITY,
                   },
                 },
               },
@@ -2558,16 +2558,16 @@ describe("test fields", () => {
         });
       });
 
-      it("should be consistent with nested relation field", async () => {
+      it("should be consistent with nested relation property", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   value: {
-                    type: FieldTypes.RELATION,
+                    type: PropertyTypes.RELATION,
                     options: {
                       ref: "accounts",
                     },
@@ -2584,19 +2584,19 @@ describe("test fields", () => {
         });
       });
 
-      it("should be consistent with nested array field", async () => {
+      it("should be consistent with nested array property", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       value: {
-                        type: FieldTypes.NUMBER,
+                        type: PropertyTypes.NUMBER,
                       },
                     },
                   },
@@ -2614,23 +2614,23 @@ describe("test fields", () => {
         ]);
       });
 
-      it("should be consistent with nested array field in nested object", async () => {
+      it("should be consistent with nested array property in nested object", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   arr: {
-                    type: FieldTypes.ARRAY,
+                    type: PropertyTypes.ARRAY,
                     options: {
                       items: {
-                        type: FieldTypes.OBJECT,
+                        type: PropertyTypes.OBJECT,
                         options: {
-                          fields: {
+                          properties: {
                             value: {
-                              type: FieldTypes.NUMBER,
+                              type: PropertyTypes.NUMBER,
                             },
                           },
                         },
@@ -2653,22 +2653,22 @@ describe("test fields", () => {
         });
       });
 
-      it("should be consistent with nested array field in nested array", async () => {
+      it("should be consistent with nested array property in nested array", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       arr: {
-                        type: FieldTypes.ARRAY,
+                        type: PropertyTypes.ARRAY,
                         options: {
                           items: {
-                            type: FieldTypes.NUMBER,
+                            type: PropertyTypes.NUMBER,
                           },
                         },
                       },
@@ -2690,13 +2690,13 @@ describe("test fields", () => {
     });
   });
 
-  describe("Identity field", () => {
+  describe("Identity property", () => {
     it("should throw error if is invalid", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           identity: {
-            type: FieldTypes.IDENTITY,
+            type: PropertyTypes.IDENTITY,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -2710,9 +2710,9 @@ describe("test fields", () => {
     it("should not throw error if is valid", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           identity: {
-            type: FieldTypes.IDENTITY,
+            type: PropertyTypes.IDENTITY,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -2722,13 +2722,13 @@ describe("test fields", () => {
     });
   });
 
-  describe("Relation field", () => {
+  describe("Relation property", () => {
     it("should return valid PromiseModel instance", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           rel: {
-            type: FieldTypes.RELATION,
+            type: PropertyTypes.RELATION,
             options: {
               ref: "accounts",
             },
@@ -2748,9 +2748,9 @@ describe("test fields", () => {
     it("should return null if value is null", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           rel: {
-            type: FieldTypes.RELATION,
+            type: PropertyTypes.RELATION,
             options: {
               ref: "accounts",
             },
@@ -2768,9 +2768,9 @@ describe("test fields", () => {
     it("should return null if value is invalid", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           rel: {
-            type: FieldTypes.RELATION,
+            type: PropertyTypes.RELATION,
             options: {
               ref: "accounts",
             },
@@ -2787,9 +2787,9 @@ describe("test fields", () => {
     it("should return string in JSON format", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           rel: {
-            type: FieldTypes.RELATION,
+            type: PropertyTypes.RELATION,
             options: {
               ref: "accounts",
             },
@@ -2805,16 +2805,16 @@ describe("test fields", () => {
     });
   });
 
-  describe("Array field", () => {
+  describe("Array property", () => {
     it("should throw error if is relation with invalid value", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arr: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.RELATION,
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: "accounts",
                 },
@@ -2835,12 +2835,12 @@ describe("test fields", () => {
     it("should not throw error if is relation with valid value", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arr: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.RELATION,
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: "accounts",
                 },
@@ -2861,12 +2861,12 @@ describe("test fields", () => {
     it("should return PromiseModelList for relation array with format object", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arrRel: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.RELATION,
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: "accounts",
                 },
@@ -2888,12 +2888,12 @@ describe("test fields", () => {
       });
     });
 
-    it("should fallback to default field if field not found and strict is false", async () => {
+    it("should fallback to default property if property not found and strict is false", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
               strict: false, // Default value
             },
@@ -2922,12 +2922,12 @@ describe("test fields", () => {
     it("should return array of ids for relation array with format json", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arrRel: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.RELATION,
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: "accounts",
                 },
@@ -2948,15 +2948,15 @@ describe("test fields", () => {
       expect(jsonArrRel).toEqual(["507f191e810c19729de860ea", "507f191e810c19729de860eb"]);
     });
 
-    it("should return array of objects for json field", async () => {
+    it("should return array of objects for json property", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arrJson: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
               },
             },
           },
@@ -2972,15 +2972,15 @@ describe("test fields", () => {
       expect(i.arrJson).toEqual([{ test: "test" }, { test2: "test2" }]);
     });
 
-    it("should return array from non-array with json field", async () => {
+    it("should return array from non-array with json property", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arrJson: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
               },
             },
           },
@@ -3000,17 +3000,17 @@ describe("test fields", () => {
     it("should return serialized item from index", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arrJson: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
                 options: {
                   strict: true,
-                  fields: {
+                  properties: {
                     title: {
-                      type: FieldTypes.TEXT,
+                      type: PropertyTypes.TEXT,
                     },
                   },
                 },
@@ -3042,12 +3042,12 @@ describe("test fields", () => {
     it("should return serialized item from index within array", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arrRel: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.RELATION,
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: "accounts",
                 },
@@ -3089,13 +3089,13 @@ describe("test fields", () => {
     it("should be able to set a default value", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           arr: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               default: [],
               items: {
-                type: FieldTypes.TEXT,
+                type: PropertyTypes.TEXT,
               },
             },
           },
@@ -3113,12 +3113,12 @@ describe("test fields", () => {
       it("should be able to use duplicates values by default", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -3133,12 +3133,12 @@ describe("test fields", () => {
       it("should detect duplicates values", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
                 distinct: true,
               },
@@ -3160,12 +3160,12 @@ describe("test fields", () => {
       it("should be able to use distinct values", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
                 distinct: true,
               },
@@ -3187,15 +3187,15 @@ describe("test fields", () => {
       it("should be able to use distinct values with nested array", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.ARRAY,
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.TEXT,
+                      type: PropertyTypes.TEXT,
                     },
                     distinct: true,
                   },
@@ -3222,19 +3222,19 @@ describe("test fields", () => {
       it("should be able to use distinct values with nested array in nested array", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       arr: {
-                        type: FieldTypes.ARRAY,
+                        type: PropertyTypes.ARRAY,
                         options: {
                           items: {
-                            type: FieldTypes.TEXT,
+                            type: PropertyTypes.TEXT,
                           },
                           distinct: true,
                         },
@@ -3261,19 +3261,19 @@ describe("test fields", () => {
       it("should detect duplicates values with nested array in nested array", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       arr: {
-                        type: FieldTypes.ARRAY,
+                        type: PropertyTypes.ARRAY,
                         options: {
                           items: {
-                            type: FieldTypes.TEXT,
+                            type: PropertyTypes.TEXT,
                           },
                           distinct: true,
                         },
@@ -3300,12 +3300,12 @@ describe("test fields", () => {
       it("should detect duplicates values in relation array", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.RELATION,
+                  type: PropertyTypes.RELATION,
                   options: {
                     ref: "accounts",
                   },
@@ -3330,15 +3330,15 @@ describe("test fields", () => {
       it("should detect duplicates values in nested array", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.ARRAY,
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.TEXT,
+                      type: PropertyTypes.TEXT,
                     },
                   },
                 },
@@ -3365,16 +3365,16 @@ describe("test fields", () => {
       it("should detect duplicates values in nested json array", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       title: {
-                        type: FieldTypes.TEXT,
+                        type: PropertyTypes.TEXT,
                       },
                     },
                   },
@@ -3399,12 +3399,12 @@ describe("test fields", () => {
       it("should detect duplicates values with number values", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.NUMBER,
+                  type: PropertyTypes.NUMBER,
                 },
                 distinct: true,
               },
@@ -3426,12 +3426,12 @@ describe("test fields", () => {
       it("should detect duplicates values with boolean values", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.BOOLEAN,
+                  type: PropertyTypes.BOOLEAN,
                 },
                 distinct: true,
               },
@@ -3453,12 +3453,12 @@ describe("test fields", () => {
       it("should detect duplicates values with date values", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.DATE,
+                  type: PropertyTypes.DATE,
                 },
                 distinct: true,
               },
@@ -3479,12 +3479,12 @@ describe("test fields", () => {
       it("should detect duplicates values with mixed types", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
                 distinct: true,
               },
@@ -3500,19 +3500,19 @@ describe("test fields", () => {
     });
 
     describe("Validation", () => {
-      it("should validate field values", async () => {
+      it("should validate property values", async () => {
         const model = mockModel({
           slug: faker.random.alphaNumeric(10),
-          fields: {
+          properties: {
             arr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       title: {
-                        type: FieldTypes.TEXT,
+                        type: PropertyTypes.TEXT,
                       },
                     },
                   },
@@ -3533,15 +3533,15 @@ describe("test fields", () => {
     });
   });
 
-  describe("Integer field", () => {
+  describe("Integer property", () => {
     it("should return default value if undefined", async () => {
       const defaultValue = parseInt(faker.random.numeric(), 10);
 
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           value: {
-            type: FieldTypes.INTEGER,
+            type: PropertyTypes.INTEGER,
             options: {
               default: defaultValue,
             },
@@ -3557,9 +3557,9 @@ describe("test fields", () => {
     it("should parse string value to integer", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           value: {
-            type: FieldTypes.INTEGER,
+            type: PropertyTypes.INTEGER,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -3574,9 +3574,9 @@ describe("test fields", () => {
     it("should parse float value to integer", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           value: {
-            type: FieldTypes.INTEGER,
+            type: PropertyTypes.INTEGER,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -3588,16 +3588,16 @@ describe("test fields", () => {
     });
   });
 
-  describe("Enum field", () => {
+  describe("Enum property", () => {
     it("should return default value if undefined", async () => {
       const enumValues = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
       const defaultValue = enumValues[0];
 
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           status: {
-            type: FieldTypes.ENUM,
+            type: PropertyTypes.ENUM,
             options: {
               enum: enumValues,
               default: defaultValue,
@@ -3617,9 +3617,9 @@ describe("test fields", () => {
 
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           status: {
-            type: FieldTypes.ENUM,
+            type: PropertyTypes.ENUM,
             options: {
               enum: enumValues,
             },
@@ -3637,9 +3637,9 @@ describe("test fields", () => {
 
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           status: {
-            type: FieldTypes.ENUM,
+            type: PropertyTypes.ENUM,
             options: {
               enum: enumValues,
             },
@@ -3657,9 +3657,9 @@ describe("test fields", () => {
 
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           status: {
-            type: FieldTypes.ENUM,
+            type: PropertyTypes.ENUM,
             options: {
               enum: enumValues,
             },
@@ -3677,9 +3677,9 @@ describe("test fields", () => {
 
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           status: {
-            type: FieldTypes.ENUM,
+            type: PropertyTypes.ENUM,
             options: {
               enum: enumValues,
             },
@@ -3698,9 +3698,9 @@ describe("test fields", () => {
 
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           status: {
-            type: FieldTypes.ENUM,
+            type: PropertyTypes.ENUM,
             options: {
               enum: enumValues,
             },

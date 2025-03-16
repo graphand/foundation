@@ -5,7 +5,7 @@ export enum ValidatorTypes {
   LENGTH = "length",
   REGEX = "regex",
   SAMPLE = "sample",
-  KEY_FIELD = "keyField",
+  KEY_PROPERTY = "keyProperty",
   DATAMODEL = "datamodel",
   EXISTS = "exists",
 }

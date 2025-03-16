@@ -1,27 +1,27 @@
 import { CoreError } from "@/lib/core-error.js";
-import { ValidationFieldError } from "@/lib/validation-field-error.js";
+import { ValidationPropertyError } from "@/lib/validation-property-error.js";
 import { ValidationValidatorError } from "@/lib/validation-validator-error.js";
 import { CoreErrorDefinition } from "@/types/index.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
 
 export class ValidationError extends CoreError {
-  fields: Array<ValidationFieldError>;
+  properties: Array<ValidationPropertyError>;
   validators: Array<ValidationValidatorError>;
   model?: string;
 
   constructor({
-    fields,
+    properties,
     validators,
     model,
     ...coreDefinition
   }: CoreErrorDefinition & {
-    fields?: Array<ValidationFieldError>;
+    properties?: Array<ValidationPropertyError>;
     validators?: Array<ValidationValidatorError>;
     model?: string;
   }) {
     super(coreDefinition);
 
-    this.fields = fields ?? [];
+    this.properties = properties ?? [];
     this.validators = validators ?? [];
     this.model = model;
 
@@ -29,9 +29,9 @@ export class ValidationError extends CoreError {
       enumerable: true,
       value: this.message,
     });
-    Object.defineProperty(this, "fieldsPaths", {
+    Object.defineProperty(this, "propertiesPaths", {
       enumerable: true,
-      value: this.fieldsPaths,
+      value: this.propertiesPaths,
     });
   }
 
@@ -39,10 +39,10 @@ export class ValidationError extends CoreError {
     return ErrorCodes.VALIDATION_FAILED;
   }
 
-  get fieldsPaths(): Array<string> {
+  get propertiesPaths(): Array<string> {
     return Array.from(
       new Set(
-        [...this.fields.map(f => f.field?.path), ...this.validators.map(v => v.validator.getFullPath())].filter(
+        [...this.properties.map(f => f.property?.path), ...this.validators.map(v => v.validator.getFullPath())].filter(
           Boolean,
         ),
       ),
@@ -53,21 +53,21 @@ export class ValidationError extends CoreError {
     let message = `Validation failed`;
 
     const reasons = [];
-    if (this.fields.length) {
+    if (this.properties.length) {
       let reason: string;
 
-      if (this.fields.length > 1) {
-        reason = `${this.fields.length} fields validators`;
+      if (this.properties.length > 1) {
+        reason = `${this.properties.length} properties validators`;
       } else {
-        reason = "a field validator";
+        reason = "a property validator";
       }
 
-      reason += ` (${this.fields.map(v => v.field.type).join(", ")})`;
+      reason += ` (${this.properties.map(v => v.property.type).join(", ")})`;
 
       reasons.push(reason);
     }
 
-    const paths = Array.from(new Set(this.fieldsPaths || [])).filter(Boolean);
+    const paths = Array.from(new Set(this.propertiesPaths || [])).filter(Boolean);
     if (paths?.length) {
       message += ` on path${paths.length > 1 ? "s" : ""} ${paths.join(", ")}`;
     }
@@ -116,7 +116,7 @@ export class ValidationError extends CoreError {
 
   onPath(path: string) {
     return [
-      ...this.fields.filter(f => f.field?.path === path),
+      ...this.properties.filter(f => f.property?.path === path),
       ...this.validators.filter(v => v.validator.getFullPath() === path),
     ];
   }
@@ -129,10 +129,10 @@ export class ValidationError extends CoreError {
       type: this.type,
       model: this.model,
       reason: {
-        fields: this.fields.map(f => f.toJSON()),
+        properties: this.properties.map(f => f.toJSON()),
         validators: this.validators.map(v => v.toJSON()),
       },
-      fieldsPaths: this.fieldsPaths,
+      propertiesPaths: this.propertiesPaths,
     };
 
     return json;
@@ -144,12 +144,12 @@ export class ValidationError extends CoreError {
     }
 
     const { message, model, reason } = json;
-    const fields = reason.fields.map(f => ValidationFieldError.fromJSON(f));
+    const properties = reason.properties.map(f => ValidationPropertyError.fromJSON(f));
     const validators = reason.validators.map(v => ValidationValidatorError.fromJSON(v));
 
     return new ValidationError({
       message,
-      fields,
+      properties,
       validators,
       model,
     });

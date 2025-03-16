@@ -1,4 +1,4 @@
-export enum FieldTypes {
+export enum PropertyTypes {
   DEFAULT = "default",
   ID = "id",
   ARRAY = "array",

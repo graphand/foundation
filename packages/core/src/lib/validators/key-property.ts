@@ -3,8 +3,8 @@ import { Validator } from "@/lib/validator.js";
 import { Patterns } from "@/enums/patterns.js";
 import { getValidatorClass } from "../utils.js";
 
-export class ValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
-  validate: Validator<ValidatorTypes.KEY_FIELD>["validate"] = async opts => {
+export class ValidatorKeyProperty extends Validator<ValidatorTypes.KEY_PROPERTY> {
+  validate: Validator<ValidatorTypes.KEY_PROPERTY>["validate"] = async opts => {
     const { model } = opts;
     const adapter = model?.getAdapter();
     const validatorsMap = adapter?.base.validatorsMap ?? {};
@@ -22,7 +22,7 @@ export class ValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
     const validatorRegex = new ValidatorRegex(
       {
         type: ValidatorTypes.REGEX,
-        options: { field: this.options.field, pattern: Patterns.SLUG },
+        options: { property: this.options.property, pattern: Patterns.SLUG },
       },
       this.path,
     );
@@ -31,7 +31,7 @@ export class ValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
     const validatorRequired = new ValidatorRequired(
       {
         type: ValidatorTypes.REQUIRED,
-        options: { field: this.options.field },
+        options: { property: this.options.property },
       },
       this.path,
     );
@@ -40,7 +40,7 @@ export class ValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
     const validatorUnique = new ValidatorUnique(
       {
         type: ValidatorTypes.UNIQUE,
-        options: { field: this.options.field },
+        options: { property: this.options.property },
       },
       this.path,
     );

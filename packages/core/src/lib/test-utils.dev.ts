@@ -3,7 +3,7 @@ import { AdapterFetcher, ModelData, ModelInstance } from "@/types/index.js";
 import { ModelList } from "@/lib/model-list.js";
 import { defineConfiguration, Model, TModelConfiguration } from "@/lib/model.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { defineFieldsProperties, isObjectId } from "@/lib/utils.js";
+import { definePropertiesObject, isObjectId } from "@/lib/utils.js";
 import { Validator } from "@/lib/validator.js";
 import { ObjectId } from "bson";
 import { modelDecorator } from "@/lib/model-decorator.js";
@@ -12,7 +12,7 @@ const cache: Map<typeof Model, Set<ModelInstance<typeof Model>>> = new Map();
 
 export const mockAdapter = ({
   name = "MockAdapter",
-  fieldsMap = {},
+  propertiesMap = {},
   validatorsMap = {
     [ValidatorTypes.SAMPLE]: class ValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
       validate = () => Promise.resolve(true);
@@ -21,14 +21,14 @@ export const mockAdapter = ({
   privateCache,
 }: {
   name?: string;
-  fieldsMap?: (typeof Adapter)["fieldsMap"];
+  propertiesMap?: (typeof Adapter)["propertiesMap"];
   validatorsMap?: (typeof Adapter)["validatorsMap"];
   privateCache?: Set<ModelInstance<typeof Model>>;
 } = {}) => {
   class MockAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
     static __name = name;
     static runWriteValidators = true;
-    static fieldsMap = fieldsMap;
+    static propertiesMap = propertiesMap;
     static validatorsMap = validatorsMap;
     static dataFormat = "json" as const;
 
@@ -63,13 +63,13 @@ export const mockAdapter = ({
         const cache = Array.from(this.thisCache);
 
         if (typeof query === "string") {
-          const keyField = this.model.getKeyField();
+          const keyProperty = this.model.getKeyProperty();
 
-          if (keyField === "_id" || isObjectId(query)) {
+          if (keyProperty === "_id" || isObjectId(query)) {
             return Promise.resolve(cache.find(r => r._id === query) || null);
           }
 
-          return Promise.resolve(cache.find(r => r.get(keyField) === query) || null);
+          return Promise.resolve(cache.find(r => r.get(keyProperty) === query) || null);
         }
 
         let found = cache[0];
@@ -212,7 +212,7 @@ export const mockModel = <const C extends TModelConfiguration>(conf?: C): typeof
       constructor(doc: ModelData<typeof Model>) {
         super(doc);
 
-        defineFieldsProperties(this);
+        definePropertiesObject(this);
       }
     },
   );

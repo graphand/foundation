@@ -1,6 +1,6 @@
 import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { Job } from "./job.js";
 import { Role } from "./role.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
@@ -13,48 +13,48 @@ export class Function extends Model {
     isEnvironmentScoped: true,
     realtime: true,
     loadDatamodel: false,
-    keyField: "name",
-    fields: {
-      name: { type: FieldTypes.TEXT },
+    keyProperty: "name",
+    properties: {
+      name: { type: PropertyTypes.TEXT },
       labels: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
         options: {
-          defaultField: {
-            type: FieldTypes.TEXT,
+          defaultProperty: {
+            type: PropertyTypes.TEXT,
           },
         },
       },
       exposed: {
-        type: FieldTypes.BOOLEAN,
+        type: PropertyTypes.BOOLEAN,
         options: {
           default: false,
         },
       },
       role: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: Role.configuration.slug,
         },
       },
       runtime: {
-        type: FieldTypes.ENUM,
+        type: PropertyTypes.ENUM,
         options: {
           enum: ["deno"],
         },
       },
       _job: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: Job.configuration.slug,
         },
       },
-      _checksum: { type: FieldTypes.TEXT },
-      _size: { type: FieldTypes.INTEGER },
+      _checksum: { type: PropertyTypes.TEXT },
+      _size: { type: PropertyTypes.INTEGER },
     },
     validators: [
       {
         type: ValidatorTypes.REQUIRED,
-        options: { field: "name" },
+        options: { property: "name" },
       },
     ],
   });

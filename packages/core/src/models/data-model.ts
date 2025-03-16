@@ -1,32 +1,32 @@
 import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { FieldDefinition } from "@/types/index.js";
+import { PropertyDefinition } from "@/types/index.js";
 import { Function } from "./function.js";
 
-const functionRelationField = {
-  type: FieldTypes.ARRAY,
+const functionRelationProperty = {
+  type: PropertyTypes.ARRAY,
   options: {
     items: {
-      type: FieldTypes.OBJECT,
+      type: PropertyTypes.OBJECT,
       options: {
         strict: true,
-        fields: {
+        properties: {
           function: {
-            type: FieldTypes.RELATION,
+            type: PropertyTypes.RELATION,
             options: {
               ref: Function.configuration.slug,
             },
           },
           runInJob: {
-            type: FieldTypes.BOOLEAN,
+            type: PropertyTypes.BOOLEAN,
             options: {
               default: false,
             },
           },
           handleErrors: {
-            type: FieldTypes.BOOLEAN,
+            type: PropertyTypes.BOOLEAN,
             options: {
               default: false,
             },
@@ -35,7 +35,7 @@ const functionRelationField = {
       },
     },
   },
-} as const satisfies FieldDefinition;
+} as const satisfies PropertyDefinition;
 
 @modelDecorator()
 export class DataModel extends Model {
@@ -45,57 +45,57 @@ export class DataModel extends Model {
     isEnvironmentScoped: true,
     realtime: true,
     loadDatamodel: false,
-    keyField: "slug",
-    fields: {
-      name: { type: FieldTypes.TEXT },
-      slug: { type: FieldTypes.TEXT, required: true },
-      fields: {
-        type: FieldTypes.OBJECT,
+    keyProperty: "slug",
+    properties: {
+      name: { type: PropertyTypes.TEXT },
+      slug: { type: PropertyTypes.TEXT, required: true },
+      properties: {
+        type: PropertyTypes.OBJECT,
         options: {
-          defaultField: {
-            type: FieldTypes.OBJECT,
+          defaultProperty: {
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
+              properties: {
                 type: {
-                  type: FieldTypes.ENUM,
+                  type: PropertyTypes.ENUM,
                   options: {
-                    enum: Object.values(FieldTypes),
+                    enum: Object.values(PropertyTypes),
                   },
                 },
                 options: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
                     strict: true,
-                    fields: {
-                      default: { type: FieldTypes.DEFAULT },
-                      items: { type: FieldTypes.OBJECT },
-                      validators: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.OBJECT } } },
-                      distinct: { type: FieldTypes.BOOLEAN },
-                      enum: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
-                      strict: { type: FieldTypes.BOOLEAN },
-                      ref: { type: FieldTypes.TEXT },
-                      defaultField: { type: FieldTypes.OBJECT },
-                      conditionalFields: { type: FieldTypes.OBJECT },
-                      fields: { type: FieldTypes.OBJECT },
+                    properties: {
+                      default: { type: PropertyTypes.DEFAULT },
+                      items: { type: PropertyTypes.OBJECT },
+                      validators: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.OBJECT } } },
+                      distinct: { type: PropertyTypes.BOOLEAN },
+                      enum: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.TEXT } } },
+                      strict: { type: PropertyTypes.BOOLEAN },
+                      ref: { type: PropertyTypes.TEXT },
+                      defaultProperty: { type: PropertyTypes.OBJECT },
+                      conditionalProperties: { type: PropertyTypes.OBJECT },
+                      properties: { type: PropertyTypes.OBJECT },
                     },
-                    conditionalFields: {
+                    conditionalProperties: {
                       dependsOn: "$.type",
                       mappings: {
-                        [FieldTypes.ARRAY]: ["items", "validators", "distinct"],
-                        [FieldTypes.TEXT]: ["default"],
-                        [FieldTypes.RELATION]: ["ref"],
-                        [FieldTypes.NUMBER]: ["default"],
-                        [FieldTypes.INTEGER]: ["default"],
-                        [FieldTypes.ENUM]: ["default", "enum"],
-                        [FieldTypes.OBJECT]: [
+                        [PropertyTypes.ARRAY]: ["items", "validators", "distinct"],
+                        [PropertyTypes.TEXT]: ["default"],
+                        [PropertyTypes.RELATION]: ["ref"],
+                        [PropertyTypes.NUMBER]: ["default"],
+                        [PropertyTypes.INTEGER]: ["default"],
+                        [PropertyTypes.ENUM]: ["default", "enum"],
+                        [PropertyTypes.OBJECT]: [
                           "default",
-                          "defaultField",
-                          "conditionalFields",
-                          "fields",
+                          "defaultProperty",
+                          "conditionalProperties",
+                          "properties",
                           "strict",
                           "validators",
                         ],
-                        [FieldTypes.BOOLEAN]: ["default"],
+                        [PropertyTypes.BOOLEAN]: ["default"],
                       },
                     },
                   },
@@ -105,7 +105,7 @@ export class DataModel extends Model {
                 {
                   type: ValidatorTypes.REQUIRED,
                   options: {
-                    field: "type",
+                    property: "type",
                   },
                 },
               ],
@@ -114,43 +114,43 @@ export class DataModel extends Model {
         },
       },
       validators: {
-        type: FieldTypes.ARRAY,
+        type: PropertyTypes.ARRAY,
         options: {
           items: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
               strict: true,
-              fields: {
+              properties: {
                 type: {
-                  type: FieldTypes.ENUM,
+                  type: PropertyTypes.ENUM,
                   required: true,
                   options: {
                     enum: Object.values(ValidatorTypes),
                   },
                 },
                 options: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   required: true,
                   options: {
                     strict: true,
-                    fields: {
-                      field: { type: FieldTypes.TEXT, required: true },
-                      min: { type: FieldTypes.NUMBER },
-                      max: { type: FieldTypes.NUMBER },
-                      pattern: { type: FieldTypes.TEXT },
-                      options: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
+                    properties: {
+                      property: { type: PropertyTypes.TEXT, required: true },
+                      min: { type: PropertyTypes.NUMBER },
+                      max: { type: PropertyTypes.NUMBER },
+                      pattern: { type: PropertyTypes.TEXT },
+                      options: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.TEXT } } },
                     },
-                    conditionalFields: {
+                    conditionalProperties: {
                       dependsOn: "$.type",
                       mappings: {
-                        [ValidatorTypes.REQUIRED]: ["field"],
-                        [ValidatorTypes.UNIQUE]: ["field"],
-                        [ValidatorTypes.BOUNDARIES]: ["field", "min", "max"],
-                        [ValidatorTypes.LENGTH]: ["field", "min", "max"],
-                        [ValidatorTypes.REGEX]: ["field", "pattern", "options"],
-                        [ValidatorTypes.SAMPLE]: ["field"],
-                        [ValidatorTypes.KEY_FIELD]: ["field"],
-                        [ValidatorTypes.EXISTS]: ["field"],
+                        [ValidatorTypes.REQUIRED]: ["property"],
+                        [ValidatorTypes.UNIQUE]: ["property"],
+                        [ValidatorTypes.BOUNDARIES]: ["property", "min", "max"],
+                        [ValidatorTypes.LENGTH]: ["property", "min", "max"],
+                        [ValidatorTypes.REGEX]: ["property", "pattern", "options"],
+                        [ValidatorTypes.SAMPLE]: ["property"],
+                        [ValidatorTypes.KEY_PROPERTY]: ["property"],
+                        [ValidatorTypes.EXISTS]: ["property"],
                       },
                     },
                   },
@@ -160,7 +160,7 @@ export class DataModel extends Model {
                 {
                   type: ValidatorTypes.REQUIRED,
                   options: {
-                    field: "type",
+                    property: "type",
                   },
                 },
               ],
@@ -169,61 +169,61 @@ export class DataModel extends Model {
         },
       },
       single: {
-        type: FieldTypes.BOOLEAN,
+        type: PropertyTypes.BOOLEAN,
         options: {
           default: false,
         },
       },
-      keyField: {
-        type: FieldTypes.TEXT,
+      keyProperty: {
+        type: PropertyTypes.TEXT,
       },
       hooks: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
         options: {
           strict: true,
-          fields: {
-            before_createOne: functionRelationField,
-            after_createOne: functionRelationField,
-            complete_createOne: functionRelationField,
-            before_createMultiple: functionRelationField,
-            after_createMultiple: functionRelationField,
-            complete_createMultiple: functionRelationField,
-            before_updateOne: functionRelationField,
-            after_updateOne: functionRelationField,
-            complete_updateOne: functionRelationField,
-            before_updateMultiple: functionRelationField,
-            after_updateMultiple: functionRelationField,
-            complete_updateMultiple: functionRelationField,
-            before_deleteOne: functionRelationField,
-            after_deleteOne: functionRelationField,
-            complete_deleteOne: functionRelationField,
-            before_deleteMultiple: functionRelationField,
-            after_deleteMultiple: functionRelationField,
-            complete_deleteMultiple: functionRelationField,
+          properties: {
+            before_createOne: functionRelationProperty,
+            after_createOne: functionRelationProperty,
+            complete_createOne: functionRelationProperty,
+            before_createMultiple: functionRelationProperty,
+            after_createMultiple: functionRelationProperty,
+            complete_createMultiple: functionRelationProperty,
+            before_updateOne: functionRelationProperty,
+            after_updateOne: functionRelationProperty,
+            complete_updateOne: functionRelationProperty,
+            before_updateMultiple: functionRelationProperty,
+            after_updateMultiple: functionRelationProperty,
+            complete_updateMultiple: functionRelationProperty,
+            before_deleteOne: functionRelationProperty,
+            after_deleteOne: functionRelationProperty,
+            complete_deleteOne: functionRelationProperty,
+            before_deleteMultiple: functionRelationProperty,
+            after_deleteMultiple: functionRelationProperty,
+            complete_deleteMultiple: functionRelationProperty,
           },
           validators: [
-            { type: ValidatorTypes.LENGTH, options: { field: "before_createOne", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "after_createOne", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "before_createMultiple", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "after_createMultiple", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "before_updateOne", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "after_updateOne", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "before_updateMultiple", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "after_updateMultiple", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "before_deleteOne", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "after_deleteOne", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "before_deleteMultiple", max: 100 } },
-            { type: ValidatorTypes.LENGTH, options: { field: "after_deleteMultiple", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "before_createOne", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "after_createOne", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "before_createMultiple", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "after_createMultiple", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "before_updateOne", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "after_updateOne", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "before_updateMultiple", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "after_updateMultiple", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "before_deleteOne", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "after_deleteOne", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "before_deleteMultiple", max: 100 } },
+            { type: ValidatorTypes.LENGTH, options: { property: "after_deleteMultiple", max: 100 } },
           ],
         },
       },
       realtime: {
-        type: FieldTypes.BOOLEAN,
+        type: PropertyTypes.BOOLEAN,
         options: {
           default: false,
         },
       },
-      _doc: { type: FieldTypes.OBJECT },
+      _doc: { type: PropertyTypes.OBJECT },
     },
     validators: [{ type: ValidatorTypes.DATAMODEL }],
   });

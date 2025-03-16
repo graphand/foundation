@@ -1,9 +1,9 @@
-import { Field } from "@/lib/field.js";
+import { Property } from "@/lib/property.js";
 import { PromiseModel } from "@/lib/promise-model.js";
 import { PromiseModelList } from "@/lib/promise-model-list.js";
 import {
   AdapterFetcher,
-  FieldsPathItem,
+  PropertiesPathItem,
   Hook,
   HookCallbackArgs,
   HookPhase,
@@ -18,7 +18,7 @@ import {
   TransactionCtx,
   SerializerCtx,
   Transaction,
-  FieldsDefinition,
+  PropertiesDefinition,
   ModelJSON,
   InferModel,
   ModelData,
@@ -29,21 +29,21 @@ import {
 import { Adapter } from "@/lib/adapter.js";
 import { Validator } from "@/lib/validator.js";
 import {
-  createFieldsMap,
+  createPropertiesMap,
   createValidatorsArray,
-  getFieldsPathsFromPath,
+  getPropertiesPathsFromPath,
   getRecursiveHooksFromModel,
   _getter,
   validateModel,
   assignDatamodel,
   getModelInitPromise,
-  defineFieldsProperties,
+  definePropertiesObject,
 } from "@/lib/utils.js";
 import { CoreError } from "@/lib/core-error.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
 import { DataModel } from "@/models/data-model.js";
 import { ModelList } from "./model-list.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 
 export type TModelConfiguration<TSlug extends string = string> = {
   slug: TSlug;
@@ -53,8 +53,8 @@ export type TModelConfiguration<TSlug extends string = string> = {
   realtime?: boolean;
   blockMultipleOperations?: boolean;
   freeMode?: boolean;
-  fields?: FieldsDefinition | null;
-  keyField?: string;
+  properties?: PropertiesDefinition | null;
+  keyProperty?: string;
   single?: boolean | null;
   validators?: ValidatorsDefinition;
   isEnvironmentScoped?: boolean;
@@ -63,7 +63,7 @@ export type TModelConfiguration<TSlug extends string = string> = {
 
 export const defineConfiguration = <const C extends TModelConfiguration>(configuration: C) => configuration;
 
-const noFieldSymbol = Symbol("noField");
+const noPropertySymbol = Symbol("noProperty");
 
 export class Model {
   static configuration: TModelConfiguration = { slug: "" };
@@ -88,17 +88,17 @@ export class Model {
   static __adapter: Adapter;
   static __extendedClass: any;
   static __memo: {
-    fieldsMap?: Map<string, Field>;
+    propertiesMap?: Map<string, Property>;
     validatorsArray?: Array<Validator | null>;
-    fieldsKeys?: string[];
-    fieldsProperties?: PropertyDescriptorMap;
+    propertiesKeys?: string[];
+    propertiesObject?: PropertyDescriptorMap;
   };
-  static systemFields: FieldsDefinition = {
-    _id: { type: FieldTypes.ID },
-    _createdAt: { type: FieldTypes.DATE },
-    _createdBy: { type: FieldTypes.IDENTITY },
-    _updatedAt: { type: FieldTypes.DATE },
-    _updatedBy: { type: FieldTypes.IDENTITY },
+  static systemProperties: PropertiesDefinition = {
+    _id: { type: PropertyTypes.ID },
+    _createdAt: { type: PropertyTypes.DATE },
+    _createdBy: { type: PropertyTypes.IDENTITY },
+    _updatedAt: { type: PropertyTypes.DATE },
+    _updatedBy: { type: PropertyTypes.IDENTITY },
   };
 
   #data: unknown; // The document
@@ -121,8 +121,8 @@ export class Model {
     return this.constructor as InferModel<T>;
   }
 
-  static getKeyField(): string {
-    return this.configuration?.keyField ?? "_id";
+  static getKeyProperty(): string {
+    return this.configuration?.keyProperty ?? "_id";
   }
 
   static hydrate<T extends typeof Model>(this: T, data?: Partial<ModelData<T>>): ModelInstance<T> {
@@ -162,15 +162,15 @@ export class Model {
 
   getKey<T extends ModelInstance<typeof Model>>(this: T, format?: SerializerFormat): string {
     const model = this.model();
-    const keyField = model.getKeyField();
+    const keyProperty = model.getKeyProperty();
 
-    if (!keyField) {
+    if (!keyProperty) {
       throw new CoreError({
-        message: `Invalid keyField for model ${model.configuration.slug} : ${keyField}`,
+        message: `Invalid keyProperty for model ${model.configuration.slug} : ${keyProperty}`,
       });
     }
 
-    return this.get(model.getKeyField(), format) as string;
+    return this.get(model.getKeyProperty(), format) as string;
   }
 
   getId<T extends ModelInstance>(this: T, format?: SerializerFormat): string {
@@ -307,7 +307,7 @@ export class Model {
   }
 
   /**
-   * Reload model from its definition (fields, validators, etc).
+   * Reload model from its definition (properties, validators, etc).
    * If the model is not extensible (Role, Token, etc.), this method does nothing.
    * @returns
    */
@@ -333,23 +333,23 @@ export class Model {
   }
 
   /**
-   * Returns the fields map of the model.
-   * The fields map could be incomplete if the model is extensible and is not initialized.
+   * Returns the properties map of the model.
+   * The properties map could be incomplete if the model is extensible and is not initialized.
    */
-  static get fieldsMap() {
+  static get propertiesMap() {
     this.__memo ??= {};
-    this.__memo.fieldsMap ??= createFieldsMap(this);
-    return this.__memo.fieldsMap;
+    this.__memo.propertiesMap ??= createPropertiesMap(this);
+    return this.__memo.propertiesMap;
   }
 
   /**
-   * Returns the keys of the fields map of the model.
-   * Equivalent to Array.from(model.fieldsMap.keys()).
+   * Returns the keys of the properties map of the model.
+   * Equivalent to Array.from(model.propertiesMap.keys()).
    */
-  static get fieldsKeys() {
+  static get propertiesKeys() {
     this.__memo ??= {};
-    this.__memo.fieldsKeys ??= Array.from(this.fieldsMap.keys());
-    return this.__memo.fieldsKeys;
+    this.__memo.propertiesKeys ??= Array.from(this.propertiesMap.keys());
+    return this.__memo.propertiesKeys;
   }
 
   /**
@@ -362,10 +362,10 @@ export class Model {
     return this.__memo.validatorsArray;
   }
 
-  static get fieldsProperties() {
-    if (!this.__memo?.fieldsProperties) {
+  static get propertiesObject() {
+    if (!this.__memo?.propertiesObject) {
       const properties: PropertyDescriptorMap = {};
-      for (const slug of this.fieldsKeys) {
+      for (const slug of this.propertiesKeys) {
         properties[slug] = {
           enumerable: true,
           configurable: true,
@@ -382,10 +382,10 @@ export class Model {
       }
 
       this.__memo ??= {};
-      this.__memo.fieldsProperties = properties;
+      this.__memo.propertiesObject = properties;
     }
 
-    return this.__memo.fieldsProperties;
+    return this.__memo.propertiesObject;
   }
 
   /**
@@ -484,7 +484,7 @@ export class Model {
       constructor(data: object) {
         super(data);
 
-        defineFieldsProperties(this);
+        definePropertiesObject(this);
       }
     };
 
@@ -506,13 +506,13 @@ export class Model {
   }
 
   /**
-   * Get value for a specific field. model.get("field") is an equivalent to `model.field`
-   * @param path - The path to the field
+   * Get value for a specific property. model.get("property") is an equivalent to `model.property`
+   * @param path - The path to the property
    * @param format - The format to serialize the value (default object)
    * @example
-   * console.log(model.get("field"));
-   * console.log(model.get("field.subfield.arr.nested"));
-   * console.log(model.get("field.subfield.arr.[1].nested"));
+   * console.log(model.get("property"));
+   * console.log(model.get("property.subproperty.arr.nested"));
+   * console.log(model.get("property.subproperty.arr.[1].nested"));
    */
   get<T extends ModelInstance, P extends string, S extends SerializerFormat = "object">(
     this: T,
@@ -529,22 +529,22 @@ export class Model {
     | undefined {
     ctx.outputFormat ??= format;
     const model = this.model();
-    let fieldsPaths: Array<FieldsPathItem | null> | undefined;
+    let propertiesPaths: Array<PropertiesPathItem | null> | undefined;
 
     if (path.includes(".") || path.includes("[")) {
-      // Parse the path to handle cases like "field[0].subfield" to follow the dot notation
+      // Parse the path to handle cases like "property[0].subproperty" to follow the dot notation
       const sanitizedPath = path.replace(/([^.])\[/g, "$1.[");
-      fieldsPaths = getFieldsPathsFromPath(this.model(), sanitizedPath.split("."));
+      propertiesPaths = getPropertiesPathsFromPath(this.model(), sanitizedPath.split("."));
     } else {
-      if (model.fieldsMap.has(path)) {
-        const field = model.fieldsMap.get(path) as Field;
-        fieldsPaths = [{ field, key: path }];
+      if (model.propertiesMap.has(path)) {
+        const property = model.propertiesMap.get(path) as Property;
+        propertiesPaths = [{ property, key: path }];
       }
     }
 
     const value = override ?? this.getData() ?? {};
 
-    if (!fieldsPaths?.length) {
+    if (!propertiesPaths?.length) {
       if (model.configuration.freeMode) {
         // @ts-ignore
         return value[path] as any;
@@ -554,9 +554,9 @@ export class Model {
     }
 
     try {
-      return _getter({ value, fieldsPaths, format, ctx, noFieldSymbol, from: this }) as any;
+      return _getter({ value, propertiesPaths, format, ctx, noPropertySymbol, from: this }) as any;
     } catch (e) {
-      if (e === noFieldSymbol) {
+      if (e === noPropertySymbol) {
         return undefined;
       }
 
@@ -587,7 +587,7 @@ export class Model {
    * @param format
    * @param ctx
    * @param clean - if true, the result object will be cleaned from undefined values
-   * @param fieldsKeys - an array of fields to serialize. If not provided, all fields will be serialized
+   * @param propertiesKeys - an array of properties to serialize. If not provided, all properties will be serialized
    * @example
    * console.log(instance.serialize("json")); // equivalent to instance.toJSON()
    */
@@ -596,9 +596,9 @@ export class Model {
     format: S,
     bindCtx: SerializerCtx = {},
     clean = false,
-    fieldsKeys?: Array<string>,
+    propertiesKeys?: Array<string>,
   ): InferModelDef<InferModel<T>, S> {
-    const keys = fieldsKeys ?? this.model().fieldsKeys;
+    const keys = propertiesKeys ?? this.model().propertiesKeys;
     const res: JSONObject = {};
 
     keys.forEach(slug => {
@@ -1252,7 +1252,7 @@ export class Model {
 //   {
 //     slug: "test",
 //     name: "DataModel",
-//     fields: {
+//     properties: {
 //       name: { type: "string" },
 //     },
 //   },

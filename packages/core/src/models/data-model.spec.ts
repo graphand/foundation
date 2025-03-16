@@ -25,15 +25,15 @@ describe("DataModel Model", () => {
     await expect(DataModelModel.validate([datamodel])).rejects.toThrow(ValidationError);
   });
 
-  it("should get nested field options (conditionalFields) with data override", async () => {
+  it("should get nested property options (conditionalProperties) with data override", async () => {
     const datamodel = DataModelModel.hydrate({
       slug: generateRandomString(),
-      fields: {},
+      properties: {},
     });
 
     const payload = {
       slug: "test",
-      fields: {
+      properties: {
         rel: {
           type: "relation",
           options: {
@@ -43,7 +43,7 @@ describe("DataModel Model", () => {
       },
     };
 
-    const json = datamodel.get("fields", "json", { defaults: false }, payload);
+    const json = datamodel.get("properties", "json", { defaults: false }, payload);
 
     expect(json?.rel).toEqual({
       type: "relation",
@@ -53,21 +53,23 @@ describe("DataModel Model", () => {
     });
   });
 
-  it("should serialize field validators (conditionalFields)", async () => {
+  it("should serialize property validators (conditionalProperties)", async () => {
     const datamodel = DataModelModel.hydrate({
       slug: generateRandomString(),
-      validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "rel" } }],
+      validators: [{ type: ValidatorTypes.REQUIRED, options: { property: "rel" } }],
     });
 
-    expect(datamodel.get("validators", "json")).toEqual([{ type: ValidatorTypes.REQUIRED, options: { field: "rel" } }]); // min field does not exist for required validator
+    expect(datamodel.get("validators", "json")).toEqual([
+      { type: ValidatorTypes.REQUIRED, options: { property: "rel" } },
+    ]); // min property does not exist for required validator
 
     const datamodel2 = DataModelModel.hydrate({
       slug: generateRandomString(),
-      validators: [{ type: ValidatorTypes.BOUNDARIES, options: { field: "rel", min: 1 } }],
+      validators: [{ type: ValidatorTypes.BOUNDARIES, options: { property: "rel", min: 1 } }],
     });
 
     expect(datamodel2.get("validators", "json")).toEqual([
-      { type: ValidatorTypes.BOUNDARIES, options: { field: "rel", min: 1 } },
+      { type: ValidatorTypes.BOUNDARIES, options: { property: "rel", min: 1 } },
     ]);
   });
 });

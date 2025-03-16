@@ -1,6 +1,6 @@
 import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Function } from "./function.js";
 import { Job } from "./job.js";
@@ -13,41 +13,41 @@ export class Connector extends Model {
     isEnvironmentScoped: true,
     realtime: true,
     loadDatamodel: false,
-    keyField: "slug",
-    fields: {
-      slug: { type: FieldTypes.TEXT },
+    keyProperty: "slug",
+    properties: {
+      slug: { type: PropertyTypes.TEXT },
       options: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
         options: { default: {} },
       },
       function: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: Function.configuration.slug,
         },
       },
       query: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
         options: {
           default: {},
-          fields: {
-            enabled: { type: FieldTypes.BOOLEAN, options: { default: false } },
-            cache: { type: FieldTypes.BOOLEAN, options: { default: false } },
+          properties: {
+            enabled: { type: PropertyTypes.BOOLEAN, options: { default: false } },
+            cache: { type: PropertyTypes.BOOLEAN, options: { default: false } },
           },
         },
       },
-      source: { type: FieldTypes.TEXT },
-      filter: { type: FieldTypes.OBJECT },
+      source: { type: PropertyTypes.TEXT },
+      filter: { type: PropertyTypes.OBJECT },
       retryStrategy: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
         options: {
           default: {},
-          fields: {
-            maxRetries: { type: FieldTypes.INTEGER, options: { default: 3 } },
-            initialDelay: { type: FieldTypes.INTEGER, options: { default: 1000 } },
-            backoffFactor: { type: FieldTypes.INTEGER, options: { default: 2 } },
+          properties: {
+            maxRetries: { type: PropertyTypes.INTEGER, options: { default: 3 } },
+            initialDelay: { type: PropertyTypes.INTEGER, options: { default: 1000 } },
+            backoffFactor: { type: PropertyTypes.INTEGER, options: { default: 2 } },
             strategyType: {
-              type: FieldTypes.ENUM,
+              type: PropertyTypes.ENUM,
               options: {
                 enum: ["fixed", "exponential", "exponentialWithJitter"],
                 default: "exponential",
@@ -57,15 +57,15 @@ export class Connector extends Model {
         },
       },
       _job: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: Job.configuration.slug,
         },
       },
     },
     validators: [
-      { type: ValidatorTypes.REQUIRED, options: { field: "function" } },
-      { type: ValidatorTypes.REQUIRED, options: { field: "source" } },
+      { type: ValidatorTypes.REQUIRED, options: { property: "function" } },
+      { type: ValidatorTypes.REQUIRED, options: { property: "source" } },
     ],
   });
 }

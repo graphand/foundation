@@ -1,6 +1,6 @@
 import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { Job } from "@/models/job.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { MergeRequestActionTypes } from "@/enums/merge-request-action-types.js";
@@ -12,43 +12,43 @@ export class MergeRequestAction extends Model {
   static configuration = defineConfiguration({
     slug: "mergeRequestActions",
     blockMultipleOperations: true,
-    fields: {
+    properties: {
       type: {
-        type: FieldTypes.ENUM,
+        type: PropertyTypes.ENUM,
         options: {
           enum: Object.values(MergeRequestActionTypes),
           default: MergeRequestActionTypes.PATCH,
         },
       },
       data: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
         options: {
-          fields: {
+          properties: {
             close: {
-              type: FieldTypes.BOOLEAN,
+              type: PropertyTypes.BOOLEAN,
             },
             comment: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
             apply: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
             },
           },
         },
       },
       request: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: MergeRequest.configuration.slug,
         },
       },
       _job: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: Job.configuration.slug,
         },
       },
     },
-    validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "request" } }],
+    validators: [{ type: ValidatorTypes.REQUIRED, options: { property: "request" } }],
   });
 }

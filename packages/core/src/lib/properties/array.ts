@@ -1,14 +1,14 @@
-import { FieldTypes } from "@/enums/field-types.js";
-import { FieldOptions, FieldSerializerInput } from "@/types/index.js";
-import { Field } from "@/lib/field.js";
+import { PropertyTypes } from "@/enums/property-types.js";
+import { PropertyOptions, PropertySerializerInput } from "@/types/index.js";
+import { Property } from "@/lib/property.js";
 import { Model } from "@/lib/model.js";
-import { getFieldFromDefinition, getValidationValues, isObjectId } from "@/lib/utils.js";
+import { getPropertyFromDefinition, getValidationValues, isObjectId } from "@/lib/utils.js";
 import { CoreError } from "@/lib/core-error.js";
 import { PromiseModelList } from "@/lib/promise-model-list.js";
 import { ModelList } from "@/lib/model-list.js";
 
-export class FieldArray extends Field<FieldTypes.ARRAY> {
-  validate: Field<FieldTypes.ARRAY>["validate"] = async ({ list }) => {
+export class PropertyArray extends Property<PropertyTypes.ARRAY> {
+  validate: Property<PropertyTypes.ARRAY>["validate"] = async ({ list }) => {
     const values = getValidationValues(list, this.path);
 
     values.forEach(v => {
@@ -44,8 +44,8 @@ export class FieldArray extends Field<FieldTypes.ARRAY> {
     return true;
   };
 
-  _sToRelArr = (input: FieldSerializerInput) => {
-    const options = this.options.items?.options as FieldOptions<FieldTypes.RELATION>;
+  _sToRelArr = (input: PropertySerializerInput) => {
+    const options = this.options.items?.options as PropertyOptions<PropertyTypes.RELATION>;
     const { value, format, from, ctx } = input;
 
     const adapter = from.model().getAdapter();
@@ -72,9 +72,9 @@ export class FieldArray extends Field<FieldTypes.ARRAY> {
 
       if (model.configuration.single) {
         res = arrVal.map((v, i) => {
-          const itemsField = getFieldFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
+          const itemsProperty = getPropertyFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
 
-          return itemsField?.serialize({ ...input, value: v });
+          return itemsProperty?.serialize({ ...input, value: v });
         });
       } else {
         const ids = arrVal.map(String);
@@ -90,33 +90,33 @@ export class FieldArray extends Field<FieldTypes.ARRAY> {
       return [];
     }
 
-    const fieldId = getFieldFromDefinition<FieldTypes.ID>({ type: FieldTypes.ID }, adapter, "_id");
+    const propertyId = getPropertyFromDefinition<PropertyTypes.ID>({ type: PropertyTypes.ID }, adapter, "_id");
 
-    return arrVal.map(id => fieldId?.serialize({ ...input, value: id }));
+    return arrVal.map(id => propertyId?.serialize({ ...input, value: id }));
   };
 
-  _sStatic = (input: FieldSerializerInput) => {
+  _sStatic = (input: PropertySerializerInput) => {
     const { value, from } = input;
     const adapter = from.model().getAdapter();
     const arrVal = Array.isArray(value) ? value : [value];
 
     return arrVal.map((v, i) => {
-      const itemsField = getFieldFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
+      const itemsProperty = getPropertyFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
 
-      return itemsField?.serialize({ ...input, value: v });
+      return itemsProperty?.serialize({ ...input, value: v });
     });
   };
 
-  _sDefault = (input: FieldSerializerInput) => {
-    if (this.options.items?.type === FieldTypes.RELATION) {
+  _sDefault = (input: PropertySerializerInput) => {
+    if (this.options.items?.type === PropertyTypes.RELATION) {
       return this._sToRelArr(input);
     }
 
     return this._sStatic(input);
   };
 
-  serializerMap: Field<FieldTypes.ARRAY>["serializerMap"] = {
+  serializerMap: Property<PropertyTypes.ARRAY>["serializerMap"] = {
     validation: ({ value }) => value,
-    [Field.defaultSymbol]: this._sDefault,
+    [Property.defaultSymbol]: this._sDefault,
   };
 }

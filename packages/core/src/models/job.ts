@@ -1,6 +1,6 @@
 import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { JobTypes } from "@/enums/job-types.js";
 import { JobStatus } from "@/enums/job-status.js";
 
@@ -11,36 +11,36 @@ export class Job extends Model {
     slug: "jobs",
     realtime: true,
     loadDatamodel: false,
-    fields: {
+    properties: {
       _type: {
-        type: FieldTypes.ENUM,
+        type: PropertyTypes.ENUM,
         options: {
           enum: Object.values(JobTypes),
         },
       },
       _status: {
-        type: FieldTypes.ENUM,
+        type: PropertyTypes.ENUM,
         options: {
           enum: Object.values(JobStatus),
           default: JobStatus.QUEUED,
         },
       },
       _refs: {
-        type: FieldTypes.ARRAY,
+        type: PropertyTypes.ARRAY,
         options: {
           items: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       },
       _startedAt: {
-        type: FieldTypes.DATE,
+        type: PropertyTypes.DATE,
       },
       _completedAt: {
-        type: FieldTypes.DATE,
+        type: PropertyTypes.DATE,
       },
       _result: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
       },
     },
   });

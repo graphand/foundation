@@ -12,27 +12,27 @@ export * from "@/lib/controllers.js";
 export { modelDecorator } from "@/lib/model-decorator.js";
 export { Adapter } from "@/lib/adapter.js";
 export { CoreError } from "@/lib/core-error.js";
-export { Field } from "@/lib/field.js";
-export { FieldArray } from "@/lib/fields/array.js";
-export { FieldBoolean } from "@/lib/fields/boolean.js";
-export { FieldDate } from "@/lib/fields/date.js";
-export { FieldId } from "@/lib/fields/id.js";
-export { FieldIdentity } from "@/lib/fields/identity.js";
-export { FieldObject } from "@/lib/fields/object.js";
-export { FieldNumber } from "@/lib/fields/number.js";
-export { FieldRelation } from "@/lib/fields/relation.js";
-export { FieldText } from "@/lib/fields/text.js";
+export { Property } from "@/lib/property.js";
+export { PropertyArray } from "@/lib/properties/array.js";
+export { PropertyBoolean } from "@/lib/properties/boolean.js";
+export { PropertyDate } from "@/lib/properties/date.js";
+export { PropertyId } from "@/lib/properties/id.js";
+export { PropertyIdentity } from "@/lib/properties/identity.js";
+export { PropertyObject } from "@/lib/properties/object.js";
+export { PropertyNumber } from "@/lib/properties/number.js";
+export { PropertyRelation } from "@/lib/properties/relation.js";
+export { PropertyText } from "@/lib/properties/text.js";
 export { Model } from "@/lib/model.js";
 export { ModelList } from "@/lib/model-list.js";
 export { PromiseModel } from "@/lib/promise-model.js";
 export { PromiseModelList } from "@/lib/promise-model-list.js";
 export { ValidationError } from "@/lib/validation-error.js";
-export { ValidationFieldError } from "@/lib/validation-field-error.js";
+export { ValidationPropertyError } from "@/lib/validation-property-error.js";
 export { ValidationValidatorError } from "@/lib/validation-validator-error.js";
 export { Validator } from "@/lib/validator.js";
 export { ValidatorBoundaries } from "@/lib/validators/boundaries.js";
 export { ValidatorDatamodel } from "@/lib/validators/datamodel.js";
-export { ValidatorKeyField } from "@/lib/validators/key-field.js";
+export { ValidatorKeyProperty } from "@/lib/validators/key-property.js";
 export { ValidatorLength } from "@/lib/validators/length.js";
 export { ValidatorRegex } from "@/lib/validators/regex.js";
 export { ValidatorRequired } from "@/lib/validators/required.js";
@@ -59,7 +59,7 @@ export { TokenIssuer } from "@/models/token-issuer.js";
 export { AuthMethods } from "@/enums/auth-methods.js";
 export { AuthProviders } from "@/enums/auth-providers.js";
 export { ErrorCodes } from "@/enums/error-codes.js";
-export { FieldTypes } from "@/enums/field-types.js";
+export { PropertyTypes } from "@/enums/property-types.js";
 export { IdentityTypes } from "@/enums/identity-types.js";
 export { JobStatus } from "@/enums/job-status.js";
 export { JobTypes } from "@/enums/job-types.js";
@@ -73,18 +73,18 @@ export { EventSeverities } from "@/enums/event-severities.js";
 export { SubscriptionChannels } from "@/enums/subscription-channels.js";
 export {
   isObjectId,
-  crossFields,
-  defineFieldsProperties,
-  getArrayItemsFieldsMap,
+  crossProperties,
+  definePropertiesObject,
+  getArrayItemsPropertiesMap,
   getArrayValidatorsArray,
-  getFieldFromDefinition,
-  getFieldsPathsFromPath,
-  getNestedFieldsMap,
+  getPropertyFromDefinition,
+  getPropertiesPathsFromPath,
+  getNestedPropertiesMap,
   getNestedValidatorsArray,
   getValidatorFromDefinition,
   validateModel,
   getValidationValues,
-  getNestedFieldsArrayForModel,
+  getNestedPropertiesArrayForModel,
   getRelationModelsFromPath,
   createValidationError,
   assignDatamodel,

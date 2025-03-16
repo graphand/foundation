@@ -1,6 +1,6 @@
 import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 
 @modelDecorator()
@@ -11,25 +11,25 @@ export class Aggregation extends Model {
     isEnvironmentScoped: true,
     realtime: true,
     loadDatamodel: false,
-    keyField: "slug",
-    fields: {
-      slug: { type: FieldTypes.TEXT },
-      source: { type: FieldTypes.TEXT },
+    keyProperty: "slug",
+    properties: {
+      slug: { type: PropertyTypes.TEXT },
+      source: { type: PropertyTypes.TEXT },
       pipeline: {
-        type: FieldTypes.ARRAY,
+        type: PropertyTypes.ARRAY,
         options: {
           items: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
           },
         },
       },
       let: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
       },
     },
     validators: [
-      { type: ValidatorTypes.REQUIRED, options: { field: "source" } },
-      { type: ValidatorTypes.REQUIRED, options: { field: "pipeline" } },
+      { type: ValidatorTypes.REQUIRED, options: { property: "source" } },
+      { type: ValidatorTypes.REQUIRED, options: { property: "pipeline" } },
     ],
   });
 }

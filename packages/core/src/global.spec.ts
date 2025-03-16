@@ -1,23 +1,15 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { ValidationError } from "@/lib/validation-error.js";
 import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.js";
 import { DataModel } from "@/models/data-model.js";
 import { Environment } from "@/models/environment.js";
 import { Media } from "@/models/media.js";
 import { defineConfiguration, Model } from "@/lib/model.js";
-import { Adapter, Field, FieldDefinitionGeneric, FieldObject } from "./index.js";
-
-declare module "./index.js" {
-  export interface SerializerFieldsMap<
-    F extends FieldDefinitionGeneric<FieldTypes> = FieldDefinitionGeneric<FieldTypes>,
-  > {
-    data: SerializerFieldsMap<F>["json"];
-  }
-}
+import { Adapter, Property, PropertyObject } from "./index.js";
 
 describe("Global tests", () => {
-  it("should not be able to create datamodel with invalid fields", async () => {
+  it("should not be able to create datamodel with invalid properties", async () => {
     const slug = generateRandomString();
     const adapter = mockAdapter();
 
@@ -28,7 +20,7 @@ describe("Global tests", () => {
         {
           slug,
           // @ts-expect-error test
-          fields: "toto",
+          properties: "toto",
         },
       ]),
     ).rejects.toThrow(ValidationError);
@@ -37,9 +29,9 @@ describe("Global tests", () => {
       model.validate([
         {
           slug,
-          fields: {
+          properties: {
             // @ts-expect-error test
-            field1: "toto",
+            property1: "toto",
           },
         },
       ]),
@@ -49,8 +41,8 @@ describe("Global tests", () => {
       model.validate([
         {
           slug,
-          fields: {
-            field1: {
+          properties: {
+            property1: {
               // @ts-expect-error test
               type: {},
             },
@@ -63,8 +55,8 @@ describe("Global tests", () => {
       model.validate([
         {
           slug,
-          fields: {
-            field1: {
+          properties: {
+            property1: {
               // @ts-expect-error test
               type: "invalid",
             },
@@ -152,22 +144,22 @@ describe("Global tests", () => {
       model.validate([
         {
           slug,
-          fields: {
+          properties: {
             title: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
               options: {},
             },
             relSingle: {
-              type: FieldTypes.RELATION,
+              type: PropertyTypes.RELATION,
               options: {
                 ref: "ref",
               },
             },
             relMultiple: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.RELATION,
+                  type: PropertyTypes.RELATION,
                   options: {
                     ref: "ref",
                   },
@@ -175,20 +167,20 @@ describe("Global tests", () => {
               },
             },
             obj: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
+                properties: {
                   relSingle: {
-                    type: FieldTypes.RELATION,
+                    type: PropertyTypes.RELATION,
                     options: {
                       ref: "ref",
                     },
                   },
                   relMultiple: {
-                    type: FieldTypes.ARRAY,
+                    type: PropertyTypes.ARRAY,
                     options: {
                       items: {
-                        type: FieldTypes.RELATION,
+                        type: PropertyTypes.RELATION,
                         options: {
                           ref: "ref",
                         },
@@ -199,23 +191,23 @@ describe("Global tests", () => {
               },
             },
             objArr: {
-              type: FieldTypes.ARRAY,
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       relSingle: {
-                        type: FieldTypes.RELATION,
+                        type: PropertyTypes.RELATION,
                         options: {
                           ref: "ref",
                         },
                       },
                       relMultiple: {
-                        type: FieldTypes.ARRAY,
+                        type: PropertyTypes.ARRAY,
                         options: {
                           items: {
-                            type: FieldTypes.RELATION,
+                            type: PropertyTypes.RELATION,
                             options: {
                               ref: "ref",
                             },
@@ -233,21 +225,21 @@ describe("Global tests", () => {
     ).resolves.toBeTruthy();
   });
 
-  it("should be able to validate with nested field with defaultField with multiple documents with different fields", async () => {
+  it("should be able to validate with nested property with defaultProperty with multiple documents with different properties", async () => {
     const adapter = mockAdapter();
     const model = class extends Model {
       static configuration = defineConfiguration({
         slug: generateRandomString(),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              defaultField: {
-                type: FieldTypes.OBJECT,
+              defaultProperty: {
+                type: PropertyTypes.OBJECT,
                 options: {
-                  fields: {
+                  properties: {
                     title: {
-                      type: FieldTypes.TEXT,
+                      type: PropertyTypes.TEXT,
                       options: {},
                     },
                   },
@@ -255,7 +247,7 @@ describe("Global tests", () => {
                     {
                       type: ValidatorTypes.REQUIRED,
                       options: {
-                        field: "title",
+                        property: "title",
                       },
                     },
                   ],
@@ -298,25 +290,25 @@ describe("Global tests", () => {
     ).rejects.toThrow(ValidationError);
   });
 
-  it("should be able to validate with nested field in array with multiple documents with different fields", async () => {
+  it("should be able to validate with nested property in array with multiple documents with different properties", async () => {
     const adapter = mockAdapter();
     const model = class extends Model {
       static configuration = defineConfiguration({
         slug: generateRandomString(),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
+              properties: {
                 arr: {
-                  type: FieldTypes.ARRAY,
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.OBJECT,
+                      type: PropertyTypes.OBJECT,
                       options: {
-                        fields: {
+                        properties: {
                           title: {
-                            type: FieldTypes.TEXT,
+                            type: PropertyTypes.TEXT,
                             options: {},
                           },
                         },
@@ -324,7 +316,7 @@ describe("Global tests", () => {
                           {
                             type: ValidatorTypes.REQUIRED,
                             options: {
-                              field: "title",
+                              property: "title",
                             },
                           },
                         ],
@@ -370,38 +362,38 @@ describe("Global tests", () => {
     ).rejects.toThrow(ValidationError);
   });
 
-  it("should be able to validate with nested field in array with defaultField with multiple documents with different fields", async () => {
+  it("should be able to validate with nested property in array with defaultProperty with multiple documents with different properties", async () => {
     const adapter = mockAdapter();
     const model = class extends Model {
       static configuration = defineConfiguration({
         slug: generateRandomString(),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
+              properties: {
                 arr: {
-                  type: FieldTypes.ARRAY,
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.OBJECT,
+                      type: PropertyTypes.OBJECT,
                       options: {
-                        defaultField: {
-                          type: FieldTypes.OBJECT,
+                        defaultProperty: {
+                          type: PropertyTypes.OBJECT,
                           options: {
-                            fields: {
+                            properties: {
                               nestedArr: {
-                                type: FieldTypes.ARRAY,
+                                type: PropertyTypes.ARRAY,
                                 options: {
                                   items: {
-                                    type: FieldTypes.OBJECT,
+                                    type: PropertyTypes.OBJECT,
                                     options: {
-                                      defaultField: {
-                                        type: FieldTypes.OBJECT,
+                                      defaultProperty: {
+                                        type: PropertyTypes.OBJECT,
                                         options: {
-                                          fields: {
+                                          properties: {
                                             title: {
-                                              type: FieldTypes.TEXT,
+                                              type: PropertyTypes.TEXT,
                                               options: {},
                                             },
                                           },
@@ -409,7 +401,7 @@ describe("Global tests", () => {
                                             {
                                               type: ValidatorTypes.REQUIRED,
                                               options: {
-                                                field: "title",
+                                                property: "title",
                                               },
                                             },
                                           ],
@@ -564,35 +556,35 @@ describe("Global tests", () => {
     ).rejects.toThrow(ValidationError);
   });
 
-  it("should detect unique fields on nested field in array with multiple documents", async () => {
+  it("should detect unique properties on nested property in array with multiple documents", async () => {
     const adapter = mockAdapter();
     const model = class extends Model {
       static configuration = defineConfiguration({
         slug: generateRandomString(),
-        fields: {
+        properties: {
           obj: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
+              properties: {
                 arr: {
-                  type: FieldTypes.ARRAY,
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.OBJECT,
+                      type: PropertyTypes.OBJECT,
                       options: {
-                        defaultField: {
-                          type: FieldTypes.OBJECT,
+                        defaultProperty: {
+                          type: PropertyTypes.OBJECT,
                           options: {
-                            fields: {
+                            properties: {
                               nestedArr: {
-                                type: FieldTypes.ARRAY,
+                                type: PropertyTypes.ARRAY,
                                 options: {
                                   items: {
-                                    type: FieldTypes.OBJECT,
+                                    type: PropertyTypes.OBJECT,
                                     options: {
-                                      fields: {
+                                      properties: {
                                         label: {
-                                          type: FieldTypes.TEXT,
+                                          type: PropertyTypes.TEXT,
                                           options: {},
                                         },
                                       },
@@ -600,7 +592,7 @@ describe("Global tests", () => {
                                         {
                                           type: ValidatorTypes.UNIQUE,
                                           options: {
-                                            field: "label",
+                                            property: "label",
                                           },
                                         },
                                       ],
@@ -660,9 +652,9 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
     await DataModel.extend({ adapterClass: adapter }).create({
       slug: Media.configuration.slug,
-      fields: {
+      properties: {
         title: {
-          type: FieldTypes.TEXT,
+          type: PropertyTypes.TEXT,
           options: {},
         },
       },
@@ -671,7 +663,7 @@ describe("Global tests", () => {
     const mediaModel = Media.extend({ adapterClass: adapter });
     await mediaModel.initialize();
 
-    expect(mediaModel.fieldsMap.get("title")).toBeTruthy();
+    expect(mediaModel.propertiesMap.get("title")).toBeTruthy();
   });
 
   it("should not be able to override Media model validators", async () => {
@@ -688,33 +680,33 @@ describe("Global tests", () => {
   });
 
   // TODO: fix this test
-  // it("should detect unique fields on nested field in array with multiple documents and different values in nested array", async () => {
+  // it("should detect unique properties on nested property in array with multiple documents and different values in nested array", async () => {
   //   const adapter = mockAdapter();
   //   const model = mockModel({
-  //     fields: {
+  //     properties: {
   //       obj: {
-  //         type: FieldTypes.OBJECT,
+  //         type: PropertyTypes.OBJECT,
   //         options: {
-  //           fields: {
+  //           properties: {
   //             arr: {
-  //               type: FieldTypes.ARRAY,
+  //               type: PropertyTypes.ARRAY,
   //               options: {
   //                 items: {
-  //                   type: FieldTypes.OBJECT,
+  //                   type: PropertyTypes.OBJECT,
   //                   options: {
-  //                     defaultField: {
-  //                       type: FieldTypes.OBJECT,
+  //                     defaultProperty: {
+  //                       type: PropertyTypes.OBJECT,
   //                       options: {
-  //                         fields: {
+  //                         properties: {
   //                           nestedArr: {
-  //                             type: FieldTypes.ARRAY,
+  //                             type: PropertyTypes.ARRAY,
   //                             options: {
   //                               items: {
-  //                                 type: FieldTypes.OBJECT,
+  //                                 type: PropertyTypes.OBJECT,
   //                                 options: {
-  //                                   fields: {
+  //                                   properties: {
   //                                     label: {
-  //                                       type: FieldTypes.TEXT,
+  //                                       type: PropertyTypes.TEXT,
   //                                       options: {},
   //                                     },
   //                                   },
@@ -722,7 +714,7 @@ describe("Global tests", () => {
   //                                     {
   //                                       type: ValidatorTypes.UNIQUE,
   //                                       options: {
-  //                                         field: "label",
+  //                                         property: "label",
   //                                       },
   //                                     },
   //                                   ],
@@ -785,14 +777,14 @@ describe("Global tests", () => {
       DM.validate([
         {
           slug: generateRandomString(),
-          keyField: "title",
-          fields: {
+          keyProperty: "title",
+          properties: {
             title: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
               options: {},
             },
             subtitle: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
               options: {},
             },
           },
@@ -807,23 +799,23 @@ describe("Global tests", () => {
       DM.validate([
         {
           slug: generateRandomString(),
-          keyField: "title",
-          fields: {
+          keyProperty: "title",
+          properties: {
             title: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
               options: {},
             },
           },
           validators: [
             {
               type: ValidatorTypes.REQUIRED,
-              options: { field: "title" },
+              options: { property: "title" },
             },
           ],
         },
         {
           slug: generateRandomString(),
-          fields: {},
+          properties: {},
         },
       ]),
     ).resolves.toBeTruthy();
@@ -832,23 +824,23 @@ describe("Global tests", () => {
       DM.validate([
         {
           slug: generateRandomString(),
-          keyField: "title",
-          fields: {
+          keyProperty: "title",
+          properties: {
             title: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
               options: {},
             },
           },
           validators: [
             {
               type: ValidatorTypes.REQUIRED,
-              options: { field: "title" },
+              options: { property: "title" },
             },
           ],
         },
         {
           slug: generateRandomString(),
-          fields: {},
+          properties: {},
           validators: [],
         },
       ]),
@@ -896,7 +888,7 @@ describe("Global tests", () => {
     await expect(DM.validate([{ slug: "sampleCoreModel" }])).rejects.toThrow(ValidationError); // CoreModel is registered in the adapter now so it should not be allowed to create a datamodel with this slug
   });
 
-  it("should not be able to create datamodel with invalid field name", async () => {
+  it("should not be able to create datamodel with invalid property name", async () => {
     const adapter = mockAdapter();
     const DM = DataModel.extend({ adapterClass: adapter });
 
@@ -904,9 +896,9 @@ describe("Global tests", () => {
       DM.validate([
         {
           slug: generateRandomString(),
-          fields: {
+          properties: {
             "invalid name": {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         },
@@ -917,9 +909,9 @@ describe("Global tests", () => {
       DM.validate([
         {
           slug: generateRandomString(),
-          fields: {
+          properties: {
             _invalidName: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
           },
         },
@@ -927,15 +919,15 @@ describe("Global tests", () => {
     ).rejects.toThrow(ValidationError);
   });
 
-  it("should be able to update model fields", async () => {
+  it("should be able to update model properties", async () => {
     const adapter = mockAdapter();
 
     const slug = generateRandomString();
     const dm = await DataModel.extend({ adapterClass: adapter }).create({
       slug,
-      fields: {
+      properties: {
         title: {
-          type: FieldTypes.TEXT,
+          type: PropertyTypes.TEXT,
           options: {
             default: "defaultTitle",
           },
@@ -946,9 +938,9 @@ describe("Global tests", () => {
     const model = Model.getClass<
       typeof Model & {
         configuration: {
-          fields: {
+          properties: {
             title: {
-              type: FieldTypes.TEXT;
+              type: PropertyTypes.TEXT;
               options: {
                 default: string;
               };
@@ -966,9 +958,9 @@ describe("Global tests", () => {
     await dm.update({
       $set: {
         slug,
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
             options: {
               default: "newDefaultTitle",
             },
@@ -1000,30 +992,30 @@ describe("Global tests", () => {
     await expect(_DataModel.create({ slug: "a" })).resolves.toBeTruthy();
   });
 
-  it("should be able to extend a field type", async () => {
+  it("should be able to extend a property type", async () => {
     const adapter = mockAdapter();
 
-    class CustomFieldObject extends FieldObject {
-      serializerMap: Field<FieldTypes.OBJECT>["serializerMap"] = {
+    class CustomPropertyObject extends PropertyObject {
+      serializerMap: Property<PropertyTypes.OBJECT>["serializerMap"] = {
         json: this._sStatic,
-        [Field.defaultSymbol]: this._sProxy,
+        [Property.defaultSymbol]: this._sProxy,
         // @ts-expect-error test is not defined globally
         test: () => "test",
       };
     }
 
-    adapter.fieldsMap = { ...adapter.fieldsMap, [FieldTypes.OBJECT]: CustomFieldObject };
+    adapter.propertiesMap = { ...adapter.propertiesMap, [PropertyTypes.OBJECT]: CustomPropertyObject };
 
     const CustomModel = class extends Model {
       static configuration = defineConfiguration({
         slug: generateRandomString(),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
+              properties: {
                 a: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
               },
             },

@@ -1,12 +1,12 @@
-import { FieldTypes } from "@/enums/field-types.js";
-import { FieldSerializerInput, JSONObject, JSONPrimitive, ModelData, ModelInstance } from "@/types/index.js";
-import { Field } from "@/lib/field.js";
-import { getFieldFromDefinition, getNestedFieldsMap, getValidationValues } from "@/lib/utils.js";
+import { PropertyTypes } from "@/enums/property-types.js";
+import { PropertySerializerInput, JSONObject, JSONPrimitive, ModelData, ModelInstance } from "@/types/index.js";
+import { Property } from "@/lib/property.js";
+import { getPropertyFromDefinition, getNestedPropertiesMap, getValidationValues } from "@/lib/utils.js";
 
-export class FieldObject extends Field<FieldTypes.OBJECT> {
+export class PropertyObject extends Property<PropertyTypes.OBJECT> {
   static symbolIgnore = Symbol("ignore");
 
-  validate: Field<FieldTypes.OBJECT>["validate"] = async ({ list }) => {
+  validate: Property<PropertyTypes.OBJECT>["validate"] = async ({ list }) => {
     const _isInvalid = (v: unknown) => v !== null && v !== undefined && typeof v !== "object";
 
     const values = getValidationValues(list, this.path);
@@ -17,8 +17,8 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
   _getConditionalKeys = (from: ModelInstance, nextData?: ModelData) => {
     let conditionalKeys: Array<string> | undefined;
 
-    if (this.options.conditionalFields) {
-      const { dependsOn, mappings, defaultMapping } = this.options.conditionalFields;
+    if (this.options.conditionalProperties) {
+      const { dependsOn, mappings, defaultMapping } = this.options.conditionalProperties;
       let dependsOnPath: string = dependsOn;
       if (dependsOnPath.includes("$")) {
         const parentPath = this.path.split(".").slice(0, -1).join(".");
@@ -34,7 +34,7 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
     return conditionalKeys;
   };
 
-  _sStatic = (input: FieldSerializerInput) => {
+  _sStatic = (input: PropertySerializerInput) => {
     const { from, ctx } = input;
     const value = Array.isArray(input.value) ? input.value[0] : input.value;
     const oFormat = ctx?.outputFormat || input.format;
@@ -52,23 +52,23 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
     }
 
     const model = from.model();
-    const fieldsMap = getNestedFieldsMap(model, this);
+    const propertiesMap = getNestedPropertiesMap(model, this);
     const defaults = ctx?.defaults ?? true;
     const conditionalKeys = this._getConditionalKeys(from, input.nextData);
 
     const json: JSONObject = {};
 
-    for (const [k, field] of fieldsMap) {
+    for (const [k, property] of propertiesMap) {
       if (conditionalKeys && !conditionalKeys.includes(k)) {
         continue;
       }
 
-      if (value[k] === undefined && defaults && "default" in field.options) {
-        json[k] = field.serialize({ ...input, value: field.options.default }) as JSONPrimitive;
+      if (value[k] === undefined && defaults && "default" in property.options) {
+        json[k] = property.serialize({ ...input, value: property.options.default }) as JSONPrimitive;
       } else if (value[k] === undefined || value[k] === null) {
         json[k] = value[k];
       } else {
-        json[k] = field.serialize({ ...input, value: value[k] }) as JSONPrimitive;
+        json[k] = property.serialize({ ...input, value: value[k] }) as JSONPrimitive;
       }
     }
 
@@ -76,25 +76,25 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
       return json;
     }
 
-    if (this.options.defaultField) {
-      let noField = Object.keys(value).filter(k => !fieldsMap.has(k));
+    if (this.options.defaultProperty) {
+      let noProperty = Object.keys(value).filter(k => !propertiesMap.has(k));
 
       if (conditionalKeys) {
-        noField = noField.filter(k => !conditionalKeys.includes(k));
+        noProperty = noProperty.filter(k => !conditionalKeys.includes(k));
       }
 
-      if (noField.length) {
-        noField.forEach(k => {
+      if (noProperty.length) {
+        noProperty.forEach(k => {
           if (value[k] === undefined || value[k] === null) {
             json[k] = value[k];
-          } else if (this.options?.defaultField) {
-            const tmpField = getFieldFromDefinition(
-              this.options.defaultField,
+          } else if (this.options?.defaultProperty) {
+            const tmpProperty = getPropertyFromDefinition(
+              this.options.defaultProperty,
               model.getAdapter(false),
               [this.path, k].join("."),
             );
 
-            json[k] = tmpField?.serialize({ ...input, value: value[k] }) as JSONPrimitive;
+            json[k] = tmpProperty?.serialize({ ...input, value: value[k] }) as JSONPrimitive;
           }
         });
       }
@@ -103,7 +103,7 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
     return { ...value, ...json };
   };
 
-  _sProxy = (input: FieldSerializerInput) => {
+  _sProxy = (input: PropertySerializerInput) => {
     const { from, ctx } = input;
     const value = Array.isArray(input.value) ? input.value[0] : input.value;
     const oFormat = ctx?.outputFormat || input.format;
@@ -122,45 +122,49 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
 
     const model = from.model();
     const adapter = model.getAdapter();
-    const fieldsMap = getNestedFieldsMap(model, this);
+    const propertiesMap = getNestedPropertiesMap(model, this);
     const conditionalKeys = this._getConditionalKeys(from, input.nextData);
 
     const _get = (target: any, prop: string) => {
-      let targetField = fieldsMap.get(prop);
+      let targetProperty = propertiesMap.get(prop);
       let value = target[prop];
 
-      if (!targetField) {
+      if (!targetProperty) {
         if (this.options?.strict) {
           return undefined;
         }
 
-        if (!this.options?.defaultField) {
+        if (!this.options?.defaultProperty) {
           return value;
         }
 
-        const tmpField = getFieldFromDefinition(this.options.defaultField, adapter, [this.path, prop].join("."));
+        const tmpProperty = getPropertyFromDefinition(
+          this.options.defaultProperty,
+          adapter,
+          [this.path, prop].join("."),
+        );
 
-        if (!tmpField) {
-          throw new Error(`Invalid default field ${this.options.defaultField}`);
+        if (!tmpProperty) {
+          throw new Error(`Invalid default property ${this.options.defaultProperty}`);
         }
 
-        targetField = tmpField;
+        targetProperty = tmpProperty;
       }
 
-      if (!targetField) {
+      if (!targetProperty) {
         return undefined;
       }
 
       const defaults = ctx?.defaults ?? true;
-      if (defaults && value === undefined && "default" in targetField.options) {
-        value = targetField.options.default as typeof value;
+      if (defaults && value === undefined && "default" in targetProperty.options) {
+        value = targetProperty.options.default as typeof value;
       }
 
       if (value === undefined || value === null) {
         return value;
       }
 
-      return targetField.serialize({ ...input, value });
+      return targetProperty.serialize({ ...input, value });
     };
 
     return new Proxy(value, {
@@ -172,7 +176,7 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
         if (prop === "__raw") {
           return (k: string) => {
             if (conditionalKeys && !conditionalKeys.includes(k)) {
-              return FieldObject.symbolIgnore;
+              return PropertyObject.symbolIgnore;
             }
 
             return target[k];
@@ -188,9 +192,9 @@ export class FieldObject extends Field<FieldTypes.OBJECT> {
     });
   };
 
-  serializerMap: Field<FieldTypes.OBJECT>["serializerMap"] = {
+  serializerMap: Property<PropertyTypes.OBJECT>["serializerMap"] = {
     json: this._sStatic,
     data: this._sStatic,
-    [Field.defaultSymbol]: this._sProxy,
+    [Property.defaultSymbol]: this._sProxy,
   };
 }

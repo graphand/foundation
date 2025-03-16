@@ -1,6 +1,6 @@
 import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Job } from "@/models/job.js";
 import { MergeRequest } from "@/models/merge-request.js";
@@ -12,25 +12,25 @@ export class Environment extends Model {
     slug: "environments",
     blockMultipleOperations: true,
     loadDatamodel: false,
-    keyField: "name",
-    fields: {
+    keyProperty: "name",
+    properties: {
       name: {
-        type: FieldTypes.TEXT,
+        type: PropertyTypes.TEXT,
       },
       base: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: "environments", // Circular reference
         },
       },
       _job: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: Job.configuration.slug,
         },
       },
       _fromRequest: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: MergeRequest.configuration.slug,
         },
@@ -40,7 +40,7 @@ export class Environment extends Model {
       {
         type: ValidatorTypes.REGEX,
         options: {
-          field: "name",
+          property: "name",
           pattern: "^(?!master$|main$)[a-z0-9]+$",
         },
       },

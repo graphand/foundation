@@ -1,6 +1,6 @@
 import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 
 @modelDecorator()
 export class Settings extends Model {
@@ -9,12 +9,12 @@ export class Settings extends Model {
     slug: "settings",
     blockMultipleOperations: true,
     loadDatamodel: false,
-    keyField: "key",
-    fields: {
-      key: { type: FieldTypes.TEXT },
+    keyProperty: "key",
+    properties: {
+      key: { type: PropertyTypes.TEXT },
       data: {
-        type: FieldTypes.OBJECT,
-        options: { default: {}, fields: {}, conditionalFields: { dependsOn: "$.key", mappings: {} } },
+        type: PropertyTypes.OBJECT,
+        options: { default: {}, properties: {}, conditionalProperties: { dependsOn: "$.key", mappings: {} } },
       },
     },
   });

@@ -178,7 +178,7 @@ describe("EventSubscription Model", () => {
         ).resolves.toBeInstanceOf(EventSubscription);
       });
 
-      it("should resolve when account channel is provided with an account field", async () => {
+      it("should resolve when account channel is provided with an account property", async () => {
         await expect(
           EventSubscriptionModel.create({
             slug: generateRandomString(),
@@ -186,7 +186,7 @@ describe("EventSubscription Model", () => {
               {
                 channel: SubscriptionChannels.ACCOUNT,
                 options: {
-                  accountField: "account",
+                  accountProperty: "account",
                 },
               },
             ],

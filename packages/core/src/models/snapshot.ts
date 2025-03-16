@@ -1,6 +1,6 @@
 import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { Job } from "./job.js";
 
 @modelDecorator()
@@ -10,12 +10,12 @@ export class Snapshot extends Model {
     slug: "snapshots",
     blockMultipleOperations: true,
     loadDatamodel: false,
-    fields: {
+    properties: {
       _expiresAt: {
-        type: FieldTypes.DATE,
+        type: PropertyTypes.DATE,
       },
       _job: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: Job.configuration.slug,
         },

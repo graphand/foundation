@@ -1,18 +1,26 @@
 import { Model } from "@/lib/model.js";
-import { FieldTypes } from "./enums/field-types.js";
-import { HookData, JSONPrimitive, ModelJSON } from "@/types/index.js";
+import { PropertyTypes } from "./enums/property-types.js";
+import { HookData, JSONPrimitive, ModelJSON, PropertyDefinitionGeneric } from "@/types/index.js";
 import { PromiseModel } from "./lib/promise-model.js";
 import { Account } from "./models/account.js";
 import { Role } from "./models/role.js";
 import { defineConfiguration } from "@/lib/model.js";
 import { generateRandomString } from "@/lib/test-utils.dev.js";
 
+declare module "./index.js" {
+  export interface SerializerPropertiesMap<
+    F extends PropertyDefinitionGeneric<PropertyTypes> = PropertyDefinitionGeneric<PropertyTypes>,
+  > {
+    data: SerializerPropertiesMap<F>["json"];
+  }
+}
+
 class CustomModel extends Model {
   static configuration = defineConfiguration({
     slug: "customModel",
-    fields: {
-      field: {
-        type: FieldTypes.TEXT,
+    properties: {
+      property: {
+        type: PropertyTypes.TEXT,
       },
     },
   });
@@ -21,10 +29,10 @@ class CustomModel extends Model {
 class CustomAccount extends Model {
   static configuration = defineConfiguration({
     slug: "accounts",
-    fields: {
-      ...Account.configuration.fields,
+    properties: {
+      ...Account.configuration.properties,
       foo: {
-        type: FieldTypes.TEXT,
+        type: PropertyTypes.TEXT,
       },
       bar: {
         type: "text",
@@ -48,14 +56,14 @@ describe("test types", () => {
     [K in keyof T]: K extends Prop ? never : T[K];
   };
 
-  describe("fields type check", () => {
+  describe("properties type check", () => {
     it("utils should work", () => {
       class CustomModel extends Model {
         static configuration = defineConfiguration({
           slug: generateRandomString(),
-          fields: {
+          properties: {
             title: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
             subtitle: {
               type: "text",
@@ -76,14 +84,14 @@ describe("test types", () => {
     });
 
     describe("test object", () => {
-      describe("text field", () => {
-        it("should validate text field", () => {
+      describe("text property", () => {
+        it("should validate text property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
               slug: generateRandomString(),
-              fields: {
-                field: {
-                  type: FieldTypes.TEXT,
+              properties: {
+                property: {
+                  type: PropertyTypes.TEXT,
                 },
               },
             });
@@ -91,22 +99,22 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string | null | undefined>(i.field); // Check the field is a string
+          simulateTypeCheck<string | null | undefined>(i.property); // Check the property is a string
         });
       });
 
-      describe("nested field", () => {
-        it("should validate nested field", () => {
+      describe("nested property", () => {
+        it("should validate nested property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
               slug: generateRandomString(),
-              fields: {
-                field: {
-                  type: FieldTypes.OBJECT,
+              properties: {
+                property: {
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       title: {
-                        type: FieldTypes.TEXT,
+                        type: PropertyTypes.TEXT,
                       },
                     },
                   },
@@ -117,21 +125,21 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string | null | undefined>(i.get("field")?.title); // Check the field is a string
-          simulateTypeCheck<JSONPrimitive | undefined>(i.get("field")?.unknown);
+          simulateTypeCheck<string | null | undefined>(i.get("property")?.title); // Check the property is a string
+          simulateTypeCheck<JSONPrimitive | undefined>(i.get("property")?.unknown);
         });
 
         it("should respect options.strict", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
               slug: generateRandomString(),
-              fields: {
-                field: {
-                  type: FieldTypes.OBJECT,
+              properties: {
+                property: {
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
+                    properties: {
                       title: {
-                        type: FieldTypes.TEXT,
+                        type: PropertyTypes.TEXT,
                       },
                     },
                     strict: true,
@@ -143,18 +151,18 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string | null | undefined>(i.get("field")?.title); // Check the field is a string
+          simulateTypeCheck<string | null | undefined>(i.get("property")?.title); // Check the property is a string
         });
       });
 
-      describe("relation field", () => {
-        it("should validate relation field", () => {
+      describe("relation property", () => {
+        it("should validate relation property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
               slug: generateRandomString(),
-              fields: {
-                field: {
-                  type: FieldTypes.RELATION,
+              properties: {
+                property: {
+                  type: PropertyTypes.RELATION,
                   options: {
                     ref: "accounts" as const,
                   },
@@ -165,18 +173,18 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<PromiseModel<typeof CustomAccount> | null | undefined>(i.get("field")); // Check the field is a PromiseModel
+          simulateTypeCheck<PromiseModel<typeof CustomAccount> | null | undefined>(i.get("property")); // Check the property is a PromiseModel
         });
       });
 
-      describe("date field", () => {
-        it("should validate date field", () => {
+      describe("date property", () => {
+        it("should validate date property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
               slug: generateRandomString(),
-              fields: {
-                field: {
-                  type: FieldTypes.DATE,
+              properties: {
+                property: {
+                  type: PropertyTypes.DATE,
                 },
               },
             });
@@ -184,18 +192,18 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<Date | null | undefined>(i.get("field")); // Check the field is a Date
+          simulateTypeCheck<Date | null | undefined>(i.get("property")); // Check the property is a Date
         });
       });
 
-      describe("integer field", () => {
-        it("should validate integer field", () => {
+      describe("integer property", () => {
+        it("should validate integer property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
               slug: generateRandomString(),
-              fields: {
-                field: {
-                  type: FieldTypes.INTEGER,
+              properties: {
+                property: {
+                  type: PropertyTypes.INTEGER,
                 },
               },
             });
@@ -203,23 +211,23 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<number | null | undefined>(i.get("field")); // Check the field is a number
+          simulateTypeCheck<number | null | undefined>(i.get("property")); // Check the property is a number
 
           const json = i.toJSON();
 
-          simulateTypeCheck<number | null | undefined>(json.field); // Check the field is a number
+          simulateTypeCheck<number | null | undefined>(json.property); // Check the property is a number
           simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
         });
       });
 
-      describe("enum field", () => {
-        it("should validate enum field", () => {
+      describe("enum property", () => {
+        it("should validate enum property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
               slug: generateRandomString(),
-              fields: {
-                field: {
-                  type: FieldTypes.ENUM,
+              properties: {
+                property: {
+                  type: PropertyTypes.ENUM,
                   options: {
                     enum: ["a", "b", "c"],
                   },
@@ -230,25 +238,25 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string | null | undefined>(i.get("field")); // Check the field is a string
+          simulateTypeCheck<string | null | undefined>(i.get("property")); // Check the property is a string
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string | null | undefined>(json._id && json.field); // Check the field is a string
+          simulateTypeCheck<string | null | undefined>(json._id && json.property); // Check the property is a string
           simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
         });
       });
     });
 
     describe("test json", () => {
-      describe("date field", () => {
-        it("should validate date field", () => {
+      describe("date property", () => {
+        it("should validate date property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
               slug: generateRandomString(),
-              fields: {
-                field: {
-                  type: FieldTypes.DATE,
+              properties: {
+                property: {
+                  type: PropertyTypes.DATE,
                 },
               },
             });
@@ -256,23 +264,23 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<Date | null | undefined>(i.get("field")); // Check the field is a string
+          simulateTypeCheck<Date | null | undefined>(i.get("property")); // Check the property is a string
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string | null | undefined>(json._id && json.field); // Check the field is a string
+          simulateTypeCheck<string | null | undefined>(json._id && json.property); // Check the property is a string
           simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
         });
       });
 
-      describe("relation field", () => {
-        it("should validate relation field", () => {
+      describe("relation property", () => {
+        it("should validate relation property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
               slug: generateRandomString(),
-              fields: {
-                field: {
-                  type: FieldTypes.RELATION,
+              properties: {
+                property: {
+                  type: PropertyTypes.RELATION,
                   options: {
                     ref: "accounts" as const,
                   },
@@ -283,24 +291,24 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<PromiseModel<typeof CustomAccount> | null | undefined>(i.get("field"));
+          simulateTypeCheck<PromiseModel<typeof CustomAccount> | null | undefined>(i.get("property"));
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string | ModelJSON<typeof Account> | null | undefined>(json._id && json.field);
+          simulateTypeCheck<string | ModelJSON<typeof Account> | null | undefined>(json._id && json.property);
         });
       });
 
-      describe("array field", () => {
+      describe("array property", () => {
         it("should validate array of relation", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
               slug: generateRandomString(),
-              fields: {
-                field: {
-                  type: FieldTypes.ARRAY,
+              properties: {
+                property: {
+                  type: PropertyTypes.ARRAY,
                   options: {
-                    items: { type: FieldTypes.TEXT },
+                    items: { type: PropertyTypes.TEXT },
                   },
                 },
               },
@@ -309,11 +317,11 @@ describe("test types", () => {
 
           const i = CustomModel.hydrate();
 
-          simulateTypeCheck<string[] | null | undefined>(i.get("field")); // Check the field is a string[]
+          simulateTypeCheck<string[] | null | undefined>(i.get("property")); // Check the property is a string[]
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string[] | null | undefined>(json.field); // Check the field is a string[]
+          simulateTypeCheck<string[] | null | undefined>(json.property); // Check the property is a string[]
           simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
         });
       });
@@ -321,16 +329,16 @@ describe("test types", () => {
   });
 
   describe("generic model", () => {
-    it("should validate relation field", () => {
+    it("should validate relation property", () => {
       const i = (
         Model as typeof Model & {
           configuration: {
-            fields: {
+            properties: {
               title: {
-                type: FieldTypes.TEXT;
+                type: PropertyTypes.TEXT;
               };
-              field: {
-                type: FieldTypes.RELATION;
+              property: {
+                type: PropertyTypes.RELATION;
                 options: {
                   ref: "accounts";
                 };
@@ -340,15 +348,15 @@ describe("test types", () => {
         }
       ).hydrate({
         title: "ok",
-        field: "blabla",
+        property: "blabla",
       });
 
-      simulateTypeCheck<string | null | undefined>(i.title); // Check the field is a PromiseModel
-      simulateTypeCheck<PromiseModel<typeof CustomAccount> | null | undefined>(i.field); // Check the field is a PromiseModel
+      simulateTypeCheck<string | null | undefined>(i.title); // Check the property is a PromiseModel
+      simulateTypeCheck<PromiseModel<typeof CustomAccount> | null | undefined>(i.property); // Check the property is a PromiseModel
 
       const json = i.toJSON();
 
-      simulateTypeCheck<string | ModelJSON<typeof Account> | null | undefined>(json.field); // Check the field is a string
+      simulateTypeCheck<string | ModelJSON<typeof Account> | null | undefined>(json.property); // Check the property is a string
       simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
     });
   });
@@ -356,21 +364,21 @@ describe("test types", () => {
   it("should ...", () => {
     const i = Role.hydrate();
 
-    simulateTypeCheck<string | null | undefined>(i.slug); // Check the field is a string
-    simulateTypeCheck<Function>(i.getRulesInherited); // Check the field is a string
+    simulateTypeCheck<string | null | undefined>(i.slug); // Check the property is a string
+    simulateTypeCheck<Function>(i.getRulesInherited); // Check the property is a string
 
     const json = i.toJSON();
 
-    simulateTypeCheck<string | null | undefined>(json.slug); // Check the field is a string
+    simulateTypeCheck<string | null | undefined>(json.slug); // Check the property is a string
   });
 
   it("should ...", () => {
     const model = Model.getClass<
       typeof Model & {
         configuration: {
-          fields: {
-            field: {
-              type: FieldTypes.TEXT;
+          properties: {
+            property: {
+              type: PropertyTypes.TEXT;
             };
           };
         };
@@ -379,7 +387,7 @@ describe("test types", () => {
 
     const i = model.hydrate();
 
-    simulateTypeCheck<string | null | undefined>(i.field); // Check the field is a string
+    simulateTypeCheck<string | null | undefined>(i.property); // Check the property is a string
   });
 
   it("should ...", () => {
@@ -389,7 +397,7 @@ describe("test types", () => {
 
     const i = ModelFromSlug.hydrate();
 
-    simulateTypeCheck<string | null | undefined>(i.field); // Check the field is a string
+    simulateTypeCheck<string | null | undefined>(i.property); // Check the property is a string
   });
 
   it("should ...", () => {
@@ -401,22 +409,22 @@ describe("test types", () => {
 
     simulateTypeCheck<PromiseModel<typeof Role> | null | undefined>(i.role); // Check the role has been inherited from Account
     simulateTypeCheck<string | null | undefined>(i.get("role", "json"));
-    simulateTypeCheck<string | null | undefined>(i.foo); // Check the foo field is a string
+    simulateTypeCheck<string | null | undefined>(i.foo); // Check the foo property is a string
   });
 
   it("should ...", () => {
     const i = (
       Model as typeof Model & {
         configuration: {
-          fields: {
-            field1: {
-              type: FieldTypes.TEXT;
+          properties: {
+            property1: {
+              type: PropertyTypes.TEXT;
             };
-            field2: {
-              type: FieldTypes.NUMBER;
+            property2: {
+              type: PropertyTypes.NUMBER;
             };
             rel: {
-              type: FieldTypes.RELATION;
+              type: PropertyTypes.RELATION;
               options: {
                 ref: "accounts";
               };
@@ -426,17 +434,17 @@ describe("test types", () => {
       }
     ).hydrate();
 
-    simulateTypeCheck<string | null | undefined>(i.get("field1", "json")); // Check the field is a string
-    simulateTypeCheck<number | null | undefined>(i.get("field2", "json")); // Check the field is a string
+    simulateTypeCheck<string | null | undefined>(i.get("property1", "json")); // Check the property is a string
+    simulateTypeCheck<number | null | undefined>(i.get("property2", "json")); // Check the property is a string
   });
 
   it("should ...", () => {
     class RelatedModel extends Model {
       static configuration = defineConfiguration({
         slug: "related",
-        fields: {
-          field: {
-            type: FieldTypes.NUMBER,
+        properties: {
+          property: {
+            type: PropertyTypes.NUMBER,
           },
         },
       });
@@ -445,15 +453,15 @@ describe("test types", () => {
     class CustomModel extends Model {
       static configuration = defineConfiguration({
         slug: "custom",
-        fields: {
-          field1: {
-            type: FieldTypes.TEXT,
+        properties: {
+          property1: {
+            type: PropertyTypes.TEXT,
           },
-          field2: {
-            type: FieldTypes.NUMBER,
+          property2: {
+            type: PropertyTypes.NUMBER,
           },
           rel: {
-            type: FieldTypes.RELATION,
+            type: PropertyTypes.RELATION,
             options: {
               ref: RelatedModel.configuration.slug,
             },

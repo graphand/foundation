@@ -1,6 +1,6 @@
 import type { Model } from "@/lib/model.js";
 import type { ModelList } from "@/lib/model-list.js";
-import type { Field } from "@/lib/field.js";
+import type { Property } from "@/lib/property.js";
 import type { ErrorCodes } from "@/enums/error-codes.js";
 import type { Validator } from "@/lib/validator.js";
 import type { Adapter } from "@/lib/adapter.js";
@@ -9,7 +9,7 @@ import type { AuthProviders } from "@/enums/auth-providers.js";
 import type { AuthMethods } from "@/enums/auth-methods.js";
 import type { MergeRequestTypes } from "@/enums/merge-request-types.js";
 import type { MergeRequestActionTypes } from "@/enums/merge-request-action-types.js";
-import type { FieldDefinition, InferModelDef, InferModelDefInput, ModelJSON } from "@/types/fields.js";
+import type { PropertyDefinition, InferModelDef, InferModelDefInput, ModelJSON } from "@/types/properties.js";
 import type { ValidatorDefinition } from "@/types/validators.js";
 import type { TransactionCtx } from "./ctx.js";
 import type { Account } from "@/models/account.js";
@@ -19,16 +19,16 @@ import type { Role } from "@/models/role.js";
 import type { PromiseModelList } from "@/lib/promise-model-list.js";
 import type { ModelInstance } from "./models.js";
 export * from "./helpers.js";
-export * from "./fields.js";
+export * from "./properties.js";
 export * from "./validators.js";
 export * from "./ctx.js";
 export * from "./models.js";
 export * from "./gdx.js";
 
 export type Rule = NonNullable<ModelInstance<typeof Role>["rules"]>[number];
-export type FieldsRestriction = NonNullable<ModelInstance<typeof Role>["fieldsRestrictions"]>[number];
+export type PropertiesRestriction = NonNullable<ModelInstance<typeof Role>["propertiesRestrictions"]>[number];
 export type SerializerFormat = "json" | "object" | "validation" | "data";
-export type FieldsDefinition = Record<string, FieldDefinition>;
+export type PropertiesDefinition = Record<string, PropertyDefinition>;
 export type ValidatorsDefinition = Array<ValidatorDefinition>;
 
 export type JSONPrimitive =
@@ -232,9 +232,9 @@ export type CoreErrorDefinition = {
   code?: ErrorCodes | string;
 };
 
-export type ValidationFieldErrorDefinition = {
+export type ValidationPropertyErrorDefinition = {
   slug: string;
-  field: Field;
+  property: Property;
   validationError?: ValidationError;
   message?: string;
 };
@@ -297,7 +297,7 @@ export type UploadEvent = {
 
 export type IdentityString = string;
 
-export type FieldsPathItem = { key: string; field: Field };
+export type PropertiesPathItem = { key: string; property: Property };
 
 export type MergeRequestOptionsMap = {
   [MergeRequestTypes.STATIC]: {

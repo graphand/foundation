@@ -1,6 +1,6 @@
 import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { Role } from "@/models/role.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { AuthProviders } from "@/enums/auth-providers.js";
@@ -13,93 +13,93 @@ export class AuthProvider extends Model {
     isEnvironmentScoped: true,
     realtime: true,
     loadDatamodel: false,
-    keyField: "type",
-    fields: {
+    keyProperty: "type",
+    properties: {
       type: {
-        type: FieldTypes.ENUM,
+        type: PropertyTypes.ENUM,
         options: {
           enum: Object.values(AuthProviders),
           default: AuthProviders.LOCAL,
         },
       },
       options: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
         options: {
           strict: true,
           default: {},
-          conditionalFields: {
+          conditionalProperties: {
             dependsOn: "$.type",
             mappings: {
-              [AuthProviders.GRAPHAND]: ["fieldsMap", "scopes", "autoRegister"],
+              [AuthProviders.GRAPHAND]: ["propertiesMap", "scopes", "autoRegister"],
               [AuthProviders.LOCAL]: [
                 "confirmEmail",
                 "confirmTokenLifetime",
                 "resetTokenLifetime",
                 "allowResetPassword",
               ],
-              [AuthProviders.FACEBOOK]: ["clientId", "clientSecret", "fieldsMap", "scopes", "autoRegister"],
-              [AuthProviders.GOOGLE]: ["clientId", "clientSecret", "fieldsMap", "scopes", "autoRegister"],
-              [AuthProviders.GITHUB]: ["clientId", "clientSecret", "fieldsMap", "scopes", "autoRegister"],
+              [AuthProviders.FACEBOOK]: ["clientId", "clientSecret", "propertiesMap", "scopes", "autoRegister"],
+              [AuthProviders.GOOGLE]: ["clientId", "clientSecret", "propertiesMap", "scopes", "autoRegister"],
+              [AuthProviders.GITHUB]: ["clientId", "clientSecret", "propertiesMap", "scopes", "autoRegister"],
               [AuthProviders.APPLE]: [
                 "clientId",
                 "teamId",
                 "keyId",
                 "privateKey",
-                "fieldsMap",
+                "propertiesMap",
                 "scopes",
                 "autoRegister",
               ],
             },
           },
-          fields: {
-            confirmEmail: { type: FieldTypes.BOOLEAN, options: { default: false } },
-            confirmTokenLifetime: { type: FieldTypes.INTEGER, options: { default: 3600 } },
-            resetTokenLifetime: { type: FieldTypes.INTEGER, options: { default: 3600 } },
-            allowResetPassword: { type: FieldTypes.BOOLEAN, options: { default: false } },
-            fieldsMap: { type: FieldTypes.OBJECT, options: { defaultField: { type: FieldTypes.TEXT } } },
-            scopes: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
-            autoRegister: { type: FieldTypes.BOOLEAN, options: { default: true } },
-            teamId: { type: FieldTypes.TEXT },
-            clientId: { type: FieldTypes.TEXT },
-            clientSecret: { type: FieldTypes.TEXT },
-            keyId: { type: FieldTypes.TEXT },
-            privateKey: { type: FieldTypes.TEXT },
+          properties: {
+            confirmEmail: { type: PropertyTypes.BOOLEAN, options: { default: false } },
+            confirmTokenLifetime: { type: PropertyTypes.INTEGER, options: { default: 3600 } },
+            resetTokenLifetime: { type: PropertyTypes.INTEGER, options: { default: 3600 } },
+            allowResetPassword: { type: PropertyTypes.BOOLEAN, options: { default: false } },
+            propertiesMap: { type: PropertyTypes.OBJECT, options: { defaultProperty: { type: PropertyTypes.TEXT } } },
+            scopes: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.TEXT } } },
+            autoRegister: { type: PropertyTypes.BOOLEAN, options: { default: true } },
+            teamId: { type: PropertyTypes.TEXT },
+            clientId: { type: PropertyTypes.TEXT },
+            clientSecret: { type: PropertyTypes.TEXT },
+            keyId: { type: PropertyTypes.TEXT },
+            privateKey: { type: PropertyTypes.TEXT },
             // oauth: {
-            //   type: FieldTypes.OBJECT,
+            //   type: PropertyTypes.OBJECT,
             //   options: {
-            //     fields: {
-            //       clientId: { type: FieldTypes.TEXT },
-            //       clientSecret: { type: FieldTypes.TEXT },
-            //       fieldsMap: { type: FieldTypes.OBJECT, options: { defaultField: { type: FieldTypes.TEXT } } },
-            //       scopes: { type: FieldTypes.ARRAY, options: { items: { type: FieldTypes.TEXT } } },
+            //     properties: {
+            //       clientId: { type: PropertyTypes.TEXT },
+            //       clientSecret: { type: PropertyTypes.TEXT },
+            //       propertiesMap: { type: PropertyTypes.OBJECT, options: { defaultProperty: { type: PropertyTypes.TEXT } } },
+            //       scopes: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.TEXT } } },
             //     },
             //   },
             // },
           },
           validators: [
-            { type: ValidatorTypes.REQUIRED, options: { field: "clientId" } },
-            { type: ValidatorTypes.REQUIRED, options: { field: "clientSecret" } },
-            { type: ValidatorTypes.REQUIRED, options: { field: "teamId" } },
-            { type: ValidatorTypes.REQUIRED, options: { field: "keyId" } },
-            { type: ValidatorTypes.REQUIRED, options: { field: "privateKey" } },
+            { type: ValidatorTypes.REQUIRED, options: { property: "clientId" } },
+            { type: ValidatorTypes.REQUIRED, options: { property: "clientSecret" } },
+            { type: ValidatorTypes.REQUIRED, options: { property: "teamId" } },
+            { type: ValidatorTypes.REQUIRED, options: { property: "keyId" } },
+            { type: ValidatorTypes.REQUIRED, options: { property: "privateKey" } },
           ],
         },
       },
-      enabled: { type: FieldTypes.BOOLEAN, options: { default: true } },
+      enabled: { type: PropertyTypes.BOOLEAN, options: { default: true } },
       register: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
         options: {
-          fields: {
-            enabled: { type: FieldTypes.BOOLEAN, options: { default: true } },
+          properties: {
+            enabled: { type: PropertyTypes.BOOLEAN, options: { default: true } },
             role: {
-              type: FieldTypes.RELATION,
+              type: PropertyTypes.RELATION,
               options: {
                 ref: Role.configuration.slug,
               },
             },
-            authorizedFields: {
-              type: FieldTypes.ARRAY,
-              options: { items: { type: FieldTypes.TEXT } },
+            authorizedProperties: {
+              type: PropertyTypes.ARRAY,
+              options: { items: { type: PropertyTypes.TEXT } },
             },
           },
         },

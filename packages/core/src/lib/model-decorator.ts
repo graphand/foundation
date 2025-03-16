@@ -1,10 +1,10 @@
 import { Model } from "@/lib/model.js";
-import { defineFieldsProperties } from "@/lib/utils.js";
+import { definePropertiesObject } from "@/lib/utils.js";
 import type { ModelData } from "@/index.js";
 
 /**
- * A decorator that extends the model class with the defineFieldsProperties function in the constructor
- * @returns a decorator that extends the model class with the defineFieldsProperties function
+ * A decorator that extends the model class with the definePropertiesObject function in the constructor
+ * @returns a decorator that extends the model class with the definePropertiesObject function
  */
 export const modelDecorator = (_?: any) => {
   return <T extends typeof Model>(model: T & {}, _opts?: any) => {
@@ -14,7 +14,7 @@ export const modelDecorator = (_?: any) => {
       constructor(data: ModelData<T>) {
         super(data);
 
-        defineFieldsProperties(this);
+        definePropertiesObject(this);
       }
     };
   };

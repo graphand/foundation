@@ -1,6 +1,6 @@
-import { crossModelTree, getFieldsPathsFromPath, getRelationModelsFromPath } from "@/lib/utils.js";
+import { crossModelTree, getPropertiesPathsFromPath, getRelationModelsFromPath } from "@/lib/utils.js";
 import { Model, defineConfiguration } from "@/lib/model.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
 import { faker } from "@faker-js/faker";
 import { modelDecorator } from "@/lib/model-decorator.js";
@@ -27,17 +27,17 @@ describe("test utils", () => {
     });
   });
 
-  describe("getFieldsPathsFromPath", () => {
-    it("should return single array entry for one field", () => {
+  describe("getPropertiesPathsFromPath", () => {
+    it("should return single array entry for one property", () => {
       const model = class extends Model {
         static configuration = defineConfiguration({
           slug: faker.random.alphaNumeric(10),
-          fields: {
-            field1: {
-              type: FieldTypes.ARRAY,
+          properties: {
+            property1: {
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
               },
             },
@@ -46,33 +46,33 @@ describe("test utils", () => {
       };
 
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.__label = "field1";
+      model.configuration.properties.property1.options.__label = "property1";
 
-      const fPath = getFieldsPathsFromPath(model, "field1");
+      const fPath = getPropertiesPathsFromPath(model, "property1");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(1);
-      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath[0]?.property).toHaveProperty("options.__label", "property1");
     });
 
-    it("should decode nested array fields", () => {
+    it("should decode nested array properties", () => {
       const model = class extends Model {
         static configuration = defineConfiguration({
           slug: faker.random.alphaNumeric(10),
-          fields: {
-            field1: {
-              type: FieldTypes.ARRAY,
+          properties: {
+            property1: {
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.ARRAY,
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.OBJECT,
+                      type: PropertyTypes.OBJECT,
                       options: {
-                        fields: {
-                          field2: {
-                            type: FieldTypes.TEXT,
+                        properties: {
+                          property2: {
+                            type: PropertyTypes.TEXT,
                             options: {},
                           },
                         },
@@ -87,52 +87,52 @@ describe("test utils", () => {
       };
 
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.__label = "field1";
+      model.configuration.properties.property1.options.__label = "property1";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      model.configuration.properties.property1.options.items.options.__label = "property1bis";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.items.options.__label = "field1bisbis";
+      model.configuration.properties.property1.options.items.options.items.options.__label = "property1bisbis";
 
-      const fPath1 = getFieldsPathsFromPath(model, "field1.field2");
+      const fPath1 = getPropertiesPathsFromPath(model, "property1.property2");
 
       expect(fPath1.length).toBe(3);
-      expect(fPath1[0]?.key).toBe("field1");
+      expect(fPath1[0]?.key).toBe("property1");
       expect(fPath1[1]?.key).toBe("[]");
       expect(fPath1[2]).toBe(null);
 
-      const fPath2 = getFieldsPathsFromPath(model, "field1.[]?.field2");
+      const fPath2 = getPropertiesPathsFromPath(model, "property1.[]?.property2");
 
       expect(fPath2.length).toBe(4);
-      expect(fPath2[0]?.key).toBe("field1");
+      expect(fPath2[0]?.key).toBe("property1");
       expect(fPath2[1]?.key).toBe("[]");
       expect(fPath2[2]?.key).toBe("[]");
-      expect(fPath2[3]?.key).toBe("field2");
+      expect(fPath2[3]?.key).toBe("property2");
 
-      const fPath3 = getFieldsPathsFromPath(model, "field1.[].[]?.field2");
+      const fPath3 = getPropertiesPathsFromPath(model, "property1.[].[]?.property2");
 
       expect(fPath3.length).toBe(4);
-      expect(fPath3[0]?.key).toBe("field1");
+      expect(fPath3[0]?.key).toBe("property1");
       expect(fPath3[1]?.key).toBe("[]");
       expect(fPath3[2]?.key).toBe("[]");
-      expect(fPath3[3]?.key).toBe("field2");
+      expect(fPath3[3]?.key).toBe("property2");
 
-      const fPath4 = getFieldsPathsFromPath(model, "field1.[]");
+      const fPath4 = getPropertiesPathsFromPath(model, "property1.[]");
 
       expect(fPath4.length).toBe(2);
-      expect(fPath4[0]?.key).toBe("field1");
+      expect(fPath4[0]?.key).toBe("property1");
       expect(fPath4[1]?.key).toBe("[]");
     });
 
-    it("should decode array items field", () => {
+    it("should decode array items property", () => {
       const model = class extends Model {
         static configuration = defineConfiguration({
           slug: faker.random.alphaNumeric(10),
-          fields: {
-            field1: {
-              type: FieldTypes.ARRAY,
+          properties: {
+            property1: {
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                   options: {},
                 },
               },
@@ -142,30 +142,30 @@ describe("test utils", () => {
       };
 
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.__label = "field1";
+      model.configuration.properties.property1.options.__label = "property1";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      model.configuration.properties.property1.options.items.options.__label = "property1bis";
 
-      const fPath = getFieldsPathsFromPath(model, "field1.[]");
+      const fPath = getPropertiesPathsFromPath(model, "property1.[]");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(2);
-      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath[1]?.property).toHaveProperty("options.__label", "property1bis");
     });
 
-    it("should decode array items field with index", () => {
+    it("should decode array items property with index", () => {
       const model = class extends Model {
         static configuration = defineConfiguration({
           slug: faker.random.alphaNumeric(10),
-          fields: {
-            field1: {
-              type: FieldTypes.ARRAY,
+          properties: {
+            property1: {
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                   options: {},
                 },
               },
@@ -175,31 +175,31 @@ describe("test utils", () => {
       };
 
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.__label = "field1";
+      model.configuration.properties.property1.options.__label = "property1";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      model.configuration.properties.property1.options.items.options.__label = "property1bis";
 
-      const fPath = getFieldsPathsFromPath(model, "field1.[0]");
+      const fPath = getPropertiesPathsFromPath(model, "property1.[0]");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(2);
-      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath[1]?.field).toHaveProperty("options.__label", "field1bis");
+      expect(fPath[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath[1]?.property).toHaveProperty("options.__label", "property1bis");
     });
 
-    it("should decode json fields field", () => {
+    it("should decode json properties property", () => {
       const model = class extends Model {
         static configuration = defineConfiguration({
           slug: faker.random.alphaNumeric(10),
-          fields: {
-            field1: {
-              type: FieldTypes.OBJECT,
+          properties: {
+            property1: {
+              type: PropertyTypes.OBJECT,
               options: {
-                fields: {
-                  field2: {
-                    type: FieldTypes.TEXT,
+                properties: {
+                  property2: {
+                    type: PropertyTypes.TEXT,
                     options: {},
                   },
                 },
@@ -210,34 +210,34 @@ describe("test utils", () => {
       };
 
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.__label = "field1";
+      model.configuration.properties.property1.options.__label = "property1";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.fields.field2.options.__label = "field2";
+      model.configuration.properties.property1.options.properties.property2.options.__label = "property2";
 
-      const fPath = getFieldsPathsFromPath(model, "field1.field2");
+      const fPath = getPropertiesPathsFromPath(model, "property1.property2");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(2);
-      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath[1]?.field).toHaveProperty("options.__label", "field2");
+      expect(fPath[0]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath[1]?.property).toHaveProperty("options.__label", "property2");
     });
 
-    it("should decode json in array items field", () => {
+    it("should decode json in array items property", () => {
       const model = class extends Model {
         static configuration = defineConfiguration({
           slug: faker.random.alphaNumeric(10),
-          fields: {
-            field1: {
-              type: FieldTypes.ARRAY,
+          properties: {
+            property1: {
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
-                      field2: {
-                        type: FieldTypes.TEXT,
+                    properties: {
+                      property2: {
+                        type: PropertyTypes.TEXT,
                         options: {},
                       },
                     },
@@ -250,50 +250,50 @@ describe("test utils", () => {
       };
 
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.__label = "field1";
+      model.configuration.properties.property1.options.__label = "property1";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      model.configuration.properties.property1.options.items.options.__label = "property1bis";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.fields.field2.options.__label = "field2";
+      model.configuration.properties.property1.options.items.options.properties.property2.options.__label = "property2";
 
-      const fPath = getFieldsPathsFromPath(model, "field1.field2");
+      const fPath = getPropertiesPathsFromPath(model, "property1.property2");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(3);
-      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath[1]?.field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath[2]?.field).toHaveProperty("options.__label", "field2");
+      expect(fPath[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath[1]?.property).toHaveProperty("options.__label", "property1bis");
+      expect(fPath[2]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath[2]?.property).toHaveProperty("options.__label", "property2");
 
-      const fPath2 = getFieldsPathsFromPath(model, "field1.[]?.field2");
+      const fPath2 = getPropertiesPathsFromPath(model, "property1.[]?.property2");
 
       expect(fPath2).toBeInstanceOf(Array);
       expect(fPath2.length).toEqual(3);
-      expect(fPath2[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath2[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath2[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath2[1]?.field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath2[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath2[2]?.field).toHaveProperty("options.__label", "field2");
+      expect(fPath2[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath2[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath2[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath2[1]?.property).toHaveProperty("options.__label", "property1bis");
+      expect(fPath2[2]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath2[2]?.property).toHaveProperty("options.__label", "property2");
     });
 
-    it("should return null field for invalid path if strict", () => {
+    it("should return null property for invalid path if strict", () => {
       const model = class extends Model {
         static configuration = defineConfiguration({
           slug: faker.random.alphaNumeric(10),
-          fields: {
-            field1: {
-              type: FieldTypes.ARRAY,
+          properties: {
+            property1: {
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
                     strict: true,
-                    fields: {
-                      field2: {
-                        type: FieldTypes.TEXT,
+                    properties: {
+                      property2: {
+                        type: PropertyTypes.TEXT,
                         options: {},
                       },
                     },
@@ -306,31 +306,31 @@ describe("test utils", () => {
       };
 
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.__label = "field1";
+      model.configuration.properties.property1.options.__label = "property1";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      model.configuration.properties.property1.options.items.options.__label = "property1bis";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.fields.field2.options.__label = "field2";
+      model.configuration.properties.property1.options.items.options.properties.property2.options.__label = "property2";
 
-      const fPath = getFieldsPathsFromPath(model, "field1.field2.field3");
+      const fPath = getPropertiesPathsFromPath(model, "property1.property2.property3");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(4);
       expect(fPath[3]).toBe(null);
 
-      const fPath2 = getFieldsPathsFromPath(model, "field1.[]?.field3");
+      const fPath2 = getPropertiesPathsFromPath(model, "property1.[]?.property3");
 
       expect(fPath2).toBeInstanceOf(Array);
       expect(fPath2.length).toEqual(3);
       expect(fPath2[2]).toBe(null);
 
-      const fPath3 = getFieldsPathsFromPath(model, "field2");
+      const fPath3 = getPropertiesPathsFromPath(model, "property2");
 
       expect(fPath3).toBeInstanceOf(Array);
       expect(fPath3.length).toEqual(1);
       expect(fPath3[0]).toBe(null);
 
-      const fPath4 = getFieldsPathsFromPath(model, "field2.field1");
+      const fPath4 = getPropertiesPathsFromPath(model, "property2.property1");
 
       expect(fPath4).toBeInstanceOf(Array);
       expect(fPath4.length).toEqual(2);
@@ -338,20 +338,20 @@ describe("test utils", () => {
       expect(fPath4[1]).toBe(null);
     });
 
-    it("should return nested field for invalid path if not strict (allow to get nested keys for non-strict nested fields)", () => {
+    it("should return nested property for invalid path if not strict (allow to get nested keys for non-strict nested properties)", () => {
       const model = class extends Model {
         static configuration = defineConfiguration({
           slug: faker.random.alphaNumeric(10),
-          fields: {
-            field1: {
-              type: FieldTypes.ARRAY,
+          properties: {
+            property1: {
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
-                      field2: {
-                        type: FieldTypes.TEXT,
+                    properties: {
+                      property2: {
+                        type: PropertyTypes.TEXT,
                         options: {},
                       },
                     },
@@ -364,49 +364,49 @@ describe("test utils", () => {
       };
 
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.__label = "field1";
+      model.configuration.properties.property1.options.__label = "property1";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      model.configuration.properties.property1.options.items.options.__label = "property1bis";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.fields.field2.options.__label = "field2";
+      model.configuration.properties.property1.options.items.options.properties.property2.options.__label = "property2";
 
-      const fPath = getFieldsPathsFromPath(model, "field1.[]?.field3.field4");
+      const fPath = getPropertiesPathsFromPath(model, "property1.[]?.property3.property4");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(4);
-      expect(fPath[2]).toHaveProperty("key", "field3");
-      expect(fPath[2]?.field).toHaveProperty("type", FieldTypes.DEFAULT);
-      expect(fPath[2]?.field).toHaveProperty("path", "field1.[].field3");
-      expect(fPath[3]).toHaveProperty("key", "field4");
-      expect(fPath[3]?.field).toHaveProperty("type", FieldTypes.DEFAULT);
-      expect(fPath[3]?.field).toHaveProperty("path", "field1.[].field3.field4");
+      expect(fPath[2]).toHaveProperty("key", "property3");
+      expect(fPath[2]?.property).toHaveProperty("type", PropertyTypes.DEFAULT);
+      expect(fPath[2]?.property).toHaveProperty("path", "property1.[].property3");
+      expect(fPath[3]).toHaveProperty("key", "property4");
+      expect(fPath[3]?.property).toHaveProperty("type", PropertyTypes.DEFAULT);
+      expect(fPath[3]?.property).toHaveProperty("path", "property1.[].property3.property4");
     });
 
-    it("should decode complex schema fields", () => {
+    it("should decode complex schema properties", () => {
       const model = class extends Model {
         static configuration = defineConfiguration({
           slug: faker.random.alphaNumeric(10),
-          fields: {
-            field1: {
-              type: FieldTypes.ARRAY,
+          properties: {
+            property1: {
+              type: PropertyTypes.ARRAY,
               options: {
                 items: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                   options: {
-                    fields: {
-                      field2: {
-                        type: FieldTypes.TEXT,
+                    properties: {
+                      property2: {
+                        type: PropertyTypes.TEXT,
                         options: {},
                       },
-                      field3: {
-                        type: FieldTypes.ARRAY,
+                      property3: {
+                        type: PropertyTypes.ARRAY,
                         options: {
                           items: {
-                            type: FieldTypes.OBJECT,
+                            type: PropertyTypes.OBJECT,
                             options: {
-                              fields: {
-                                field4: {
-                                  type: FieldTypes.TEXT,
+                              properties: {
+                                property4: {
+                                  type: PropertyTypes.TEXT,
                                   options: {},
                                 },
                               },
@@ -424,142 +424,143 @@ describe("test utils", () => {
       };
 
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.__label = "field1";
+      model.configuration.properties.property1.options.__label = "property1";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.__label = "field1bis";
+      model.configuration.properties.property1.options.items.options.__label = "property1bis";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.fields.field2.options.__label = "field2";
+      model.configuration.properties.property1.options.items.options.properties.property2.options.__label = "property2";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.fields.field3.options.__label = "field3";
+      model.configuration.properties.property1.options.items.options.properties.property3.options.__label = "property3";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.fields.field3.options.items.options.__label = "field3bis";
+      model.configuration.properties.property1.options.items.options.properties.property3.options.items.options.__label =
+        "property3bis";
       // @ts-expect-error Add label for testing
-      model.configuration.fields.field1.options.items.options.fields.field3.options.items.options.fields.field4.options.__label =
-        "field4";
+      model.configuration.properties.property1.options.items.options.properties.property3.options.items.options.properties.property4.options.__label =
+        "property4";
 
-      const fPath = getFieldsPathsFromPath(model, "field1");
+      const fPath = getPropertiesPathsFromPath(model, "property1");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(1);
-      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath[0]?.field).toHaveProperty("options.__label", "field1");
+      expect(fPath[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath[0]?.property).toHaveProperty("options.__label", "property1");
 
-      const fPath2 = getFieldsPathsFromPath(model, "field1.field2");
+      const fPath2 = getPropertiesPathsFromPath(model, "property1.property2");
 
       expect(fPath2).toBeInstanceOf(Array);
       expect(fPath2.length).toEqual(3);
-      expect(fPath2[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath2[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath2[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath2[1]?.field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath2[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath2[2]?.field).toHaveProperty("options.__label", "field2");
+      expect(fPath2[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath2[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath2[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath2[1]?.property).toHaveProperty("options.__label", "property1bis");
+      expect(fPath2[2]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath2[2]?.property).toHaveProperty("options.__label", "property2");
 
-      const fPath3 = getFieldsPathsFromPath(model, "field1.field3");
+      const fPath3 = getPropertiesPathsFromPath(model, "property1.property3");
 
       expect(fPath3).toBeInstanceOf(Array);
       expect(fPath3.length).toEqual(3);
-      expect(fPath3[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath3[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath3[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath3[1]?.field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath3[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath3[2]?.field).toHaveProperty("options.__label", "field3");
+      expect(fPath3[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath3[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath3[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath3[1]?.property).toHaveProperty("options.__label", "property1bis");
+      expect(fPath3[2]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath3[2]?.property).toHaveProperty("options.__label", "property3");
 
-      const fPath4 = getFieldsPathsFromPath(model, "field1.field3.field4");
+      const fPath4 = getPropertiesPathsFromPath(model, "property1.property3.property4");
 
       expect(fPath4).toBeInstanceOf(Array);
       expect(fPath4.length).toEqual(5);
-      expect(fPath4[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath4[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath4[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath4[1]?.field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath4[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath4[2]?.field).toHaveProperty("options.__label", "field3");
-      expect(fPath4[3]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath4[3]?.field).toHaveProperty("options.__label", "field3bis");
-      expect(fPath4[4]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath4[4]?.field).toHaveProperty("options.__label", "field4");
+      expect(fPath4[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath4[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath4[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath4[1]?.property).toHaveProperty("options.__label", "property1bis");
+      expect(fPath4[2]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath4[2]?.property).toHaveProperty("options.__label", "property3");
+      expect(fPath4[3]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath4[3]?.property).toHaveProperty("options.__label", "property3bis");
+      expect(fPath4[4]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath4[4]?.property).toHaveProperty("options.__label", "property4");
 
-      const fPath5 = getFieldsPathsFromPath(model, "field1.[]?.field2");
+      const fPath5 = getPropertiesPathsFromPath(model, "property1.[]?.property2");
 
       expect(fPath5).toBeInstanceOf(Array);
       expect(fPath5.length).toEqual(3);
-      expect(fPath5[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath5[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath5[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath5[1]?.field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath5[2]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath5[2]?.field).toHaveProperty("options.__label", "field2");
+      expect(fPath5[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath5[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath5[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath5[1]?.property).toHaveProperty("options.__label", "property1bis");
+      expect(fPath5[2]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath5[2]?.property).toHaveProperty("options.__label", "property2");
 
-      const fPath6 = getFieldsPathsFromPath(model, "field1.[]?.field3");
+      const fPath6 = getPropertiesPathsFromPath(model, "property1.[]?.property3");
 
       expect(fPath6).toBeInstanceOf(Array);
       expect(fPath6.length).toEqual(3);
-      expect(fPath6[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath6[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath6[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath6[1]?.field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath6[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath6[2]?.field).toHaveProperty("options.__label", "field3");
+      expect(fPath6[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath6[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath6[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath6[1]?.property).toHaveProperty("options.__label", "property1bis");
+      expect(fPath6[2]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath6[2]?.property).toHaveProperty("options.__label", "property3");
 
-      const fPath7 = getFieldsPathsFromPath(model, "field1.[]?.field3.[]?.field4");
+      const fPath7 = getPropertiesPathsFromPath(model, "property1.[]?.property3.[]?.property4");
 
       expect(fPath7).toBeInstanceOf(Array);
       expect(fPath7.length).toEqual(5);
-      expect(fPath7[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath7[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath7[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath7[1]?.field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath7[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath7[2]?.field).toHaveProperty("options.__label", "field3");
-      expect(fPath7[3]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath7[3]?.field).toHaveProperty("options.__label", "field3bis");
-      expect(fPath7[4]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath7[4]?.field).toHaveProperty("options.__label", "field4");
+      expect(fPath7[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath7[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath7[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath7[1]?.property).toHaveProperty("options.__label", "property1bis");
+      expect(fPath7[2]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath7[2]?.property).toHaveProperty("options.__label", "property3");
+      expect(fPath7[3]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath7[3]?.property).toHaveProperty("options.__label", "property3bis");
+      expect(fPath7[4]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath7[4]?.property).toHaveProperty("options.__label", "property4");
 
-      const fPath8 = getFieldsPathsFromPath(model, "field1.[]?.field3.[]?.field4.field5");
+      const fPath8 = getPropertiesPathsFromPath(model, "property1.[]?.property3.[]?.property4.property5");
 
       expect(fPath8).toBeInstanceOf(Array);
       expect(fPath8.length).toEqual(6);
-      expect(fPath8[0]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath8[0]?.field).toHaveProperty("options.__label", "field1");
-      expect(fPath8[1]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath8[1]?.field).toHaveProperty("options.__label", "field1bis");
-      expect(fPath8[2]?.field).toHaveProperty("type", FieldTypes.ARRAY);
-      expect(fPath8[2]?.field).toHaveProperty("options.__label", "field3");
-      expect(fPath8[3]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath8[3]?.field).toHaveProperty("options.__label", "field3bis");
-      expect(fPath8[4]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath8[4]?.field).toHaveProperty("options.__label", "field4");
+      expect(fPath8[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath8[0]?.property).toHaveProperty("options.__label", "property1");
+      expect(fPath8[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath8[1]?.property).toHaveProperty("options.__label", "property1bis");
+      expect(fPath8[2]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
+      expect(fPath8[2]?.property).toHaveProperty("options.__label", "property3");
+      expect(fPath8[3]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath8[3]?.property).toHaveProperty("options.__label", "property3bis");
+      expect(fPath8[4]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath8[4]?.property).toHaveProperty("options.__label", "property4");
       expect(fPath8[5]).toBe(null);
     });
 
-    it("should decode nested relation field", async () => {
+    it("should decode nested relation property", async () => {
       const adapter = mockAdapter();
       const model1 = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.TEXT,
           },
         },
       }).extend({ adapterClass: adapter });
 
       const model2 = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           rel: {
-            type: FieldTypes.RELATION,
+            type: PropertyTypes.RELATION,
             options: {
               ref: model1.configuration.slug,
             },
           },
           arrRel: {
-            type: FieldTypes.ARRAY,
+            type: PropertyTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.RELATION,
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: model1.configuration.slug,
                 },
@@ -571,22 +572,22 @@ describe("test utils", () => {
 
       const model3 = mockModel({
         slug: faker.random.alphaNumeric(10),
-        fields: {
+        properties: {
           nested: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
-              fields: {
+              properties: {
                 rel: {
-                  type: FieldTypes.RELATION,
+                  type: PropertyTypes.RELATION,
                   options: {
                     ref: model2.configuration.slug,
                   },
                 },
                 multiRel: {
-                  type: FieldTypes.ARRAY,
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.RELATION,
+                      type: PropertyTypes.RELATION,
                       options: {
                         ref: model2.configuration.slug,
                       },
@@ -599,17 +600,17 @@ describe("test utils", () => {
         },
       }).extend({ adapterClass: adapter });
 
-      const fPath = getFieldsPathsFromPath(model3, "nested.rel.rel.title");
+      const fPath = getPropertiesPathsFromPath(model3, "nested.rel.rel.title");
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(4);
-      expect(fPath[0]?.field).toHaveProperty("type", FieldTypes.OBJECT);
-      expect(fPath[0]?.field).toHaveProperty("path", "nested");
-      expect(fPath[1]?.field).toHaveProperty("type", FieldTypes.RELATION);
-      expect(fPath[1]?.field).toHaveProperty("path", "nested.rel");
-      expect(fPath[2]?.field).toHaveProperty("type", FieldTypes.RELATION);
-      expect(fPath[2]?.field).toHaveProperty("path", "rel");
-      expect(fPath[3]?.field).toHaveProperty("type", FieldTypes.TEXT);
-      expect(fPath[3]?.field).toHaveProperty("path", "title");
+      expect(fPath[0]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
+      expect(fPath[0]?.property).toHaveProperty("path", "nested");
+      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.RELATION);
+      expect(fPath[1]?.property).toHaveProperty("path", "nested.rel");
+      expect(fPath[2]?.property).toHaveProperty("type", PropertyTypes.RELATION);
+      expect(fPath[2]?.property).toHaveProperty("path", "rel");
+      expect(fPath[3]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath[3]?.property).toHaveProperty("path", "title");
     });
   });
 
@@ -621,28 +622,28 @@ describe("test utils", () => {
         class extends Model {
           static configuration = defineConfiguration({
             slug: faker.random.alphaNumeric(10),
-            fields: {
-              field1: {
-                type: FieldTypes.RELATION,
+            properties: {
+              property1: {
+                type: PropertyTypes.RELATION,
               },
             },
           });
         },
       ).extend({ adapterClass: adapter });
 
-      await expect(getRelationModelsFromPath(model, "field1")).rejects.toThrow();
+      await expect(getRelationModelsFromPath(model, "property1")).rejects.toThrow();
     });
 
-    it("should work with single relation field", async () => {
+    it("should work with single relation property", async () => {
       const model1 = faker.random.alphaNumeric(10);
 
       const model = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
             slug: faker.random.alphaNumeric(10),
-            fields: {
-              field1: {
-                type: FieldTypes.RELATION,
+            properties: {
+              property1: {
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: model1,
                 },
@@ -652,23 +653,23 @@ describe("test utils", () => {
         },
       ).extend({ adapterClass: adapter });
 
-      const models = await getRelationModelsFromPath(model, "field1");
+      const models = await getRelationModelsFromPath(model, "property1");
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(1);
       expect(models[0]?.configuration.slug).toBe(model1);
     });
 
-    it("should work with chained relation fields", async () => {
+    it("should work with chained relation properties", async () => {
       const model2 = faker.random.alphaNumeric(10);
 
       const model1 = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
             slug: faker.random.alphaNumeric(10),
-            fields: {
-              field1: {
-                type: FieldTypes.RELATION,
+            properties: {
+              property1: {
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: model2,
                 },
@@ -682,9 +683,9 @@ describe("test utils", () => {
         class extends Model {
           static configuration = defineConfiguration({
             slug: faker.random.alphaNumeric(10),
-            fields: {
-              field1: {
-                type: FieldTypes.RELATION,
+            properties: {
+              property1: {
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: model1.configuration.slug,
                 },
@@ -694,7 +695,7 @@ describe("test utils", () => {
         },
       ).extend({ adapterClass: adapter });
 
-      const models = await getRelationModelsFromPath(model, "field1.field1");
+      const models = await getRelationModelsFromPath(model, "property1.property1");
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(2);
@@ -702,7 +703,7 @@ describe("test utils", () => {
       expect(models[1]?.configuration.slug).toBe(model2);
     });
 
-    it("should work with nested relation fields", async () => {
+    it("should work with nested relation properties", async () => {
       const model1 = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
@@ -715,13 +716,13 @@ describe("test utils", () => {
         class extends Model {
           static configuration = defineConfiguration({
             slug: faker.random.alphaNumeric(10),
-            fields: {
+            properties: {
               nested: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
                 options: {
-                  fields: {
+                  properties: {
                     rel: {
-                      type: FieldTypes.RELATION,
+                      type: PropertyTypes.RELATION,
                       options: {
                         ref: model1.configuration.slug,
                       },
@@ -741,23 +742,23 @@ describe("test utils", () => {
       expect(models[0]?.configuration.slug).toBe(model1.configuration.slug);
     });
 
-    it("should work with nested field in nested array and chained relation fields", async () => {
+    it("should work with nested property in nested array and chained relation properties", async () => {
       const model2 = faker.random.alphaNumeric(10);
 
       const model1 = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
             slug: faker.random.alphaNumeric(10),
-            fields: {
+            properties: {
               arr: {
-                type: FieldTypes.ARRAY,
+                type: PropertyTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.OBJECT,
+                    type: PropertyTypes.OBJECT,
                     options: {
-                      fields: {
+                      properties: {
                         rel: {
-                          type: FieldTypes.RELATION,
+                          type: PropertyTypes.RELATION,
                           options: {
                             ref: model2,
                           },
@@ -776,20 +777,20 @@ describe("test utils", () => {
         class extends Model {
           static configuration = defineConfiguration({
             slug: faker.random.alphaNumeric(10),
-            fields: {
+            properties: {
               nested: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
                 options: {
-                  fields: {
+                  properties: {
                     arr: {
-                      type: FieldTypes.ARRAY,
+                      type: PropertyTypes.ARRAY,
                       options: {
                         items: {
-                          type: FieldTypes.OBJECT,
+                          type: PropertyTypes.OBJECT,
                           options: {
-                            fields: {
+                            properties: {
                               rel: {
-                                type: FieldTypes.RELATION,
+                                type: PropertyTypes.RELATION,
                                 options: {
                                   ref: model1.configuration.slug,
                                 },
@@ -814,34 +815,34 @@ describe("test utils", () => {
       expect(models[1]?.configuration.slug).toBe(model2);
     });
 
-    it("should return empty array if no relations found in nested field", async () => {
+    it("should return empty array if no relations found in nested property", async () => {
       const model = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
             slug: faker.random.alphaNumeric(10),
-            fields: {
+            properties: {
               nested: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
               },
             },
           });
         },
       ).extend({ adapterClass: adapter });
 
-      const models = await getRelationModelsFromPath(model, "nested.unknown.field");
+      const models = await getRelationModelsFromPath(model, "nested.unknown.property");
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(0);
     });
 
-    it("should work with nested array in chained relation field", async () => {
+    it("should work with nested array in chained relation property", async () => {
       const model1 = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
             slug: faker.random.alphaNumeric(10),
-            fields: {
+            properties: {
               nested: {
-                type: FieldTypes.OBJECT,
+                type: PropertyTypes.OBJECT,
               },
             },
           });
@@ -852,9 +853,9 @@ describe("test utils", () => {
         class extends Model {
           static configuration = defineConfiguration({
             slug: faker.random.alphaNumeric(10),
-            fields: {
+            properties: {
               rel: {
-                type: FieldTypes.RELATION,
+                type: PropertyTypes.RELATION,
                 options: {
                   ref: model1.configuration.slug,
                 },
@@ -864,7 +865,7 @@ describe("test utils", () => {
         },
       ).extend({ adapterClass: adapter });
 
-      const models = await getRelationModelsFromPath(model, "rel.nested.unknown.field");
+      const models = await getRelationModelsFromPath(model, "rel.nested.unknown.property");
 
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(1);

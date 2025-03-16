@@ -78,62 +78,62 @@ describe("Role Model", () => {
     });
   });
 
-  describe("getFieldsRestrictionsInherited", () => {
-    it("should return own fieldsRestrictions if no inherited roles", async () => {
+  describe("getPropertiesRestrictionsInherited", () => {
+    it("should return own propertiesRestrictions if no inherited roles", async () => {
       const instance = await RoleModel.create({
         slug: generateRandomString(),
-        fieldsRestrictions: [{ ref: "test", actions: [RuleActions.CREATE] }],
+        propertiesRestrictions: [{ ref: "test", actions: [RuleActions.CREATE] }],
       });
 
-      const fieldsRestrictions = await instance.getFieldsRestrictionsInherited();
-      expect(fieldsRestrictions).toEqual([{ ref: "test", actions: [RuleActions.CREATE] }]);
+      const propertiesRestrictions = await instance.getPropertiesRestrictionsInherited();
+      expect(propertiesRestrictions).toEqual([{ ref: "test", actions: [RuleActions.CREATE] }]);
     });
 
-    it("should return combined fieldsRestrictions from inherited roles", async () => {
+    it("should return combined propertiesRestrictions from inherited roles", async () => {
       const inheritedRole1 = await RoleModel.create({
         slug: generateRandomString(),
-        fieldsRestrictions: [{ ref: "inherited1", actions: [RuleActions.CREATE] }],
+        propertiesRestrictions: [{ ref: "inherited1", actions: [RuleActions.CREATE] }],
       });
 
       const inheritedRole2 = await RoleModel.create({
         slug: generateRandomString(),
-        fieldsRestrictions: [{ ref: "inherited2", actions: [RuleActions.UPDATE] }],
+        propertiesRestrictions: [{ ref: "inherited2", actions: [RuleActions.UPDATE] }],
       });
 
       const instance = await RoleModel.create({
         slug: generateRandomString(),
-        fieldsRestrictions: [{ ref: "test", actions: [RuleActions.DELETE] }],
+        propertiesRestrictions: [{ ref: "test", actions: [RuleActions.DELETE] }],
         inherits: [inheritedRole1._id as string, inheritedRole2._id as string],
       });
 
-      const fieldsRestrictions = await instance.getFieldsRestrictionsInherited();
-      expect(fieldsRestrictions).toEqual([
+      const propertiesRestrictions = await instance.getPropertiesRestrictionsInherited();
+      expect(propertiesRestrictions).toEqual([
         { ref: "test", actions: [RuleActions.DELETE] },
         { ref: "inherited1", actions: [RuleActions.CREATE] },
         { ref: "inherited2", actions: [RuleActions.UPDATE] },
       ]);
     });
 
-    it("should return combined fieldsRestrictions from inherited roles recursively", async () => {
+    it("should return combined propertiesRestrictions from inherited roles recursively", async () => {
       const inheritedRole1 = await RoleModel.create({
         slug: generateRandomString(),
-        fieldsRestrictions: [{ ref: "inherited1", actions: [RuleActions.CREATE] }],
+        propertiesRestrictions: [{ ref: "inherited1", actions: [RuleActions.CREATE] }],
       });
 
       const inheritedRole2 = await RoleModel.create({
         slug: generateRandomString(),
-        fieldsRestrictions: [{ ref: "inherited2", actions: [RuleActions.UPDATE] }],
+        propertiesRestrictions: [{ ref: "inherited2", actions: [RuleActions.UPDATE] }],
         inherits: [inheritedRole1._id as string],
       });
 
       const instance = await RoleModel.create({
         slug: generateRandomString(),
-        fieldsRestrictions: [{ ref: "test", actions: [RuleActions.DELETE] }],
+        propertiesRestrictions: [{ ref: "test", actions: [RuleActions.DELETE] }],
         inherits: [inheritedRole2._id as string],
       });
 
-      const fieldsRestrictions = await instance.getFieldsRestrictionsInherited();
-      expect(fieldsRestrictions).toEqual([
+      const propertiesRestrictions = await instance.getPropertiesRestrictionsInherited();
+      expect(propertiesRestrictions).toEqual([
         { ref: "test", actions: [RuleActions.DELETE] },
         { ref: "inherited2", actions: [RuleActions.UPDATE] },
         { ref: "inherited1", actions: [RuleActions.CREATE] },

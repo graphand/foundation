@@ -1,50 +1,50 @@
 import { AdapterFetcher, SerializerFormat } from "@/types/index.js";
 import { Model } from "@/lib/model.js";
-import { FieldTypes } from "@/enums/field-types.js";
-import { Field } from "@/lib/field.js";
+import { PropertyTypes } from "@/enums/property-types.js";
+import { Property } from "@/lib/property.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Validator } from "@/lib/validator.js";
 import { CoreError } from "./core-error.js";
-import { FieldId } from "./fields/id.js";
-import { FieldNumber } from "./fields/number.js";
-import { FieldBoolean } from "./fields/boolean.js";
-import { FieldDate } from "./fields/date.js";
-import { FieldText } from "./fields/text.js";
-import { FieldRelation } from "./fields/relation.js";
-import { FieldObject } from "./fields/object.js";
-import { FieldIdentity } from "./fields/identity.js";
-import { FieldArray } from "./fields/array.js";
+import { PropertyId } from "./properties/id.js";
+import { PropertyNumber } from "./properties/number.js";
+import { PropertyBoolean } from "./properties/boolean.js";
+import { PropertyDate } from "./properties/date.js";
+import { PropertyText } from "./properties/text.js";
+import { PropertyRelation } from "./properties/relation.js";
+import { PropertyObject } from "./properties/object.js";
+import { PropertyIdentity } from "./properties/identity.js";
+import { PropertyArray } from "./properties/array.js";
 import { ValidatorUnique } from "./validators/unique.js";
 import { ValidatorRegex } from "./validators/regex.js";
-import { ValidatorKeyField } from "./validators/key-field.js";
+import { ValidatorKeyProperty } from "./validators/key-property.js";
 import { ValidatorDatamodel } from "./validators/datamodel.js";
 import { ValidatorLength } from "./validators/length.js";
 import { ValidatorBoundaries } from "./validators/boundaries.js";
 import { ValidatorRequired } from "./validators/required.js";
-import { FieldInteger } from "./fields/integer.js";
-import { FieldEnum } from "./fields/enum.js";
+import { PropertyInteger } from "./properties/integer.js";
+import { PropertyEnum } from "./properties/enum.js";
 
 export class Adapter<T extends typeof Model = typeof Model> {
   static __name = "Adapter";
 
-  static fieldsMap: Partial<{ [T in FieldTypes]: typeof Field<T> }> = {
-    [FieldTypes.ID]: FieldId,
-    [FieldTypes.NUMBER]: FieldNumber,
-    [FieldTypes.INTEGER]: FieldInteger,
-    [FieldTypes.BOOLEAN]: FieldBoolean,
-    [FieldTypes.DATE]: FieldDate,
-    [FieldTypes.TEXT]: FieldText,
-    [FieldTypes.ENUM]: FieldEnum,
-    [FieldTypes.RELATION]: FieldRelation,
-    [FieldTypes.OBJECT]: FieldObject,
-    [FieldTypes.IDENTITY]: FieldIdentity,
-    [FieldTypes.ARRAY]: FieldArray,
+  static propertiesMap: Partial<{ [T in PropertyTypes]: typeof Property<T> }> = {
+    [PropertyTypes.ID]: PropertyId,
+    [PropertyTypes.NUMBER]: PropertyNumber,
+    [PropertyTypes.INTEGER]: PropertyInteger,
+    [PropertyTypes.BOOLEAN]: PropertyBoolean,
+    [PropertyTypes.DATE]: PropertyDate,
+    [PropertyTypes.TEXT]: PropertyText,
+    [PropertyTypes.ENUM]: PropertyEnum,
+    [PropertyTypes.RELATION]: PropertyRelation,
+    [PropertyTypes.OBJECT]: PropertyObject,
+    [PropertyTypes.IDENTITY]: PropertyIdentity,
+    [PropertyTypes.ARRAY]: PropertyArray,
   };
   static validatorsMap: Partial<{ [T in ValidatorTypes]: typeof Validator<T> }> = {
     [ValidatorTypes.REQUIRED]: ValidatorRequired,
     [ValidatorTypes.UNIQUE]: ValidatorUnique,
     [ValidatorTypes.REGEX]: ValidatorRegex,
-    [ValidatorTypes.KEY_FIELD]: ValidatorKeyField,
+    [ValidatorTypes.KEY_PROPERTY]: ValidatorKeyProperty,
     [ValidatorTypes.DATAMODEL]: ValidatorDatamodel,
     [ValidatorTypes.LENGTH]: ValidatorLength,
     [ValidatorTypes.BOUNDARIES]: ValidatorBoundaries,
@@ -58,7 +58,7 @@ export class Adapter<T extends typeof Model = typeof Model> {
   fetcher?: AdapterFetcher<T>; // The adapter configuration = how the adapter should process
   model: T; // The model of the current adapter instance
 
-  #cacheFieldsMap: Map<string, Field<FieldTypes>> | undefined; // Cache the fields of the current model
+  #cachePropertiesMap: Map<string, Property<PropertyTypes>> | undefined; // Cache the properties of the current model
 
   constructor(model: T) {
     this.model = model;
@@ -129,13 +129,13 @@ export class Adapter<T extends typeof Model = typeof Model> {
     this.getModelsRegistry().clear();
   }
 
-  get cacheFieldsMap() {
-    this.#cacheFieldsMap ??= new Map();
-    return this.#cacheFieldsMap;
+  get cachePropertiesMap() {
+    this.#cachePropertiesMap ??= new Map();
+    return this.#cachePropertiesMap;
   }
 
-  resetFieldsCache() {
-    this.#cacheFieldsMap = new Map();
+  resetPropertiesCache() {
+    this.#cachePropertiesMap = new Map();
   }
 
   /**

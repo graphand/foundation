@@ -1,10 +1,10 @@
-import { FieldTypes } from "@/enums/field-types.js";
-import { FieldSerializerInput } from "@/index.js";
-import { Field } from "@/lib/field.js";
+import { PropertyTypes } from "@/enums/property-types.js";
+import { PropertySerializerInput } from "@/index.js";
+import { Property } from "@/lib/property.js";
 import { getValidationValues, isObjectId } from "@/lib/utils.js";
 
-export class FieldEnum extends Field<FieldTypes.ENUM> {
-  validate: Field<FieldTypes.ENUM>["validate"] = async ({ list }) => {
+export class PropertyEnum extends Property<PropertyTypes.ENUM> {
+  validate: Property<PropertyTypes.ENUM>["validate"] = async ({ list }) => {
     const values = getValidationValues(list, this.path);
     const enums = this.options.enum ?? [];
 
@@ -18,22 +18,22 @@ export class FieldEnum extends Field<FieldTypes.ENUM> {
       }
 
       if (isObjectId(v)) {
-        throw new Error(`value is an ObjectId. Enum fields do not accept ObjectId values`);
+        throw new Error(`value is an ObjectId. Enum properties do not accept ObjectId values`);
       }
     });
 
     return true;
   };
 
-  _sDefault = ({ value }: FieldSerializerInput) => {
+  _sDefault = ({ value }: PropertySerializerInput) => {
     const single = Array.isArray(value) ? String(value[0]) : String(value);
     const enums = this.options.enum ?? [];
 
     return enums.includes(single) ? single : undefined;
   };
 
-  serializerMap: Field<FieldTypes.ENUM>["serializerMap"] = {
+  serializerMap: Property<PropertyTypes.ENUM>["serializerMap"] = {
     validation: ({ value }) => value,
-    [Field.defaultSymbol]: this._sDefault,
+    [Property.defaultSymbol]: this._sDefault,
   };
 }

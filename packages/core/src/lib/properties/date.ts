@@ -1,5 +1,5 @@
-import { FieldTypes } from "@/enums/field-types.js";
-import { Field } from "@/lib/field.js";
+import { PropertyTypes } from "@/enums/property-types.js";
+import { Property } from "@/lib/property.js";
 import { CoreError } from "../core-error.js";
 
 const toDate = (value: unknown): Date => {
@@ -19,14 +19,14 @@ const toDate = (value: unknown): Date => {
   });
 };
 
-export class FieldDate extends Field<FieldTypes.DATE> {
-  serializerMap: Field<FieldTypes.DATE>["serializerMap"] = {
+export class PropertyDate extends Property<PropertyTypes.DATE> {
+  serializerMap: Property<PropertyTypes.DATE>["serializerMap"] = {
     json: ({ value }) => {
       const date = toDate(value);
 
       return date.toJSON();
     },
     validation: ({ value }) => value,
-    [Field.defaultSymbol]: ({ value }) => toDate(value),
+    [Property.defaultSymbol]: ({ value }) => toDate(value),
   };
 }

@@ -1,37 +1,37 @@
 import { Model } from "@/lib/model.js";
 import {
   AdapterFetcher,
-  FieldDefinitionGeneric,
-  FieldOptionsMap,
-  FieldsPathItem,
+  PropertyDefinitionGeneric,
+  PropertyOptionsMap,
+  PropertiesPathItem,
   Hook,
   HookPhase,
   ModelInstance,
   ValidatorDefinitionGeneric,
   ValidatorOptions,
-  FieldOptions,
+  PropertyOptions,
   SerializerFormat,
   SerializerCtx,
   TransactionCtx,
-  FieldsDefinition,
+  PropertiesDefinition,
   Transaction,
   ModelJSON,
   ModelData,
   ValidatorDefinition,
-  FieldDefinition,
+  PropertyDefinition,
   ValidatorsDefinition,
 } from "@/types/index.js";
-import { FieldTypes } from "@/enums/field-types.js";
-import { Field } from "@/lib/field.js";
+import { PropertyTypes } from "@/enums/property-types.js";
+import { Property } from "@/lib/property.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Validator } from "@/lib/validator.js";
 import { Adapter } from "@/lib/adapter.js";
 import { ValidationValidatorError } from "@/lib/validation-validator-error.js";
-import { ValidationFieldError } from "@/lib/validation-field-error.js";
+import { ValidationPropertyError } from "@/lib/validation-property-error.js";
 import { ValidationError } from "@/lib/validation-error.js";
 import type { DataModel } from "@/models/data-model.js";
 import { Patterns } from "@/enums/patterns.js";
-import { FieldObject } from "./fields/object.js";
+import { PropertyObject } from "./properties/object.js";
 
 export const crossModelTree = (_model: typeof Model, cb: (_model: typeof Model) => void) => {
   let model = _model;
@@ -50,7 +50,7 @@ export const crossModelTree = (_model: typeof Model, cb: (_model: typeof Model) 
  * the path.
  * @param model - The `model` parameter is the type of the model for which you want to retrieve the relation models in the path.
  * @param { Array<string> | string } pathArr - The `pathArr` parameter is either an array of strings or a
- * string. It represents the path to a specific field in the model.
+ * string. It represents the path to a specific property in the model.
  * @returns { Promise<Array<typeof Model>> } The function `getRelationModelsFromPath` returns an array of `typeof Model` objects
  * representing the relation models found in the path.
  */
@@ -60,19 +60,19 @@ export const getRelationModelsFromPath = async (
 ): Promise<Array<typeof Model>> => {
   await model.initialize();
   pathArr = Array.isArray(pathArr) ? pathArr : pathArr.split(".");
-  const fields = getFieldsPathsFromPath(model, pathArr);
+  const properties = getPropertiesPathsFromPath(model, pathArr);
   const relationModels: Set<string> = new Set();
 
-  for (let i = 0; i < fields.length; i++) {
-    const field = fields[i];
+  for (let i = 0; i < properties.length; i++) {
+    const property = properties[i];
 
-    if (!field) {
+    if (!property) {
       break;
     }
 
-    const isLast = i === fields.length - 1;
-    if (field.field.type === FieldTypes.RELATION) {
-      const options = field.field.options as FieldOptions<FieldTypes.RELATION>;
+    const isLast = i === properties.length - 1;
+    if (property.property.type === PropertyTypes.RELATION) {
+      const options = property.property.options as PropertyOptions<PropertyTypes.RELATION>;
       const refModel = Model.getClass(options.ref, model.getAdapter(false).base);
       relationModels.add(refModel.configuration.slug);
 
@@ -89,28 +89,30 @@ export const getRelationModelsFromPath = async (
 };
 
 /**
- * The function `getFieldsPathsFromPath` takes a model and a path array or string as input and returns
- * an array of the decomposed fields path.
- * @param model - The `model` parameter is the type of the model that contains the fields. It is of
+ * The function `getPropertiesPathsFromPath` takes a model and a path array or string as input and returns
+ * an array of the decomposed properties path.
+ * @param model - The `model` parameter is the type of the model that contains the properties. It is of
  * type `typeof Model`.
  * @param {Array<string> | string} pathArr - The `pathArr` parameter is either an array of strings or a
- * string. It represents the path to a specific field in the model.
- * @returns The function `getFieldsPathsFromPath` returns an array of `FieldsPathItem` objects.
+ * string. It represents the path to a specific property in the model.
+ * @returns The function `getPropertiesPathsFromPath` returns an array of `PropertiesPathItem` objects.
  */
-export const getFieldsPathsFromPath = (
+export const getPropertiesPathsFromPath = (
   model: typeof Model,
   pathArr: Array<string> | string,
-): Array<FieldsPathItem | null> => {
+): Array<PropertiesPathItem | null> => {
   const paths = Array.isArray(pathArr) ? pathArr : pathArr.split(".");
-  const firstFieldKey = paths[0];
-  if (!firstFieldKey) {
+  const firstPropertyKey = paths[0];
+  if (!firstPropertyKey) {
     return [];
   }
 
-  const firstField = model.fieldsMap?.get(firstFieldKey);
+  const firstProperty = model.propertiesMap?.get(firstPropertyKey);
   const adapter = model.getAdapter(false);
 
-  const result: Array<FieldsPathItem | null> = firstField ? [{ key: firstFieldKey, field: firstField }] : [null];
+  const result: Array<PropertiesPathItem | null> = firstProperty
+    ? [{ key: firstPropertyKey, property: firstProperty }]
+    : [null];
 
   if (paths.length === 1) {
     return result;
@@ -118,19 +120,19 @@ export const getFieldsPathsFromPath = (
 
   for (let i = 1; i < paths.length; i++) {
     const key = paths[i] as string;
-    const prevField = result[result.length - 1]?.field;
+    const prevProperty = result[result.length - 1]?.property;
     const pathStr = result.map(item => item?.key).join(".");
 
-    if (prevField?.type === FieldTypes.ARRAY) {
-      const options = prevField.options as FieldOptions<FieldTypes.ARRAY>;
+    if (prevProperty?.type === PropertyTypes.ARRAY) {
+      const options = prevProperty.options as PropertyOptions<PropertyTypes.ARRAY>;
       const matchIndex = key.match(/\[(\d+)?\]/);
 
       if (matchIndex) {
         const index = matchIndex[1] ? parseInt(matchIndex[1], 10) : null;
         if (index !== null) {
-          const itemsField = getFieldFromDefinition(options.items, adapter, `${pathStr}.[${index}]`);
-          if (itemsField) {
-            result.push({ key: `[${index}]`, field: itemsField });
+          const itemsProperty = getPropertyFromDefinition(options.items, adapter, `${pathStr}.[${index}]`);
+          if (itemsProperty) {
+            result.push({ key: `[${index}]`, property: itemsProperty });
           } else {
             result.push(null);
           }
@@ -138,73 +140,73 @@ export const getFieldsPathsFromPath = (
         }
       }
 
-      const itemsField = getFieldFromDefinition(options.items, adapter, `${pathStr}.[]`);
-      if (itemsField) {
-        result.push({ key: "[]", field: itemsField });
+      const itemsProperty = getPropertyFromDefinition(options.items, adapter, `${pathStr}.[]`);
+      if (itemsProperty) {
+        result.push({ key: "[]", property: itemsProperty });
       } else {
         result.push(null);
       }
 
       if (matchIndex) continue;
 
-      if (itemsField?.type === FieldTypes.OBJECT) {
-        const nestedOptions = itemsField.options as FieldOptions<FieldTypes.OBJECT>;
-        const nextFieldDef = nestedOptions?.fields?.[key];
-        if (!nextFieldDef) {
+      if (itemsProperty?.type === PropertyTypes.OBJECT) {
+        const nestedOptions = itemsProperty.options as PropertyOptions<PropertyTypes.OBJECT>;
+        const nextPropertyDef = nestedOptions?.properties?.[key];
+        if (!nextPropertyDef) {
           result.push(null);
           continue;
         }
 
-        const nextField = getFieldFromDefinition(nextFieldDef, adapter, `${pathStr}.[].${key}`);
-        if (nextField) {
-          result.push({ key, field: nextField });
+        const nextProperty = getPropertyFromDefinition(nextPropertyDef, adapter, `${pathStr}.[].${key}`);
+        if (nextProperty) {
+          result.push({ key, property: nextProperty });
           continue;
         }
       }
     }
 
-    if (prevField?.type === FieldTypes.OBJECT) {
-      const options = prevField.options as FieldOptions<FieldTypes.OBJECT>;
-      let nextFieldDef = options.fields?.[key] || options.defaultField;
-      if (nextFieldDef === undefined && !options.strict) {
-        nextFieldDef = {
-          type: FieldTypes.DEFAULT,
+    if (prevProperty?.type === PropertyTypes.OBJECT) {
+      const options = prevProperty.options as PropertyOptions<PropertyTypes.OBJECT>;
+      let nextPropertyDef = options.properties?.[key] || options.defaultProperty;
+      if (nextPropertyDef === undefined && !options.strict) {
+        nextPropertyDef = {
+          type: PropertyTypes.DEFAULT,
         };
       }
 
-      if (!nextFieldDef) {
+      if (!nextPropertyDef) {
         result.push(null);
         continue;
       }
 
-      const nextField = getFieldFromDefinition(nextFieldDef, adapter, `${pathStr}.${key}`);
-      if (nextField) {
-        result.push({ key, field: nextField });
+      const nextProperty = getPropertyFromDefinition(nextPropertyDef, adapter, `${pathStr}.${key}`);
+      if (nextProperty) {
+        result.push({ key, property: nextProperty });
         continue;
       }
     }
 
-    if (prevField?.type === FieldTypes.DEFAULT) {
-      const nextField = getFieldFromDefinition(
+    if (prevProperty?.type === PropertyTypes.DEFAULT) {
+      const nextProperty = getPropertyFromDefinition(
         {
-          type: FieldTypes.DEFAULT,
+          type: PropertyTypes.DEFAULT,
         },
         adapter,
         `${pathStr}.${key}`,
       );
 
-      if (nextField) {
-        result.push({ key, field: nextField });
+      if (nextProperty) {
+        result.push({ key, property: nextProperty });
         continue;
       }
     }
 
-    if (prevField?.type === FieldTypes.RELATION) {
-      const options = prevField.options as FieldOptions<FieldTypes.RELATION>;
+    if (prevProperty?.type === PropertyTypes.RELATION) {
+      const options = prevProperty.options as PropertyOptions<PropertyTypes.RELATION>;
       const refModel = Model.getClass(options.ref, adapter.base);
       const restPaths = paths.slice(i);
-      const nextFields = getFieldsPathsFromPath(refModel, restPaths);
-      result.push(...nextFields);
+      const nextProperties = getPropertiesPathsFromPath(refModel, restPaths);
+      result.push(...nextProperties);
       break;
     }
 
@@ -269,23 +271,23 @@ export const getRecursiveHooksFromModel = <A extends keyof AdapterFetcher, T ext
 };
 
 /**
- * The function `getNestedFieldsMap` takes a model and a nested field as input, and returns a map of
- * the nested fields within the given field.
- * @param model - The `model` parameter is the type of the model that contains the nested field. It is
+ * The function `getNestedPropertiesMap` takes a model and a nested property as input, and returns a map of
+ * the nested properties within the given property.
+ * @param model - The `model` parameter is the type of the model that contains the nested property. It is
  * of type `typeof Model`.
- * @param nestedField - The `nestedField` parameter is of type `Field<FieldTypes.OBJECT>`. It
- * represents a nested field in a model.
- * @returns The function `getNestedFieldsMap` returns a `Map` object.
+ * @param nestedProperty - The `nestedProperty` parameter is of type `Property<PropertyTypes.OBJECT>`. It
+ * represents a nested property in a model.
+ * @returns The function `getNestedPropertiesMap` returns a `Map` object.
  */
-export const getNestedFieldsMap = (model: typeof Model, nestedField: Field<FieldTypes.OBJECT>) => {
+export const getNestedPropertiesMap = (model: typeof Model, nestedProperty: Property<PropertyTypes.OBJECT>) => {
   const adapter = model.getAdapter(false);
-  const map = new Map<string, Field>();
+  const map = new Map<string, Property>();
 
-  Object.entries(nestedField.options.fields ?? {}).forEach(([slug, def]) => {
-    const field = getFieldFromDefinition(def, adapter, nestedField.path + "." + slug);
+  Object.entries(nestedProperty.options.properties ?? {}).forEach(([slug, def]) => {
+    const property = getPropertyFromDefinition(def, adapter, nestedProperty.path + "." + slug);
 
-    if (field) {
-      map.set(slug, field);
+    if (property) {
+      map.set(slug, property);
     }
   });
 
@@ -293,20 +295,20 @@ export const getNestedFieldsMap = (model: typeof Model, nestedField: Field<Field
 };
 
 /**
- * The function `getNestedValidatorsArray` returns an array of validators for a nested field in a
+ * The function `getNestedValidatorsArray` returns an array of validators for a nested property in a
  * model.
- * @param model - The `model` parameter is the type of the model that contains the nested field. It is
+ * @param model - The `model` parameter is the type of the model that contains the nested property. It is
  * of type `typeof Model`.
- * @param nestedField - The `nestedField` parameter is of type `Field<FieldTypes.OBJECT>`. It
- * represents a nested field in a model.
+ * @param nestedProperty - The `nestedProperty` parameter is of type `Property<PropertyTypes.OBJECT>`. It
+ * represents a nested property in a model.
  * @returns an array of validators.
  */
-export const getNestedValidatorsArray = (model: typeof Model, nestedField: Field<FieldTypes.OBJECT>) => {
+export const getNestedValidatorsArray = (model: typeof Model, nestedProperty: Property<PropertyTypes.OBJECT>) => {
   const adapter = model.getAdapter(false);
   const validators: Array<Validator> = [];
 
-  nestedField.options.validators?.forEach(def => {
-    const validator = getValidatorFromDefinition(def, adapter, nestedField.path);
+  nestedProperty.options.validators?.forEach(def => {
+    const validator = getValidatorFromDefinition(def, adapter, nestedProperty.path);
 
     if (validator) {
       validators.push(validator);
@@ -317,42 +319,42 @@ export const getNestedValidatorsArray = (model: typeof Model, nestedField: Field
 };
 
 /**
- * The function `getArrayItemsFieldsMap` takes a model and an array field as input, and returns a map
- * of the fields within the array.
+ * The function `getArrayItemsPropertiesMap` takes a model and an array property as input, and returns a map
+ * of the properties within the array.
  * @param model - The `model` parameter is the model class that represents a database table or
  * collection. It is of type `typeof Model`.
- * @param arrayField - The `arrayField` parameter is a field of type `FieldTypes.ARRAY`. It represents
- * an array field in a model.
+ * @param arrayProperty - The `arrayProperty` parameter is a property of type `PropertyTypes.ARRAY`. It represents
+ * an array property in a model.
  * @returns a Map object.
  */
-export const getArrayItemsFieldsMap = (model: typeof Model, arrayField: Field<FieldTypes.ARRAY>) => {
+export const getArrayItemsPropertiesMap = (model: typeof Model, arrayProperty: Property<PropertyTypes.ARRAY>) => {
   const adapter = model.getAdapter();
   const map = new Map();
 
-  const itemsField = getFieldFromDefinition(arrayField.options.items, adapter, arrayField.path + ".[]");
+  const itemsProperty = getPropertyFromDefinition(arrayProperty.options.items, adapter, arrayProperty.path + ".[]");
 
-  if (itemsField) {
-    map.set("[]", itemsField);
+  if (itemsProperty) {
+    map.set("[]", itemsProperty);
   }
 
   return map;
 };
 
 /**
- * The function `getArrayValidatorsArray` returns an array of validators for a given array field in a
+ * The function `getArrayValidatorsArray` returns an array of validators for a given array property in a
  * model.
- * @param model - The `model` parameter is the type of the model that contains the array field. It is
+ * @param model - The `model` parameter is the type of the model that contains the array property. It is
  * of type `typeof Model`.
- * @param arrayField - The `arrayField` parameter is of type `Field<FieldTypes.ARRAY>`. It represents a
- * field in a model that is of type array.
+ * @param arrayProperty - The `arrayProperty` parameter is of type `Property<PropertyTypes.ARRAY>`. It represents a
+ * property in a model that is of type array.
  * @returns an array of validators.
  */
-export const getArrayValidatorsArray = (model: typeof Model, arrayField: Field<FieldTypes.ARRAY>) => {
+export const getArrayValidatorsArray = (model: typeof Model, arrayProperty: Property<PropertyTypes.ARRAY>) => {
   const adapter = model.getAdapter();
   const validators: Array<Validator> = [];
 
-  arrayField.options.validators?.forEach(def => {
-    const validator = getValidatorFromDefinition(def as ValidatorDefinition, adapter, arrayField.path + ".[]");
+  arrayProperty.options.validators?.forEach(def => {
+    const validator = getValidatorFromDefinition(def as ValidatorDefinition, adapter, arrayProperty.path + ".[]");
 
     if (validator) {
       validators.push(validator);
@@ -363,28 +365,28 @@ export const getArrayValidatorsArray = (model: typeof Model, arrayField: Field<F
 };
 
 /**
- * The `createFieldsMap` function creates a map of fields from a model/
- * @param model - The `model` parameter is the type of the model for which you want to create a fields
+ * The `createPropertiesMap` function creates a map of properties from a model/
+ * @param model - The `model` parameter is the type of the model for which you want to create a properties
  * map. It is of type `typeof Model`.
- * @returns The function `createFieldsMap` returns a `Map` object.
+ * @returns The function `createPropertiesMap` returns a `Map` object.
  */
-export const createFieldsMap = (model: typeof Model): Map<string, Field> => {
-  const fields: FieldsDefinition = Object.assign({}, model.configuration.fields);
+export const createPropertiesMap = (model: typeof Model): Map<string, Property> => {
+  const properties: PropertiesDefinition = Object.assign({}, model.configuration.properties);
 
-  if (model.systemFields) {
-    Object.assign(fields, model.systemFields);
+  if (model.systemProperties) {
+    Object.assign(properties, model.systemProperties);
   }
 
-  fields._id = { type: FieldTypes.ID };
+  properties._id = { type: PropertyTypes.ID };
 
-  const map = new Map<string, Field>();
+  const map = new Map<string, Property>();
   const adapter = model.getAdapter(false);
 
-  Object.entries(fields).forEach(([slug, def]) => {
-    const field = getFieldFromDefinition(def, adapter, slug);
+  Object.entries(properties).forEach(([slug, def]) => {
+    const property = getPropertyFromDefinition(def, adapter, slug);
 
-    if (field) {
-      map.set(slug, field);
+    if (property) {
+      map.set(slug, property);
     }
   });
 
@@ -401,19 +403,19 @@ export const createFieldsMap = (model: typeof Model): Map<string, Field> => {
 export const createValidatorsArray = (model: typeof Model): Array<Validator | null> => {
   let validators: Array<Readonly<ValidatorDefinition>> = Array.from(model.configuration.validators || []);
 
-  const keyField = model.configuration.keyField;
-  if (keyField && keyField !== "_id") {
+  const keyProperty = model.configuration.keyProperty;
+  if (keyProperty && keyProperty !== "_id") {
     validators.push({
-      type: ValidatorTypes.KEY_FIELD,
-      options: { field: keyField },
+      type: ValidatorTypes.KEY_PROPERTY,
+      options: { property: keyProperty },
     });
 
     validators = validators.filter(v => {
-      if (v.type === ValidatorTypes.UNIQUE && v.options?.field === keyField) {
+      if (v.type === ValidatorTypes.UNIQUE && v.options?.property === keyProperty) {
         return false;
       }
 
-      if (v.type === ValidatorTypes.REQUIRED && v.options?.field === keyField) {
+      if (v.type === ValidatorTypes.REQUIRED && v.options?.property === keyProperty) {
         return false;
       }
 
@@ -427,27 +429,27 @@ export const createValidatorsArray = (model: typeof Model): Array<Validator | nu
 };
 
 /**
- * The getFieldClass function returns the appropriate Field class based on the given type and adapter.
- * @param {FieldTypes} type - The `type` parameter is of type `FieldTypes`. It represents the type of
- * field that is being requested.
+ * The getPropertyClass function returns the appropriate Property class based on the given type and adapter.
+ * @param {PropertyTypes} type - The `type` parameter is of type `PropertyTypes`. It represents the type of
+ * property that is being requested.
  * @param {Adapter} [adapter] - The `adapter` parameter is an optional parameter of type `Adapter`. It
- * is used to provide a custom mapping of field types to field classes. If provided, the `adapter`
- * object should have a `fieldsMap` property which is an object mapping field types to field classes.
- * @returns The function `getFieldClass` returns the value of the variable `FieldClass`.
+ * is used to provide a custom mapping of property types to property classes. If provided, the `adapter`
+ * object should have a `propertiesMap` property which is an object mapping property types to property classes.
+ * @returns The function `getPropertyClass` returns the value of the variable `PropertyClass`.
  */
-export const getFieldClass = <T extends FieldTypes>(type: T, adapter?: Adapter): typeof Field<T> => {
-  let FieldClass: typeof Field<T> | undefined;
+export const getPropertyClass = <T extends PropertyTypes>(type: T, adapter?: Adapter): typeof Property<T> => {
+  let PropertyClass: typeof Property<T> | undefined;
 
-  if (type === FieldTypes.DEFAULT) {
-    FieldClass = Field;
+  if (type === PropertyTypes.DEFAULT) {
+    PropertyClass = Property;
   } else {
-    FieldClass = adapter?.base?.fieldsMap[type];
+    PropertyClass = adapter?.base?.propertiesMap[type];
   }
 
-  FieldClass ??= Adapter.fieldsMap[type];
-  FieldClass ??= Field;
+  PropertyClass ??= Adapter.propertiesMap[type];
+  PropertyClass ??= Property;
 
-  return FieldClass;
+  return PropertyClass;
 };
 
 /**
@@ -477,40 +479,40 @@ export const getValidatorClass = <T extends ValidatorTypes>(type: T, adapter?: A
 };
 
 /**
- * The function `getFieldFromDefinition` takes a field definition, an adapter, and a path, and returns
- * a field object based on the definition.
- * @param def - The `def` parameter is a FieldDefinition object that describes the field. It can be of
- * type `FieldOptionsMap` or `FieldTypes`.
+ * The function `getPropertyFromDefinition` takes a property definition, an adapter, and a path, and returns
+ * a property object based on the definition.
+ * @param def - The `def` parameter is a PropertyDefinition object that describes the property. It can be of
+ * type `PropertyOptionsMap` or `PropertyTypes`.
  * @param {Adapter} adapter - The `adapter` parameter is an object that represents an adapter. It is
- * used to provide additional functionality or customization for the `getFieldFromDefinition` function.
- * @param {string} path - The `path` parameter is a string that represents the path to the field. It is
- * used to uniquely identify the field in the cache.
- * @returns an instance of the `FieldClass` which is created using the `def` and `path` parameters.
+ * used to provide additional functionality or customization for the `getPropertyFromDefinition` function.
+ * @param {string} path - The `path` parameter is a string that represents the path to the property. It is
+ * used to uniquely identify the property in the cache.
+ * @returns an instance of the `PropertyClass` which is created using the `def` and `path` parameters.
  */
-export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTypes>(
-  def: FieldDefinitionGeneric<T>,
+export const getPropertyFromDefinition = <T extends keyof PropertyOptionsMap | PropertyTypes>(
+  def: PropertyDefinitionGeneric<T>,
   adapter: Adapter,
   path: string,
-): Field<T> | null => {
+): Property<T> | null => {
   if (!def || typeof def !== "object") {
     return null;
   }
 
   const cacheKey = path;
 
-  if (adapter?.cacheFieldsMap?.has(cacheKey)) {
-    return adapter.cacheFieldsMap.get(cacheKey) as Field<T>;
+  if (adapter?.cachePropertiesMap?.has(cacheKey)) {
+    return adapter.cachePropertiesMap.get(cacheKey) as Property<T>;
   }
 
-  const FieldClass = getFieldClass(def.type as FieldTypes, adapter) as typeof Field<T>;
+  const PropertyClass = getPropertyClass(def.type as PropertyTypes, adapter) as typeof Property<T>;
 
-  const field = new FieldClass(def, path);
+  const property = new PropertyClass(def, path);
 
   if (adapter) {
-    adapter.cacheFieldsMap.set(cacheKey, field);
+    adapter.cachePropertiesMap.set(cacheKey, property);
   }
 
-  return field;
+  return property;
 };
 
 /**
@@ -534,7 +536,7 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
     return null;
   }
 
-  // const cacheKey = path + def.type + def.options?.field;
+  // const cacheKey = path + def.type + def.options?.property;
 
   // if (adapter?.cacheValidatorsMap?.has(cacheKey)) {
   //   return adapter.cacheValidatorsMap.get(cacheKey);
@@ -583,71 +585,71 @@ export const getDefaultValidatorOptions = <T extends ValidatorTypes>(type: T): V
 export const isObjectId = (input: unknown) => /^[a-f\d]{24}$/i.test(String(input));
 
 /**
- * The function `defineFieldsProperties` defines properties on an instance object based on the fields
+ * The function `definePropertiesObject` defines properties on an instance object based on the properties
  * of a model.
  * @param {Model} instance - The `instance` parameter is an object of type `Model`.
  * @returns There is no explicit return statement in the code provided. Therefore, the function
- * `defineFieldsProperties` does not return anything.
+ * `definePropertiesObject` does not return anything.
  */
-export const defineFieldsProperties = (instance: Model) => {
-  Object.defineProperties(instance, (instance as ModelInstance).model().fieldsProperties);
+export const definePropertiesObject = (instance: Model) => {
+  Object.defineProperties(instance, (instance as ModelInstance).model().propertiesObject);
 };
 
-const _pathReplace = (field: Field, p: FieldsPathItem, fp: string) => {
-  return p.field.path.replace(field.path, fp);
+const _pathReplace = (property: Property, p: PropertiesPathItem, fp: string) => {
+  return p.property.path.replace(property.path, fp);
 };
 
 /**
  * The `_getter` function is a helper function that retrieves values from an object based on a given
- * set of fields and paths.
+ * set of properties and paths.
  * @param opts - The `opts` parameter is an object that contains the following properties:
  * - `value` - The `value` property is the value to be retrieved from the object. It is of type
  * `any`.
- * - `fieldsPaths` - The `fieldsPaths` property is an array of `FieldsPathItem` objects. It is used
- * to determine which fields to retrieve from the object.
- * - `lastField` - The `lastField` property is the last field in the `fieldsPaths` array. It is of
- * type `Field`.
- * - `noFieldSymbol` - The `noFieldSymbol` property is a symbol that is used to indicate that a field
+ * - `propertiesPaths` - The `propertiesPaths` property is an array of `PropertiesPathItem` objects. It is used
+ * to determine which properties to retrieve from the object.
+ * - `lastProperty` - The `lastProperty` property is the last property in the `propertiesPaths` array. It is of
+ * type `Property`.
+ * - `noPropertySymbol` - The `noPropertySymbol` property is a symbol that is used to indicate that a property
  * does not exist.
  * - `format` - The `format` property is a string that represents the format of the value to be
  * retrieved. It is of type `SerializerFormat`.
  * - `ctx` - The `ctx` property is an object that represents the context of the value to be retrieved.
  * - `from` - The `from` property is the model from which the value is being retrieved. It is of type
- * @returns the value obtained by traversing through the `_fieldsPaths` array and accessing the
+ * @returns the value obtained by traversing through the `_propertiesPaths` array and accessing the
  * corresponding properties in the `_value` object. If at any point the value is `undefined` or `null`,
- * it returns that value. If the current field is the last field or the format is `OBJECT` and the
- * current field's `nextFieldEqObject` property is `true`, it serializes the value using the current
- * field's `serialize` method and returns the serialized value. Otherwise, it returns the value
- * obtained by traversing through the `_fieldsPaths` array and accessing the corresponding properties
+ * it returns that value. If the current property is the last property or the format is `OBJECT` and the
+ * current property's `nextPropertyEqObject` property is `true`, it serializes the value using the current
+ * property's `serialize` method and returns the serialized value. Otherwise, it returns the value
+ * obtained by traversing through the `_propertiesPaths` array and accessing the corresponding properties
  * in the `_value` object.
  */
 export const _getter = (opts: {
   value?: unknown;
-  fieldsPaths: Array<{ key: string; field: Field } | null>;
-  noFieldSymbol: symbol;
+  propertiesPaths: Array<{ key: string; property: Property } | null>;
+  noPropertySymbol: symbol;
   format: SerializerFormat;
   ctx: SerializerCtx;
   from: ModelInstance;
   override?: unknown;
 }): unknown => {
   let { value } = opts;
-  const { fieldsPaths, noFieldSymbol, format, from, ctx } = opts;
+  const { propertiesPaths, noPropertySymbol, format, from, ctx } = opts;
 
   opts.override ??= value; // Keep the original value for the nextData, even when _getter is called recursively
 
-  for (let i = 0; i < fieldsPaths.length; i++) {
-    const fieldsPath = fieldsPaths[i];
-    if (!fieldsPath) {
-      throw noFieldSymbol;
+  for (let i = 0; i < propertiesPaths.length; i++) {
+    const propertiesPath = propertiesPaths[i];
+    if (!propertiesPath) {
+      throw noPropertySymbol;
     }
 
-    const { key, field } = fieldsPath;
+    const { key, property } = propertiesPath;
 
-    if (!field) {
-      throw noFieldSymbol;
+    if (!property) {
+      throw noPropertySymbol;
     }
 
-    const restPaths = fieldsPaths.slice(i + 1);
+    const restPaths = propertiesPaths.slice(i + 1);
     const matchIndex = key.match(/\[(\d+)?\]/);
     if (matchIndex) {
       const arrVal: Array<unknown> = Array.isArray(value) ? value : Array.from(value as Iterable<unknown>);
@@ -656,13 +658,13 @@ export const _getter = (opts: {
         const adapter = from.model().getAdapter();
 
         return arrVal.map((v: unknown, fi: number): unknown => {
-          const thisPath = field.path.replace(/\[\]$/, `[${fi}]`);
+          const thisPath = property.path.replace(/\[\]$/, `[${fi}]`);
           const _restPaths = restPaths.map(p => {
-            if (!p?.field) {
+            if (!p?.property) {
               return p;
             }
 
-            const _f = getFieldFromDefinition(p.field.definition, adapter, _pathReplace(field, p, thisPath));
+            const _f = getPropertyFromDefinition(p.property.definition, adapter, _pathReplace(property, p, thisPath));
 
             if (!_f) {
               return p;
@@ -670,14 +672,14 @@ export const _getter = (opts: {
 
             return {
               ...p,
-              field: _f,
+              property: _f,
             };
           });
 
           return _getter({
             ...opts,
             value: v,
-            fieldsPaths: _restPaths,
+            propertiesPaths: _restPaths,
           });
         });
       }
@@ -685,13 +687,13 @@ export const _getter = (opts: {
       const index = parseInt(matchIndex[1], 10);
 
       if (arrVal.length <= index) {
-        throw noFieldSymbol;
+        throw noPropertySymbol;
       }
 
       return _getter({
         ...opts,
         value: arrVal[index],
-        fieldsPaths: restPaths,
+        propertiesPaths: restPaths,
       });
     }
 
@@ -700,7 +702,7 @@ export const _getter = (opts: {
     }
 
     let n: unknown;
-    // @ts-expect-error __raw exists in the proxy returned by nested field
+    // @ts-expect-error __raw exists in the proxy returned by nested property
     const raw = value.__raw as (_key: string) => unknown;
 
     if (typeof raw === "function") {
@@ -709,12 +711,12 @@ export const _getter = (opts: {
       n = value[key as keyof typeof value];
     }
 
-    if (n === undefined && "default" in field.options && (ctx?.defaults ?? true)) {
-      n = field.options.default as typeof n;
+    if (n === undefined && "default" in property.options && (ctx?.defaults ?? true)) {
+      n = property.options.default as typeof n;
     }
 
-    if (n === undefined || n === null || n === FieldObject.symbolIgnore) {
-      if (n === FieldObject.symbolIgnore && format !== "validation") {
+    if (n === undefined || n === null || n === PropertyObject.symbolIgnore) {
+      if (n === PropertyObject.symbolIgnore && format !== "validation") {
         return undefined;
       }
 
@@ -723,24 +725,24 @@ export const _getter = (opts: {
 
     ctx.hasNext = !!restPaths?.length;
 
-    value = field.serialize({ value: n, format, from, ctx, nextData: opts.override as ModelData });
+    value = property.serialize({ value: n, format, from, ctx, nextData: opts.override as ModelData });
   }
 
   return value;
 };
 
 /**
- * The function `getNestedFieldsArrayForModel` recursively retrieves all nested fields for a given
+ * The function `getNestedPropertiesArrayForModel` recursively retrieves all nested properties for a given
  * model.
  * @param model - The `model` parameter is the type of the model for which we want to retrieve the
- * nested fields array.
- * @returns The function `getNestedFieldsArrayForModel` returns an array of `Field` objects.
+ * nested properties array.
+ * @returns The function `getNestedPropertiesArrayForModel` returns an array of `Property` objects.
  */
-export const getNestedFieldsArrayForModel = (model: typeof Model): Array<Field> => {
-  const res: Array<Field> = [];
+export const getNestedPropertiesArrayForModel = (model: typeof Model): Array<Property> => {
+  const res: Array<Property> = [];
 
-  crossFields({ model }, field => {
-    res.push(field);
+  crossProperties({ model }, property => {
+    res.push(property);
   });
 
   return res;
@@ -752,73 +754,73 @@ export const getNestedFieldsArrayForModel = (model: typeof Model): Array<Field> 
  * @param  - - `validators`: An array of tuples, where each tuple contains a `Validator` object and an
  * array of `ModelInstance` objects.
  */
-async function validateFields<T extends typeof Model>(opts: {
-  fields: Array<Field>;
+async function validateProperties<T extends typeof Model>(opts: {
+  properties: Array<Property>;
   on: Array<ModelInstance<T>>;
   model: T;
   ctx?: TransactionCtx;
-  errorsFieldsSet: Set<ValidationFieldError>;
-  fieldsValidators: Array<[Validator, Array<ModelInstance<T>>]>;
-  fieldsValidatorsKeys: Set<string>;
+  errorsPropertiesSet: Set<ValidationPropertyError>;
+  propertiesValidators: Array<[Validator, Array<ModelInstance<T>>]>;
+  propertiesValidatorsKeys: Set<string>;
 }) {
-  const { fields, on, model, ctx, errorsFieldsSet, fieldsValidators, fieldsValidatorsKeys } = opts;
+  const { properties, on, model, ctx, errorsPropertiesSet, propertiesValidators, propertiesValidatorsKeys } = opts;
 
-  for (const field of fields) {
-    const { type, path } = field;
+  for (const property of properties) {
+    const { type, path } = property;
 
     try {
-      // Validate method could be not implemented on Field class
-      if (field.validate) {
-        const validated = await field.validate({ list: on as Array<ModelInstance>, model, ctx });
+      // Validate method could be not implemented on Property class
+      if (property.validate) {
+        const validated = await property.validate({ list: on as Array<ModelInstance>, model, ctx });
         if (!validated) {
           throw null;
         }
       }
 
-      if (type === FieldTypes.OBJECT) {
+      if (type === PropertyTypes.OBJECT) {
         const values = on
           .map(i => i.get(path, "validation"))
           .flat(Infinity)
           .filter(Boolean);
 
         if (values?.length) {
-          const _field = field as Field<FieldTypes.OBJECT>;
-          const o = _field.options || {};
-          if (o.defaultField) {
-            const noField = values
+          const _property = property as Property<PropertyTypes.OBJECT>;
+          const o = _property.options || {};
+          if (o.defaultProperty) {
+            const noProperty = values
               .map(v => {
                 if (!v || typeof v !== "object") {
                   return [];
                 }
 
-                return Object.keys(v).filter(k => !o.fields?.[k]);
+                return Object.keys(v).filter(k => !o.properties?.[k]);
               })
               .flat();
 
-            if (noField?.length) {
+            if (noProperty?.length) {
               const adapter = model.getAdapter();
               const _process = async (_path: string, _list: Array<ModelInstance<T>>) => {
-                const tmpField = o.defaultField && getFieldFromDefinition(o.defaultField, adapter, _path);
+                const tmpProperty = o.defaultProperty && getPropertyFromDefinition(o.defaultProperty, adapter, _path);
 
-                if (!tmpField) {
+                if (!tmpProperty) {
                   return;
                 }
 
                 const promises = [
-                  validateFields({
+                  validateProperties({
                     ...opts,
-                    fields: [tmpField],
+                    properties: [tmpProperty],
                     on: _list,
                   }),
                 ];
 
-                if (tmpField?.type === FieldTypes.OBJECT) {
-                  const fields = getNestedFieldsMap(model, tmpField as Field<FieldTypes.OBJECT>);
+                if (tmpProperty?.type === PropertyTypes.OBJECT) {
+                  const properties = getNestedPropertiesMap(model, tmpProperty as Property<PropertyTypes.OBJECT>);
 
                   promises.push(
-                    validateFields({
+                    validateProperties({
                       ...opts,
-                      fields: Array.from(fields.values()),
+                      properties: Array.from(properties.values()),
                       on: _list,
                     }),
                   );
@@ -828,8 +830,8 @@ async function validateFields<T extends typeof Model>(opts: {
               };
 
               await Promise.all(
-                noField.map(async k => {
-                  const path = _field.path + `.${k}`;
+                noProperty.map(async k => {
+                  const path = _property.path + `.${k}`;
 
                   const valuesMap = new Map<string, { list: Array<ModelInstance<T>>; arrayLength?: number }>();
 
@@ -867,18 +869,18 @@ async function validateFields<T extends typeof Model>(opts: {
             }
           }
 
-          getNestedValidatorsArray(model, _field).forEach(v => {
+          getNestedValidatorsArray(model, _property).forEach(v => {
             const key = v.getKey();
-            if (!fieldsValidatorsKeys.has(key)) {
-              fieldsValidators.push([v, on]);
-              fieldsValidatorsKeys.add(key);
+            if (!propertiesValidatorsKeys.has(key)) {
+              propertiesValidators.push([v, on]);
+              propertiesValidatorsKeys.add(key);
             }
           });
         }
       }
 
-      if (type === FieldTypes.ARRAY) {
-        const _field = field as Field<FieldTypes.ARRAY>;
+      if (type === PropertyTypes.ARRAY) {
+        const _property = property as Property<PropertyTypes.ARRAY>;
         const entries = on.map(i => [i, i.get(path, "validation")]).filter(e => Boolean(e[1])) as Array<
           [ModelInstance<T>, unknown]
         >;
@@ -888,40 +890,40 @@ async function validateFields<T extends typeof Model>(opts: {
           .filter(Boolean);
 
         if (values?.length) {
-          const validators = getArrayValidatorsArray(model, _field);
+          const validators = getArrayValidatorsArray(model, _property);
           const _on = entries.map(e => e[0]);
 
           validators.forEach(v => {
             const key = v.getKey();
-            if (!fieldsValidatorsKeys.has(key)) {
-              fieldsValidators.push([v, _on]);
-              fieldsValidatorsKeys.add(key);
+            if (!propertiesValidatorsKeys.has(key)) {
+              propertiesValidators.push([v, _on]);
+              propertiesValidatorsKeys.add(key);
             }
           });
 
-          const fields = getArrayItemsFieldsMap(model, _field);
-          await validateFields({
+          const properties = getArrayItemsPropertiesMap(model, _property);
+          await validateProperties({
             ...opts,
-            fields: Array.from(fields.values()),
+            properties: Array.from(properties.values()),
             on: _on,
           });
         }
       }
     } catch (err) {
-      let e: ValidationFieldError;
+      let e: ValidationPropertyError;
 
-      if (err instanceof ValidationFieldError) {
+      if (err instanceof ValidationPropertyError) {
         e = err;
       } else {
-        e = new ValidationFieldError({
-          slug: field.path.split(".").pop() as string,
-          field,
+        e = new ValidationPropertyError({
+          slug: property.path.split(".").pop() as string,
+          property,
           validationError: err instanceof ValidationError ? err : undefined,
           message: (err as Error)?.message,
         });
       }
 
-      errorsFieldsSet.add(e);
+      errorsPropertiesSet.add(e);
     }
   }
 }
@@ -975,7 +977,7 @@ async function validateValidators<T extends typeof Model>({
 
 /**
  * The `validateModel` function is a TypeScript function that validates a list of model instances
- * against their defined fields and validators, throwing a `ValidationError` if any errors are found.
+ * against their defined properties and validators, throwing a `ValidationError` if any errors are found.
  * @param {T} model - The `model` parameter is the type of the model that you want to validate. It
  * should be a subclass of the `Model` class.
  * @param list - The `list` parameter is an array of either `ModelInstance<T>` or `ModelData<T>`.
@@ -990,22 +992,22 @@ export const validateModel = async <T extends typeof Model>(
   list: Array<Partial<ModelData<T>> | ModelInstance<T>>,
   ctx?: TransactionCtx,
 ) => {
-  const errorsFieldsSet = new Set<ValidationFieldError>();
+  const errorsPropertiesSet = new Set<ValidationPropertyError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
-  const fieldsValidatorsKeys = new Set<string>();
-  const fieldsValidators: Array<[Validator, Array<ModelInstance<T>>]> = [];
+  const propertiesValidatorsKeys = new Set<string>();
+  const propertiesValidators: Array<[Validator, Array<ModelInstance<T>>]> = [];
 
   const instances = list.map(i => (i instanceof Model ? i : model.hydrate(i))) as Array<ModelInstance<T>>;
 
   const promises: Array<Promise<void>> = [
-    validateFields({
-      fields: getNestedFieldsArrayForModel(model),
+    validateProperties({
+      properties: getNestedPropertiesArrayForModel(model),
       on: instances,
       model,
       ctx,
-      errorsFieldsSet,
-      fieldsValidators,
-      fieldsValidatorsKeys,
+      errorsPropertiesSet,
+      propertiesValidators,
+      propertiesValidatorsKeys,
     }),
   ];
 
@@ -1023,18 +1025,18 @@ export const validateModel = async <T extends typeof Model>(
 
   await Promise.all(promises);
 
-  if (fieldsValidatorsKeys.size && !errorsFieldsSet.size && !errorsValidatorsSet.size) {
+  if (propertiesValidatorsKeys.size && !errorsPropertiesSet.size && !errorsValidatorsSet.size) {
     await validateValidators({
-      validators: fieldsValidators,
+      validators: propertiesValidators,
       model,
       ctx,
       errorsValidatorsSet,
     });
   }
 
-  if (errorsFieldsSet.size || errorsValidatorsSet.size) {
+  if (errorsPropertiesSet.size || errorsValidatorsSet.size) {
     throw new ValidationError({
-      fields: Array.from(errorsFieldsSet),
+      properties: Array.from(errorsPropertiesSet),
       validators: Array.from(errorsValidatorsSet),
       model: model.configuration.slug,
     });
@@ -1044,42 +1046,42 @@ export const validateModel = async <T extends typeof Model>(
 };
 
 /**
- * The `crossFields` function recursively iterates over fields in a model and calls a callback function
- * for each field.
- * @param opts - - `model`: The model object that contains the fields.
- * @param cb - The `cb` parameter is a callback function that takes a `field` parameter and returns
- * either `void` or a `Promise<void>`. This callback function is called for each field in the
- * `fieldsMap`.
- * @returns The function `crossFields` is returning itself.
+ * The `crossProperties` function recursively iterates over properties in a model and calls a callback function
+ * for each property.
+ * @param opts - - `model`: The model object that contains the properties.
+ * @param cb - The `cb` parameter is a callback function that takes a `property` parameter and returns
+ * either `void` or a `Promise<void>`. This callback function is called for each property in the
+ * `propertiesMap`.
+ * @returns The function `crossProperties` is returning itself.
  */
-export const crossFields = (
+export const crossProperties = (
   opts: {
     model: typeof Model;
-    fieldsMap?: Map<string, Field>;
+    propertiesMap?: Map<string, Property>;
   },
-  cb: (_field: Field) => void | Promise<void>,
+  cb: (_property: Property) => void | Promise<void>,
 ) => {
   const { model } = opts;
-  const fieldsMap = opts.fieldsMap || opts.model.fieldsMap;
+  const propertiesMap = opts.propertiesMap || opts.model.propertiesMap;
 
   const results: Array<void | Promise<void>> = [];
 
-  fieldsMap.forEach(field => {
-    results.push(cb(field));
+  propertiesMap.forEach(property => {
+    results.push(cb(property));
 
-    if (field.type === FieldTypes.ARRAY) {
-      crossFields(
+    if (property.type === PropertyTypes.ARRAY) {
+      crossProperties(
         {
           model,
-          fieldsMap: getArrayItemsFieldsMap(model, field as Field<FieldTypes.ARRAY>),
+          propertiesMap: getArrayItemsPropertiesMap(model, property as Property<PropertyTypes.ARRAY>),
         },
         cb,
       );
-    } else if (field.type === FieldTypes.OBJECT) {
-      crossFields(
+    } else if (property.type === PropertyTypes.OBJECT) {
+      crossProperties(
         {
           model,
-          fieldsMap: getNestedFieldsMap(model, field as Field<FieldTypes.OBJECT>),
+          propertiesMap: getNestedPropertiesMap(model, property as Property<PropertyTypes.OBJECT>),
         },
         cb,
       );
@@ -1094,14 +1096,14 @@ export const assignDatamodel = async <T extends typeof Model>(model: T, datamode
 
   model.configuration.realtime = Boolean(baseClass.configuration.realtime) || Boolean(datamodel?.realtime) || false;
 
-  const fields: FieldsDefinition = {};
+  const properties: PropertiesDefinition = {};
 
-  if (baseClass.configuration.fields) {
-    Object.assign(fields, baseClass.configuration.fields);
+  if (baseClass.configuration.properties) {
+    Object.assign(properties, baseClass.configuration.properties);
   }
 
-  if (datamodel?.fields) {
-    Object.assign(fields, datamodel.fields);
+  if (datamodel?.properties) {
+    Object.assign(properties, datamodel.properties);
   }
 
   const validators: ValidatorsDefinition = [];
@@ -1116,15 +1118,15 @@ export const assignDatamodel = async <T extends typeof Model>(model: T, datamode
 
   model.configuration = {
     ...model.configuration,
-    keyField: baseClass.configuration.keyField || datamodel?.keyField || undefined,
+    keyProperty: baseClass.configuration.keyProperty || datamodel?.keyProperty || undefined,
     single: datamodel?.single || false,
-    fields,
+    properties,
     validators,
   };
 
   model.__memo = {};
 
-  model.getAdapter(false)?.resetFieldsCache();
+  model.getAdapter(false)?.resetPropertiesCache();
 };
 
 export const getModelInitPromise = (
@@ -1170,9 +1172,9 @@ export const getModelInitPromise = (
   });
 };
 
-export const isValidFieldDefinition = (def: FieldDefinition) => {
-  if (def.type === FieldTypes.RELATION) {
-    const _def = def as FieldDefinitionGeneric<FieldTypes.RELATION>;
+export const isValidPropertyDefinition = (def: PropertyDefinition) => {
+  if (def.type === PropertyTypes.RELATION) {
+    const _def = def as PropertyDefinitionGeneric<PropertyTypes.RELATION>;
     if (!_def.options?.ref) {
       return false;
     }
@@ -1189,53 +1191,53 @@ export const validateDatamodel = (data: ModelJSON<typeof DataModel>, adapter?: A
     throw new Error(`model slug "${slug}" is reserved`);
   }
 
-  const fields = data?.fields;
+  const properties = data?.properties;
 
-  if (fields) {
-    const keys = Object.keys(fields || {});
+  if (properties) {
+    const keys = Object.keys(properties || {});
 
     if (keys.length > 100) {
-      throw new Error(`fields limit is 100`);
+      throw new Error(`properties limit is 100`);
     }
 
-    const regex = new RegExp(Patterns.FIELD);
+    const regex = new RegExp(Patterns.PROPERTY);
     for (const key of keys) {
       if (key in Model.prototype) {
-        throw new Error(`field name "${key}" is reserved`);
+        throw new Error(`property name "${key}" is reserved`);
       }
 
       if (!regex.test(key)) {
-        throw new Error(`invalid field name "${key}"`);
+        throw new Error(`invalid property name "${key}"`);
       }
     }
 
-    Object.entries(fields).forEach(([key, def]) => {
-      if (!isValidFieldDefinition(def as FieldDefinition)) {
-        throw new Error(`invalid definition for field "${key}"`);
+    Object.entries(properties).forEach(([key, def]) => {
+      if (!isValidPropertyDefinition(def as PropertyDefinition)) {
+        throw new Error(`invalid definition for property "${key}"`);
       }
     });
   }
 
-  const keyField = data?.keyField;
+  const keyProperty = data?.keyProperty;
 
-  if (keyField) {
-    const keyFieldField = fields?.[keyField];
+  if (keyProperty) {
+    const keyPropertyProperty = properties?.[keyProperty];
 
-    if (!keyFieldField) {
-      throw new Error(`keyField not found in fields`);
+    if (!keyPropertyProperty) {
+      throw new Error(`keyProperty not found in properties`);
     }
 
-    if (keyFieldField.type !== FieldTypes.TEXT) {
-      throw new Error(`keyField must be a text field`);
+    if (keyPropertyProperty.type !== PropertyTypes.TEXT) {
+      throw new Error(`keyProperty must be a text property`);
     }
 
     if (
-      typeof keyFieldField?.options === "object" &&
-      keyFieldField.options &&
-      "default" in keyFieldField.options &&
-      keyFieldField.options.default !== undefined
+      typeof keyPropertyProperty?.options === "object" &&
+      keyPropertyProperty.options &&
+      "default" in keyPropertyProperty.options &&
+      keyPropertyProperty.options.default !== undefined
     ) {
-      throw new Error(`keyField must not have a default value`);
+      throw new Error(`keyProperty must not have a default value`);
     }
   }
 
@@ -1246,7 +1248,7 @@ export const validateDatamodel = (data: ModelJSON<typeof DataModel>, adapter?: A
  * The function `getValidationValues` returns an array of values for a given path in a list of model instances.
  * The values are flattened and filtered out any falsy values to simplify the validation process.
  * @param list - The `list` parameter is an array of model instances.
- * @param path - The `path` parameter is a string that represents the path to the field.
+ * @param path - The `path` parameter is a string that represents the path to the property.
  * @returns The function `getValidationValues` returns an array of values from a given list to test on a specific path.
  */
 export const getValidationValues = (list: Array<ModelInstance<typeof Model>>, path: string) => {
@@ -1263,7 +1265,7 @@ export const getValidationValues = (list: Array<ModelInstance<typeof Model>>, pa
     values = values.flat(level);
   }
 
-  values = values.filter(v => v !== FieldObject.symbolIgnore);
+  values = values.filter(v => v !== PropertyObject.symbolIgnore);
 
   return values;
 };

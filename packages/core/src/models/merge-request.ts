@@ -1,6 +1,6 @@
 import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
+import { PropertyTypes } from "@/enums/property-types.js";
 import { Job } from "@/models/job.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { MergeRequestTypes } from "@/enums/merge-request-types.js";
@@ -13,49 +13,49 @@ export class MergeRequest extends Model {
     blockMultipleOperations: true,
     realtime: true,
     loadDatamodel: false,
-    keyField: "slug",
-    fields: {
-      slug: { type: FieldTypes.TEXT },
+    keyProperty: "slug",
+    properties: {
+      slug: { type: PropertyTypes.TEXT },
       type: {
-        type: FieldTypes.ENUM,
+        type: PropertyTypes.ENUM,
         options: {
           enum: Object.values(MergeRequestTypes),
           default: MergeRequestTypes.STATIC,
         },
       },
       options: {
-        type: FieldTypes.OBJECT,
+        type: PropertyTypes.OBJECT,
         options: {
-          fields: {
+          properties: {
             source: {
-              type: FieldTypes.TEXT,
+              type: PropertyTypes.TEXT,
             },
             query: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
             },
             gdx: {
-              type: FieldTypes.OBJECT,
+              type: PropertyTypes.OBJECT,
             },
           },
         },
       },
-      target: { type: FieldTypes.TEXT },
+      target: { type: PropertyTypes.TEXT },
       _closed: {
-        type: FieldTypes.BOOLEAN,
+        type: PropertyTypes.BOOLEAN,
         options: {
           default: false,
         },
       },
       _job: {
-        type: FieldTypes.RELATION,
+        type: PropertyTypes.RELATION,
         options: {
           ref: Job.configuration.slug,
         },
       },
     },
     validators: [
-      { type: ValidatorTypes.REQUIRED, options: { field: "options" } },
-      { type: ValidatorTypes.REQUIRED, options: { field: "target" } },
+      { type: ValidatorTypes.REQUIRED, options: { property: "options" } },
+      { type: ValidatorTypes.REQUIRED, options: { property: "target" } },
     ],
   });
 }

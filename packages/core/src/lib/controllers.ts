@@ -81,7 +81,7 @@ export const controllerAccountPendingEmail: Controller<{ params: { id: string } 
 
 export const controllerGdxPull: Controller<{
   query?: {
-    includeSystemFields?: boolean;
+    includeSystemProperties?: boolean;
     omitMeta?: boolean;
   };
   data?: Record<string, JSONQuery | true>;

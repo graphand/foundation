@@ -1,7 +1,7 @@
 import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
-import { FieldTypes } from "@/enums/field-types.js";
-import { FieldsRestriction, ModelInstance, Rule } from "@/types/index.js";
+import { PropertyTypes } from "@/enums/property-types.js";
+import { PropertiesRestriction, ModelInstance, Rule } from "@/types/index.js";
 import { RuleActions } from "@/enums/rule-actions.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Patterns } from "@/enums/patterns.js";
@@ -14,18 +14,18 @@ export class Role extends Model {
     isEnvironmentScoped: true,
     realtime: true,
     loadDatamodel: false,
-    keyField: "slug",
-    fields: {
-      slug: { type: FieldTypes.TEXT },
+    keyProperty: "slug",
+    properties: {
+      slug: { type: PropertyTypes.TEXT },
       _admin: {
-        type: FieldTypes.BOOLEAN,
+        type: PropertyTypes.BOOLEAN,
         options: { default: false },
       },
       inherits: {
-        type: FieldTypes.ARRAY,
+        type: PropertyTypes.ARRAY,
         options: {
           items: {
-            type: FieldTypes.RELATION,
+            type: PropertyTypes.RELATION,
             options: {
               ref: "roles",
             },
@@ -33,21 +33,21 @@ export class Role extends Model {
         },
       },
       rules: {
-        type: FieldTypes.ARRAY,
+        type: PropertyTypes.ARRAY,
         options: {
           items: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
               strict: true,
-              fields: {
+              properties: {
                 ref: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
                 actions: {
-                  type: FieldTypes.ARRAY,
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.ENUM,
+                      type: PropertyTypes.ENUM,
                       options: {
                         enum: Object.values(RuleActions),
                       },
@@ -55,32 +55,32 @@ export class Role extends Model {
                   },
                 },
                 filter: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                 },
                 prohibition: {
-                  type: FieldTypes.BOOLEAN,
+                  type: PropertyTypes.BOOLEAN,
                 },
               },
             },
           },
         },
       },
-      fieldsRestrictions: {
-        type: FieldTypes.ARRAY,
+      propertiesRestrictions: {
+        type: PropertyTypes.ARRAY,
         options: {
           items: {
-            type: FieldTypes.OBJECT,
+            type: PropertyTypes.OBJECT,
             options: {
               strict: true,
-              fields: {
+              properties: {
                 ref: {
-                  type: FieldTypes.TEXT,
+                  type: PropertyTypes.TEXT,
                 },
                 actions: {
-                  type: FieldTypes.ARRAY,
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.ENUM,
+                      type: PropertyTypes.ENUM,
                       options: {
                         enum: Object.values(RuleActions),
                       },
@@ -88,18 +88,18 @@ export class Role extends Model {
                   },
                 },
                 filter: {
-                  type: FieldTypes.OBJECT,
+                  type: PropertyTypes.OBJECT,
                 },
-                fields: {
-                  type: FieldTypes.ARRAY,
+                properties: {
+                  type: PropertyTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.TEXT,
+                      type: PropertyTypes.TEXT,
                     },
                   },
                 },
-                inverseFields: {
-                  type: FieldTypes.BOOLEAN,
+                inverseProperties: {
+                  type: PropertyTypes.BOOLEAN,
                   options: { default: false },
                 },
               },
@@ -111,7 +111,7 @@ export class Role extends Model {
     validators: [
       {
         type: ValidatorTypes.REGEX,
-        options: { field: "slug", pattern: Patterns.SLUG },
+        options: { property: "slug", pattern: Patterns.SLUG },
       },
     ],
   });
@@ -131,20 +131,20 @@ export class Role extends Model {
     return rules;
   }
 
-  async getFieldsRestrictionsInherited(): Promise<Array<FieldsRestriction>> {
+  async getPropertiesRestrictionsInherited(): Promise<Array<PropertiesRestriction>> {
     const i = this as ModelInstance<typeof Role>;
-    let fieldsRestrictions = i.fieldsRestrictions || [];
+    let propertiesRestrictions = i.propertiesRestrictions || [];
 
     const inheritedRoles = await i.inherits;
 
     if (inheritedRoles?.length) {
-      const rolesFieldsRestrictions = await Promise.all(
-        inheritedRoles.map(role => role.getFieldsRestrictionsInherited()),
+      const rolesPropertiesRestrictions = await Promise.all(
+        inheritedRoles.map(role => role.getPropertiesRestrictionsInherited()),
       );
 
-      fieldsRestrictions = [...fieldsRestrictions, ...rolesFieldsRestrictions.flat()];
+      propertiesRestrictions = [...propertiesRestrictions, ...rolesPropertiesRestrictions.flat()];
     }
 
-    return fieldsRestrictions;
+    return propertiesRestrictions;
   }
 }
