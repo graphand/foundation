@@ -77,6 +77,7 @@ export class DataModel extends Model {
                       additionalProperties: { type: PropertyTypes.OBJECT },
                       conditionalProperties: { type: PropertyTypes.OBJECT },
                       properties: { type: PropertyTypes.OBJECT },
+                      required: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.TEXT } } },
                     },
                     conditionalProperties: {
                       dependsOn: "$.type",
@@ -166,6 +167,12 @@ export class DataModel extends Model {
               ],
             },
           },
+        },
+      },
+      required: {
+        type: PropertyTypes.ARRAY,
+        options: {
+          items: { type: PropertyTypes.TEXT },
         },
       },
       single: {

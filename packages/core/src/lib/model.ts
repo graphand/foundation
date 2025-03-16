@@ -54,7 +54,7 @@ export type TModelConfiguration<TSlug extends string = string> = {
   type?: "object";
   blockMultipleOperations?: boolean;
   freeMode?: boolean;
-  properties?: PropertiesDefinition | null;
+  properties?: PropertiesDefinition;
   keyProperty?: string;
   single?: boolean | null;
   validators?: ValidatorsDefinition;
