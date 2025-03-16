@@ -11,7 +11,7 @@ describe("EventSubscription Model", () => {
 
   it("should be able to create a simple event subscription", async () => {
     await EventSubscriptionModel.create({
-      slug: generateRandomString(),
+      slug: faker.random.alphaNumeric(10),
       filter: { _id: { $exists: true } },
       channels: [
         {
@@ -26,7 +26,7 @@ describe("EventSubscription Model", () => {
 
     await expect(
       EventSubscriptionModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         filter: { _id: { $exists: true } },
         channels: [
           {
@@ -41,7 +41,7 @@ describe("EventSubscription Model", () => {
   it("should validate the event subscription filter", async () => {
     await expect(
       EventSubscriptionModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         // @ts-ignore
         filter: "foo",
       }),
@@ -52,7 +52,7 @@ describe("EventSubscription Model", () => {
     it("should reject when channels array is empty", async () => {
       await expect(
         EventSubscriptionModel.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           channels: [],
         }),
       ).rejects.toThrow(ValidationError);
@@ -61,7 +61,7 @@ describe("EventSubscription Model", () => {
     it("should reject when channel is invalid", async () => {
       await expect(
         EventSubscriptionModel.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           channels: [
             {
               channel: "invalid" as SubscriptionChannels,
@@ -75,7 +75,7 @@ describe("EventSubscription Model", () => {
       it("should reject when email channel is provided without options", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.EMAIL,
@@ -88,7 +88,7 @@ describe("EventSubscription Model", () => {
       it("should reject when email channel is provided with empty options", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.EMAIL,
@@ -102,7 +102,7 @@ describe("EventSubscription Model", () => {
       it("should reject when email value is not a valid email", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.EMAIL,
@@ -118,7 +118,7 @@ describe("EventSubscription Model", () => {
       it("should resolve when email channel is provided with a valid email", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.EMAIL,
@@ -136,7 +136,7 @@ describe("EventSubscription Model", () => {
       it("should reject when account channel is provided without options", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.ACCOUNT,
@@ -149,7 +149,7 @@ describe("EventSubscription Model", () => {
       it("should reject when account ID is invalid", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.ACCOUNT,
@@ -165,7 +165,7 @@ describe("EventSubscription Model", () => {
       it("should resolve when account channel is provided with a valid account ID", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.ACCOUNT,
@@ -181,7 +181,7 @@ describe("EventSubscription Model", () => {
       it("should resolve when account channel is provided with an account property", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.ACCOUNT,
@@ -199,7 +199,7 @@ describe("EventSubscription Model", () => {
       it("should reject when role channel is provided without options", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.ROLE,
@@ -212,7 +212,7 @@ describe("EventSubscription Model", () => {
       it("should reject when role channel is provided with empty options", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.ROLE,
@@ -226,7 +226,7 @@ describe("EventSubscription Model", () => {
       it("should reject when role ID is invalid", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.ROLE,
@@ -242,7 +242,7 @@ describe("EventSubscription Model", () => {
       it("should resolve when role channel is provided with a valid role ID", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.ROLE,
@@ -260,7 +260,7 @@ describe("EventSubscription Model", () => {
       it("should reject when slack channel is provided without options", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.SLACK,
@@ -273,7 +273,7 @@ describe("EventSubscription Model", () => {
       it("should reject when slack channel is provided with empty options", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.SLACK,
@@ -287,7 +287,7 @@ describe("EventSubscription Model", () => {
       it("should reject when webhook URL for slack is invalid", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.SLACK,
@@ -303,7 +303,7 @@ describe("EventSubscription Model", () => {
       it("should resolve when slack channel is provided with a valid webhook URL", async () => {
         await expect(
           EventSubscriptionModel.create({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             channels: [
               {
                 channel: SubscriptionChannels.SLACK,

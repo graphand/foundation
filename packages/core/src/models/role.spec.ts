@@ -1,6 +1,7 @@
 import { Role } from "@/models/role.js";
 import { RuleActions } from "@/enums/rule-actions.js";
-import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.js";
+import { mockAdapter } from "@/lib/test-utils.dev.js";
+import { faker } from "@faker-js/faker";
 
 describe("Role Model", () => {
   const adapter = mockAdapter();
@@ -9,7 +10,7 @@ describe("Role Model", () => {
   it("should be able to create a simple role", async () => {
     await expect(
       RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         rules: [{ ref: "test", actions: [RuleActions.CREATE] }],
       }),
     ).resolves.toBeInstanceOf(RoleModel);
@@ -18,7 +19,7 @@ describe("Role Model", () => {
   describe("getRulesInherited", () => {
     it("should return own rules if no inherited roles", async () => {
       const instance = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         rules: [{ ref: "test", actions: [RuleActions.CREATE] }],
       });
 
@@ -28,17 +29,17 @@ describe("Role Model", () => {
 
     it("should return combined rules from inherited roles", async () => {
       const inheritedRole1 = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         rules: [{ ref: "inherited1", actions: [RuleActions.CREATE] }],
       });
 
       const inheritedRole2 = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         rules: [{ ref: "inherited2", actions: [RuleActions.UPDATE] }],
       });
 
       const instance = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         rules: [{ ref: "test", actions: [RuleActions.DELETE] }],
         inherits: [inheritedRole1._id as string, inheritedRole2._id as string],
       });
@@ -53,18 +54,18 @@ describe("Role Model", () => {
 
     it("should return combined rules from inherited roles recursively", async () => {
       const inheritedRole1 = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         rules: [{ ref: "inherited1", actions: [RuleActions.CREATE] }],
       });
 
       const inheritedRole2 = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         rules: [{ ref: "inherited2", actions: [RuleActions.UPDATE] }],
         inherits: [inheritedRole1._id as string],
       });
 
       const instance = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         rules: [{ ref: "test", actions: [RuleActions.DELETE] }],
         inherits: [inheritedRole2._id as string],
       });
@@ -81,7 +82,7 @@ describe("Role Model", () => {
   describe("getPropertiesRestrictionsInherited", () => {
     it("should return own propertiesRestrictions if no inherited roles", async () => {
       const instance = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         propertiesRestrictions: [{ ref: "test", actions: [RuleActions.CREATE] }],
       });
 
@@ -91,17 +92,17 @@ describe("Role Model", () => {
 
     it("should return combined propertiesRestrictions from inherited roles", async () => {
       const inheritedRole1 = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         propertiesRestrictions: [{ ref: "inherited1", actions: [RuleActions.CREATE] }],
       });
 
       const inheritedRole2 = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         propertiesRestrictions: [{ ref: "inherited2", actions: [RuleActions.UPDATE] }],
       });
 
       const instance = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         propertiesRestrictions: [{ ref: "test", actions: [RuleActions.DELETE] }],
         inherits: [inheritedRole1._id as string, inheritedRole2._id as string],
       });
@@ -116,18 +117,18 @@ describe("Role Model", () => {
 
     it("should return combined propertiesRestrictions from inherited roles recursively", async () => {
       const inheritedRole1 = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         propertiesRestrictions: [{ ref: "inherited1", actions: [RuleActions.CREATE] }],
       });
 
       const inheritedRole2 = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         propertiesRestrictions: [{ ref: "inherited2", actions: [RuleActions.UPDATE] }],
         inherits: [inheritedRole1._id as string],
       });
 
       const instance = await RoleModel.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         propertiesRestrictions: [{ ref: "test", actions: [RuleActions.DELETE] }],
         inherits: [inheritedRole2._id as string],
       });

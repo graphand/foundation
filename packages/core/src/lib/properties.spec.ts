@@ -144,7 +144,7 @@ describe("test properties", () => {
       const model = DataModel.extend({ adapterClass: adapter });
 
       const i = await model.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         properties: {
           test: {
             type: PropertyTypes.OBJECT,

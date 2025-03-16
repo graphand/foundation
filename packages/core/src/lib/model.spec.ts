@@ -183,7 +183,7 @@ describe("Test Model", () => {
       const base = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             loadDatamodel: true,
           });
         },
@@ -235,8 +235,8 @@ describe("Test Model", () => {
 
     it("Model.keyProperty is not overriden by datamodel if declared in inherited class", async () => {
       const adapter = mockAdapter();
-      const slug1 = generateRandomString();
-      const slug2 = generateRandomString();
+      const slug1 = faker.random.alphaNumeric(10);
+      const slug2 = faker.random.alphaNumeric(10);
       const model = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
@@ -1914,7 +1914,7 @@ describe("Test Model", () => {
     it("should load properties from datamodel", async () => {
       const adapter = mockAdapter();
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         properties: {
           property1: {
             type: PropertyTypes.TEXT,
@@ -1952,7 +1952,7 @@ describe("Test Model", () => {
     it("should load properties from single datamodel", async () => {
       const adapter = mockAdapter();
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         single: true,
         properties: {
           property1: {
@@ -1990,7 +1990,7 @@ describe("Test Model", () => {
     it("should support for keyProperty change", async () => {
       const adapter = mockAdapter();
       const dm = await DataModel.extend({ adapterClass: adapter }).create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         keyProperty: "property1",
         properties: {
           property1: {
@@ -2058,13 +2058,13 @@ describe("Test Model", () => {
       const model = mockModel();
       model.adapterClass = adapterGlobal;
       const model1 = model.extend({ adapterClass: adapter1 });
-      model1.configuration.slug = generateRandomString();
+      model1.configuration.slug = faker.random.alphaNumeric(10);
       const model2 = model.extend({ adapterClass: adapter2 });
-      model2.configuration.slug = generateRandomString();
+      model2.configuration.slug = faker.random.alphaNumeric(10);
       const model3 = class extends model2 {};
-      model3.configuration.slug = generateRandomString();
+      model3.configuration.slug = faker.random.alphaNumeric(10);
       const model4 = model3.extend({ adapterClass: adapter1 });
-      model4.configuration.slug = generateRandomString();
+      model4.configuration.slug = faker.random.alphaNumeric(10);
 
       expect(model.getAdapter()?.base).toBe(adapterGlobal);
       expect(model1.getAdapter()?.base).toBe(adapter1);
@@ -2092,7 +2092,7 @@ describe("Test Model", () => {
   describe("Model getClass", () => {
     it("should return the same model & initialize once with multiple model get", async () => {
       const adapter = mockAdapter();
-      const slug = generateRandomString();
+      const slug = faker.random.alphaNumeric(10);
       await DataModel.extend({ adapterClass: adapter }).create({ slug });
 
       const model = Model.getClass(slug, adapter);
@@ -2111,7 +2111,7 @@ describe("Test Model", () => {
     });
 
     it("should throw error at initializing if no adapter", async () => {
-      const slug = generateRandomString();
+      const slug = faker.random.alphaNumeric(10);
 
       const model = Model.getClass(slug);
 
@@ -2120,7 +2120,7 @@ describe("Test Model", () => {
 
     it("should not throw error at initializing if datamodel exists", async () => {
       const adapter = mockAdapter();
-      const slug = generateRandomString();
+      const slug = faker.random.alphaNumeric(10);
       await DataModel.extend({ adapterClass: adapter }).create({ slug });
 
       const model = Model.getClass(slug).extend({ adapterClass: adapter });
@@ -2130,7 +2130,7 @@ describe("Test Model", () => {
 
     it("should not throw error at initializing if datamodel doesn't exists", async () => {
       const adapter = mockAdapter();
-      const slug = generateRandomString();
+      const slug = faker.random.alphaNumeric(10);
 
       const model = Model.getClass(slug).extend({ adapterClass: adapter });
 
@@ -2149,7 +2149,7 @@ describe("Test Model", () => {
 
     it("should return same model from slug and from datamodel instance with same adapter", async () => {
       const adapter = mockAdapter();
-      const slug = generateRandomString();
+      const slug = faker.random.alphaNumeric(10);
 
       const datamodel = DataModel.hydrate({ slug });
 
@@ -2161,7 +2161,7 @@ describe("Test Model", () => {
 
     it("should return different models from slug and from datamodel instance with different adapters", async () => {
       const adapter = mockAdapter();
-      const slug = generateRandomString();
+      const slug = faker.random.alphaNumeric(10);
 
       const datamodel = DataModel.hydrate({ slug });
 
@@ -2173,7 +2173,7 @@ describe("Test Model", () => {
 
     it("should return different models from slugs with different adapters", async () => {
       const adapter = mockAdapter();
-      const slug = generateRandomString();
+      const slug = faker.random.alphaNumeric(10);
 
       const modelFromDM = Model.getClass(slug);
       const modelFromSlug = Model.getClass(slug, adapter);
@@ -2184,8 +2184,8 @@ describe("Test Model", () => {
     it("should cache class on adapter by slug and use these models in relation properties", async () => {
       const adapter = mockAdapter();
 
-      const slug1 = generateRandomString();
-      const slug2 = generateRandomString();
+      const slug1 = faker.random.alphaNumeric(10);
+      const slug2 = faker.random.alphaNumeric(10);
 
       await DataModel.extend({ adapterClass: adapter }).createMultiple([
         {
@@ -2236,8 +2236,8 @@ describe("Test Model", () => {
     it("should cache class on adapter by slug and use these models in relation properties", async () => {
       const adapter = mockAdapter();
 
-      const slug1 = generateRandomString();
-      const slug2 = generateRandomString();
+      const slug1 = faker.random.alphaNumeric(10);
+      const slug2 = faker.random.alphaNumeric(10);
 
       await DataModel.extend({ adapterClass: adapter }).createMultiple([
         {
@@ -2295,8 +2295,8 @@ describe("Test Model", () => {
     it("should cache class on adapter by slug and use these models in array relation properties", async () => {
       const adapter = mockAdapter();
 
-      const slug1 = generateRandomString();
-      const slug2 = generateRandomString();
+      const slug1 = faker.random.alphaNumeric(10);
+      const slug2 = faker.random.alphaNumeric(10);
 
       await DataModel.extend({ adapterClass: adapter }).createMultiple([
         {
@@ -2585,7 +2585,7 @@ describe("Test Model", () => {
   });
 
   it("should reloadModel only if needed", async () => {
-    const slug = generateRandomString();
+    const slug = faker.random.alphaNumeric(10);
     const adapter = mockAdapter();
 
     const dm = await DataModel.extend({ adapterClass: adapter }).create({
@@ -2646,7 +2646,7 @@ describe("Test Model", () => {
       const TestModel = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             realtime: true,
           });
         },
@@ -2661,7 +2661,7 @@ describe("Test Model", () => {
       const TestModel = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             realtime: true,
           });
         },
@@ -2673,7 +2673,7 @@ describe("Test Model", () => {
 
     it("should get realtime flag from datamodel", async () => {
       const adapter = mockAdapter();
-      const slug = generateRandomString();
+      const slug = faker.random.alphaNumeric(10);
 
       await DataModel.extend({ adapterClass: adapter }).create({
         slug,
@@ -2696,7 +2696,7 @@ describe("Test Model", () => {
       const TestModel = modelDecorator()(
         class extends Model {
           static configuration = defineConfiguration({
-            slug: generateRandomString(),
+            slug: faker.random.alphaNumeric(10),
             realtime: false,
             loadDatamodel: true,
           });

@@ -5,7 +5,7 @@ import { PromiseModel } from "./lib/promise-model.js";
 import { Account } from "./models/account.js";
 import { Role } from "./models/role.js";
 import { defineConfiguration } from "@/lib/model.js";
-import { generateRandomString } from "@/lib/test-utils.dev.js";
+import { faker } from "@faker-js/faker";
 
 declare module "./index.js" {
   export interface SerializerPropertiesMap<
@@ -60,7 +60,7 @@ describe("test types", () => {
     it("utils should work", () => {
       class CustomModel extends Model {
         static configuration = defineConfiguration({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             title: {
               type: PropertyTypes.TEXT,
@@ -88,7 +88,7 @@ describe("test types", () => {
         it("should validate text property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
-              slug: generateRandomString(),
+              slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.TEXT,
@@ -107,7 +107,7 @@ describe("test types", () => {
         it("should validate nested property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
-              slug: generateRandomString(),
+              slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.OBJECT,
@@ -130,7 +130,7 @@ describe("test types", () => {
         it("should respect options.strict", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
-              slug: generateRandomString(),
+              slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.OBJECT,
@@ -155,7 +155,7 @@ describe("test types", () => {
         it("should validate relation property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
-              slug: generateRandomString(),
+              slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.RELATION,
@@ -175,7 +175,7 @@ describe("test types", () => {
         it("should validate date property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
-              slug: generateRandomString(),
+              slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.DATE,
@@ -194,7 +194,7 @@ describe("test types", () => {
         it("should validate integer property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
-              slug: generateRandomString(),
+              slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.INTEGER,
@@ -218,7 +218,7 @@ describe("test types", () => {
         it("should validate enum property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
-              slug: generateRandomString(),
+              slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.ENUM,
@@ -245,7 +245,7 @@ describe("test types", () => {
         it("should validate date property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
-              slug: generateRandomString(),
+              slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.DATE,
@@ -269,7 +269,7 @@ describe("test types", () => {
         it("should validate relation property", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
-              slug: generateRandomString(),
+              slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.RELATION,
@@ -293,7 +293,7 @@ describe("test types", () => {
         it("should validate array of relation", () => {
           class CustomModel extends Model {
             static configuration = defineConfiguration({
-              slug: generateRandomString(),
+              slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.ARRAY,

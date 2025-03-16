@@ -470,7 +470,7 @@ describe("test validators", () => {
   describe("datamodelKeyProperty validator", () => {
     it("datamodel without keyProperty should not throw error", async () => {
       const datamodel = DataModel_.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
             type: PropertyTypes.TEXT,
@@ -483,7 +483,7 @@ describe("test validators", () => {
 
     it("datamodel with keyProperty and valid keyProperty property should not throw error", async () => {
       const datamodel = DataModel_.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         keyProperty: "title",
         properties: {
           title: {
@@ -497,7 +497,7 @@ describe("test validators", () => {
 
     it("datamodel with keyProperty and not existing property should throw error", async () => {
       const datamodel = DataModel_.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         keyProperty: "title",
       });
 
@@ -506,7 +506,7 @@ describe("test validators", () => {
 
     it("datamodel with keyProperty and invalid keyProperty property should throw error", async () => {
       const datamodel1 = DataModel_.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         keyProperty: "test",
         properties: {
           title: {
@@ -518,7 +518,7 @@ describe("test validators", () => {
       await expect(datamodel1).rejects.toBeInstanceOf(ValidationError);
 
       const datamodel2 = DataModel_.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         keyProperty: "title",
         properties: {
           title: {
@@ -533,7 +533,7 @@ describe("test validators", () => {
       await expect(datamodel2).rejects.toBeInstanceOf(ValidationError);
 
       const datamodel3 = DataModel_.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         keyProperty: "title",
         properties: {
           title: {
@@ -549,7 +549,7 @@ describe("test validators", () => {
   describe("datamodelDefinition validator", () => {
     it("datamodel with invalid property name should throw error", async () => {
       const datamodel = DataModel_.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         properties: {
           "invalid name": {
             type: PropertyTypes.TEXT,
@@ -562,7 +562,7 @@ describe("test validators", () => {
 
     it("datamodel with invalid property type should throw error", async () => {
       const datamodel = DataModel_.create({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
             // @ts-expect-error invalid type
@@ -577,7 +577,7 @@ describe("test validators", () => {
     it("datamodel with valid property name should not throw", async () => {
       await expect(
         DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             validname: {
               type: PropertyTypes.TEXT,
@@ -588,7 +588,7 @@ describe("test validators", () => {
 
       await expect(
         DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             "valid:name": {
               type: PropertyTypes.TEXT,
@@ -599,7 +599,7 @@ describe("test validators", () => {
 
       await expect(
         DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             "valid-name": {
               type: PropertyTypes.TEXT,
@@ -610,7 +610,7 @@ describe("test validators", () => {
 
       await expect(
         DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             valid_name: {
               type: PropertyTypes.TEXT,
@@ -623,7 +623,7 @@ describe("test validators", () => {
     it("datamodel with invalid property name should throw error", async () => {
       await expect(
         DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             "invalid name": {
               type: PropertyTypes.TEXT,
@@ -634,7 +634,7 @@ describe("test validators", () => {
 
       await expect(
         DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             "invalid.name": {
               type: PropertyTypes.TEXT,
@@ -645,7 +645,7 @@ describe("test validators", () => {
 
       await expect(
         DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             "invalid!name": {
               type: PropertyTypes.TEXT,
@@ -656,7 +656,7 @@ describe("test validators", () => {
 
       await expect(
         DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             _invalidName: {
               type: PropertyTypes.TEXT,
@@ -669,7 +669,7 @@ describe("test validators", () => {
     it("datamodel with property name as reserved keyword should throw error", async () => {
       const _create = async (properties: ModelJSON<typeof DataModel>["properties"]) => {
         return DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties,
         });
       };
@@ -711,7 +711,7 @@ describe("test validators", () => {
       const propertyName = "a".repeat(101);
       await expect(
         DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             [propertyName]: {
               type: PropertyTypes.TEXT,
@@ -731,7 +731,7 @@ describe("test validators", () => {
         }
 
         return DataModel_.create({
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties,
         });
       };

@@ -1,16 +1,17 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { ValidationError } from "@/lib/validation-error.js";
-import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.js";
+import { mockAdapter } from "@/lib/test-utils.dev.js";
 import { DataModel } from "@/models/data-model.js";
 import { Environment } from "@/models/environment.js";
 import { Media } from "@/models/media.js";
 import { defineConfiguration, Model } from "@/lib/model.js";
 import { Adapter, Property, PropertyObject } from "./index.js";
+import { faker } from "@faker-js/faker";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid properties", async () => {
-    const slug = generateRandomString();
+    const slug = faker.random.alphaNumeric(10);
     const adapter = mockAdapter();
 
     const model = DataModel.extend({ adapterClass: adapter });
@@ -67,7 +68,7 @@ describe("Global tests", () => {
   });
 
   it("should not be able to create datamodel with invalid validators", async () => {
-    const slug = generateRandomString();
+    const slug = faker.random.alphaNumeric(10);
     const adapter = mockAdapter();
 
     const model = DataModel.extend({ adapterClass: adapter });
@@ -94,7 +95,7 @@ describe("Global tests", () => {
   });
 
   it("should not be able to create datamodel with more than 100 hooks for an event", async () => {
-    const slug = generateRandomString();
+    const slug = faker.random.alphaNumeric(10);
     const adapter = mockAdapter();
 
     const model = DataModel.extend({ adapterClass: adapter });
@@ -135,7 +136,7 @@ describe("Global tests", () => {
   });
 
   it("should be able to validate complex documents", async () => {
-    const slug = generateRandomString();
+    const slug = faker.random.alphaNumeric(10);
     const adapter = mockAdapter();
 
     const model = DataModel.extend({ adapterClass: adapter });
@@ -204,7 +205,7 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
     const model = class extends Model {
       static configuration = defineConfiguration({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
@@ -262,7 +263,7 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
     const model = class extends Model {
       static configuration = defineConfiguration({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
@@ -325,7 +326,7 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
     const model = class extends Model {
       static configuration = defineConfiguration({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
@@ -502,7 +503,7 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
     const model = class extends Model {
       static configuration = defineConfiguration({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         properties: {
           obj: {
             type: PropertyTypes.OBJECT,
@@ -702,7 +703,7 @@ describe("Global tests", () => {
     await expect(
       DM.validate([
         {
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           keyProperty: "title",
           properties: {
             title: {
@@ -714,7 +715,7 @@ describe("Global tests", () => {
           },
         },
         {
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
         },
       ]),
     ).resolves.toBeTruthy();
@@ -722,7 +723,7 @@ describe("Global tests", () => {
     await expect(
       DM.validate([
         {
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           keyProperty: "title",
           properties: {
             title: {
@@ -737,7 +738,7 @@ describe("Global tests", () => {
           ],
         },
         {
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {},
         },
       ]),
@@ -746,7 +747,7 @@ describe("Global tests", () => {
     await expect(
       DM.validate([
         {
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           keyProperty: "title",
           properties: {
             title: {
@@ -761,7 +762,7 @@ describe("Global tests", () => {
           ],
         },
         {
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {},
           validators: [],
         },
@@ -817,7 +818,7 @@ describe("Global tests", () => {
     await expect(
       DM.validate([
         {
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             "invalid name": {
               type: PropertyTypes.TEXT,
@@ -830,7 +831,7 @@ describe("Global tests", () => {
     await expect(
       DM.validate([
         {
-          slug: generateRandomString(),
+          slug: faker.random.alphaNumeric(10),
           properties: {
             _invalidName: {
               type: PropertyTypes.TEXT,
@@ -844,7 +845,7 @@ describe("Global tests", () => {
   it("should be able to update model properties", async () => {
     const adapter = mockAdapter();
 
-    const slug = generateRandomString();
+    const slug = faker.random.alphaNumeric(10);
     const dm = await DataModel.extend({ adapterClass: adapter }).create({
       slug,
       properties: {
@@ -924,7 +925,7 @@ describe("Global tests", () => {
 
     const CustomModel = class extends Model {
       static configuration = defineConfiguration({
-        slug: generateRandomString(),
+        slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
             type: PropertyTypes.OBJECT,

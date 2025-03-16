@@ -7,6 +7,7 @@ import { definePropertiesObject, isObjectId } from "@/lib/utils.js";
 import { Validator } from "@/lib/validator.js";
 import { ObjectId } from "bson";
 import { modelDecorator } from "@/lib/model-decorator.js";
+import { faker } from "@faker-js/faker";
 
 const cache: Map<typeof Model, Set<ModelInstance<typeof Model>>> = new Map();
 
@@ -204,7 +205,7 @@ export const mockAdapter = ({
 };
 
 export const mockModel = <const C extends TModelConfiguration>(conf?: C): typeof Model & { configuration: C } => {
-  conf ??= { slug: generateRandomString() } as C;
+  conf ??= { slug: faker.random.alphaNumeric(10) } as C;
   return modelDecorator()(
     class extends Model {
       static configuration = defineConfiguration(conf as C);
@@ -216,8 +217,4 @@ export const mockModel = <const C extends TModelConfiguration>(conf?: C): typeof
       }
     },
   );
-};
-
-export const generateRandomString = () => {
-  return "a" + Math.random().toString(36).substring(7);
 };
