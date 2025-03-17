@@ -3,7 +3,6 @@ import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { Job } from "./job.js";
 import { Role } from "./role.js";
-import { ValidatorTypes } from "@/enums/validator-types.js";
 
 @modelDecorator()
 export class Function extends Model {
@@ -41,11 +40,6 @@ export class Function extends Model {
       _checksum: { type: PropertyTypes.TEXT },
       _size: { type: PropertyTypes.INTEGER },
     },
-    validators: [
-      {
-        type: ValidatorTypes.REQUIRED,
-        property: "name",
-      },
-    ],
+    required: ["name"],
   });
 }

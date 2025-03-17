@@ -1,7 +1,6 @@
 import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
-import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Function } from "./function.js";
 import { Job } from "./job.js";
 
@@ -53,9 +52,6 @@ export class Connector extends Model {
         ref: Job.configuration.slug,
       },
     },
-    validators: [
-      { type: ValidatorTypes.REQUIRED, property: "function" },
-      { type: ValidatorTypes.REQUIRED, property: "source" },
-    ],
+    required: ["function", "source"],
   });
 }

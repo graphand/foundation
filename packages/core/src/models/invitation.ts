@@ -19,12 +19,7 @@ export class Invitation extends Model {
       email: { type: PropertyTypes.TEXT },
       account: { type: PropertyTypes.RELATION, ref: Account.configuration.slug },
     },
-    validators: [
-      { type: ValidatorTypes.REQUIRED, property: "firstname" },
-      { type: ValidatorTypes.REQUIRED, property: "lastname" },
-      { type: ValidatorTypes.REQUIRED, property: "email" },
-      { type: ValidatorTypes.REQUIRED, property: "account" },
-      { type: ValidatorTypes.REGEX, property: "email", pattern: Patterns.EMAIL },
-    ],
+    required: ["firstname", "lastname", "email", "account"],
+    validators: [{ type: ValidatorTypes.REGEX, property: "email", pattern: Patterns.EMAIL }],
   });
 }

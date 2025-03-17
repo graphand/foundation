@@ -27,8 +27,8 @@ export class TokenIssuer extends Model {
         default: 0,
       },
     },
+    required: ["role"],
     validators: [
-      { type: ValidatorTypes.REQUIRED, property: "role" },
       { type: ValidatorTypes.BOUNDARIES, property: "lifetime", min: 0 },
       { type: ValidatorTypes.BOUNDARIES, property: "maxGen", min: 0 },
     ],

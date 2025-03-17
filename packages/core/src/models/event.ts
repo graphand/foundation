@@ -24,11 +24,8 @@ export class Event extends Model {
         default: EventSources.USER,
       },
     },
+    required: ["type"],
     validators: [
-      {
-        type: ValidatorTypes.REQUIRED,
-        property: "type",
-      },
       {
         type: ValidatorTypes.BOUNDARIES,
         property: "severity",

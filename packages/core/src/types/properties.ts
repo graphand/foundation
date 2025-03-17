@@ -66,10 +66,7 @@ export type PropertyDefinitions = {
   [K in PropertyTypes]: PropertyDefinitionGeneric<K>;
 }[PropertyTypes];
 
-export type PropertyDefinitionGeneric<T extends PropertyTypes> = {
-  type: T | `${T}`;
-  required?: true;
-} & PropertyOptionsMap[T];
+export type PropertyDefinitionGeneric<T extends PropertyTypes> = { type: T | `${T}` } & PropertyOptionsMap[T];
 
 export type PropertyDefinition = {
   [K in PropertyTypes]: PropertyDefinitionGeneric<K>;
@@ -88,10 +85,26 @@ export interface SystemPropertiesOverrides<M extends typeof Model> {}
 export type SystemProperties<M extends typeof Model> = Omit<SystemPropertiesBase, keyof SystemPropertiesOverrides<M>> &
   SystemPropertiesOverrides<M>;
 
-export type InferPropertiesDefinition<F extends PropertiesDefinition, S extends SerializerFormat> = {
-  [K in keyof F as F[K]["required"] extends true ? K : never]: InferPropertyType<F[K], S>;
+export type InferPropertiesDefinition<
+  F extends PropertiesDefinition,
+  S extends SerializerFormat,
+  Required = undefined,
+> = {
+  [K in keyof F as K extends string
+    ? Required extends [string, ...string[]] | readonly [string, ...string[]]
+      ? K extends Required[number]
+        ? K
+        : never
+      : never
+    : never]: InferPropertyType<F[K], S>;
 } & {
-  [K in keyof F as F[K]["required"] extends true ? never : K]?: InferPropertyType<F[K], S> | null | undefined;
+  [K in keyof F as K extends string
+    ? Required extends [string, ...string[]] | readonly [string, ...string[]]
+      ? K extends Required[number]
+        ? never
+        : K
+      : K
+    : K]?: InferPropertyType<F[K], S> | null | undefined;
 };
 
 // Helper types to handle additionalProperties properly
@@ -113,10 +126,10 @@ type SerializerJSON<F extends PropertyDefinitionGeneric<PropertyTypes>> = {
     ? (F["properties"] extends PropertiesDefinition
         ? F["additionalProperties"] extends PropertyDefinition
           ? WithDefaultProperty<
-              InferPropertiesDefinition<F["properties"], "json">,
+              InferPropertiesDefinition<F["properties"], "json", F["required"]>,
               InferPropertyType<F["additionalProperties"], "json">
             >
-          : InferPropertiesDefinition<F["properties"], "json">
+          : InferPropertiesDefinition<F["properties"], "json", F["required"]>
         : F["additionalProperties"] extends PropertyDefinition
           ? Record<string, InferPropertyType<F["additionalProperties"], "json">>
           : {}) &
@@ -143,10 +156,10 @@ type SerializerObject<F extends PropertyDefinitionGeneric<PropertyTypes>> = {
     ? (F["properties"] extends PropertiesDefinition
         ? F["additionalProperties"] extends PropertyDefinition
           ? WithDefaultProperty<
-              InferPropertiesDefinition<F["properties"], "object">,
+              InferPropertiesDefinition<F["properties"], "object", F["required"]>,
               InferPropertyType<F["additionalProperties"], "object">
             >
-          : InferPropertiesDefinition<F["properties"], "object">
+          : InferPropertiesDefinition<F["properties"], "object", F["required"]>
         : F["additionalProperties"] extends PropertyDefinition
           ? Record<string, InferPropertyType<F["additionalProperties"], "object">>
           : {}) &
@@ -180,11 +193,9 @@ export type InferSystemProperties<M extends typeof Model, S extends SerializerFo
 };
 
 export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "object"> = (M extends {
-  configuration: { properties: infer R };
+  configuration: { properties: infer R; required?: infer T };
 }
-  ? R extends PropertiesDefinition
-    ? InferPropertiesDefinition<R, S>
-    : unknown
+  ? InferPropertiesDefinition<R extends PropertiesDefinition ? R : never, S, T>
   : unknown) &
   InferSystemProperties<M, S>;
 

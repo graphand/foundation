@@ -1,7 +1,6 @@
 import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
-import { ValidatorTypes } from "@/enums/validator-types.js";
 
 @modelDecorator()
 export class Secret extends Model {
@@ -14,6 +13,6 @@ export class Secret extends Model {
       name: { type: PropertyTypes.TEXT },
       value: { type: PropertyTypes.TEXT },
     },
-    validators: [{ type: ValidatorTypes.REQUIRED, property: "value" }],
+    required: ["value"],
   });
 }

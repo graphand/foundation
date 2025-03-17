@@ -1,5 +1,5 @@
 import { EventSubscription } from "@/models/event-subscription.js";
-import { generateRandomString, mockAdapter } from "@/lib/test-utils.dev.js";
+import { mockAdapter } from "@/lib/test-utils.dev.js";
 import { ValidationError } from "../lib/validation-error.js";
 import { SubscriptionChannels } from "../enums/subscription-channels.js";
 import { faker } from "@faker-js/faker";

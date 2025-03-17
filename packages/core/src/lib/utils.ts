@@ -317,6 +317,22 @@ export const getNestedValidatorsArray = (model: typeof Model, nestedProperty: Pr
     }
   });
 
+  if (nestedProperty.definition.required?.length) {
+    nestedProperty.definition.required.forEach(p => {
+      const validator = getValidatorFromDefinition(
+        {
+          type: ValidatorTypes.REQUIRED,
+          property: nestedProperty.path + "." + p,
+        },
+        adapter,
+      );
+
+      if (validator) {
+        validators.push(validator);
+      }
+    });
+  }
+
   return validators;
 };
 
@@ -430,6 +446,30 @@ export const createValidatorsArray = (model: typeof Model): Array<Validator | nu
       return true;
     });
   }
+
+  if (model.configuration.required?.length) {
+    model.configuration.required.forEach(p => {
+      validators.push({
+        type: ValidatorTypes.REQUIRED,
+        property: p,
+      });
+    });
+  }
+
+  // crossProperties({ model }, property => {
+  //   if (property.type === PropertyTypes.OBJECT) {
+  //     const options = property.definition as PropertyOptions<PropertyTypes.OBJECT>;
+  //     if (options.required?.length) {
+  //       options.required.forEach(nestedProperty => {
+  //         const path = property.path + "." + nestedProperty;
+  //         validators.push({
+  //           type: ValidatorTypes.REQUIRED,
+  //           property: path,
+  //         });
+  //       });
+  //     }
+  //   }
+  // });
 
   const adapter = model.getAdapter(false);
 
@@ -794,6 +834,7 @@ async function validateProperties<T extends typeof Model>(opts: {
         if (values?.length) {
           const _property = property as Property<PropertyTypes.OBJECT>;
           const o = _property.definition || {};
+
           if (o.additionalProperties) {
             const noProperty = values
               .map(v => {

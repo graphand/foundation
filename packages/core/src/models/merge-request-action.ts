@@ -2,7 +2,6 @@ import { Model, defineConfiguration } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { Job } from "@/models/job.js";
-import { ValidatorTypes } from "@/enums/validator-types.js";
 import { MergeRequestActionTypes } from "@/enums/merge-request-action-types.js";
 import { MergeRequest } from "@/models/merge-request.js";
 
@@ -41,6 +40,6 @@ export class MergeRequestAction extends Model {
         ref: Job.configuration.slug,
       },
     },
-    validators: [{ type: ValidatorTypes.REQUIRED, property: "request" }],
+    required: ["request"],
   });
 }

@@ -2,7 +2,6 @@ import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { Role } from "@/models/role.js";
-import { ValidatorTypes } from "@/enums/validator-types.js";
 import { AuthProviders } from "@/enums/auth-providers.js";
 
 @modelDecorator()
@@ -71,13 +70,7 @@ export class AuthProvider extends Model {
           //   },
           // },
         },
-        validators: [
-          { type: ValidatorTypes.REQUIRED, property: "clientId" },
-          { type: ValidatorTypes.REQUIRED, property: "clientSecret" },
-          { type: ValidatorTypes.REQUIRED, property: "teamId" },
-          { type: ValidatorTypes.REQUIRED, property: "keyId" },
-          { type: ValidatorTypes.REQUIRED, property: "privateKey" },
-        ],
+        required: ["clientId", "clientSecret", "teamId", "keyId", "privateKey"],
       },
       enabled: { type: PropertyTypes.BOOLEAN, default: true },
       register: {

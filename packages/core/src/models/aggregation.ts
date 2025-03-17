@@ -1,7 +1,6 @@
 import { defineConfiguration, Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
-import { ValidatorTypes } from "@/enums/validator-types.js";
 
 @modelDecorator()
 export class Aggregation extends Model {
@@ -25,9 +24,6 @@ export class Aggregation extends Model {
         type: PropertyTypes.OBJECT,
       },
     },
-    validators: [
-      { type: ValidatorTypes.REQUIRED, property: "source" },
-      { type: ValidatorTypes.REQUIRED, property: "pipeline" },
-    ],
+    required: ["source", "pipeline"],
   });
 }

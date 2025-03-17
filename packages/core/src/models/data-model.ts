@@ -38,13 +38,13 @@ export class DataModel extends Model {
     keyProperty: "slug",
     properties: {
       name: { type: PropertyTypes.TEXT },
-      slug: { type: PropertyTypes.TEXT, required: true },
+      slug: { type: PropertyTypes.TEXT },
       properties: {
         type: PropertyTypes.OBJECT,
         additionalProperties: {
           type: PropertyTypes.OBJECT,
           properties: {
-            type: { type: PropertyTypes.ENUM, enum: Object.values(PropertyTypes), required: true },
+            type: { type: PropertyTypes.ENUM, enum: Object.values(PropertyTypes) },
             default: { type: PropertyTypes.DEFAULT },
             items: { type: PropertyTypes.OBJECT },
             validators: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.OBJECT } },
@@ -94,12 +94,7 @@ export class DataModel extends Model {
             //   },
             // },
           },
-          validators: [
-            {
-              type: ValidatorTypes.REQUIRED,
-              property: "type",
-            },
-          ],
+          required: ["type"],
         },
       },
       validators: {
@@ -108,7 +103,7 @@ export class DataModel extends Model {
           type: PropertyTypes.OBJECT,
           strict: true,
           properties: {
-            type: { type: PropertyTypes.ENUM, required: true, enum: Object.values(ValidatorTypes) },
+            type: { type: PropertyTypes.ENUM, enum: Object.values(ValidatorTypes) },
             property: { type: PropertyTypes.TEXT },
             min: { type: PropertyTypes.NUMBER },
             max: { type: PropertyTypes.NUMBER },
@@ -128,12 +123,7 @@ export class DataModel extends Model {
             //   },
             // },
           },
-          validators: [
-            {
-              type: ValidatorTypes.REQUIRED,
-              property: "type",
-            },
-          ],
+          required: ["type"],
         },
       },
       required: {

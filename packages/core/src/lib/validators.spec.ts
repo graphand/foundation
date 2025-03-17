@@ -1,4 +1,4 @@
-import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils.dev.js";
+import { mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { ValidationError } from "@/lib/validation-error.js";
 import { faker } from "@faker-js/faker";
@@ -9,11 +9,11 @@ import { ValidatorOptions, ModelJSON } from "@/types/index.js";
 import { DataModel } from "@/models/data-model.js";
 
 describe("test validators", () => {
-  const adapter = mockAdapter();
-  const DataModel_ = DataModel.extend({ adapterClass: adapter });
+  let adapter = mockAdapter();
+  let DataModel_ = DataModel.extend({ adapterClass: adapter });
 
   describe("required validator", () => {
-    const model = mockModel({
+    let model = mockModel({
       slug: faker.random.alphaNumeric(10),
       properties: {
         title: {
@@ -26,17 +26,33 @@ describe("test validators", () => {
               type: PropertyTypes.TEXT,
             },
           },
+          required: ["title"],
         },
       },
-      validators: [
-        {
-          type: ValidatorTypes.REQUIRED,
-          property: "title",
-        },
-      ],
+      required: ["title"],
     }).extend({ adapterClass: adapter });
 
-    beforeAll(async () => {
+    beforeEach(async () => {
+      adapter = mockAdapter();
+      model = mockModel({
+        slug: faker.random.alphaNumeric(10),
+        properties: {
+          title: {
+            type: PropertyTypes.TEXT,
+          },
+          obj: {
+            type: PropertyTypes.OBJECT,
+            properties: {
+              title: {
+                type: PropertyTypes.TEXT,
+              },
+            },
+            required: ["title"],
+          },
+        },
+        required: ["title"],
+      }).extend({ adapterClass: adapter });
+
       await model.initialize();
     });
 
@@ -52,6 +68,7 @@ describe("test validators", () => {
         expect.assertions(2);
 
         try {
+          // @ts-expect-error
           await model.create({});
         } catch (_e) {
           const e = _e as ValidationError;
@@ -70,6 +87,7 @@ describe("test validators", () => {
         expect.assertions(2);
 
         try {
+          // @ts-expect-error
           await model.create({ title: undefined });
         } catch (_e) {
           const e = _e as ValidationError;
@@ -85,6 +103,7 @@ describe("test validators", () => {
         const title = faker.lorem.word();
 
         try {
+          // @ts-expect-error
           await model.createMultiple([{}, { title }]);
         } catch (_e) {
           const e = _e as ValidationError;
@@ -105,6 +124,7 @@ describe("test validators", () => {
         const title = faker.lorem.word();
 
         try {
+          // @ts-expect-error
           await model.createMultiple([{ title }, { title: undefined }]);
         } catch (_e) {
           const e = _e as ValidationError;

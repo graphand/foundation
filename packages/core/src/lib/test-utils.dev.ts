@@ -204,7 +204,9 @@ export const mockAdapter = ({
   return MockAdapter;
 };
 
-export const mockModel = <const C extends TModelConfiguration>(conf?: C): typeof Model & { configuration: C } => {
+export const mockModel = <const C extends TModelConfiguration>(
+  conf?: C,
+): typeof Model & { readonly configuration: C } => {
   conf ??= { slug: faker.random.alphaNumeric(10) } as C;
   return modelDecorator()(
     class extends Model {

@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import { ObjectId } from "bson";
-import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
+import { mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { faker } from "@faker-js/faker";
 import { Property } from "@/lib/property.js";
