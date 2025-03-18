@@ -1,5 +1,5 @@
-import { crossModelTree, getPropertiesPathsFromPath, getRelationModelsFromPath } from "@/lib/utils.js";
-import { Model, defineConfiguration } from "@/lib/model.js";
+import { crossModelTree, defineModelConf, getPropertiesPathsFromPath, getRelationModelsFromPath } from "@/lib/utils.js";
+import { Model } from "@/lib/model.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
 import { faker } from "@faker-js/faker";
@@ -30,13 +30,13 @@ describe("test utils", () => {
   describe("getPropertiesPathsFromPath", () => {
     it("should return single array entry for one property", () => {
       const model = class extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: faker.random.alphaNumeric(10),
           properties: {
             property1: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },
@@ -56,7 +56,7 @@ describe("test utils", () => {
 
     it("should decode nested array properties", () => {
       const model = class extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: faker.random.alphaNumeric(10),
           properties: {
             property1: {
@@ -67,7 +67,7 @@ describe("test utils", () => {
                   type: PropertyTypes.OBJECT,
                   properties: {
                     property2: {
-                      type: PropertyTypes.TEXT,
+                      type: PropertyTypes.STRING,
                     },
                   },
                 },
@@ -116,13 +116,13 @@ describe("test utils", () => {
 
     it("should decode array items property", () => {
       const model = class extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: faker.random.alphaNumeric(10),
           properties: {
             property1: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },
@@ -140,19 +140,19 @@ describe("test utils", () => {
       expect(fPath.length).toEqual(2);
       expect(fPath[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
       expect(fPath[0]?.property).toHaveProperty("definition.__label", "property1");
-      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath[1]?.property).toHaveProperty("definition.__label", "property1bis");
     });
 
     it("should decode array items property with index", () => {
       const model = class extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: faker.random.alphaNumeric(10),
           properties: {
             property1: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },
@@ -170,20 +170,20 @@ describe("test utils", () => {
       expect(fPath.length).toEqual(2);
       expect(fPath[0]?.property).toHaveProperty("type", PropertyTypes.ARRAY);
       expect(fPath[0]?.property).toHaveProperty("definition.__label", "property1");
-      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath[1]?.property).toHaveProperty("definition.__label", "property1bis");
     });
 
     it("should decode json properties property", () => {
       const model = class extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: faker.random.alphaNumeric(10),
           properties: {
             property1: {
               type: PropertyTypes.OBJECT,
               properties: {
                 property2: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -202,13 +202,13 @@ describe("test utils", () => {
       expect(fPath.length).toEqual(2);
       expect(fPath[0]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
       expect(fPath[0]?.property).toHaveProperty("definition.__label", "property1");
-      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath[1]?.property).toHaveProperty("definition.__label", "property2");
     });
 
     it("should decode json in array items property", () => {
       const model = class extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: faker.random.alphaNumeric(10),
           properties: {
             property1: {
@@ -217,7 +217,7 @@ describe("test utils", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   property2: {
-                    type: PropertyTypes.TEXT,
+                    type: PropertyTypes.STRING,
                   },
                 },
               },
@@ -241,7 +241,7 @@ describe("test utils", () => {
       expect(fPath[0]?.property).toHaveProperty("definition.__label", "property1");
       expect(fPath[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
       expect(fPath[1]?.property).toHaveProperty("definition.__label", "property1bis");
-      expect(fPath[2]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath[2]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath[2]?.property).toHaveProperty("definition.__label", "property2");
 
       const fPath2 = getPropertiesPathsFromPath(model, "property1.[]?.property2");
@@ -252,13 +252,13 @@ describe("test utils", () => {
       expect(fPath2[0]?.property).toHaveProperty("definition.__label", "property1");
       expect(fPath2[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
       expect(fPath2[1]?.property).toHaveProperty("definition.__label", "property1bis");
-      expect(fPath2[2]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath2[2]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath2[2]?.property).toHaveProperty("definition.__label", "property2");
     });
 
     it("should return null property for invalid path if strict", () => {
       const model = class extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: faker.random.alphaNumeric(10),
           properties: {
             property1: {
@@ -268,7 +268,7 @@ describe("test utils", () => {
                 strict: true,
                 properties: {
                   property2: {
-                    type: PropertyTypes.TEXT,
+                    type: PropertyTypes.STRING,
                   },
                 },
               },
@@ -312,7 +312,7 @@ describe("test utils", () => {
 
     it("should return nested property for invalid path if not strict (allow to get nested keys for non-strict nested properties)", () => {
       const model = class extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: faker.random.alphaNumeric(10),
           properties: {
             property1: {
@@ -321,7 +321,7 @@ describe("test utils", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   property2: {
-                    type: PropertyTypes.TEXT,
+                    type: PropertyTypes.STRING,
                   },
                 },
               },
@@ -351,7 +351,7 @@ describe("test utils", () => {
 
     it("should decode complex schema properties", () => {
       const model = class extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: faker.random.alphaNumeric(10),
           properties: {
             property1: {
@@ -360,7 +360,7 @@ describe("test utils", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   property2: {
-                    type: PropertyTypes.TEXT,
+                    type: PropertyTypes.STRING,
                   },
                   property3: {
                     type: PropertyTypes.ARRAY,
@@ -368,7 +368,7 @@ describe("test utils", () => {
                       type: PropertyTypes.OBJECT,
                       properties: {
                         property4: {
-                          type: PropertyTypes.TEXT,
+                          type: PropertyTypes.STRING,
                         },
                       },
                     },
@@ -409,7 +409,7 @@ describe("test utils", () => {
       expect(fPath2[0]?.property).toHaveProperty("definition.__label", "property1");
       expect(fPath2[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
       expect(fPath2[1]?.property).toHaveProperty("definition.__label", "property1bis");
-      expect(fPath2[2]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath2[2]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath2[2]?.property).toHaveProperty("definition.__label", "property2");
 
       const fPath3 = getPropertiesPathsFromPath(model, "property1.property3");
@@ -435,7 +435,7 @@ describe("test utils", () => {
       expect(fPath4[2]?.property).toHaveProperty("definition.__label", "property3");
       expect(fPath4[3]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
       expect(fPath4[3]?.property).toHaveProperty("definition.__label", "property3bis");
-      expect(fPath4[4]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath4[4]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath4[4]?.property).toHaveProperty("definition.__label", "property4");
 
       const fPath5 = getPropertiesPathsFromPath(model, "property1.[]?.property2");
@@ -446,7 +446,7 @@ describe("test utils", () => {
       expect(fPath5[0]?.property).toHaveProperty("definition.__label", "property1");
       expect(fPath5[1]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
       expect(fPath5[1]?.property).toHaveProperty("definition.__label", "property1bis");
-      expect(fPath5[2]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath5[2]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath5[2]?.property).toHaveProperty("definition.__label", "property2");
 
       const fPath6 = getPropertiesPathsFromPath(model, "property1.[]?.property3");
@@ -472,7 +472,7 @@ describe("test utils", () => {
       expect(fPath7[2]?.property).toHaveProperty("definition.__label", "property3");
       expect(fPath7[3]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
       expect(fPath7[3]?.property).toHaveProperty("definition.__label", "property3bis");
-      expect(fPath7[4]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath7[4]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath7[4]?.property).toHaveProperty("definition.__label", "property4");
 
       const fPath8 = getPropertiesPathsFromPath(model, "property1.[]?.property3.[]?.property4.property5");
@@ -487,7 +487,7 @@ describe("test utils", () => {
       expect(fPath8[2]?.property).toHaveProperty("definition.__label", "property3");
       expect(fPath8[3]?.property).toHaveProperty("type", PropertyTypes.OBJECT);
       expect(fPath8[3]?.property).toHaveProperty("definition.__label", "property3bis");
-      expect(fPath8[4]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath8[4]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath8[4]?.property).toHaveProperty("definition.__label", "property4");
       expect(fPath8[5]).toBe(null);
     });
@@ -498,7 +498,7 @@ describe("test utils", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -551,7 +551,7 @@ describe("test utils", () => {
       expect(fPath[1]?.property).toHaveProperty("path", "nested.rel");
       expect(fPath[2]?.property).toHaveProperty("type", PropertyTypes.RELATION);
       expect(fPath[2]?.property).toHaveProperty("path", "rel");
-      expect(fPath[3]?.property).toHaveProperty("type", PropertyTypes.TEXT);
+      expect(fPath[3]?.property).toHaveProperty("type", PropertyTypes.STRING);
       expect(fPath[3]?.property).toHaveProperty("path", "title");
     });
   });
@@ -564,7 +564,7 @@ describe("test utils", () => {
 
       const model = modelDecorator()(
         class extends Model {
-          static configuration = defineConfiguration({
+          static configuration = defineModelConf({
             slug: faker.random.alphaNumeric(10),
             properties: {
               property1: {
@@ -588,7 +588,7 @@ describe("test utils", () => {
 
       const model1 = modelDecorator()(
         class extends Model {
-          static configuration = defineConfiguration({
+          static configuration = defineModelConf({
             slug: faker.random.alphaNumeric(10),
             properties: {
               property1: {
@@ -602,7 +602,7 @@ describe("test utils", () => {
 
       const model = modelDecorator()(
         class extends Model {
-          static configuration = defineConfiguration({
+          static configuration = defineModelConf({
             slug: faker.random.alphaNumeric(10),
             properties: {
               property1: {
@@ -625,7 +625,7 @@ describe("test utils", () => {
     it("should work with nested relation properties", async () => {
       const model1 = modelDecorator()(
         class extends Model {
-          static configuration = defineConfiguration({
+          static configuration = defineModelConf({
             slug: faker.random.alphaNumeric(10),
           });
         },
@@ -633,7 +633,7 @@ describe("test utils", () => {
 
       const model = modelDecorator()(
         class extends Model {
-          static configuration = defineConfiguration({
+          static configuration = defineModelConf({
             slug: faker.random.alphaNumeric(10),
             properties: {
               nested: {
@@ -662,7 +662,7 @@ describe("test utils", () => {
 
       const model1 = modelDecorator()(
         class extends Model {
-          static configuration = defineConfiguration({
+          static configuration = defineModelConf({
             slug: faker.random.alphaNumeric(10),
             properties: {
               arr: {
@@ -684,7 +684,7 @@ describe("test utils", () => {
 
       const model = modelDecorator()(
         class extends Model {
-          static configuration = defineConfiguration({
+          static configuration = defineModelConf({
             slug: faker.random.alphaNumeric(10),
             properties: {
               nested: {
@@ -719,7 +719,7 @@ describe("test utils", () => {
     it("should return empty array if no relations found in nested property", async () => {
       const model = modelDecorator()(
         class extends Model {
-          static configuration = defineConfiguration({
+          static configuration = defineModelConf({
             slug: faker.random.alphaNumeric(10),
             properties: {
               nested: {
@@ -739,7 +739,7 @@ describe("test utils", () => {
     it("should work with nested array in chained relation property", async () => {
       const model1 = modelDecorator()(
         class extends Model {
-          static configuration = defineConfiguration({
+          static configuration = defineModelConf({
             slug: faker.random.alphaNumeric(10),
             properties: {
               nested: {
@@ -752,7 +752,7 @@ describe("test utils", () => {
 
       const model = modelDecorator()(
         class extends Model {
-          static configuration = defineConfiguration({
+          static configuration = defineModelConf({
             slug: faker.random.alphaNumeric(10),
             properties: {
               rel: {

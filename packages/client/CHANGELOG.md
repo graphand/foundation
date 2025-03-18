@@ -1,5 +1,16 @@
 # @graphand/client
 
+## 1.6.0
+
+### Minor Changes
+
+- Refactor models with json-schema properties support"
+
+### Patch Changes
+
+- Updated dependencies
+  - @graphand/core@1.8.0
+
 ## 1.5.9
 
 ### Patch Changes

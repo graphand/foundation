@@ -3,7 +3,7 @@ import { Command } from "commander";
 import { checksumDirectory, getClient, withSpinner } from "@/lib/utils.js";
 import path from "path";
 import fs from "fs";
-import { Function, ModelInstance, ModelJSON } from "@graphand/core";
+import { Function, ModelInput, ModelInstance } from "@graphand/core";
 import { Client } from "@graphand/client";
 import JobHandler from "@/lib/JobHandler.js";
 import Collector from "@/lib/Collector.js";
@@ -11,7 +11,11 @@ import Collector from "@/lib/Collector.js";
 export const commandDeploy = new Command("deploy")
   .description("Deploy a function")
   .arguments("<functionName> <functionPath>")
-  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", Collector.setter)
+  .option(
+    "--set <set>",
+    "Set properties with URL encoded key=value (property1=value1&property2=value2)",
+    Collector.setter,
+  )
   .option("-f --force", "Force deployment")
   .action(async (functionName, functionPath, options) => {
     let func: ModelInstance<typeof Function> | null | undefined;
@@ -32,15 +36,15 @@ export const commandDeploy = new Command("deploy")
 
         func = await model.get(functionName).catch(() => null);
 
-        let payload: ModelJSON<typeof Function>;
+        let payload: ModelInput<typeof Function>;
 
         if (Array.isArray(options.set)) {
-          payload = options.set[0] as ModelJSON<typeof Function>;
+          payload = options.set[0] as ModelInput<typeof Function>;
         } else {
-          payload = options.set as ModelJSON<typeof Function>;
+          payload = options.set as ModelInput<typeof Function>;
         }
 
-        payload ??= {};
+        payload ??= { name: functionName, exposed: true, runtime: "deno" };
 
         Object.assign(payload, {
           name: payload.name ?? functionName,

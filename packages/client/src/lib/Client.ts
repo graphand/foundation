@@ -322,7 +322,7 @@ export class Client<
 
   model<I extends typeof Model | string | keyof D | keyof Models>(input: I): InferClientModel<this, I> {
     const model = Model.getClass(input as any, this.getAdapterClass()) as InferClientModel<this, I>;
-    model.loadDatamodel ??= true;
+    model.configuration.loadDatamodel ??= true;
     return model;
   }
 

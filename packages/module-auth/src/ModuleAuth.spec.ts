@@ -7,9 +7,9 @@ import {
   AuthMethods,
   AuthProviders,
   controllerConfigureAuth,
-  ModelJSON,
   ErrorCodes,
   controllerModelRead,
+  InferModelDefInput,
 } from "@graphand/core";
 import ModuleAuth from "./ModuleAuth.js";
 import { AuthStorage } from "./types.js";
@@ -273,7 +273,7 @@ describe("ModuleAuth", () => {
       const firstname = faker.name.firstName();
       const lastname = faker.name.lastName();
 
-      const account = { firstname, lastname } as ModelJSON<typeof Account>;
+      const account = { firstname, lastname, role: "" } as InferModelDefInput<typeof Account, "json">;
 
       await _client.get("auth").register({ configuration: { email, password }, account });
 
@@ -318,7 +318,7 @@ describe("ModuleAuth", () => {
       const firstname = faker.name.firstName();
       const lastname = faker.name.lastName();
 
-      const account = { firstname, lastname } as ModelJSON<typeof Account>;
+      const account = { firstname, lastname, role: "" } as InferModelDefInput<typeof Account, "json">;
 
       await _client.get("auth").register({ configuration: { email, password }, account });
 
@@ -350,7 +350,7 @@ describe("ModuleAuth", () => {
       const firstname = faker.name.firstName();
       const lastname = faker.name.lastName();
 
-      const account = { firstname, lastname } as ModelJSON<typeof Account>;
+      const account = { firstname, lastname, role: "" } as InferModelDefInput<typeof Account, "json">;
 
       await _client.get("auth").register({ configuration: { email, password }, account });
 

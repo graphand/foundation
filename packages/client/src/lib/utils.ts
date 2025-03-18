@@ -68,7 +68,7 @@ export const parseErrorFromJSON = (json: any, res?: Response) => {
 export const getCachedModel = (promise: PromiseModel<typeof Model>) => {
   const adapter = promise.model.getAdapter() as ClientAdapter;
 
-  if (promise.model.isSingle()) {
+  if (promise.model.configuration.single) {
     if (adapter.store.size) {
       return adapter.store.values().next().value;
     }

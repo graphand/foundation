@@ -27,7 +27,7 @@ describe("ValidationError", () => {
   });
 
   it("should return correct message with multiple properties and validators", () => {
-    const property1 = new Property({ type: PropertyTypes.TEXT }, "property1");
+    const property1 = new Property({ type: PropertyTypes.STRING }, "property1");
     const property2 = new Property({ type: PropertyTypes.NUMBER }, "property2");
 
     const propertyError1 = new ValidationPropertyError({
@@ -74,7 +74,7 @@ describe("ValidationError", () => {
   });
 
   it("should return correct propertiesPaths with multiple properties", () => {
-    const property1 = new Property({ type: PropertyTypes.TEXT }, "property1");
+    const property1 = new Property({ type: PropertyTypes.STRING }, "property1");
     const property2 = new Property({ type: PropertyTypes.NUMBER }, "property2");
 
     const propertyError1 = new ValidationPropertyError({
@@ -99,7 +99,7 @@ describe("ValidationError", () => {
   });
 
   it("should return errors on existing path using onPath", () => {
-    const property = new Property({ type: PropertyTypes.TEXT }, "property1");
+    const property = new Property({ type: PropertyTypes.STRING }, "property1");
 
     const propertyError = new ValidationPropertyError({
       slug: "property1",
@@ -129,7 +129,7 @@ describe("ValidationError", () => {
   });
 
   it("should return empty array for non-existing path using onPath", () => {
-    const property = new Property({ type: PropertyTypes.TEXT }, "property1");
+    const property = new Property({ type: PropertyTypes.STRING }, "property1");
 
     const propertyError = new ValidationPropertyError({
       slug: "property1",
@@ -147,7 +147,7 @@ describe("ValidationError", () => {
   it("should correctly serialize and deserialize with toJSON and fromJSON", () => {
     const propertyError = new ValidationPropertyError({
       slug: "property1",
-      property: new Property({ type: PropertyTypes.TEXT }, "property1"),
+      property: new Property({ type: PropertyTypes.STRING }, "property1"),
     });
     const validatorError = new ValidationValidatorError({
       validator: new Validator({
@@ -203,7 +203,7 @@ describe("ValidationError", () => {
       slug: faker.random.alphaNumeric(10),
       properties: {
         enum: {
-          type: PropertyTypes.ENUM,
+          type: PropertyTypes.STRING,
           enum: ["a", "b", "c"],
         },
       },
@@ -238,7 +238,7 @@ describe("ValidationError", () => {
           type: PropertyTypes.OBJECT,
           properties: {
             enum: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["a", "b", "c"],
             },
           },
@@ -280,7 +280,7 @@ describe("ValidationError", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   enum: {
-                    type: PropertyTypes.ENUM,
+                    type: PropertyTypes.STRING,
                     enum: ["a", "b", "c"],
                   },
                 },

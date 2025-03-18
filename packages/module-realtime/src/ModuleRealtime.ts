@@ -61,8 +61,8 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
       adapterClass.prototype.subscribe = function (...args: Parameters<typeof subscribe>) {
         const adapter = this as ClientAdapter;
         const model = adapter.model;
-        if (model?.exposed && model?.slug) {
-          _module.subscribeModels([model.slug]);
+        if (!model?.configuration.restricted && model?.configuration.slug) {
+          _module.subscribeModels([model.configuration.slug]);
         }
         return subscribe.apply(this, args);
       };

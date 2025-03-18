@@ -1,13 +1,14 @@
-import { defineConfiguration, Model } from "@/lib/model.js";
+import { Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { Role } from "@/models/role.js";
 import { AuthProviders } from "@/enums/auth-providers.js";
+import { defineModelConf } from "@/lib/utils.js";
 
 @modelDecorator()
 export class AuthProvider extends Model {
   static __name = "AuthProvider";
-  static configuration = defineConfiguration({
+  static configuration = defineModelConf({
     slug: "authProviders",
     isEnvironmentScoped: true,
     realtime: true,
@@ -15,7 +16,7 @@ export class AuthProvider extends Model {
     keyProperty: "type",
     properties: {
       type: {
-        type: PropertyTypes.ENUM,
+        type: PropertyTypes.STRING,
         enum: Object.values(AuthProviders),
         default: AuthProviders.LOCAL,
       },
@@ -49,23 +50,23 @@ export class AuthProvider extends Model {
           allowResetPassword: { type: PropertyTypes.BOOLEAN, default: false },
           propertiesMap: {
             type: PropertyTypes.OBJECT,
-            additionalProperties: { type: PropertyTypes.TEXT },
+            additionalProperties: { type: PropertyTypes.STRING },
           },
-          scopes: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.TEXT } },
+          scopes: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.STRING } },
           autoRegister: { type: PropertyTypes.BOOLEAN, default: true },
-          teamId: { type: PropertyTypes.TEXT },
-          clientId: { type: PropertyTypes.TEXT },
-          clientSecret: { type: PropertyTypes.TEXT },
-          keyId: { type: PropertyTypes.TEXT },
-          privateKey: { type: PropertyTypes.TEXT },
+          teamId: { type: PropertyTypes.STRING },
+          clientId: { type: PropertyTypes.STRING },
+          clientSecret: { type: PropertyTypes.STRING },
+          keyId: { type: PropertyTypes.STRING },
+          privateKey: { type: PropertyTypes.STRING },
           // oauth: {
           //   type: PropertyTypes.OBJECT,
           //   options: {
           //     properties: {
-          //       clientId: { type: PropertyTypes.TEXT },
-          //       clientSecret: { type: PropertyTypes.TEXT },
-          //       propertiesMap: { type: PropertyTypes.OBJECT, options: { additionalProperties: { type: PropertyTypes.TEXT } } },
-          //       scopes: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.TEXT } } },
+          //       clientId: { type: PropertyTypes.STRING },
+          //       clientSecret: { type: PropertyTypes.STRING },
+          //       propertiesMap: { type: PropertyTypes.OBJECT, options: { additionalProperties: { type: PropertyTypes.STRING } } },
+          //       scopes: { type: PropertyTypes.ARRAY, options: { items: { type: PropertyTypes.STRING } } },
           //     },
           //   },
           // },
@@ -83,7 +84,7 @@ export class AuthProvider extends Model {
           },
           authorizedProperties: {
             type: PropertyTypes.ARRAY,
-            items: { type: PropertyTypes.TEXT },
+            items: { type: PropertyTypes.STRING },
           },
         },
       },

@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.8.0
+
+### Minor Changes
+
+- Refactor models with json-schema properties support"
+
 ## 1.7.3
 
 ### Patch Changes

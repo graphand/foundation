@@ -1,13 +1,15 @@
 import { Adapter } from "@/lib/adapter.js";
 import { AdapterFetcher, ModelData, ModelInstance } from "@/types/index.js";
 import { ModelList } from "@/lib/model-list.js";
-import { defineConfiguration, Model, TModelConfiguration } from "@/lib/model.js";
+import { Model } from "@/lib/model.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { definePropertiesObject, isObjectId } from "@/lib/utils.js";
 import { Validator } from "@/lib/validator.js";
 import { ObjectId } from "bson";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { faker } from "@faker-js/faker";
+import { defineModelConf } from "@/lib/utils.js";
+import { TModelConfiguration } from "@/types/index.js";
 
 const cache: Map<typeof Model, Set<ModelInstance<typeof Model>>> = new Map();
 
@@ -210,7 +212,7 @@ export const mockModel = <const C extends TModelConfiguration>(
   conf ??= { slug: faker.random.alphaNumeric(10) } as C;
   return modelDecorator()(
     class extends Model {
-      static configuration = defineConfiguration(conf as C);
+      static configuration = defineModelConf(conf as C);
 
       constructor(doc: ModelData<typeof Model>) {
         super(doc);

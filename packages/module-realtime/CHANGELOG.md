@@ -1,5 +1,17 @@
 # @graphand/client-module-realtime
 
+## 1.4.0
+
+### Minor Changes
+
+- Refactor models with json-schema properties support"
+
+### Patch Changes
+
+- Updated dependencies
+  - @graphand/client@1.6.0
+  - @graphand/core@1.8.0
+
 ## 1.3.1
 
 ### Patch Changes

@@ -1,8 +1,15 @@
-import { DataModel, InferModelDefInput, Model, Models } from "@/index.js";
-import { TModelConfiguration } from "@/lib/model.js";
+import { DataModel, InferModelDefInput, Model, Models, SerializerFormat, TModelConfiguration } from "@/index.js";
+
+type InferModelDefInputWithoutKey<T extends typeof Model, S extends SerializerFormat> = T extends {
+  configuration: { keyProperty: infer K };
+}
+  ? K extends string
+    ? Omit<InferModelDefInput<T, S>, K>
+    : InferModelDefInput<T, S>
+  : InferModelDefInput<T, S>;
 
 export type GDXEntryModelInput<T extends TModelConfiguration> =
-  | (InferModelDefInput<typeof Model & { configuration: T }, "json"> &
+  | (InferModelDefInputWithoutKey<typeof Model & { configuration: T }, "json"> &
       Partial<{
         $dependency: boolean;
         $force: boolean;
@@ -15,26 +22,33 @@ export type GDXEntryModel<T extends TModelConfiguration> = T["single"] extends t
   : Record<string, GDXEntryModelInput<T>>;
 
 export type GDXDatamodels = {
-  [K: string]: InferModelDefInput<typeof DataModel, "json">;
+  [K: string]: InferModelDefInputWithoutKey<typeof DataModel, "json">;
 };
 
 export type GDXType<D extends GDXDatamodels = {}> = {
   datamodels: D;
 } & Omit<
   {
-    [K in keyof D]?: D[K] extends InferModelDefInput<typeof DataModel, "json">
-      ? GDXEntryModel<InferModelConfigurationFromDatamodel<D[K]>>
+    [K in keyof D]?: D[K]["keyProperty"] extends string
+      ? D[K] extends InferModelDefInputWithoutKey<typeof DataModel, "json">
+        ? GDXEntryModel<InferModelConfigurationFromDatamodel<K, D[K]>>
+        : never
       : never;
   } & {
-    [K in keyof Models]?: Models[K] extends { configuration: TModelConfiguration }
-      ? GDXEntryModel<Models[K]["configuration"]>
+    [K in keyof Models]?: Models[K] extends { configuration: infer C extends TModelConfiguration }
+      ? C["keyProperty"] extends string
+        ? GDXEntryModel<C>
+        : never
       : never;
   },
   "datamodels"
 >;
 
-export type InferModelConfigurationFromDatamodel<D extends InferModelDefInput<typeof DataModel, "json">> = {
-  slug: D["slug"];
+export type InferModelConfigurationFromDatamodel<
+  K,
+  D extends InferModelDefInputWithoutKey<typeof DataModel, "json">,
+> = {
+  slug: K extends string ? K : never;
   single: D["single"] extends true ? true : false;
   properties: D["properties"] extends Record<string, any> ? D["properties"] : undefined;
   validators: D["validators"] extends Array<any> ? D["validators"] : undefined;
@@ -53,9 +67,9 @@ export const defineGDX = <const D extends GDXDatamodels = {}>(gdx: GDXType<D>) =
 // const gdx = defineGDX({
 //   datamodels: {
 //     test: {
-//       slug: "test",
+//       keyProperty: "name",
 //       properties: {
-//         name: { type: "text" },
+//         name: { type: "string" },
 //         age: { type: "number" },
 //       },
 //     },

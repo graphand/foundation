@@ -5,7 +5,8 @@ import { mockAdapter } from "@/lib/test-utils.dev.js";
 import { DataModel } from "@/models/data-model.js";
 import { Environment } from "@/models/environment.js";
 import { Media } from "@/models/media.js";
-import { defineConfiguration, Model } from "@/lib/model.js";
+import { Model } from "@/lib/model.js";
+import { defineModelConf } from "@/lib/utils.js";
 import { Adapter, Property, PropertyObject } from "./index.js";
 import { faker } from "@faker-js/faker";
 
@@ -147,7 +148,7 @@ describe("Global tests", () => {
           slug,
           properties: {
             title: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
             relSingle: {
               type: PropertyTypes.RELATION,
@@ -204,7 +205,7 @@ describe("Global tests", () => {
   it("should be able to validate with nested property with additionalProperties with multiple documents with different properties", async () => {
     const adapter = mockAdapter();
     const model = class extends Model {
-      static configuration = defineConfiguration({
+      static configuration = defineModelConf({
         slug: faker.random.alphaNumeric(10),
         properties: {
           obj: {
@@ -213,7 +214,7 @@ describe("Global tests", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 title: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
               validators: [
@@ -262,7 +263,7 @@ describe("Global tests", () => {
   it("should be able to validate with nested property in array with multiple documents with different properties", async () => {
     const adapter = mockAdapter();
     const model = class extends Model {
-      static configuration = defineConfiguration({
+      static configuration = defineModelConf({
         slug: faker.random.alphaNumeric(10),
         properties: {
           obj: {
@@ -274,7 +275,7 @@ describe("Global tests", () => {
                   type: PropertyTypes.OBJECT,
                   properties: {
                     title: {
-                      type: PropertyTypes.TEXT,
+                      type: PropertyTypes.STRING,
                     },
                   },
                   validators: [
@@ -325,7 +326,7 @@ describe("Global tests", () => {
   it("should be able to validate with nested property in array with additionalProperties with multiple documents with different properties", async () => {
     const adapter = mockAdapter();
     const model = class extends Model {
-      static configuration = defineConfiguration({
+      static configuration = defineModelConf({
         slug: faker.random.alphaNumeric(10),
         properties: {
           obj: {
@@ -346,7 +347,7 @@ describe("Global tests", () => {
                             type: PropertyTypes.OBJECT,
                             properties: {
                               title: {
-                                type: PropertyTypes.TEXT,
+                                type: PropertyTypes.STRING,
                               },
                             },
                             validators: [
@@ -502,7 +503,7 @@ describe("Global tests", () => {
   it("should detect unique properties on nested property in array with multiple documents", async () => {
     const adapter = mockAdapter();
     const model = class extends Model {
-      static configuration = defineConfiguration({
+      static configuration = defineModelConf({
         slug: faker.random.alphaNumeric(10),
         properties: {
           obj: {
@@ -521,7 +522,7 @@ describe("Global tests", () => {
                           type: PropertyTypes.OBJECT,
                           properties: {
                             label: {
-                              type: PropertyTypes.TEXT,
+                              type: PropertyTypes.STRING,
                             },
                           },
                           validators: [
@@ -582,7 +583,7 @@ describe("Global tests", () => {
       slug: Media.configuration.slug,
       properties: {
         title: {
-          type: PropertyTypes.TEXT,
+          type: PropertyTypes.STRING,
         },
       },
     });
@@ -633,7 +634,7 @@ describe("Global tests", () => {
   //                                 options: {
   //                                   properties: {
   //                                     label: {
-  //                                       type: PropertyTypes.TEXT,
+  //                                       type: PropertyTypes.STRING,
   //                                       options: {},
   //                                     },
   //                                   },
@@ -707,10 +708,10 @@ describe("Global tests", () => {
           keyProperty: "title",
           properties: {
             title: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
             subtitle: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         },
@@ -727,7 +728,7 @@ describe("Global tests", () => {
           keyProperty: "title",
           properties: {
             title: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
           validators: [
@@ -751,7 +752,7 @@ describe("Global tests", () => {
           keyProperty: "title",
           properties: {
             title: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
           validators: [
@@ -798,7 +799,7 @@ describe("Global tests", () => {
     const DM = DataModel.extend({ adapterClass: adapter });
 
     class CoreModel extends Model {
-      static configuration = defineConfiguration({
+      static configuration = defineModelConf({
         slug: "sampleCoreModel",
         loadDatamodel: false, // That means it's a core model and creating a datamodel with this slug is not allowed
       });
@@ -821,7 +822,7 @@ describe("Global tests", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             "invalid name": {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         },
@@ -834,7 +835,7 @@ describe("Global tests", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             _invalidName: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         },
@@ -850,7 +851,7 @@ describe("Global tests", () => {
       slug,
       properties: {
         title: {
-          type: PropertyTypes.TEXT,
+          type: PropertyTypes.STRING,
           default: "defaultTitle",
         },
       },
@@ -861,8 +862,8 @@ describe("Global tests", () => {
         configuration: {
           properties: {
             title: {
-              type: PropertyTypes.TEXT;
-              default: string;
+              type: PropertyTypes.STRING;
+              default: "defaultTitle";
             };
           };
         };
@@ -879,7 +880,7 @@ describe("Global tests", () => {
         slug,
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
             default: "newDefaultTitle",
           },
         },
@@ -924,14 +925,14 @@ describe("Global tests", () => {
     adapter.propertiesMap = { ...adapter.propertiesMap, [PropertyTypes.OBJECT]: CustomPropertyObject };
 
     const CustomModel = class extends Model {
-      static configuration = defineConfiguration({
+      static configuration = defineModelConf({
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
             type: PropertyTypes.OBJECT,
             properties: {
               a: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },

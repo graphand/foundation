@@ -72,12 +72,12 @@ export class Property<T extends PropertyTypes = PropertyTypes> {
   toJSON() {
     return {
       ...this.#definition,
-      _path: this.#path,
+      path: this.#path,
     };
   }
 
   static fromJSON(json: ReturnType<Property["toJSON"]>) {
-    const { _path, ...definition } = json;
-    return new Property(definition, _path);
+    const { path, ...definition } = json;
+    return new Property(definition, path);
   }
 }

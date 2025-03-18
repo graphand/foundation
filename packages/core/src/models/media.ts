@@ -1,11 +1,12 @@
-import { Model, defineConfiguration } from "@/lib/model.js";
+import { Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
+import { defineModelConf } from "@/lib/utils.js";
 
 @modelDecorator()
 export class Media extends Model {
   static __name = "Media";
-  static configuration = defineConfiguration({
+  static configuration = defineModelConf({
     slug: "medias",
     loadDatamodel: true,
     connectable: true,
@@ -13,10 +14,10 @@ export class Media extends Model {
     isEnvironmentScoped: true,
     keyProperty: "name",
     properties: {
-      name: { type: PropertyTypes.TEXT },
+      name: { type: PropertyTypes.STRING },
       private: { type: PropertyTypes.BOOLEAN, default: false },
-      _mimetype: { type: PropertyTypes.TEXT },
-      _originalname: { type: PropertyTypes.TEXT },
+      _mimetype: { type: PropertyTypes.STRING },
+      _originalname: { type: PropertyTypes.STRING },
       _size: { type: PropertyTypes.INTEGER },
     },
   });

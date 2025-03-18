@@ -2,8 +2,7 @@ export enum PropertyTypes {
   DEFAULT = "default",
   ID = "id",
   ARRAY = "array",
-  TEXT = "text",
-  ENUM = "enum",
+  STRING = "string",
   NUMBER = "number",
   INTEGER = "integer",
   BOOLEAN = "boolean",
@@ -11,4 +10,5 @@ export enum PropertyTypes {
   DATE = "date",
   OBJECT = "object",
   IDENTITY = "identity",
+  NULL = "null",
 }

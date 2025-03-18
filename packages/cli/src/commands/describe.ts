@@ -17,7 +17,9 @@ export const commandDescribe = new Command("describe")
 
       await model.initialize();
 
-      console.info(`Fetching ${chalk.cyan(model.slug)} ${key ? `with key ${chalk.bold(key)}` : "list"} ...`);
+      console.info(
+        `Fetching ${chalk.cyan(model.configuration.slug)} ${key ? `with key ${chalk.bold(key)}` : "list"} ...`,
+      );
 
       if (key) {
         instance = await model.get(key);
@@ -28,16 +30,18 @@ export const commandDescribe = new Command("describe")
         instance = await model.get(query);
       }
 
-      spinner.succeed(`Fetched ${chalk.bold(model.slug)} ${key ? `with key ${chalk.bold(key)}` : "list"} successfully`);
+      spinner.succeed(
+        `Fetched ${chalk.bold(model.configuration.slug)} ${key ? `with key ${chalk.bold(key)}` : "list"} successfully`,
+      );
 
       if (!instance) {
         return;
       }
 
-      let fields: Array<string> = options.fields?.split(",");
+      let properties: Array<string> = options.properties?.split(",");
 
-      if (!fields?.length) {
-        fields = Array.from(new Set(["_id", model.getKeyField()]));
+      if (!properties?.length) {
+        properties = Array.from(new Set(["_id", model.getKeyProperty()]));
       }
 
       return instance.toJSON();

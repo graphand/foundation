@@ -1,22 +1,23 @@
-import { Model, defineConfiguration } from "@/lib/model.js";
+import { Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { Job } from "@/models/job.js";
 import { MergeRequestTypes } from "@/enums/merge-request-types.js";
+import { defineModelConf } from "@/lib/utils.js";
 
 @modelDecorator()
 export class MergeRequest extends Model {
   static __name = "MergeRequest";
-  static configuration = defineConfiguration({
+  static configuration = defineModelConf({
     slug: "mergeRequests",
     blockMultipleOperations: true,
     realtime: true,
     loadDatamodel: false,
     keyProperty: "slug",
     properties: {
-      slug: { type: PropertyTypes.TEXT },
+      slug: { type: PropertyTypes.STRING },
       type: {
-        type: PropertyTypes.ENUM,
+        type: PropertyTypes.STRING,
         enum: Object.values(MergeRequestTypes),
         default: MergeRequestTypes.STATIC,
       },
@@ -24,7 +25,7 @@ export class MergeRequest extends Model {
         type: PropertyTypes.OBJECT,
         properties: {
           source: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
           query: {
             type: PropertyTypes.OBJECT,
@@ -34,7 +35,7 @@ export class MergeRequest extends Model {
           },
         },
       },
-      target: { type: PropertyTypes.TEXT },
+      target: { type: PropertyTypes.STRING },
       _closed: {
         type: PropertyTypes.BOOLEAN,
         default: false,

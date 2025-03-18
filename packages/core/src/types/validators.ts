@@ -1,27 +1,27 @@
 import { ValidatorTypes } from "@/enums/validator-types.js";
 
 export type ValidatorOptionsMap = {
-  [ValidatorTypes.REQUIRED]: { property: Readonly<string> };
-  [ValidatorTypes.UNIQUE]: { property: Readonly<string> };
-  [ValidatorTypes.BOUNDARIES]: { property: Readonly<string>; min?: Readonly<number>; max?: Readonly<number> };
-  [ValidatorTypes.LENGTH]: { property: Readonly<string>; min?: Readonly<number>; max?: Readonly<number> };
+  [ValidatorTypes.REQUIRED]: { property: string };
+  [ValidatorTypes.UNIQUE]: { property: string };
+  [ValidatorTypes.BOUNDARIES]: { property: string; min?: number; max?: number };
+  [ValidatorTypes.LENGTH]: { property: string; min?: number; max?: number };
   [ValidatorTypes.REGEX]: {
-    property: Readonly<string>;
-    pattern: Readonly<string>;
-    options?: Readonly<Partial<Array<"i" | "m" | "s" | "u" | "y">>>;
+    property: string;
+    pattern: string;
+    options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
   };
-  [ValidatorTypes.SAMPLE]: { property: Readonly<string> };
-  [ValidatorTypes.KEY_PROPERTY]: { property: Readonly<string> };
-  [ValidatorTypes.EXISTS]: { property: Readonly<string> };
+  [ValidatorTypes.SAMPLE]: { property: string };
+  [ValidatorTypes.KEY_PROPERTY]: { property: string };
+  [ValidatorTypes.EXISTS]: { property: string };
   [ValidatorTypes.DATAMODEL]: {};
 };
 
 export type ValidatorOptionsMapOmitProperty = {
-  [ValidatorTypes.LENGTH]: { min?: Readonly<number>; max?: Readonly<number> };
-  [ValidatorTypes.BOUNDARIES]: { min?: Readonly<number>; max?: Readonly<number> };
+  [ValidatorTypes.LENGTH]: { min?: number; max?: number };
+  [ValidatorTypes.BOUNDARIES]: { min?: number; max?: number };
   [ValidatorTypes.REGEX]: {
-    pattern: Readonly<string>;
-    options?: Readonly<Partial<Array<"i" | "m" | "s" | "u" | "y">>>;
+    pattern: string;
+    options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
   };
 };
 

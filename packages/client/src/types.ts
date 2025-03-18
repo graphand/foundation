@@ -2,21 +2,21 @@ import {
   CoreErrorDefinition,
   InferModel,
   ModelInstance,
-  ModelJSON,
   ModelList,
   Model,
-  FieldTypes,
-  FieldDefinitionGeneric,
+  PropertyTypes,
+  PropertyDefinitionGeneric,
   GDXDatamodels,
   Models,
+  ModelData,
 } from "@graphand/core";
 import { Module } from "./lib/Module.js";
 import { Client } from "./lib/Client.js";
 import { ClientAdapter } from "./lib/ClientAdapter.js";
 
 declare module "@graphand/core" {
-  export interface SerializerFieldsMap<F extends FieldDefinitionGeneric<FieldTypes>> {
-    data: SerializerFieldsMap<F>["json"];
+  export interface SerializerPropertiesMap<F extends PropertyDefinitionGeneric<PropertyTypes>> {
+    data: SerializerPropertiesMap<F>["json"];
   }
 
   export interface TransactionCtx {
@@ -43,7 +43,7 @@ declare module "@graphand/core" {
     ): ReturnType<ClientAdapter<T>["subscribe"]>;
     export function clearCache<T extends typeof Model>(this: T): T;
     export function getClient<T extends typeof Model>(this: T): Client;
-    export function hydrateAndCache<T extends typeof Model>(this: T, _json?: ModelJSON<T>): ModelInstance<T>;
+    export function hydrateAndCache<T extends typeof Model>(this: T, _data?: Partial<ModelData<T>>): ModelInstance<T>;
   }
 
   export interface ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
@@ -164,10 +164,10 @@ export interface TraverseOptions {
 export type InferClientModel<C extends Client<any, any, any>, Input> =
   C extends Client<infer D, any, infer M>
     ? Input extends typeof Model
-      ? Input & (Input["slug"] extends keyof D ? D[Input["slug"]] : {})
+      ? Input & (Input["configuration"]["slug"] extends keyof D ? D[Input["configuration"]["slug"]] : {})
       : Input extends string
-        ? Input extends Extract<M[number]["slug"], string>
-          ? Extract<M[number], { slug: Input }> & (Input extends keyof D ? D[Input] : {})
+        ? Input extends Extract<M[number]["configuration"]["slug"], string>
+          ? Extract<M[number], { configuration: { slug: Input } }> & (Input extends keyof D ? D[Input] : {})
           : Input extends keyof D | keyof Models
             ? (Input extends keyof Models ? Models[Input & keyof Models] : typeof Model) &
                 (Input extends keyof D ? D[Input & keyof D] : {})

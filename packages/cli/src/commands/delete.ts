@@ -7,7 +7,7 @@ export const commandDelete = new Command("delete")
   .description("Delete an instance")
   .arguments("<modelName> [key]")
   .option("-q --query <query>", "URL encoded JSONQuery object")
-  .option("-f --fields <fields>", "Fields to display (comma separated)")
+  .option("-f --properties <properties>", "Properties to display (comma separated)")
   .option("-o --output <output>", "Output format (json, table)")
   .option("-1", "Sort by -_id")
   .option("--last", "Get the last created item")
@@ -17,11 +17,11 @@ export const commandDelete = new Command("delete")
       const model = client.model(String(modelName));
       let deleted: Array<string> = [];
 
-      console.info(`Initializing model ${model.slug} ...`);
+      console.info(`Initializing model ${model.configuration.slug} ...`);
 
       await model.initialize();
 
-      console.info(`Deleting ${model.slug} ${key ? `with key ${key}` : "list"} ...`);
+      console.info(`Deleting ${model.configuration.slug} ${key ? `with key ${key}` : "list"} ...`);
 
       const start = Date.now();
 
@@ -44,7 +44,7 @@ export const commandDelete = new Command("delete")
       const end = Date.now();
 
       spinner.succeed(
-        `Deleted ${model.slug} ${key ? `with key ${key}` : "list"}: ${deleted.length} result${
+        `Deleted ${model.configuration.slug} ${key ? `with key ${key}` : "list"}: ${deleted.length} result${
           deleted.length > 1 ? "s" : ""
         } processed in ${end - start}ms`,
       );

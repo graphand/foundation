@@ -7,43 +7,45 @@ import {
   ModelCrudEvent,
   ModelInstance,
   ModelJSON,
-  FieldTypes,
-  getNestedFieldsArrayForModel,
-  getFieldsPathsFromPath,
-  FieldOptionsMap,
-  Field,
+  PropertyTypes,
+  getNestedPropertiesArrayForModel,
+  getPropertiesPathsFromPath,
+  PropertyOptionsMap,
+  Property,
   JSONQuery,
   TransactionCtx,
-  FieldsDefinition,
+  PropertiesDefinition,
   controllerModelCount,
   controllerModelRead,
   controllerModelQuery,
   controllerModelCreate,
   controllerModelUpdate,
   controllerModelDelete,
-  FieldsPathItem,
-  defineFieldsProperties,
+  PropertiesPathItem,
+  definePropertiesObject,
   ModelData,
   UpdateObject,
   assignDatamodel,
   DataModel,
   GDXDatamodels,
+  PropertyDefinitionGeneric,
+  InferModelDefInput,
 } from "@graphand/core";
 import { Client } from "./Client.js";
 import { Subject } from "./Subject.js";
 import { canUseIds, traverseObject } from "./utils.js";
 import { ModelUpdaterEvent, SubjectObserver } from "@/types.js";
 import { ClientError } from "./ClientError.js";
-import FieldRelation from "./fields/Relation.js";
-import FieldArray from "./fields/Array.js";
+import PropertyRelation from "./properties/Relation.js";
+import PropertyArray from "./properties/Array.js";
 import { FetchError } from "./FetchError.js";
 
 export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapter<T> {
   static client: Client;
 
-  static fieldsMap = {
-    [FieldTypes.RELATION]: FieldRelation,
-    [FieldTypes.ARRAY]: FieldArray,
+  static propertiesMap = {
+    [PropertyTypes.RELATION]: PropertyRelation,
+    [PropertyTypes.ARRAY]: PropertyArray,
   };
 
   #store: Map<string, ModelInstance<T>> = new Map();
@@ -113,7 +115,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       },
       preTransformObject(obj) {
         if (obj instanceof Model) {
-          return { $_next: obj.get("_id") };
+          return { $_next: (obj as ModelInstance).get("_id") };
         }
 
         if (obj instanceof Set) {
@@ -136,7 +138,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return update;
   }
 
-  #sanitizePayload(payload: ModelJSON<T>): ModelJSON<T> {
+  #sanitizePayload(payload: InferModelDefInput<T, "json">): InferModelDefInput<T, "json"> {
     return payload;
   }
 
@@ -163,7 +165,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
       const res = await this.client.execute(controllerModelCount, {
         ctx,
-        params: { model: this.model.slug },
+        params: { model: this.model.configuration.slug },
         init: { body: JSON.stringify(this.#sanitizeQuery(query)), headers: { Accept: "application/json" } },
       });
 
@@ -173,7 +175,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     get: async ([query], ctx) => {
       this.checkClient();
 
-      if (this.model.isSingle()) {
+      if (this.model.configuration.single) {
         return this.#getSingle(ctx);
       }
 
@@ -247,7 +249,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
     const res = await this.client.execute(controllerModelRead, {
       ctx,
-      params: { model: this.model.slug },
+      params: { model: this.model.configuration.slug },
       init: { headers: { Accept: "application/json" } },
     });
     const json: ModelJSON<T> = await res.json().then(r => r.data);
@@ -264,7 +266,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     try {
       const res = await this.client.execute(controllerModelRead, {
         ctx,
-        params: { id, model: this.model.slug },
+        params: { id, model: this.model.configuration.slug },
         init: { headers: { Accept: "application/json" } },
       });
       const json: ModelJSON<T> = await res.json().then(r => r.data);
@@ -304,7 +306,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
     const res = await this.client.execute(controllerModelQuery, {
       ctx,
-      params: { model: this.model.slug },
+      params: { model: this.model.configuration.slug },
       data: query,
       init: { headers: { Accept: "application/json" } },
     });
@@ -338,7 +340,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         const newFormData = new FormData();
         newFormData.append("_json", JSON.stringify(data));
 
-        // Append all existing fields from the original FormData
+        // Append all existing properties from the original FormData
         for (let [key, value] of ctx.formData.entries()) {
           newFormData.append(key, value);
         }
@@ -360,7 +362,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
     const res = await this.client.execute(controllerModelCreate, {
       ctx,
-      params: { model: this.model.slug },
+      params: { model: this.model.configuration.slug },
       data,
       init: { body: ctx.formData, headers },
     });
@@ -378,7 +380,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         const newFormData = new FormData();
         newFormData.append("_json", JSON.stringify(data));
 
-        // Append all existing fields from the original FormData
+        // Append all existing properties from the original FormData
         for (let [key, value] of ctx.formData.entries()) {
           newFormData.append(key, value);
         }
@@ -400,7 +402,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
     const res = await this.client.execute(controllerModelCreate, {
       ctx,
-      params: { model: this.model.slug },
+      params: { model: this.model.configuration.slug },
       data,
       init: { body: ctx.formData, headers },
     });
@@ -419,7 +421,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         const newFormData = new FormData();
         newFormData.append("_json", JSON.stringify(data));
 
-        // Append all existing fields from the original FormData
+        // Append all existing properties from the original FormData
         for (let [key, value] of ctx.formData.entries()) {
           newFormData.append(key, value);
         }
@@ -441,7 +443,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
     const res = await this.client.execute(controllerModelUpdate, {
       ctx,
-      params: { id, model: this.model.slug },
+      params: { id, model: this.model.configuration.slug },
       data,
       init: { body: ctx.formData, headers },
     });
@@ -468,7 +470,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         const newFormData = new FormData();
         newFormData.append("_json", JSON.stringify(data));
 
-        // Append all existing fields from the original FormData
+        // Append all existing properties from the original FormData
         for (let [key, value] of ctx.formData.entries()) {
           newFormData.append(key, value);
         }
@@ -490,7 +492,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
     const res = await this.client.execute(controllerModelUpdate, {
       ctx,
-      params: { id: "", model: this.model.slug },
+      params: { id: "", model: this.model.configuration.slug },
       data,
       init: { body: ctx.formData, headers },
     });
@@ -503,7 +505,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   async #deleteById(id: string, ctx: TransactionCtx): Promise<boolean> {
     const res = await this.client.execute(controllerModelDelete, {
       ctx,
-      params: { id, model: this.model.slug },
+      params: { id, model: this.model.configuration.slug },
       init: { headers: { Accept: "application/json" } },
     });
 
@@ -529,7 +531,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
         const newFormData = new FormData();
         newFormData.append("_json", JSON.stringify(data));
 
-        // Append all existing fields from the original FormData
+        // Append all existing properties from the original FormData
         for (let [key, value] of ctx.formData.entries()) {
           newFormData.append(key, value);
         }
@@ -551,7 +553,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
 
     const res = await this.client.execute(controllerModelDelete, {
       ctx,
-      params: { id: "", model: this.model.slug },
+      params: { id: "", model: this.model.configuration.slug },
       data,
       init: { body: ctx.formData, headers },
     });
@@ -568,7 +570,10 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       return false;
     }
 
-    if (Array.isArray(this.client.options.disableCache) && this.client.options.disableCache.includes(this.model.slug)) {
+    if (
+      Array.isArray(this.client.options.disableCache) &&
+      this.client.options.disableCache.includes(this.model.configuration.slug)
+    ) {
       return false;
     }
 
@@ -600,9 +605,9 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       return this.#store.get(idOrKey);
     }
 
-    const keyField = this.model.getKeyField();
-    if (keyField) {
-      return Array.from(this.#store.values()).find(instance => instance.get(keyField, "json") === idOrKey);
+    const keyProperty = this.model.getKeyProperty();
+    if (keyProperty) {
+      return Array.from(this.#store.values()).find(instance => instance.get(keyProperty, "json") === idOrKey);
     }
 
     return undefined;
@@ -625,7 +630,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   #dispatchCreateEvent(data: ModelJSON<T>[]): void {
     this.dispatch({
       operation: "create",
-      model: this.model.slug,
+      model: this.model.configuration.slug,
       ids: data.map(item => item._id) as string[],
       data,
     });
@@ -634,7 +639,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   #dispatchUpdateEvent(data: ModelJSON<T>[]): void {
     this.dispatch({
       operation: "update",
-      model: this.model.slug,
+      model: this.model.configuration.slug,
       ids: data.map(item => item._id) as string[],
       data,
     });
@@ -643,14 +648,17 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   #dispatchDeleteEvent(ids: string[]): void {
     this.dispatch({
       operation: "delete",
-      model: this.model.slug,
+      model: this.model.configuration.slug,
       ids,
       data: null,
     });
   }
 
   #isStoreEnabled(): boolean {
-    if (Array.isArray(this.client.options.disableStore) && this.client.options.disableStore.includes(this.model.slug)) {
+    if (
+      Array.isArray(this.client.options.disableStore) &&
+      this.client.options.disableStore.includes(this.model.configuration.slug)
+    ) {
       return false;
     }
 
@@ -661,7 +669,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return true;
   }
 
-  processInstancePayload(payload: ModelJSON<T>): { updated: boolean; instance?: ModelInstance<T> } {
+  processInstancePayload(payload: Partial<ModelData<T>>): { updated: boolean; instance?: ModelInstance<T> } {
     if (!payload || typeof payload !== "object") {
       throw new Error("Invalid payload");
     }
@@ -679,7 +687,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     if (instance) {
       const newAge = Math.max(new Date(payload._createdAt ?? 0).getTime(), new Date(payload._updatedAt ?? 0).getTime());
       if (newAge > instance.__getAge()) {
-        instance.setData(payload);
+        instance.setData(payload as ModelData<T>);
         updated = true;
       }
     } else if (payload._id) {
@@ -699,41 +707,44 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     const modelsToInitialize: Set<typeof Model> = new Set();
 
     const collectModels = (obj: any, model: typeof Model) => {
-      const fields = getNestedFieldsArrayForModel(model);
+      const properties = getNestedPropertiesArrayForModel(model);
 
-      for (const field of fields) {
-        const fieldsPaths = getFieldsPathsFromPath(model, field.path).filter(Boolean) as Array<FieldsPathItem>;
+      for (const property of properties) {
+        const propertiesPaths = getPropertiesPathsFromPath(model, property.path).filter(
+          Boolean,
+        ) as Array<PropertiesPathItem>;
         let current = obj;
 
-        for (const { field: currentField, key } of fieldsPaths) {
+        for (const { property: currentProperty, key } of propertiesPaths) {
           if (current?.[key] === undefined) break;
 
-          if (currentField.type === FieldTypes.ARRAY) {
-            const arrayOptions = currentField.options as FieldOptionsMap[FieldTypes.ARRAY];
+          if (currentProperty.type === PropertyTypes.ARRAY) {
+            const { items } = currentProperty.definition as PropertyDefinitionGeneric<PropertyTypes.ARRAY>;
             if (Array.isArray(current[key])) {
-              if (arrayOptions?.items?.type === FieldTypes.RELATION) {
-                const refModel = this.client.model((arrayOptions.items.options as any).ref);
+              if (items?.type === PropertyTypes.RELATION) {
+                const refModel = this.client.model(items.ref!);
                 modelsToInitialize.add(refModel);
                 current[key].forEach((item: any) => {
                   if (typeof item === "object" && item !== null) {
                     collectModels(item, refModel);
                   }
                 });
-              } else if (arrayOptions?.items?.type === FieldTypes.OBJECT) {
+              } else if (items?.type === PropertyTypes.OBJECT) {
                 current[key].forEach((item: any) => {
                   collectModels(item, model);
                 });
               }
             }
             break;
-          } else if (currentField.type === FieldTypes.RELATION) {
+          } else if (currentProperty.type === PropertyTypes.RELATION) {
             if (typeof current[key] === "object" && current[key] !== null) {
-              const refModel = this.client.model((currentField.options as any).ref);
+              const { ref } = currentProperty.definition as PropertyDefinitionGeneric<PropertyTypes.RELATION>;
+              const refModel = this.client.model(ref as string);
               modelsToInitialize.add(refModel);
               collectModels(current[key], refModel);
             }
             break;
-          } else if (currentField.type === FieldTypes.OBJECT) {
+          } else if (currentProperty.type === PropertyTypes.OBJECT) {
             if (typeof current[key] === "object" && current[key] !== null) {
               collectModels(current[key], model);
             }
@@ -755,46 +766,53 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     await Promise.all(Array.from(modelsToInitialize).map(m => m.initialize()));
   }
 
-  #processPopulatedData(payload: ModelJSON<T>): ModelJSON<T> {
-    const relationFields = getNestedFieldsArrayForModel(this.model).filter(f => f.type === FieldTypes.RELATION);
+  #processPopulatedData(payload: Partial<ModelData<T>>): Partial<ModelData<T>> {
+    const relationProperties = getNestedPropertiesArrayForModel(this.model).filter(
+      f => f.type === PropertyTypes.RELATION,
+    );
 
-    if (!relationFields.length) {
+    if (!relationProperties.length) {
       return payload;
     }
 
-    const processRelationField = (data: any, field: Field): any => {
-      const fieldsPaths = getFieldsPathsFromPath(this.model, field.path).filter(Boolean) as Array<FieldsPathItem>;
+    const processRelationProperty = (data: any, property: Property): any => {
+      const propertiesPaths = getPropertiesPathsFromPath(this.model, property.path).filter(
+        Boolean,
+      ) as Array<PropertiesPathItem>;
       let current = data;
 
-      for (const { field: currentField, key } of fieldsPaths) {
+      for (const { property: currentProperty, key } of propertiesPaths) {
         if (current?.[key] === undefined) break;
 
-        if (currentField.type === FieldTypes.ARRAY) {
-          const arrayOptions = currentField.options as FieldOptionsMap[FieldTypes.ARRAY];
+        if (currentProperty.type === PropertyTypes.ARRAY) {
+          const arrayOptions = currentProperty.definition as PropertyOptionsMap[PropertyTypes.ARRAY];
           if (Array.isArray(current[key])) {
-            if (arrayOptions?.items?.type === FieldTypes.RELATION) {
-              const refModel = this.client.model((arrayOptions.items.options as any).ref);
+            if (arrayOptions?.items?.type === PropertyTypes.RELATION) {
+              const refModel = this.client.model(arrayOptions.items.ref!);
               const adapter = refModel.getAdapter() as ClientAdapter;
               current[key] = current[key].map((item: any) =>
                 typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance?._id : item,
               );
-            } else if (arrayOptions?.items?.type === FieldTypes.OBJECT) {
-              const nestedOptions = arrayOptions.items.options as FieldOptionsMap[FieldTypes.OBJECT];
-              current[key] = current[key].map((item: any) => this.#processNestedObject(item, nestedOptions?.fields));
+            } else if (arrayOptions?.items?.type === PropertyTypes.OBJECT) {
+              const nestedOptions = arrayOptions.items as PropertyOptionsMap[PropertyTypes.OBJECT];
+              current[key] = current[key].map((item: any) =>
+                this.#processNestedObject(item, nestedOptions?.properties),
+              );
             }
           }
           break;
-        } else if (currentField.type === FieldTypes.RELATION) {
+        } else if (currentProperty.type === PropertyTypes.RELATION) {
           if (typeof current[key] === "object" && current[key] !== null) {
-            const refModel = this.client.model((currentField.options as any).ref);
+            const { ref } = currentProperty.definition as PropertyDefinitionGeneric<PropertyTypes.RELATION>;
+            const refModel = this.client.model(ref as string);
             const adapter = refModel.getAdapter() as ClientAdapter;
             current[key] = adapter.processInstancePayload(current[key]).instance?._id;
           }
           break;
-        } else if (currentField.type === FieldTypes.OBJECT) {
-          const nestedOptions = currentField.options as FieldOptionsMap[FieldTypes.OBJECT];
+        } else if (currentProperty.type === PropertyTypes.OBJECT) {
+          const { properties } = currentProperty.definition as PropertyDefinitionGeneric<PropertyTypes.OBJECT>;
           if (typeof current[key] === "object" && current[key] !== null) {
-            current[key] = this.#processNestedObject(current[key], nestedOptions?.fields);
+            current[key] = this.#processNestedObject(current[key], properties);
           }
           break;
         }
@@ -815,8 +833,8 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
       }
 
       const processedObj = obj;
-      for (const field of relationFields) {
-        processRelationField(processedObj, field);
+      for (const property of relationProperties) {
+        processRelationProperty(processedObj, property);
       }
 
       for (const key in processedObj) {
@@ -829,37 +847,36 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return processObject(payload);
   }
 
-  #processNestedObject(obj: any, fields?: FieldsDefinition): any {
-    if (!fields) return obj;
+  #processNestedObject(obj: any, properties?: PropertiesDefinition): any {
+    if (!properties) return obj;
 
     const processedObj = obj;
-    for (const [key, field] of Object.entries(fields)) {
-      if (field.type === FieldTypes.RELATION) {
+    for (const [key, property] of Object.entries(properties)) {
+      if (property.type === PropertyTypes.RELATION) {
         if (typeof processedObj[key] === "object" && processedObj[key] !== null) {
-          const refModel = this.client.model((field.options as any).ref);
+          const { ref } = property as PropertyDefinitionGeneric<PropertyTypes.RELATION>;
+          const refModel = this.client.model(ref as string);
           const adapter = refModel.getAdapter() as ClientAdapter;
           processedObj[key] = adapter.processInstancePayload(processedObj[key]).instance?._id;
         }
-      } else if (field.type === FieldTypes.ARRAY) {
-        const arrayOptions = field.options as FieldOptionsMap[FieldTypes.ARRAY];
+      } else if (property.type === PropertyTypes.ARRAY) {
+        const { items } = property as PropertyDefinitionGeneric<PropertyTypes.ARRAY>;
         if (Array.isArray(processedObj[key])) {
-          if (arrayOptions?.items?.type === FieldTypes.RELATION) {
-            const refModel = this.client.model((arrayOptions.items.options as any).ref);
+          if (items?.type === PropertyTypes.RELATION) {
+            const refModel = this.client.model(items.ref!);
             const adapter = refModel.getAdapter() as ClientAdapter;
             processedObj[key] = processedObj[key].map((item: any) =>
               typeof item === "object" && item !== null ? adapter.processInstancePayload(item).instance?._id : item,
             );
-          } else if (arrayOptions?.items?.type === FieldTypes.OBJECT) {
-            const nestedOptions = arrayOptions.items.options as FieldOptionsMap[FieldTypes.OBJECT];
-            processedObj[key] = processedObj[key].map((item: any) =>
-              this.#processNestedObject(item, nestedOptions?.fields),
-            );
+          } else if (items?.type === PropertyTypes.OBJECT) {
+            const { properties } = items as PropertyDefinitionGeneric<PropertyTypes.OBJECT>;
+            processedObj[key] = processedObj[key].map((item: any) => this.#processNestedObject(item, properties));
           }
         }
-      } else if (field.type === FieldTypes.OBJECT) {
+      } else if (property.type === PropertyTypes.OBJECT) {
         if (typeof processedObj[key] === "object" && processedObj[key] !== null) {
-          const nestedOptions = field.options as FieldOptionsMap[FieldTypes.OBJECT];
-          processedObj[key] = this.#processNestedObject(processedObj[key], nestedOptions?.fields);
+          const { properties } = property as PropertyDefinitionGeneric<PropertyTypes.OBJECT>;
+          processedObj[key] = this.#processNestedObject(processedObj[key], properties);
         }
       }
     }
@@ -871,9 +888,9 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   dispatch(event: ModelCrudEvent<"create" | "update" | "delete", T>): void {
-    if (this.model.slug !== event.model) {
+    if (this.model.configuration.slug !== event.model) {
       throw new ClientError({
-        message: `Invalid model ${event.model} for adapter ${this.model.slug}`,
+        message: `Invalid model ${event.model} for adapter ${this.model.configuration.slug}`,
       });
     }
 
@@ -884,9 +901,9 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     this.#store.clear();
   }
 
-  processAndCacheInstance(json?: ModelJSON<T>): ModelInstance<T> | null {
-    json ??= {} as ModelJSON<T>;
-    const { instance, updated } = this.processInstancePayload(json);
+  processAndCacheInstance(data?: Partial<ModelData<T>>): ModelInstance<T> | null {
+    data ??= {} as Partial<ModelData<T>>;
+    const { instance, updated } = this.processInstancePayload(data);
 
     if (updated && instance?._id) {
       this.#cacheSubject.next({
@@ -898,18 +915,18 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return instance || null;
   }
 
-  resetFieldsCache() {
-    super.resetFieldsCache();
+  resetPropertiesCache() {
+    super.resetPropertiesCache();
     for (const instance of this.#store.values()) {
-      defineFieldsProperties(instance);
+      definePropertiesObject(instance);
     }
   }
 
   static registerModel(model: typeof Model, force?: boolean): void {
     const datamodels = this.client?.options.datamodels as GDXDatamodels;
 
-    if (model.slug && datamodels && datamodels?.[model.slug]) {
-      assignDatamodel(model, datamodels[model.slug] as ModelJSON<typeof DataModel>);
+    if (model.configuration.slug && datamodels && datamodels?.[model.configuration.slug]) {
+      assignDatamodel(model, datamodels[model.configuration.slug] as ModelJSON<typeof DataModel>);
     }
 
     super.registerModel(model, force);

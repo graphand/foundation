@@ -1,22 +1,23 @@
-import { defineConfiguration, Model } from "@/lib/model.js";
+import { Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { PropertiesRestriction, ModelInstance, Rule } from "@/types/index.js";
 import { RuleActions } from "@/enums/rule-actions.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Patterns } from "@/enums/patterns.js";
+import { defineModelConf } from "@/lib/utils.js";
 
 @modelDecorator()
 export class Role extends Model {
   static __name = "Role";
-  static configuration = defineConfiguration({
+  static configuration = defineModelConf({
     slug: "roles",
     isEnvironmentScoped: true,
     realtime: true,
     loadDatamodel: false,
     keyProperty: "slug",
     properties: {
-      slug: { type: PropertyTypes.TEXT },
+      slug: { type: PropertyTypes.STRING },
       _admin: {
         type: PropertyTypes.BOOLEAN,
         default: false,
@@ -35,12 +36,12 @@ export class Role extends Model {
           strict: true,
           properties: {
             ref: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
             actions: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.ENUM,
+                type: PropertyTypes.STRING,
                 enum: Object.values(RuleActions),
               },
             },
@@ -60,12 +61,12 @@ export class Role extends Model {
           strict: true,
           properties: {
             ref: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
             actions: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.ENUM,
+                type: PropertyTypes.STRING,
                 enum: Object.values(RuleActions),
               },
             },
@@ -75,7 +76,7 @@ export class Role extends Model {
             properties: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
             inverseProperties: {

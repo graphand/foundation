@@ -9,7 +9,7 @@ import { PropertyId } from "./properties/id.js";
 import { PropertyNumber } from "./properties/number.js";
 import { PropertyBoolean } from "./properties/boolean.js";
 import { PropertyDate } from "./properties/date.js";
-import { PropertyText } from "./properties/text.js";
+import { PropertyString } from "./properties/string.js";
 import { PropertyRelation } from "./properties/relation.js";
 import { PropertyObject } from "./properties/object.js";
 import { PropertyIdentity } from "./properties/identity.js";
@@ -22,7 +22,7 @@ import { ValidatorLength } from "./validators/length.js";
 import { ValidatorBoundaries } from "./validators/boundaries.js";
 import { ValidatorRequired } from "./validators/required.js";
 import { PropertyInteger } from "./properties/integer.js";
-import { PropertyEnum } from "./properties/enum.js";
+import { PropertyNull } from "./properties/null.js";
 
 export class Adapter<T extends typeof Model = typeof Model> {
   static __name = "Adapter";
@@ -33,12 +33,12 @@ export class Adapter<T extends typeof Model = typeof Model> {
     [PropertyTypes.INTEGER]: PropertyInteger,
     [PropertyTypes.BOOLEAN]: PropertyBoolean,
     [PropertyTypes.DATE]: PropertyDate,
-    [PropertyTypes.TEXT]: PropertyText,
-    [PropertyTypes.ENUM]: PropertyEnum,
+    [PropertyTypes.STRING]: PropertyString,
     [PropertyTypes.RELATION]: PropertyRelation,
     [PropertyTypes.OBJECT]: PropertyObject,
     [PropertyTypes.IDENTITY]: PropertyIdentity,
     [PropertyTypes.ARRAY]: PropertyArray,
+    [PropertyTypes.NULL]: PropertyNull,
   };
   static validatorsMap: Partial<{ [T in ValidatorTypes]: typeof Validator<T> }> = {
     [ValidatorTypes.REQUIRED]: ValidatorRequired,

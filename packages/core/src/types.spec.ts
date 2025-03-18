@@ -4,8 +4,9 @@ import { HookData, JSONPrimitive, ModelJSON, PropertyDefinitionGeneric } from "@
 import { PromiseModel } from "./lib/promise-model.js";
 import { Account } from "./models/account.js";
 import { Role } from "./models/role.js";
-import { defineConfiguration } from "@/lib/model.js";
+import { defineModelConf } from "@/lib/utils.js";
 import { faker } from "@faker-js/faker";
+import { modelDecorator } from "./lib/model-decorator.js";
 
 declare module "./index.js" {
   export interface SerializerPropertiesMap<
@@ -16,26 +17,26 @@ declare module "./index.js" {
 }
 
 class CustomModel extends Model {
-  static configuration = defineConfiguration({
+  static configuration = defineModelConf({
     slug: "customModel",
     properties: {
       property: {
-        type: PropertyTypes.TEXT,
+        type: PropertyTypes.STRING,
       },
     },
   });
 }
 
 class CustomAccount extends Model {
-  static configuration = defineConfiguration({
+  static configuration = defineModelConf({
     slug: "accounts",
     properties: {
       ...Account.configuration.properties,
       foo: {
-        type: PropertyTypes.TEXT,
+        type: PropertyTypes.STRING,
       },
       bar: {
-        type: "text",
+        type: "string",
       },
     },
   });
@@ -58,15 +59,16 @@ describe("test types", () => {
 
   describe("properties type check", () => {
     it("utils should work", () => {
+      @modelDecorator()
       class CustomModel extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: faker.random.alphaNumeric(10),
           properties: {
             title: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
             subtitle: {
-              type: "text",
+              type: "string",
             },
           },
         });
@@ -86,12 +88,13 @@ describe("test types", () => {
     describe("test object", () => {
       describe("text property", () => {
         it("should validate text property", () => {
+          @modelDecorator()
           class CustomModel extends Model {
-            static configuration = defineConfiguration({
+            static configuration = defineModelConf({
               slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             });
@@ -105,15 +108,16 @@ describe("test types", () => {
 
       describe("nested property", () => {
         it("should validate nested property", () => {
+          @modelDecorator()
           class CustomModel extends Model {
-            static configuration = defineConfiguration({
+            static configuration = defineModelConf({
               slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.OBJECT,
                   properties: {
                     title: {
-                      type: PropertyTypes.TEXT,
+                      type: PropertyTypes.STRING,
                     },
                   },
                 },
@@ -128,15 +132,16 @@ describe("test types", () => {
         });
 
         it("should respect options.strict", () => {
+          @modelDecorator()
           class CustomModel extends Model {
-            static configuration = defineConfiguration({
+            static configuration = defineModelConf({
               slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.OBJECT,
                   properties: {
                     title: {
-                      type: PropertyTypes.TEXT,
+                      type: PropertyTypes.STRING,
                     },
                   },
                   strict: true,
@@ -153,8 +158,9 @@ describe("test types", () => {
 
       describe("relation property", () => {
         it("should validate relation property", () => {
+          @modelDecorator()
           class CustomModel extends Model {
-            static configuration = defineConfiguration({
+            static configuration = defineModelConf({
               slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
@@ -173,8 +179,9 @@ describe("test types", () => {
 
       describe("date property", () => {
         it("should validate date property", () => {
+          @modelDecorator()
           class CustomModel extends Model {
-            static configuration = defineConfiguration({
+            static configuration = defineModelConf({
               slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
@@ -192,8 +199,9 @@ describe("test types", () => {
 
       describe("integer property", () => {
         it("should validate integer property", () => {
+          @modelDecorator()
           class CustomModel extends Model {
-            static configuration = defineConfiguration({
+            static configuration = defineModelConf({
               slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
@@ -216,12 +224,13 @@ describe("test types", () => {
 
       describe("enum property", () => {
         it("should validate enum property", () => {
+          @modelDecorator()
           class CustomModel extends Model {
-            static configuration = defineConfiguration({
+            static configuration = defineModelConf({
               slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
-                  type: PropertyTypes.ENUM,
+                  type: PropertyTypes.STRING,
                   enum: ["a", "b", "c"],
                 },
               },
@@ -234,7 +243,7 @@ describe("test types", () => {
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string | null | undefined>(json._id && json.property); // Check the property is a string
+          simulateTypeCheck<string | null | undefined>(json.property); // Check the property is a string
           simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
         });
       });
@@ -243,8 +252,9 @@ describe("test types", () => {
     describe("test json", () => {
       describe("date property", () => {
         it("should validate date property", () => {
+          @modelDecorator()
           class CustomModel extends Model {
-            static configuration = defineConfiguration({
+            static configuration = defineModelConf({
               slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
@@ -260,15 +270,16 @@ describe("test types", () => {
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string | null | undefined>(json._id && json.property); // Check the property is a string
+          simulateTypeCheck<string | null | undefined>(json.property); // Check the property is a string
           simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
         });
       });
 
       describe("relation property", () => {
         it("should validate relation property", () => {
+          @modelDecorator()
           class CustomModel extends Model {
-            static configuration = defineConfiguration({
+            static configuration = defineModelConf({
               slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
@@ -285,19 +296,20 @@ describe("test types", () => {
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string | ModelJSON<typeof Account> | null | undefined>(json._id && json.property);
+          simulateTypeCheck<string | ModelJSON<typeof Account> | null | undefined>(json.property);
         });
       });
 
       describe("array property", () => {
         it("should validate array of relation", () => {
+          @modelDecorator()
           class CustomModel extends Model {
-            static configuration = defineConfiguration({
+            static configuration = defineModelConf({
               slug: faker.random.alphaNumeric(10),
               properties: {
                 property: {
                   type: PropertyTypes.ARRAY,
-                  items: { type: PropertyTypes.TEXT },
+                  items: { type: PropertyTypes.STRING },
                 },
               },
             });
@@ -319,11 +331,11 @@ describe("test types", () => {
   describe("generic model", () => {
     it("should validate relation property", () => {
       const i = (
-        Model as typeof Model & {
+        modelDecorator()(Model) as typeof Model & {
           configuration: {
             properties: {
               title: {
-                type: PropertyTypes.TEXT;
+                type: PropertyTypes.STRING;
               };
               property: {
                 type: PropertyTypes.RELATION;
@@ -366,7 +378,7 @@ describe("test types", () => {
         configuration: {
           properties: {
             property: {
-              type: PropertyTypes.TEXT;
+              type: PropertyTypes.STRING;
             };
           };
         };
@@ -402,11 +414,11 @@ describe("test types", () => {
 
   it("should ...", () => {
     const i = (
-      Model as typeof Model & {
+      modelDecorator()(Model) as typeof Model & {
         configuration: {
           properties: {
             property1: {
-              type: PropertyTypes.TEXT;
+              type: PropertyTypes.STRING;
             };
             property2: {
               type: PropertyTypes.NUMBER;
@@ -427,8 +439,9 @@ describe("test types", () => {
   });
 
   it("should ...", () => {
+    @modelDecorator()
     class RelatedModel extends Model {
-      static configuration = defineConfiguration({
+      static configuration = defineModelConf({
         slug: "related",
         properties: {
           property: {
@@ -438,21 +451,20 @@ describe("test types", () => {
       });
     }
 
+    @modelDecorator()
     class CustomModel extends Model {
-      static configuration = defineConfiguration({
+      static configuration = defineModelConf({
         slug: "custom",
         properties: {
           property1: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
           property2: {
             type: PropertyTypes.NUMBER,
           },
           rel: {
             type: PropertyTypes.RELATION,
-            options: {
-              ref: RelatedModel.configuration.slug,
-            },
+            ref: RelatedModel.configuration.slug,
           },
         },
       });
@@ -461,6 +473,28 @@ describe("test types", () => {
     const i = CustomModel.hydrate();
 
     simulateTypeCheck<PromiseModel<typeof Model> | null | undefined>(i.rel);
+  });
+
+  it("should infer the keyProperty as required", async () => {
+    @modelDecorator()
+    class CustomModel extends Model {
+      static configuration = defineModelConf({
+        slug: "custom",
+        properties: {
+          property1: {
+            type: PropertyTypes.STRING,
+          },
+          property2: {
+            type: PropertyTypes.STRING,
+          },
+        },
+        keyProperty: "property1",
+      });
+    }
+
+    const i = CustomModel.hydrate({ property1: "ok" });
+
+    simulateTypeCheck<string>(i.property1);
   });
 
   describe("hooks", () => {

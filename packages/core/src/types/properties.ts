@@ -21,46 +21,44 @@ export type ConditionalPropertiesDefinition<Mappings extends Array<string> = Arr
 
 export type PropertyOptionsMap = {
   [PropertyTypes.ARRAY]: {
-    default?: Readonly<Array<unknown>>;
-    items: Readonly<PropertyDefinitions>;
-    validators?: Readonly<Array<ValidatorDefinitionOmitProperty>>;
-    distinct?: Readonly<boolean>;
+    default?: Array<unknown>;
+    items: PropertyDefinitions;
+    validators?: Array<ValidatorDefinitionOmitProperty>;
+    distinct?: boolean;
   };
-  [PropertyTypes.TEXT]: {
-    default?: Readonly<string>;
+  [PropertyTypes.STRING]: {
+    default?: string;
+    enum?: Array<string>;
   };
   [PropertyTypes.RELATION]: {
     ref?: string;
   };
   [PropertyTypes.NUMBER]: {
-    default?: Readonly<number>;
+    default?: number;
   };
   [PropertyTypes.INTEGER]: {
-    default?: Readonly<number>;
+    default?: number;
   };
   [PropertyTypes.OBJECT]: {
-    default?: Readonly<JSONObject>;
-    additionalProperties?: Readonly<PropertyDefinitions>;
-    conditionalProperties?: Readonly<ConditionalPropertiesDefinition>;
-    properties?: Readonly<PropertiesDefinition>;
-    strict?: Readonly<boolean>;
-    validators?: Readonly<ValidatorsDefinition>;
-    required?: Readonly<string[]>;
+    default?: JSONObject;
+    additionalProperties?: PropertyDefinitions;
+    conditionalProperties?: ConditionalPropertiesDefinition;
+    properties?: PropertiesDefinition;
+    strict?: boolean;
+    validators?: ValidatorsDefinition;
+    required?: string[];
   };
   [PropertyTypes.BOOLEAN]: {
-    default?: Readonly<boolean>;
-  };
-  [PropertyTypes.ENUM]: {
-    default?: Readonly<string>;
-    enum: Array<string>;
+    default?: boolean;
   };
   [PropertyTypes.DEFAULT]: {};
   [PropertyTypes.ID]: {};
   [PropertyTypes.DATE]: {};
   [PropertyTypes.IDENTITY]: {};
+  [PropertyTypes.NULL]: {};
 };
 
-export type PropertyOptions<T extends PropertyTypes = PropertyTypes> = Readonly<PropertyOptionsMap[T]>;
+export type PropertyOptions<T extends PropertyTypes = PropertyTypes> = PropertyOptionsMap[T];
 
 export type PropertyDefinitions = {
   [K in PropertyTypes]: PropertyDefinitionGeneric<K>;
@@ -118,10 +116,12 @@ type SerializerJSON<F extends PropertyDefinitionGeneric<PropertyTypes>> = {
   [PropertyTypes.NUMBER]: number;
   [PropertyTypes.INTEGER]: number;
   [PropertyTypes.DATE]: string;
-  [PropertyTypes.TEXT]: string;
-  [PropertyTypes.ENUM]: F extends PropertyDefinitionGeneric<PropertyTypes.ENUM>
-    ? F["enum"][number] | `${F["enum"][number]}`
+  [PropertyTypes.STRING]: F extends PropertyDefinitionGeneric<PropertyTypes.STRING>
+    ? F["enum"] extends string[]
+      ? F["enum"][number] | `${F["enum"][number]}`
+      : string
     : never;
+  [PropertyTypes.NULL]: null;
   [PropertyTypes.OBJECT]: F extends PropertyDefinitionGeneric<PropertyTypes.OBJECT>
     ? (F["properties"] extends PropertiesDefinition
         ? F["additionalProperties"] extends PropertyDefinition
@@ -148,10 +148,12 @@ type SerializerObject<F extends PropertyDefinitionGeneric<PropertyTypes>> = {
   [PropertyTypes.NUMBER]: number;
   [PropertyTypes.INTEGER]: number;
   [PropertyTypes.DATE]: Date;
-  [PropertyTypes.TEXT]: string;
-  [PropertyTypes.ENUM]: F extends PropertyDefinitionGeneric<PropertyTypes.ENUM>
-    ? F["enum"][number] | `${F["enum"][number]}`
+  [PropertyTypes.STRING]: F extends PropertyDefinitionGeneric<PropertyTypes.STRING>
+    ? F["enum"] extends string[]
+      ? F["enum"][number] | `${F["enum"][number]}`
+      : string
     : never;
+  [PropertyTypes.NULL]: null;
   [PropertyTypes.OBJECT]: F extends PropertyDefinitionGeneric<PropertyTypes.OBJECT>
     ? (F["properties"] extends PropertiesDefinition
         ? F["additionalProperties"] extends PropertyDefinition
@@ -192,10 +194,27 @@ export type InferSystemProperties<M extends typeof Model, S extends SerializerFo
   [K in keyof SystemProperties<M>]: InferPropertyType<SystemProperties<M>[K], S>;
 };
 
+// Helper type to combine required properties with keyProperty if present
+type CombineRequired<T, K extends string | undefined> = K extends string
+  ? string extends K
+    ? T extends [string, ...string[]] | readonly [string, ...string[]]
+      ? T
+      : undefined
+    : T extends [string, ...string[]] | readonly [string, ...string[]]
+      ? [...T, K]
+      : [K]
+  : T extends [string, ...string[]] | readonly [string, ...string[]]
+    ? T
+    : undefined;
+
 export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "object"> = (M extends {
-  configuration: { properties: infer R; required?: infer T };
+  configuration: { properties: infer R; required?: infer T; keyProperty?: infer K };
 }
-  ? InferPropertiesDefinition<R extends PropertiesDefinition ? R : never, S, T>
+  ? InferPropertiesDefinition<
+      R extends PropertiesDefinition ? R : never,
+      S,
+      CombineRequired<T, K extends string ? K : undefined>
+    >
   : unknown) &
   InferSystemProperties<M, S>;
 
@@ -225,6 +244,8 @@ export type ModelObject<M extends typeof Model = typeof Model> = InferModelDef<M
 export type ModelJSON<M extends typeof Model = typeof Model> = InferModelDef<M, "json">;
 
 export type ModelData<M extends typeof Model = typeof Model> = InferModelDef<M, "data">;
+
+export type ModelInput<M extends typeof Model = typeof Model> = InferModelDefInput<M, "data">;
 
 export type PropertySerializerInput<S extends SerializerFormat = SerializerFormat> = {
   value: unknown;

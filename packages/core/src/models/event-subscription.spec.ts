@@ -62,11 +62,7 @@ describe("EventSubscription Model", () => {
       await expect(
         EventSubscriptionModel.create({
           slug: faker.random.alphaNumeric(10),
-          channels: [
-            {
-              channel: "invalid" as SubscriptionChannels,
-            },
-          ],
+          channels: [{ channel: "invalid" as SubscriptionChannels, options: {} }],
         }),
       ).rejects.toThrow(ValidationError);
     });
@@ -76,11 +72,8 @@ describe("EventSubscription Model", () => {
         await expect(
           EventSubscriptionModel.create({
             slug: faker.random.alphaNumeric(10),
-            channels: [
-              {
-                channel: SubscriptionChannels.EMAIL,
-              },
-            ],
+            // @ts-expect-error
+            channels: [{ channel: SubscriptionChannels.EMAIL }],
           }),
         ).rejects.toThrow(ValidationError);
       });
@@ -137,11 +130,8 @@ describe("EventSubscription Model", () => {
         await expect(
           EventSubscriptionModel.create({
             slug: faker.random.alphaNumeric(10),
-            channels: [
-              {
-                channel: SubscriptionChannels.ACCOUNT,
-              },
-            ],
+            // @ts-expect-error
+            channels: [{ channel: SubscriptionChannels.ACCOUNT }],
           }),
         ).rejects.toThrow(ValidationError);
       });
@@ -200,11 +190,8 @@ describe("EventSubscription Model", () => {
         await expect(
           EventSubscriptionModel.create({
             slug: faker.random.alphaNumeric(10),
-            channels: [
-              {
-                channel: SubscriptionChannels.ROLE,
-              },
-            ],
+            // @ts-expect-error
+            channels: [{ channel: SubscriptionChannels.ROLE }],
           }),
         ).rejects.toThrow(ValidationError);
       });
@@ -261,11 +248,8 @@ describe("EventSubscription Model", () => {
         await expect(
           EventSubscriptionModel.create({
             slug: faker.random.alphaNumeric(10),
-            channels: [
-              {
-                channel: SubscriptionChannels.SLACK,
-              },
-            ],
+            // @ts-expect-error
+            channels: [{ channel: SubscriptionChannels.SLACK }],
           }),
         ).rejects.toThrow(ValidationError);
       });

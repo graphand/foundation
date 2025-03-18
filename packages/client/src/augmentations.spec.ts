@@ -2,15 +2,15 @@ import { vi } from "vitest";
 import { ObjectId } from "bson";
 import { ModelUpdaterEvent } from "@/types.js";
 import {
-  FieldTypes,
+  PropertyTypes,
   Model,
   ModelCrudEvent,
   modelDecorator,
-  ModelDefinition,
   ModelInstance,
   ModelList,
   PromiseModel,
   PromiseModelList,
+  defineModelConf,
 } from "@graphand/core";
 import { Client } from "./lib/Client.js";
 import { ClientAdapter } from "./lib/ClientAdapter.js";
@@ -18,15 +18,15 @@ import { ClientAdapter } from "./lib/ClientAdapter.js";
 describe("augmentations", () => {
   @modelDecorator()
   class TestModel extends Model {
-    static slug = "testModel";
-    static loadDatamodel = false as const;
-    static definition = {
-      fields: {
-        someField: {
-          type: FieldTypes.TEXT,
+    static configuration = defineModelConf({
+      slug: "testModel",
+      loadDatamodel: false,
+      properties: {
+        someProperty: {
+          type: PropertyTypes.STRING,
         },
       },
-    };
+    });
   }
 
   let client: Client;
@@ -59,7 +59,7 @@ describe("augmentations", () => {
       model.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
-      adapter.dispatch({ ...event, model: model.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
       >);
@@ -75,7 +75,7 @@ describe("augmentations", () => {
       unsubscribe();
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
-      adapter.dispatch({ ...event, model: model.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
       >);
@@ -91,7 +91,7 @@ describe("augmentations", () => {
       model.subscribe(observer2);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["123"] };
-      adapter.dispatch({ ...event, model: model.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
       >);
@@ -107,7 +107,7 @@ describe("augmentations", () => {
       model.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
-      adapter.dispatch({ ...event, model: model.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
       >);
@@ -121,7 +121,7 @@ describe("augmentations", () => {
       model.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["123"] };
-      adapter.dispatch({ ...event, model: model.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
       >);
@@ -136,7 +136,7 @@ describe("augmentations", () => {
 
       adapter.store.set("123", model.hydrate({ _id: "123" }));
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["123"] };
-      adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: null } as ModelCrudEvent<any, typeof model>);
 
       expect(observer).toHaveBeenCalled();
       expect(observer.mock.calls?.[0]?.[0]).toEqual(event);
@@ -147,12 +147,15 @@ describe("augmentations", () => {
       model.subscribe(observer);
 
       class OtherModel extends Model {
-        static slug = "otherModel";
+        static configuration = defineModelConf({
+          slug: "otherModel",
+        });
       }
 
       const adapter2 = client.model(OtherModel).getAdapter() as unknown as ClientAdapter;
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
+      // @ts-expect-error
       adapter2.dispatch({ ...event, model: "otherModel", data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
@@ -166,7 +169,7 @@ describe("augmentations", () => {
       model.subscribe(asyncObserver);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
-      adapter.dispatch({ ...event, model: model.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
       >);
@@ -182,7 +185,7 @@ describe("augmentations", () => {
       model.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: [] };
-      adapter.dispatch({ ...event, model: model.slug, data: [] } as ModelCrudEvent<any, typeof model>);
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: [] } as ModelCrudEvent<any, typeof model>);
 
       expect(observer).not.toHaveBeenCalled();
     });
@@ -200,7 +203,7 @@ describe("augmentations", () => {
       events.forEach((event, i) => {
         adapter.dispatch({
           ...event,
-          model: model.slug,
+          model: model.configuration.slug,
           data:
             event.operation === "delete"
               ? null
@@ -217,18 +220,20 @@ describe("augmentations", () => {
     it("should handle subscription immediately after model creation", () => {
       @modelDecorator()
       class NewModel extends Model {
-        static slug = "newModel";
+        static configuration = defineModelConf({
+          slug: "newModel",
+        });
       }
       const newModel = client.model(NewModel);
-      const newAdapter = newModel.getAdapter() as unknown as ClientAdapter;
+      const newAdapter = newModel.getAdapter() as unknown as ClientAdapter<typeof newModel>;
 
       const observer = vi.fn();
       const unsubscribe = newModel.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
-      newAdapter.dispatch({ ...event, model: newModel.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      newAdapter.dispatch({ ...event, model: newModel.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
-        typeof model
+        typeof newModel
       >);
 
       expect(observer.mock.calls?.[0]?.[0]).toEqual(event);
@@ -240,7 +245,7 @@ describe("augmentations", () => {
       observers.forEach(observer => model.subscribe(observer));
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["123"] };
-      adapter.dispatch({ ...event, model: model.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
       >);
@@ -253,10 +258,12 @@ describe("augmentations", () => {
     it("should maintain separate subscriptions for different models", () => {
       @modelDecorator()
       class OtherModel extends Model {
-        static slug = "otherModel";
+        static configuration = defineModelConf({
+          slug: "otherModel",
+        });
       }
       const otherModel = client.model(OtherModel);
-      const otherAdapter = otherModel.getAdapter() as unknown as ClientAdapter;
+      const otherAdapter = otherModel.getAdapter() as unknown as ClientAdapter<typeof otherModel>;
 
       const observer1 = vi.fn();
       const observer2 = vi.fn();
@@ -267,14 +274,15 @@ describe("augmentations", () => {
       const event1: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
       const event2: ModelUpdaterEvent = { operation: "create", ids: ["456"] };
 
-      adapter.dispatch({ ...event1, model: model.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      adapter.dispatch({ ...event1, model: model.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
       >);
-      otherAdapter.dispatch({ ...event2, model: otherModel.slug, data: [{ _id: "456" }] } as ModelCrudEvent<
-        "update",
-        typeof model
-      >);
+      otherAdapter.dispatch({
+        ...event2,
+        model: otherModel.configuration.slug,
+        data: [{ _id: "456" }],
+      } as ModelCrudEvent<"update", typeof otherModel>);
 
       expect(observer1).toHaveBeenCalledWith(event1, undefined);
       expect(observer1).not.toHaveBeenCalledWith(event2, undefined);
@@ -289,7 +297,7 @@ describe("augmentations", () => {
       model.clearCache();
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
-      adapter.dispatch({ ...event, model: model.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
       >);
@@ -305,7 +313,7 @@ describe("augmentations", () => {
       expect(model.getClient()).toBeInstanceOf(Client);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["123"] };
-      adapter.dispatch({ ...event, model: model.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
         "update",
         typeof model
       >);
@@ -314,21 +322,26 @@ describe("augmentations", () => {
     });
 
     it("should work correctly with inherited model classes", () => {
+      // @ts-expect-error
       class ExtendedModel extends TestModel {
-        static slug = "extendedModel";
+        static configuration = defineModelConf({
+          ...TestModel.configuration,
+          slug: "extendedModel",
+        });
       }
 
       const extendedModel = client.model(ExtendedModel);
-      const extendedAdapter = extendedModel.getAdapter() as unknown as ClientAdapter;
+      const extendedAdapter = extendedModel.getAdapter() as unknown as ClientAdapter<typeof extendedModel>;
 
       const observer = vi.fn();
       extendedModel.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "create", ids: ["123"] };
-      extendedAdapter.dispatch({ ...event, model: extendedModel.slug, data: [{ _id: "123" }] } as ModelCrudEvent<
-        "update",
-        typeof model
-      >);
+      extendedAdapter.dispatch({
+        ...event,
+        model: extendedModel.configuration.slug,
+        data: [{ _id: "123" }],
+      } as ModelCrudEvent<"update", typeof extendedModel>);
 
       expect(observer).toHaveBeenCalledWith(event, undefined);
     });
@@ -336,8 +349,8 @@ describe("augmentations", () => {
 
   describe("Model.clearCache", () => {
     it("should clear all instances from the cache", () => {
-      const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
-      const instance2 = TestModel.hydrate({ _id: "2", someField: "value2" });
+      const instance1 = TestModel.hydrate({ _id: "1", someProperty: "value1" });
+      const instance2 = TestModel.hydrate({ _id: "2", someProperty: "value2" });
       adapter.store.set("1", instance1);
       adapter.store.set("2", instance2);
 
@@ -354,15 +367,18 @@ describe("augmentations", () => {
     });
 
     it("should not affect other model caches", () => {
+      @modelDecorator()
       class OtherModel extends Model {
-        static slug = "otherModel";
+        static configuration = defineModelConf({
+          slug: "otherModel",
+        });
       }
       const otherModel = client.model(OtherModel);
-      const otherAdapter = otherModel.getAdapter() as unknown as ClientAdapter;
+      const otherAdapter = otherModel.getAdapter() as unknown as ClientAdapter<typeof otherModel>;
 
-      const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
+      const instance1 = TestModel.hydrate({ _id: "1", someProperty: "value1" });
       // @ts-expect-error
-      const instance2 = OtherModel.hydrate({ _id: "2", someField: "value2" });
+      const instance2 = OtherModel.hydrate({ _id: "2", someProperty: "value2" });
       adapter.store.set("1", instance1);
       otherAdapter.store.set("2", instance2);
 
@@ -379,13 +395,17 @@ describe("augmentations", () => {
     });
 
     it("should clear cache for inherited model classes", () => {
+      // @ts-expect-error
       class ExtendedModel extends TestModel {
-        static slug = "extendedModel";
+        static configuration = defineModelConf({
+          ...TestModel.configuration,
+          slug: "extendedModel",
+        });
       }
       const extendedModel = client.model(ExtendedModel);
-      const extendedAdapter = extendedModel.getAdapter() as unknown as ClientAdapter;
+      const extendedAdapter = extendedModel.getAdapter() as unknown as ClientAdapter<typeof extendedModel>;
 
-      const instance = ExtendedModel.hydrate({ _id: "1", someField: "value" });
+      const instance = ExtendedModel.hydrate({ _id: "1", someProperty: "value" });
       extendedAdapter.store.set("1", instance);
 
       expect(extendedAdapter.store.size).toBe(1);
@@ -394,12 +414,12 @@ describe("augmentations", () => {
     });
 
     it("should allow adding new instances after clearing the cache", () => {
-      const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
+      const instance1 = TestModel.hydrate({ _id: "1", someProperty: "value1" });
       adapter.store.set("1", instance1);
 
       model.clearCache();
 
-      const instance2 = TestModel.hydrate({ _id: "2", someField: "value2" });
+      const instance2 = TestModel.hydrate({ _id: "2", someProperty: "value2" });
       adapter.store.set("2", instance2);
 
       expect(adapter.store.size).toBe(1);
@@ -409,13 +429,13 @@ describe("augmentations", () => {
     it("should not interfere with model's ability to create new instances", () => {
       model.clearCache();
 
-      const newInstance = TestModel.hydrate({ _id: "1", someField: "value" });
+      const newInstance = TestModel.hydrate({ _id: "1", someProperty: "value" });
       expect(newInstance).toBeInstanceOf(TestModel);
       expect(newInstance.get("_id")).toBe("1");
     });
 
     it("should clear cache multiple times without errors", () => {
-      const instance = TestModel.hydrate({ _id: "1", someField: "value" });
+      const instance = TestModel.hydrate({ _id: "1", someProperty: "value" });
       adapter.store.set("1", instance);
 
       model.clearCache();
@@ -429,17 +449,17 @@ describe("augmentations", () => {
     });
 
     it("should work correctly when called in combination with other methods", async () => {
-      const instance1 = TestModel.hydrate({ _id: "1", someField: "value1" });
+      const instance1 = TestModel.hydrate({ _id: "1", someProperty: "value1" });
       adapter.store.set("1", instance1);
 
-      mockFetch.mockResolvedValue(new Response('{"data": {"_id": "1", "someField": "updated"}}', { status: 200 }));
+      mockFetch.mockResolvedValue(new Response('{"data": {"_id": "1", "someProperty": "updated"}}', { status: 200 }));
 
       model.clearCache();
 
       const refetchedInstance = await model.get("1");
 
       expect(mockFetch).toHaveBeenCalled();
-      expect(refetchedInstance?.get("someField")).toBe("updated");
+      expect(refetchedInstance?.get("someProperty")).toBe("updated");
       expect(adapter.store.size).toBe(1);
     });
   });
@@ -453,7 +473,9 @@ describe("augmentations", () => {
 
     it("should return the same Client instance for different models from the same client", () => {
       class AnotherModel extends Model {
-        static slug = "anotherModel";
+        static configuration = defineModelConf({
+          slug: "anotherModel",
+        });
       }
       const anotherModel = client.model(AnotherModel);
 
@@ -466,7 +488,9 @@ describe("augmentations", () => {
 
     it("should throw an error if called on a model not associated with a client", () => {
       class UnassociatedModel extends Model {
-        static slug = "unassociatedModel";
+        static configuration = defineModelConf({
+          slug: "unassociatedModel",
+        });
       }
 
       expect(() => UnassociatedModel.getClient()).toThrow();
@@ -492,8 +516,8 @@ describe("augmentations", () => {
       const event: ModelUpdaterEvent = { operation: "update", ids: ["test-id"] };
       adapter.dispatch({
         ...event,
-        model: model.slug,
-        data: [{ _id: "test-id", someField: "test123", _updatedAt: new Date().toJSON() }],
+        model: model.configuration.slug,
+        data: [{ _id: "test-id", someProperty: "test123", _updatedAt: new Date().toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       expect(observer).toHaveBeenCalled();
@@ -504,7 +528,11 @@ describe("augmentations", () => {
       instance.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "update", ids: ["other-id"] };
-      adapter.dispatch({ ...event, model: model.slug, data: [{ _id: "other-id", someField: "test123" }] } as any);
+      adapter.dispatch({
+        ...event,
+        model: model.configuration.slug,
+        data: [{ _id: "other-id", someProperty: "test123" }],
+      } as any);
 
       expect(observer).not.toHaveBeenCalled();
     });
@@ -515,7 +543,7 @@ describe("augmentations", () => {
       adapter.store.set(instance._id as string, instance);
 
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["test-id"] };
-      adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: null } as ModelCrudEvent<any, typeof model>);
 
       expect(observer).toHaveBeenCalled();
     });
@@ -529,8 +557,8 @@ describe("augmentations", () => {
       const event: ModelUpdaterEvent = { operation: "update", ids: ["test-id"] };
       adapter.dispatch({
         ...event,
-        model: model.slug,
-        data: [{ _id: "test-id", someField: "test123" }],
+        model: model.configuration.slug,
+        data: [{ _id: "test-id", someProperty: "test123" }],
       } as ModelCrudEvent<any, typeof model>);
 
       expect(observer).not.toHaveBeenCalled();
@@ -546,8 +574,8 @@ describe("augmentations", () => {
       const event: ModelUpdaterEvent = { operation: "update", ids: ["test-id"] };
       adapter.dispatch({
         ...event,
-        model: model.slug,
-        data: [{ _id: "test-id", someField: "test123" }],
+        model: model.configuration.slug,
+        data: [{ _id: "test-id", someProperty: "test123" }],
       } as ModelCrudEvent<any, typeof model>);
 
       expect(observer1).toHaveBeenCalled();
@@ -561,10 +589,10 @@ describe("augmentations", () => {
       const event: ModelUpdaterEvent = { operation: "update", ids: ["test-id", "other-id"] };
       adapter.dispatch({
         ...event,
-        model: model.slug,
+        model: model.configuration.slug,
         data: [
-          { _id: "test-id", someField: "test123" },
-          { _id: "other-id", someField: "test123" },
+          { _id: "test-id", someProperty: "test123" },
+          { _id: "other-id", someProperty: "test123" },
         ],
       } as ModelCrudEvent<any, typeof model>);
 
@@ -578,10 +606,10 @@ describe("augmentations", () => {
       const event: ModelUpdaterEvent = { operation: "update", ids: ["other-id-1", "other-id-2"] };
       adapter.dispatch({
         ...event,
-        model: model.slug,
+        model: model.configuration.slug,
         data: [
-          { _id: "other-id-1", someField: "test123" },
-          { _id: "other-id-2", someField: "test123" },
+          { _id: "other-id-1", someProperty: "test123" },
+          { _id: "other-id-2", someProperty: "test123" },
         ],
       } as ModelCrudEvent<any, typeof model>);
 
@@ -594,7 +622,7 @@ describe("augmentations", () => {
       adapter.store.set(instance._id as string, instance);
 
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["test-id", "other-id"] };
-      adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: null } as ModelCrudEvent<any, typeof model>);
 
       expect(observer).toHaveBeenCalled();
     });
@@ -604,7 +632,7 @@ describe("augmentations", () => {
       instance.subscribe(observer);
 
       const event: ModelUpdaterEvent = { operation: "delete", ids: ["other-id-1", "other-id-2"] };
-      adapter.dispatch({ ...event, model: model.slug, data: null } as ModelCrudEvent<any, typeof model>);
+      adapter.dispatch({ ...event, model: model.configuration.slug, data: null } as ModelCrudEvent<any, typeof model>);
 
       expect(observer).not.toHaveBeenCalled();
     });
@@ -617,8 +645,8 @@ describe("augmentations", () => {
       const event: ModelUpdaterEvent = { operation: "create", ids: ["test-id"] };
       adapter.dispatch({
         ...event,
-        model: model.slug,
-        data: [{ _id: "test-id", someField: "test123" }],
+        model: model.configuration.slug,
+        data: [{ _id: "test-id", someProperty: "test123" }],
       } as ModelCrudEvent<any, typeof model>);
 
       expect(observer).not.toHaveBeenCalled();
@@ -631,8 +659,8 @@ describe("augmentations", () => {
       const event: ModelUpdaterEvent = { operation: "update", ids: ["test-id"] };
       adapter.dispatch({
         ...event,
-        model: model.slug,
-        data: [{ _id: "test-id", someField: "test123" }],
+        model: model.configuration.slug,
+        data: [{ _id: "test-id", someProperty: "test123" }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -648,44 +676,44 @@ describe("augmentations", () => {
       const event: ModelUpdaterEvent = { operation: "update", ids: ["new-id"] };
       adapter.dispatch({
         ...event,
-        model: model.slug,
-        data: [{ _id: "new-id", someField: "test123" }],
+        model: model.configuration.slug,
+        data: [{ _id: "new-id", someProperty: "test123" }],
       } as ModelCrudEvent<any, typeof model>);
 
       expect(observer).toHaveBeenCalled();
     });
 
     it("should pass the previous data and event to the observer", async () => {
-      const body1 = JSON.stringify({ data: { _id: "test-id", someField: "test123" } });
+      const body1 = JSON.stringify({ data: { _id: "test-id", someProperty: "test123" } });
       mockFetch.mockResolvedValueOnce(new Response(body1));
 
       const i = await model.get("test-id");
-      expect(i.someField).toBe("test123");
+      expect(i.someProperty).toBe("test123");
 
       const observer = vi.fn();
       i.subscribe(observer);
 
       const body2 = JSON.stringify({
-        data: { _id: "test-id", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() },
+        data: { _id: "test-id", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() },
       });
       mockFetch.mockResolvedValueOnce(new Response(body2));
-      await i.update({ $set: { someField: "updated" } });
-      expect(i.someField).toBe("updated");
+      await i.update({ $set: { someProperty: "updated" } });
+      expect(i.someProperty).toBe("updated");
 
       expect(observer).toHaveBeenCalledWith(
-        { _id: "test-id", someField: "test123" },
+        { _id: "test-id", someProperty: "test123" },
         { operation: "update", ids: ["test-id"] },
       );
 
       const body3 = JSON.stringify({
-        data: { _id: "test-id", someField: "updated2", _updatedAt: new Date(Date.now() + 20).toJSON() },
+        data: { _id: "test-id", someProperty: "updated2", _updatedAt: new Date(Date.now() + 20).toJSON() },
       });
       mockFetch.mockResolvedValueOnce(new Response(body3));
-      await i.update({ $set: { someField: "updated2" } });
-      expect(i.someField).toBe("updated2");
+      await i.update({ $set: { someProperty: "updated2" } });
+      expect(i.someProperty).toBe("updated2");
 
       expect(observer).toHaveBeenCalledWith(
-        { _id: "test-id", someField: "updated", _updatedAt: expect.any(String) },
+        { _id: "test-id", someProperty: "updated", _updatedAt: expect.any(String) },
         { operation: "update", ids: ["test-id"] },
       );
     });
@@ -695,7 +723,7 @@ describe("augmentations", () => {
       instance.subscribe(observer);
       adapter.store.set("test-id", instance);
 
-      const updateEvents = [{ someField: "update1" }, { someField: "update2" }, { someField: "update3" }];
+      const updateEvents = [{ someProperty: "update1" }, { someProperty: "update2" }, { someProperty: "update3" }];
 
       const mockFetch = vi.spyOn(global, "fetch");
 
@@ -713,12 +741,12 @@ describe("augmentations", () => {
 
       expect(observer.mock.calls?.[0]?.[0]).toEqual({ _id: "test-id" });
       expect(observer.mock.calls?.[0]?.[1]).toEqual({ operation: "update", ids: ["test-id"] });
-      expect(observer.mock.calls?.[1]?.[0]).toHaveProperty("someField", "update1");
+      expect(observer.mock.calls?.[1]?.[0]).toHaveProperty("someProperty", "update1");
       expect(observer.mock.calls?.[1]?.[1]).toEqual({ operation: "update", ids: ["test-id"] });
-      expect(observer.mock.calls?.[2]?.[0]).toHaveProperty("someField", "update2");
+      expect(observer.mock.calls?.[2]?.[0]).toHaveProperty("someProperty", "update2");
       expect(observer.mock.calls?.[2]?.[1]).toEqual({ operation: "update", ids: ["test-id"] });
 
-      expect(instance.getData()).toHaveProperty("someField", "update3");
+      expect(instance.getData()).toHaveProperty("someProperty", "update3");
     });
   });
 
@@ -728,13 +756,13 @@ describe("augmentations", () => {
     beforeEach(() => {
       const i1 = model.hydrate({
         _id: "1",
-        someField: "value1",
+        someProperty: "value1",
         _createdAt: new Date().toJSON(),
         _updatedAt: new Date().toJSON(),
       });
       const i2 = model.hydrate({
         _id: "2",
-        someField: "value2",
+        someProperty: "value2",
         _createdAt: new Date().toJSON(),
         _updatedAt: new Date().toJSON(),
       });
@@ -758,9 +786,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -770,9 +798,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["2"],
-        data: [{ _id: "2", someField: "updated", _updatedAt: new Date().toJSON() }],
+        data: [{ _id: "2", someProperty: "updated", _updatedAt: new Date().toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -789,9 +817,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -813,9 +841,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -840,9 +868,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -864,9 +892,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["3"], // ID not in the list
-        data: [{ _id: "3", someField: "new", _updatedAt: new Date().toJSON() }],
+        data: [{ _id: "3", someProperty: "new", _updatedAt: new Date().toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -885,7 +913,7 @@ describe("augmentations", () => {
 
       const updatedList = [
         ...modelList.toJSON().rows,
-        { _id: "3", someField: "new", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() },
+        { _id: "3", someProperty: "new", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() },
       ];
       mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({ data: { rows: updatedList, count: updatedList.length } })),
@@ -893,9 +921,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "create",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["3"],
-        data: [{ _id: "3", someField: "new", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() }],
+        data: [{ _id: "3", someProperty: "new", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -915,7 +943,7 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "delete",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["2"],
         data: null,
       } as ModelCrudEvent<any, typeof model>);
@@ -932,7 +960,7 @@ describe("augmentations", () => {
 
       const updatedList = modelList.toJSON().rows.map(item => ({
         ...item,
-        someField: item._id === "1" ? "updated1" : "updated2",
+        someProperty: item._id === "1" ? "updated1" : "updated2",
         _updatedAt: new Date(Date.now() + 10).toJSON(),
       }));
       mockFetch.mockResolvedValueOnce(
@@ -941,11 +969,11 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1", "2"],
         data: [
-          { _id: "1", someField: "updated1", _updatedAt: new Date(Date.now() + 10).toJSON() },
-          { _id: "2", someField: "updated2", _updatedAt: new Date(Date.now() + 10).toJSON() },
+          { _id: "1", someProperty: "updated1", _updatedAt: new Date(Date.now() + 10).toJSON() },
+          { _id: "2", someProperty: "updated2", _updatedAt: new Date(Date.now() + 10).toJSON() },
         ],
       } as ModelCrudEvent<any, typeof model>);
 
@@ -967,11 +995,11 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1", "2"],
         data: [
-          { _id: "1", someField: "value1", _updatedAt: new Date(Date.now() + 10).toJSON() },
-          { _id: "2", someField: "value2", _updatedAt: new Date(Date.now() + 10).toJSON() },
+          { _id: "1", someProperty: "value1", _updatedAt: new Date(Date.now() + 10).toJSON() },
+          { _id: "2", someProperty: "value2", _updatedAt: new Date(Date.now() + 10).toJSON() },
         ],
       } as ModelCrudEvent<any, typeof model>);
 
@@ -987,7 +1015,7 @@ describe("augmentations", () => {
         Array.from({ length: 1000 }, (_, i) =>
           model.hydrate({
             _id: `${i}`,
-            someField: `value${i}`,
+            someProperty: `value${i}`,
             _createdAt: new Date().toJSON(),
             _updatedAt: new Date().toJSON(),
           }),
@@ -1001,7 +1029,9 @@ describe("augmentations", () => {
       const updatedList = largeList
         .toJSON()
         .rows.map(item =>
-          item._id === "500" ? { ...item, someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() } : item,
+          item._id === "500"
+            ? { ...item, someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }
+            : item,
         );
       mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({ data: { rows: updatedList, count: updatedList.length } })),
@@ -1011,9 +1041,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["500"],
-        data: [{ _id: "500", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "500", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1032,9 +1062,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1049,9 +1079,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["3"],
-        data: [{ _id: "3", someField: "new", _updatedAt: new Date().toJSON() }],
+        data: [{ _id: "3", someProperty: "new", _updatedAt: new Date().toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1065,9 +1095,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "create",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["3"],
-        data: [{ _id: "3", someField: "new", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() }],
+        data: [{ _id: "3", someProperty: "new", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1081,7 +1111,7 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "delete",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
         data: null,
       } as ModelCrudEvent<any, typeof model>);
@@ -1099,9 +1129,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1116,9 +1146,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1128,9 +1158,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["2"],
-        data: [{ _id: "2", someField: "updated", _updatedAt: new Date(Date.now() + 20).toJSON() }],
+        data: [{ _id: "2", someProperty: "updated", _updatedAt: new Date(Date.now() + 20).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1145,9 +1175,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1164,9 +1194,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1186,9 +1216,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1203,11 +1233,11 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1", "2"],
         data: [
-          { _id: "1", someField: "updated1", _updatedAt: new Date(Date.now() + 10).toJSON() },
-          { _id: "2", someField: "updated2", _updatedAt: new Date(Date.now() + 20).toJSON() },
+          { _id: "1", someProperty: "updated1", _updatedAt: new Date(Date.now() + 10).toJSON() },
+          { _id: "2", someProperty: "updated2", _updatedAt: new Date(Date.now() + 20).toJSON() },
         ],
       } as ModelCrudEvent<any, typeof model>);
 
@@ -1220,8 +1250,8 @@ describe("augmentations", () => {
       const body = JSON.stringify({
         data: {
           rows: [
-            { _id: "3", someField: "value1", _updatedAt: new Date().toJSON() },
-            { _id: "4", someField: "value2", _updatedAt: new Date().toJSON() },
+            { _id: "3", someProperty: "value1", _updatedAt: new Date().toJSON() },
+            { _id: "4", someProperty: "value2", _updatedAt: new Date().toJSON() },
           ],
           count: 2,
         },
@@ -1237,9 +1267,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["3"],
-        data: [{ _id: "3", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "3", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -1259,9 +1289,9 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date().toJSON() }],
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date().toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1278,16 +1308,16 @@ describe("augmentations", () => {
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated1", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated1", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       adapter.dispatch({
         operation: "update",
-        model: model.slug,
+        model: model.configuration.slug,
         ids: ["1"],
-        data: [{ _id: "1", someField: "updated2", _updatedAt: new Date(Date.now() + 20).toJSON() }],
+        data: [{ _id: "1", someProperty: "updated2", _updatedAt: new Date(Date.now() + 20).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -1306,8 +1336,8 @@ describe("augmentations", () => {
       const event: ModelUpdaterEvent = { operation: "update", ids: ["1"] };
       adapter.dispatch({
         ...event,
-        model: model.slug,
-        data: [{ _id: "1", someField: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
+        model: model.configuration.slug,
+        data: [{ _id: "1", someProperty: "updated", _updatedAt: new Date(Date.now() + 10).toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0)); // Wait for async operations
@@ -1323,14 +1353,14 @@ describe("augmentations", () => {
       modelList.subscribe(observer);
 
       const reloadSpy = vi.spyOn(modelList, "reload").mockImplementation(async () => {
-        modelList.push(model.hydrate({ _id: "3", someField: "value3" }));
+        modelList.push(model.hydrate({ _id: "3", someProperty: "value3" }));
       });
 
       const createEvent: ModelUpdaterEvent = { operation: "create", ids: ["3"] };
       adapter.dispatch({
         ...createEvent,
-        model: model.slug,
-        data: [{ _id: "3", someField: "value3", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() }],
+        model: model.configuration.slug,
+        data: [{ _id: "3", someProperty: "value3", _createdAt: new Date().toJSON(), _updatedAt: new Date().toJSON() }],
       } as ModelCrudEvent<any, typeof model>);
 
       await new Promise(resolve => setTimeout(resolve, 0)); // Wait for async operations
@@ -1345,7 +1375,7 @@ describe("augmentations", () => {
       const deleteEvent: ModelUpdaterEvent = { operation: "delete", ids: ["2"] };
       adapter.dispatch({
         ...deleteEvent,
-        model: model.slug,
+        model: model.configuration.slug,
         data: null,
       } as ModelCrudEvent<any, typeof model>);
 
@@ -1363,25 +1393,25 @@ describe("augmentations", () => {
     });
 
     it("should return the cached instance if available", async () => {
-      const instance = model.hydrate({ _id: "cached-id", someField: "value" });
+      const instance = model.hydrate({ _id: "cached-id", someProperty: "value" });
       adapter.store.set("cached-id", instance);
       const promise = model.get("cached-id");
       expect(promise.cached).toBe(instance);
     });
 
     it("should return null for a query that doesn't use IDs", () => {
-      const promise = model.get({ filter: { someField: "value" } });
+      const promise = model.get({ filter: { someProperty: "value" } });
       expect(promise.cached).toBeNull();
     });
 
     it("should work with single models", async () => {
       @modelDecorator()
       class SingleModel extends Model {
-        static slug = "singleModel";
-        static definition = {
-          ...TestModel.definition,
+        static configuration = defineModelConf({
+          ...TestModel.configuration,
+          slug: "singleModel",
           single: true,
-        };
+        });
       }
       const singleModel = client.model(SingleModel);
       const singleAdapter = singleModel.getAdapter() as unknown as ClientAdapter;
@@ -1391,61 +1421,55 @@ describe("augmentations", () => {
       expect(promise.cached).toBe(instance);
     });
 
-    it("Model.prototype.get should pass the cached instance to the next field with a relation field", async () => {
+    it("Model.prototype.get should pass the cached instance to the next property with a relation property", async () => {
       @modelDecorator()
       class RelModel extends Model {
-        static slug = "model";
-        static definition = {
-          ...TestModel.definition,
-          fields: {
-            ...TestModel.definition.fields,
+        static configuration = defineModelConf({
+          ...TestModel.configuration,
+          slug: "model",
+          properties: {
+            ...TestModel.configuration.properties,
             rel: {
-              type: FieldTypes.RELATION,
-              options: {
-                ref: TestModel.slug,
-              },
+              type: PropertyTypes.RELATION,
+              ref: TestModel.configuration.slug,
             },
           },
-        } as const satisfies ModelDefinition;
+        });
       }
 
-      const instance = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value" });
+      const instance = model.hydrateAndCache({ _id: new ObjectId().toString(), someProperty: "value" });
       const relModel = client.model(RelModel);
       const relInstance = relModel.hydrateAndCache({ _id: new ObjectId().toString(), rel: instance._id });
       const rel = relInstance?.get("rel") as PromiseModel<typeof TestModel>;
       expect(rel).toBeInstanceOf(PromiseModel);
       expect(rel.cached).toBe(instance);
-      expect(relInstance.get("rel.someField")).toBe("value");
-      // @ts-expect-error test - someField is undefined on a PromiseModel instance
-      expect(relInstance.rel.someField).toBeUndefined();
-      expect((relInstance.rel as PromiseModel<typeof TestModel>)?.cached?.someField).toBe("value");
+      expect(relInstance.get("rel.someProperty")).toBe("value");
+      // @ts-expect-error test - someProperty is undefined on a PromiseModel instance
+      expect(relInstance.rel.someProperty).toBeUndefined();
+      expect((relInstance.rel as PromiseModel<typeof TestModel>)?.cached?.someProperty).toBe("value");
     });
 
-    it("Model.prototype.get should pass the cached instance to the next field with a relation array field", async () => {
+    it("Model.prototype.get should pass the cached instance to the next property with a relation array property", async () => {
       @modelDecorator()
       class RelModel extends Model {
-        static slug = "model";
-        static definition = {
-          ...TestModel.definition,
-          fields: {
-            ...TestModel.definition.fields,
+        static configuration = defineModelConf({
+          ...TestModel.configuration,
+          slug: "model",
+          properties: {
+            ...TestModel.configuration.properties,
             relArr: {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: TestModel.slug,
-                  },
-                },
+              type: PropertyTypes.ARRAY,
+              items: {
+                type: PropertyTypes.RELATION,
+                ref: TestModel.configuration.slug,
               },
             },
           },
-        } as const satisfies ModelDefinition;
+        });
       }
 
-      const instance1 = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value1" });
-      const instance2 = model.hydrateAndCache({ _id: new ObjectId().toString(), someField: "value2" });
+      const instance1 = model.hydrateAndCache({ _id: new ObjectId().toString(), someProperty: "value1" });
+      const instance2 = model.hydrateAndCache({ _id: new ObjectId().toString(), someProperty: "value2" });
 
       const relModel = client.model(RelModel);
       const relInstance = relModel.hydrateAndCache({
@@ -1458,10 +1482,10 @@ describe("augmentations", () => {
       expect(rel.cached?.length).toBe(2);
       expect(rel.cached?.[0]).toBe(instance1);
       expect(rel.cached?.[1]).toBe(instance2);
-      expect(relInstance.get("relArr.[0].someField")).toBe("value1");
-      expect(relInstance.get("relArr.[1].someField")).toBe("value2");
-      expect(relInstance.get("relArr.[2].someField")).toBe(undefined);
-      expect(relInstance.get("relArr.[].someField")).toEqual(["value1", "value2"]);
+      expect(relInstance.get("relArr.[0].someProperty")).toBe("value1");
+      expect(relInstance.get("relArr.[1].someProperty")).toBe("value2");
+      expect(relInstance.get("relArr.[2].someProperty")).toBe(undefined);
+      expect(relInstance.get("relArr.[].someProperty")).toEqual(["value1", "value2"]);
     });
   });
 
@@ -1472,20 +1496,20 @@ describe("augmentations", () => {
     });
 
     it("should return null if the query doesn't use IDs", () => {
-      const promise = model.getList({ filter: { someField: "value" } });
+      const promise = model.getList({ filter: { someProperty: "value" } });
       expect(promise.cached).toBeNull();
     });
 
     it("should return null if not all instances are in cache", () => {
-      const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
+      const instance1 = model.hydrate({ _id: "id1", someProperty: "value1" });
       adapter.store.set("id1", instance1);
       const promise = model.getList({ ids: ["id1", "id2"] });
       expect(promise.cached).toBeNull();
     });
 
     it("should return a ModelList with cached instances if all are available", () => {
-      const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
-      const instance2 = model.hydrate({ _id: "id2", someField: "value2" });
+      const instance1 = model.hydrate({ _id: "id1", someProperty: "value1" });
+      const instance2 = model.hydrate({ _id: "id2", someProperty: "value2" });
       adapter.store.set("id1", instance1);
       adapter.store.set("id2", instance2);
       const promise = model.getList({ ids: ["id1", "id2"] });
@@ -1499,13 +1523,13 @@ describe("augmentations", () => {
 
   describe("PromiseModelList.prototype.cachedPartial", () => {
     it("should return null if the query doesn't use IDs", () => {
-      const promise = model.getList({ filter: { someField: "value" } });
+      const promise = model.getList({ filter: { someProperty: "value" } });
       expect(promise.cachedPartial).toBeNull();
     });
 
     it("should return a ModelList with available cached instances", () => {
-      const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
-      const instance2 = model.hydrate({ _id: "id2", someField: "value2" });
+      const instance1 = model.hydrate({ _id: "id1", someProperty: "value1" });
+      const instance2 = model.hydrate({ _id: "id2", someProperty: "value2" });
       adapter.store.set("id1", instance1);
       adapter.store.set("id2", instance2);
       const promise = model.getList({ ids: ["id1", "id2", "id3"] });
@@ -1524,9 +1548,9 @@ describe("augmentations", () => {
     });
 
     it("should maintain the order of IDs from the original query", () => {
-      const instance1 = model.hydrate({ _id: "id1", someField: "value1" });
-      const instance2 = model.hydrate({ _id: "id2", someField: "value2" });
-      const instance3 = model.hydrate({ _id: "id3", someField: "value3" });
+      const instance1 = model.hydrate({ _id: "id1", someProperty: "value1" });
+      const instance2 = model.hydrate({ _id: "id2", someProperty: "value2" });
+      const instance3 = model.hydrate({ _id: "id3", someProperty: "value3" });
       adapter.store.set("id1", instance1);
       adapter.store.set("id2", instance2);
       adapter.store.set("id3", instance3);

@@ -5,6 +5,7 @@ import {
   Account,
   DataModel,
   defineDatamodels,
+  defineModelConf,
   IdentityTypes,
   Model,
   modelDecorator,
@@ -162,7 +163,9 @@ describe("Client", () => {
     // Test 10b: Client.useModel() method
     it("should allow adding new models using the useModel() method", () => {
       class LateModel extends Model {
-        static slug = "LateModel" as const;
+        static configuration = defineModelConf({
+          slug: "LateModel",
+        });
       }
       const client = new Client({ project: null });
       const updatedClient = client.useModel(LateModel);
@@ -928,14 +931,14 @@ describe("Client", () => {
       mockFetch.mockResolvedValueOnce(
         new Response(
           JSON.stringify({
-            data: { rows: [{ _id: new ObjectId().toString(), slug: "accounts", definition: {} }], count: 1 },
+            data: { rows: [{ _id: new ObjectId().toString(), slug: "accounts" }], count: 1 },
           }),
         ),
       );
       await _client.model(Account).initialize();
       account = await _client
         .model(Account)
-        .hydrateAndCache({ _id: new ObjectId().toString(), _email: faker.internet.email() });
+        .hydrateAndCache({ _id: new ObjectId().toString(), _email: faker.internet.email(), role: "admin" });
     });
 
     it("should return null if no access token is provided", async () => {
@@ -968,11 +971,9 @@ describe("Client", () => {
     it("should register and retrieve a model correctly", async () => {
       const datamodels = defineDatamodels({
         test: {
-          definition: {
-            fields: {
-              title: {
-                type: "text",
-              },
+          properties: {
+            title: {
+              type: "string",
             },
           },
         },
@@ -980,8 +981,10 @@ describe("Client", () => {
 
       @modelDecorator()
       class Test extends Model {
-        static slug = "test" as const;
-        static definition = datamodels.test.definition;
+        static configuration = defineModelConf({
+          slug: "test",
+          ...datamodels.test,
+        });
         foo() {
           return "bar";
         }
@@ -990,17 +993,15 @@ describe("Client", () => {
       const client = new Client({ project: "test" }, [], [Test]);
       const model = client.model("test");
       expect(model).toBeDefined();
-      expect(model.slug).toBe("test");
+      expect(model.configuration.slug).toBe("test");
     });
 
     it("should hydrate model instances correctly", async () => {
       const datamodels = defineDatamodels({
         test: {
-          definition: {
-            fields: {
-              title: {
-                type: "text",
-              },
+          properties: {
+            title: {
+              type: "string",
             },
           },
         },
@@ -1008,8 +1009,10 @@ describe("Client", () => {
 
       @modelDecorator()
       class Test extends Model {
-        static slug = "test" as const;
-        static definition = datamodels.test.definition;
+        static configuration = defineModelConf({
+          slug: "test",
+          ...datamodels.test,
+        });
         foo() {
           return "bar";
         }
@@ -1025,11 +1028,9 @@ describe("Client", () => {
     it("should preserve custom methods in hydrated instances", async () => {
       const datamodels = defineDatamodels({
         test: {
-          definition: {
-            fields: {
-              title: {
-                type: "text",
-              },
+          properties: {
+            title: {
+              type: "string",
             },
           },
         },
@@ -1037,8 +1038,10 @@ describe("Client", () => {
 
       @modelDecorator()
       class Test extends Model {
-        static slug = "test" as const;
-        static definition = datamodels.test.definition;
+        static configuration = defineModelConf({
+          slug: "test",
+          ...datamodels.test,
+        });
         foo() {
           return "bar";
         }
@@ -1053,14 +1056,12 @@ describe("Client", () => {
     it("should correctly register models that extend core models", async () => {
       const datamodels = defineDatamodels({
         accounts: {
-          definition: {
-            fields: {
-              firstname: {
-                type: "text",
-              },
-              lastname: {
-                type: "text",
-              },
+          properties: {
+            firstname: {
+              type: "string",
+            },
+            lastname: {
+              type: "string",
             },
           },
         },
@@ -1068,7 +1069,10 @@ describe("Client", () => {
 
       @modelDecorator()
       class _Account extends Account {
-        static slug = "accounts" as const;
+        static configuration = defineModelConf({
+          ...Account.configuration,
+          slug: "accounts",
+        });
         foo() {
           return "bar";
         }
@@ -1077,20 +1081,18 @@ describe("Client", () => {
       const client = new Client({ project: "test", datamodels }, [], [_Account]);
       const model = client.model("accounts");
       expect(model).toBeDefined();
-      expect(model.slug).toBe("accounts");
+      expect(model.configuration.slug).toBe("accounts");
     });
 
     it("should correctly hydrate extended core model instances", async () => {
       const datamodels = defineDatamodels({
         accounts: {
-          definition: {
-            fields: {
-              firstname: {
-                type: "text",
-              },
-              lastname: {
-                type: "text",
-              },
+          properties: {
+            firstname: {
+              type: "string",
+            },
+            lastname: {
+              type: "string",
             },
           },
         },
@@ -1098,8 +1100,10 @@ describe("Client", () => {
 
       @modelDecorator()
       class _Account extends Account {
-        static slug = "accounts" as const;
-        // Remove static definition to avoid conflicts with Account base class
+        static configuration = defineModelConf({
+          ...Account.configuration,
+          slug: "accounts",
+        });
 
         // Add property declarations to fix type errors
         firstname!: string;
@@ -1127,14 +1131,12 @@ describe("Client", () => {
     it("should preserve custom methods in extended core model instances", async () => {
       const datamodels = defineDatamodels({
         accounts: {
-          definition: {
-            fields: {
-              firstname: {
-                type: "text",
-              },
-              lastname: {
-                type: "text",
-              },
+          properties: {
+            firstname: {
+              type: "string",
+            },
+            lastname: {
+              type: "string",
             },
           },
         },
@@ -1142,8 +1144,10 @@ describe("Client", () => {
 
       @modelDecorator()
       class _Account extends Account {
-        static slug = "accounts" as const;
-        // Remove static definition to avoid conflicts with Account base class
+        static configuration = defineModelConf({
+          ...Account.configuration,
+          slug: "accounts",
+        });
 
         // Add property declarations to fix type errors
         firstname!: string;
@@ -1161,14 +1165,12 @@ describe("Client", () => {
       expect(instance.foo()).toBe("bar");
     });
 
-    it("should load definition from datamodels", async () => {
+    it("should load configuration from datamodels", async () => {
       const datamodels = defineDatamodels({
         test: {
-          definition: {
-            fields: {
-              title: {
-                type: "text",
-              },
+          properties: {
+            title: {
+              type: "string",
             },
           },
         },
@@ -1177,8 +1179,8 @@ describe("Client", () => {
       const client = new Client({ project: "test", datamodels });
       const model = client.model("test");
       expect(model).toBeDefined();
-      expect(model.slug).toBe("test");
-      expect(model.fieldsKeys).toContain("title");
+      expect(model.configuration.slug).toBe("test");
+      expect(model.propertiesKeys).toContain("title");
     });
   });
 });

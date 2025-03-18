@@ -11,6 +11,7 @@ import {
   controllerRefreshToken,
   controllerCodeAuth,
   InferControllerInput,
+  Account,
 } from "@graphand/core";
 import { ModuleAuthOptions, AuthResult, ParsedAuthResult } from "./types.js";
 import MemoryStorage from "./MemoryStorage.js";
@@ -144,12 +145,12 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
   }
 
   async register<P extends AuthProviders = AuthProviders.LOCAL, M extends AuthMethods = AuthMethods.WINDOW>(
-    providerOrData: RegisterData<P, M> | P,
-    methodOrData?: Omit<RegisterData<P, M>, "provider"> | M,
-    _data?: Omit<RegisterData<P, M>, "provider" | "method">,
+    providerOrData: RegisterData<typeof Account, P, M> | P,
+    methodOrData?: Omit<RegisterData<typeof Account, P, M>, "provider"> | M,
+    _data?: Omit<RegisterData<typeof Account, P, M>, "provider" | "method">,
     query?: NonNullable<InferControllerInput<typeof controllerRegister>>["query"],
   ): Promise<ParsedAuthResult | undefined> {
-    let data: RegisterData<P, M>;
+    let data: RegisterData<typeof Account, P, M>;
 
     if (_data && typeof _data === "object") {
       data = _data;

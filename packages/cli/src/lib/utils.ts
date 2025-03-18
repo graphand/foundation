@@ -9,7 +9,7 @@ import open from "open";
 import ModuleCli from "./ModuleCli.js";
 import ora, { Ora } from "ora";
 import Table from "cli-table3";
-import { AuthMethods, Function, isObjectId, JSONType, JSONObject, ModelJSON } from "@graphand/core";
+import { AuthMethods, Function, isObjectId, JSONType, JSONObject, InferModelDefInput } from "@graphand/core";
 import LogProcessor from "./LogProcessor.js";
 import crypto from "crypto";
 import { pathToFileURL } from "url";
@@ -132,9 +132,9 @@ export const loadGdx = async (
     const _functions = json["$cli.function"] as Record<string, string>;
     const client = await getClient();
     json.functions ??= {};
-    const functions = json.functions as Record<string, ModelJSON<typeof Function>>;
+    const functions = json.functions as Record<string, InferModelDefInput<typeof Function, "json">>;
     for (const [key, value] of Object.entries(_functions)) {
-      functions[key] ??= {};
+      functions[key] ??= { name: key };
       const f = functions[key]!;
       Object.assign(f, {
         exposed: f.exposed ?? true,
@@ -168,7 +168,7 @@ export const loadGdx = async (
       }
 
       const model = client.model(key);
-      const isProjectScoped = !model.isEnvironmentScoped && !model.loadDatamodel;
+      const isProjectScoped = !model.configuration.isEnvironmentScoped && !model.configuration.loadDatamodel;
 
       if (isProjectScoped) {
         delete json![key];
@@ -689,29 +689,29 @@ export const isTypescriptProject = () => {
   return false;
 };
 
-export const getTable = <Fields extends string[], Item extends any>(options: {
-  fields: Fields;
+export const getTable = <Properties extends string[], Item extends any>(options: {
+  properties: Properties;
   list: Array<Item>;
-  getter: (_item: Item, _field: Fields[number]) => unknown;
-  getNaturalWidth?: (_field: Fields[number]) => number;
-  isImportantField?: (_field: Fields[number]) => boolean;
+  getter: (_item: Item, _property: Properties[number]) => unknown;
+  getNaturalWidth?: (_property: Properties[number]) => number;
+  isImportantProperty?: (_property: Properties[number]) => boolean;
   maxWidth?: number;
 }) => {
-  const fields = options.fields;
+  const properties = options.properties;
   const list = options.list;
   const getter = options.getter;
   const getNaturalWidth = options.getNaturalWidth;
-  const isImportantField = options.isImportantField;
+  const isImportantProperty = options.isImportantProperty;
   const maxWidth = Number(options.maxWidth || 70);
 
   // Calculate natural widths for each column based on maximum cell content width
-  const naturalWidths = fields.map(field => {
+  const naturalWidths = properties.map(property => {
     if (typeof getNaturalWidth === "function") {
-      return getNaturalWidth(field);
+      return getNaturalWidth(property);
     }
 
-    const values = list.map(item => String(getter(item, field)));
-    const maxContentWidth = Math.max(...values.map(value => value.length), field.length);
+    const values = list.map(item => String(getter(item, property)));
+    const maxContentWidth = Math.max(...values.map(value => value.length), property.length);
     return maxContentWidth;
   }) as number[];
 
@@ -738,13 +738,13 @@ export const getTable = <Fields extends string[], Item extends any>(options: {
         break;
       }
 
-      const field = fields[idx];
+      const property = properties[idx];
 
-      if (!field) {
+      if (!property) {
         continue;
       }
 
-      if (typeof isImportantField === "function" && isImportantField(field)) {
+      if (typeof isImportantProperty === "function" && isImportantProperty(property)) {
         continue;
       }
 
@@ -765,15 +765,15 @@ export const getTable = <Fields extends string[], Item extends any>(options: {
     // If additional reduction is needed, proportionally reduce remaining columns
     if (remainingReduction > 0) {
       const totalAdjustableWidth = columnWidths.reduce(
-        (sum, width, idx) => sum + (fields[idx] && isImportantField?.(fields[idx]!) ? 0 : width),
+        (sum, width, idx) => sum + (properties[idx] && isImportantProperty?.(properties[idx]!) ? 0 : width),
         0,
       );
       const scalingFactor = (totalAdjustableWidth - remainingReduction) / totalAdjustableWidth;
 
       columnWidths = columnWidths.map((width, idx) => {
-        const field = fields[idx];
-        if (field && isImportantField?.(field)) {
-          return width; // Preserve fixed width for important fields
+        const property = properties[idx];
+        if (property && isImportantProperty?.(property)) {
+          return width; // Preserve fixed width for important properties
         } else {
           return Math.max(5, Math.floor(width * scalingFactor));
         }
@@ -804,12 +804,12 @@ export const getTable = <Fields extends string[], Item extends any>(options: {
     },
     style: { "padding-left": 0, "padding-right": 0 },
     colWidths: columnWidths,
-    head: fields,
+    head: properties,
   });
 
   list.forEach(item => {
-    const row = fields.map(field => {
-      let value = getter(item, field);
+    const row = properties.map(property => {
+      let value = getter(item, property);
 
       if (typeof value === "object") {
         value = JSON.stringify(value);

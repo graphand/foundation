@@ -18,11 +18,29 @@ import type { Event } from "@/models/event.js";
 import type { Invitation } from "@/models/invitation.js";
 import type { Snapshot } from "@/models/snapshot.js";
 import type { EventSubscription } from "@/models/event-subscription.js";
-import { InferModelDef } from "@/index.js";
+import { InferModelDef, PropertiesDefinition, ValidatorsDefinition } from "@/index.js";
 export * from "./helpers.js";
 export * from "./properties.js";
 export * from "./validators.js";
 export * from "./ctx.js";
+
+export type TModelConfiguration<TSlug extends string = string> = {
+  slug: TSlug;
+  loadDatamodel?: boolean;
+  connectable?: boolean;
+  restricted?: boolean;
+  realtime?: boolean;
+  type?: "object";
+  blockMultipleOperations?: boolean;
+  freeMode?: boolean;
+  properties?: PropertiesDefinition;
+  keyProperty?: string;
+  single?: boolean | null;
+  validators?: ValidatorsDefinition;
+  isEnvironmentScoped?: boolean;
+  isDynamic?: boolean;
+  required?: string[];
+};
 
 export interface ModelsOverrides {}
 

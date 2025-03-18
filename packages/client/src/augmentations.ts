@@ -3,6 +3,7 @@ import {
   GDXDatamodels,
   InferModel,
   Model,
+  ModelData,
   ModelInstance,
   ModelJSON,
   ModelList,
@@ -36,9 +37,9 @@ Model.prototype.subscribe = function <T extends ModelInstance>(
   });
 };
 
-Model.hydrateAndCache = function <T extends typeof Model>(this: T, json?: ModelJSON<T>): ModelInstance<T> {
+Model.hydrateAndCache = function <T extends typeof Model>(this: T, data?: Partial<ModelData<T>>): ModelInstance<T> {
   const adapter = this.getAdapter() as ClientAdapter<T>;
-  return adapter.processAndCacheInstance(json) as ModelInstance<T>;
+  return adapter.processAndCacheInstance(data) as ModelInstance<T>;
 };
 
 ModelList.prototype.getKey = function <T extends ModelList<typeof Model>>(this: T): string {
@@ -193,7 +194,7 @@ Model.hook("before", "initialize", function () {
   const adapter = this.getAdapter() as ClientAdapter<typeof this>;
   const client = adapter.client;
   const datamodels = client.options.datamodels as GDXDatamodels;
-  if (this.slug && datamodels && datamodels?.[this.slug]) {
-    this.__initOptions.datamodel = datamodels[this.slug] as ModelJSON<typeof DataModel>;
+  if (this.configuration.slug && datamodels && datamodels?.[this.configuration.slug]) {
+    this.__initOptions.datamodel = datamodels[this.configuration.slug] as ModelJSON<typeof DataModel>;
   }
 });

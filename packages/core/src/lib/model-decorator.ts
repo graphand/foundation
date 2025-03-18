@@ -9,8 +9,6 @@ import type { ModelData } from "@/index.js";
 export const modelDecorator = (_?: any) => {
   return <T extends typeof Model>(model: T & {}, _opts?: any) => {
     return class extends model {
-      static __isDecorated = true;
-
       constructor(data: ModelData<T>) {
         super(data);
 

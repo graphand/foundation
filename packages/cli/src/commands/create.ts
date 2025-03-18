@@ -22,11 +22,11 @@ export const _create = async (options: {
   const client = options.client ?? (await getClient({ realtime: true }));
   const model = client.model(String(options.modelName));
 
-  options.spinner.text = `Initializing model ${model.slug} ...`;
+  options.spinner.text = `Initializing model ${model.configuration.slug} ...`;
 
   await model.initialize();
 
-  options.spinner.text = `Creating ${chalk.cyan(model.slug)} instance...`;
+  options.spinner.text = `Creating ${chalk.cyan(model.configuration.slug)} instance...`;
 
   let formData: FormData | undefined;
   let uploadId: string | undefined;
@@ -47,7 +47,7 @@ export const _create = async (options: {
       let unsubscribe: () => void;
       uploadPromise = new Promise<void>(resolve => {
         unsubscribe = upload.subscribe(async state => {
-          options.spinner.text = `Uploading ${chalk.cyan(model.slug)} ... ${state.percentage}%`;
+          options.spinner.text = `Uploading ${chalk.cyan(model.configuration.slug)} ... ${state.percentage}%`;
 
           if (!["uploading", "pending"].includes(state.status)) {
             resolve();
@@ -68,7 +68,7 @@ export const _create = async (options: {
     }
 
     if (spinner) {
-      spinner.text = `Creating ${chalk.cyan(model.slug)} instances...`;
+      spinner.text = `Creating ${chalk.cyan(model.configuration.slug)} instances...`;
     }
 
     let instances: Array<ModelInstance<typeof model>> | undefined;
@@ -81,7 +81,7 @@ export const _create = async (options: {
       await createPromise;
     }
 
-    spinner?.succeed(`Created ${instances?.length} ${chalk.cyan(model.slug)} instances successfully`);
+    spinner?.succeed(`Created ${instances?.length} ${chalk.cyan(model.configuration.slug)} instances successfully`);
 
     return instances?.map(i => i.toJSON()) as Array<ModelJSON<typeof model>>;
   }
@@ -103,7 +103,7 @@ export const _create = async (options: {
     await createPromise;
   }
 
-  options.spinner.succeed(`Created a ${chalk.cyan(model.slug)} instance successfully`);
+  options.spinner.succeed(`Created a ${chalk.cyan(model.configuration.slug)} instance successfully`);
 
   return instance?.toJSON() as ModelJSON<typeof model>;
 };
@@ -112,7 +112,11 @@ export const commandCreate = new Command("create")
   .alias("new")
   .description("Create a new instance")
   .arguments("<modelName>")
-  .option("--set <set>", "Set fields with URL encoded key=value (field1=value1&field2=value2)", Collector.setter)
+  .option(
+    "--set <set>",
+    "Set properties with URL encoded key=value (property1=value1&property2=value2)",
+    Collector.setter,
+  )
   .option("-f --file <file>", "File path to add", Collector.file)
   .option("-m --multiple", "Create multiple instances")
   .option("--skip-realtime-upload", "Skip realtime upload")

@@ -14,7 +14,7 @@ import { PromiseModelList } from "@/lib/promise-model-list.js";
 describe("test properties", () => {
   const adapter = mockAdapter({});
 
-  describe("Text property", () => {
+  describe("String property", () => {
     it("should return default value if undefined", async () => {
       const defaultText = faker.lorem.word();
 
@@ -22,7 +22,7 @@ describe("test properties", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
             default: defaultText,
           },
         },
@@ -38,7 +38,7 @@ describe("test properties", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -55,7 +55,7 @@ describe("test properties", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -73,7 +73,7 @@ describe("test properties", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -85,7 +85,7 @@ describe("test properties", () => {
     });
   });
 
-  describe("Nested property", () => {
+  describe("Object property", () => {
     it("should return default value if undefined", async () => {
       const defaultJSON = { default: true };
 
@@ -180,7 +180,7 @@ describe("test properties", () => {
             type: PropertyTypes.OBJECT,
             properties: {
               foo: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
                 default: "bar",
               },
             },
@@ -205,11 +205,11 @@ describe("test properties", () => {
             type: PropertyTypes.OBJECT,
             properties: {
               property1: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
                 default: "foo",
               },
               property2: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
                 default: "bar",
               },
             },
@@ -239,11 +239,11 @@ describe("test properties", () => {
             type: PropertyTypes.OBJECT,
             properties: {
               property1: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
                 default: "foo",
               },
               property2: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
                 default: "bar",
               },
             },
@@ -273,7 +273,7 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 title: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -294,7 +294,7 @@ describe("test properties", () => {
               additionalProperties: {
                 type: PropertyTypes.ARRAY,
                 items: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -317,7 +317,7 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 title: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -344,7 +344,7 @@ describe("test properties", () => {
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
+            [PropertyTypes.STRING]: class extends Property<PropertyTypes.STRING> {
               serializerMap = {
                 [Property.defaultSymbol]: serializeText,
               };
@@ -364,7 +364,7 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 title: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
                 value: {
                   type: PropertyTypes.NUMBER,
@@ -403,7 +403,7 @@ describe("test properties", () => {
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
+            [PropertyTypes.STRING]: class extends Property<PropertyTypes.STRING> {
               serializerMap = {
                 [Property.defaultSymbol]: serializeText,
               };
@@ -426,7 +426,7 @@ describe("test properties", () => {
                   type: PropertyTypes.OBJECT,
                   properties: {
                     title: {
-                      type: PropertyTypes.TEXT,
+                      type: PropertyTypes.STRING,
                     },
                     value: {
                       type: PropertyTypes.NUMBER,
@@ -476,7 +476,7 @@ describe("test properties", () => {
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
+            [PropertyTypes.STRING]: class extends Property<PropertyTypes.STRING> {
               serializerMap = {
                 [Property.defaultSymbol]: serializeText,
               };
@@ -498,7 +498,7 @@ describe("test properties", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   title: {
-                    type: PropertyTypes.TEXT,
+                    type: PropertyTypes.STRING,
                   },
                   value: {
                     type: PropertyTypes.NUMBER,
@@ -541,7 +541,7 @@ describe("test properties", () => {
               strict: true,
               properties: {
                 title: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -571,7 +571,7 @@ describe("test properties", () => {
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
+            [PropertyTypes.STRING]: class extends Property<PropertyTypes.STRING> {
               serializerMap = {
                 [Property.defaultSymbol]: testSerializer,
               };
@@ -586,7 +586,7 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 title: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -606,13 +606,13 @@ describe("test properties", () => {
       it("should validate properties defined in options", async () => {
         const testValidator = vi.fn(() => Promise.resolve(true));
 
-        class TestPropertyText extends Property<PropertyTypes.TEXT> {
+        class TestPropertyString extends Property<PropertyTypes.STRING> {
           validate = testValidator;
         }
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: TestPropertyText,
+            [PropertyTypes.STRING]: TestPropertyString,
           },
         });
 
@@ -623,7 +623,7 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 title: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -647,7 +647,7 @@ describe("test properties", () => {
         const testSerializer = vi.fn(() => serializedText);
         const testValidator = vi.fn(() => Promise.resolve(true));
 
-        class TestPropertyText extends Property<PropertyTypes.TEXT> {
+        class TestPropertyString extends Property<PropertyTypes.STRING> {
           validate = testValidator;
 
           serializerMap = {
@@ -657,7 +657,7 @@ describe("test properties", () => {
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: TestPropertyText,
+            [PropertyTypes.STRING]: TestPropertyString,
           },
         });
 
@@ -671,7 +671,7 @@ describe("test properties", () => {
                   type: PropertyTypes.OBJECT,
                   properties: {
                     title: {
-                      type: PropertyTypes.TEXT,
+                      type: PropertyTypes.STRING,
                     },
                   },
                 },
@@ -702,13 +702,13 @@ describe("test properties", () => {
       it("should throw error if error happens in property validation", async () => {
         const testValidator = vi.fn(() => Promise.resolve(false));
 
-        class TestPropertyText extends Property<PropertyTypes.TEXT> {
+        class TestPropertyString extends Property<PropertyTypes.STRING> {
           validate = testValidator;
         }
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: TestPropertyText,
+            [PropertyTypes.STRING]: TestPropertyString,
           },
         });
 
@@ -722,7 +722,7 @@ describe("test properties", () => {
                   type: PropertyTypes.OBJECT,
                   properties: {
                     title: {
-                      type: PropertyTypes.TEXT,
+                      type: PropertyTypes.STRING,
                     },
                   },
                 },
@@ -929,15 +929,15 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             channel: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["email", "slack"],
             },
             options: {
               type: PropertyTypes.OBJECT,
               strict: true,
               properties: {
-                email: { type: PropertyTypes.TEXT },
-                slackWebhookUrl: { type: PropertyTypes.TEXT },
+                email: { type: PropertyTypes.STRING },
+                slackWebhookUrl: { type: PropertyTypes.STRING },
               },
               conditionalProperties: {
                 dependsOn: "channel",
@@ -974,7 +974,7 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             channel: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["email", "slack"],
               blbala: true,
             },
@@ -982,8 +982,8 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               strict: true,
               properties: {
-                email: { type: PropertyTypes.TEXT },
-                slackWebhookUrl: { type: PropertyTypes.TEXT },
+                email: { type: PropertyTypes.STRING },
+                slackWebhookUrl: { type: PropertyTypes.STRING },
               },
               conditionalProperties: {
                 dependsOn: "channel",
@@ -1060,7 +1060,7 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             type: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["type1", "type2"],
             },
             obj: {
@@ -1071,8 +1071,8 @@ describe("test properties", () => {
                   type: PropertyTypes.OBJECT,
                   strict: true,
                   properties: {
-                    property11: { type: PropertyTypes.TEXT },
-                    property12: { type: PropertyTypes.TEXT },
+                    property11: { type: PropertyTypes.STRING },
+                    property12: { type: PropertyTypes.STRING },
                   },
                   validators: [
                     {
@@ -1085,8 +1085,8 @@ describe("test properties", () => {
                   type: PropertyTypes.OBJECT,
                   strict: true,
                   properties: {
-                    property21: { type: PropertyTypes.TEXT },
-                    property22: { type: PropertyTypes.TEXT },
+                    property21: { type: PropertyTypes.STRING },
+                    property22: { type: PropertyTypes.STRING },
                   },
                   validators: [
                     {
@@ -1186,14 +1186,14 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 mode: {
-                  type: PropertyTypes.ENUM,
+                  type: PropertyTypes.STRING,
                   enum: ["simple", "advanced"],
                 },
                 config: {
                   type: PropertyTypes.OBJECT,
                   strict: true,
                   properties: {
-                    simpleOption: { type: PropertyTypes.TEXT },
+                    simpleOption: { type: PropertyTypes.STRING },
                     advancedOption: { type: PropertyTypes.NUMBER },
                   },
                   conditionalProperties: {
@@ -1237,14 +1237,14 @@ describe("test properties", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   type: {
-                    type: PropertyTypes.ENUM,
+                    type: PropertyTypes.STRING,
                     enum: ["A", "B"],
                   },
                   data: {
                     type: PropertyTypes.OBJECT,
                     strict: true,
                     properties: {
-                      propertyA: { type: PropertyTypes.TEXT },
+                      propertyA: { type: PropertyTypes.STRING },
                       propertyB: { type: PropertyTypes.NUMBER },
                     },
                     conditionalProperties: {
@@ -1293,15 +1293,15 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             channel: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["email", "slack"],
             },
             options: {
               type: PropertyTypes.OBJECT,
               strict: true,
               properties: {
-                email: { type: PropertyTypes.TEXT },
-                slackWebhookUrl: { type: PropertyTypes.TEXT },
+                email: { type: PropertyTypes.STRING },
+                slackWebhookUrl: { type: PropertyTypes.STRING },
               },
               conditionalProperties: {
                 dependsOn: "channel",
@@ -1393,15 +1393,15 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             channel: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["email", "slack"],
             },
             options: {
               type: PropertyTypes.OBJECT,
               strict: true,
               properties: {
-                email: { type: PropertyTypes.TEXT },
-                slackWebhookUrl: { type: PropertyTypes.TEXT },
+                email: { type: PropertyTypes.STRING },
+                slackWebhookUrl: { type: PropertyTypes.STRING },
               },
               conditionalProperties: {
                 dependsOn: "channel",
@@ -1456,15 +1456,15 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             channel: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["email", "slack", "unknown"],
             },
             options: {
               type: PropertyTypes.OBJECT,
               strict: true,
               properties: {
-                email: { type: PropertyTypes.TEXT },
-                slackWebhookUrl: { type: PropertyTypes.TEXT },
+                email: { type: PropertyTypes.STRING },
+                slackWebhookUrl: { type: PropertyTypes.STRING },
               },
               conditionalProperties: {
                 dependsOn: "channel",
@@ -1507,15 +1507,15 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             channel: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["email", "slack", "unknown"],
             },
             options: {
               type: PropertyTypes.OBJECT,
               strict: true,
               properties: {
-                email: { type: PropertyTypes.TEXT },
-                slackWebhookUrl: { type: PropertyTypes.TEXT },
+                email: { type: PropertyTypes.STRING },
+                slackWebhookUrl: { type: PropertyTypes.STRING },
               },
               conditionalProperties: {
                 dependsOn: "channel",
@@ -1560,15 +1560,15 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 mode: {
-                  type: PropertyTypes.ENUM,
+                  type: PropertyTypes.STRING,
                   enum: ["light", "dark"],
                 },
                 theme: {
                   type: PropertyTypes.OBJECT,
                   strict: true,
                   properties: {
-                    lightOption: { type: PropertyTypes.TEXT },
-                    darkOption: { type: PropertyTypes.TEXT },
+                    lightOption: { type: PropertyTypes.STRING },
+                    darkOption: { type: PropertyTypes.STRING },
                   },
                   conditionalProperties: {
                     dependsOn: "$.mode",
@@ -1608,15 +1608,15 @@ describe("test properties", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   type: {
-                    type: PropertyTypes.ENUM,
+                    type: PropertyTypes.STRING,
                     enum: ["A", "B"],
                   },
                   config: {
                     type: PropertyTypes.OBJECT,
                     strict: true,
                     properties: {
-                      optionA: { type: PropertyTypes.TEXT },
-                      optionB: { type: PropertyTypes.TEXT },
+                      optionA: { type: PropertyTypes.STRING },
+                      optionB: { type: PropertyTypes.STRING },
                     },
                     conditionalProperties: {
                       dependsOn: "$.type",
@@ -1668,15 +1668,15 @@ describe("test properties", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   type: {
-                    type: PropertyTypes.ENUM,
+                    type: PropertyTypes.STRING,
                     enum: ["A", "B"],
                   },
                   config: {
                     type: PropertyTypes.OBJECT,
                     strict: true,
                     properties: {
-                      optionA: { type: PropertyTypes.TEXT },
-                      optionB: { type: PropertyTypes.TEXT },
+                      optionA: { type: PropertyTypes.STRING },
+                      optionB: { type: PropertyTypes.STRING },
                     },
                     conditionalProperties: {
                       dependsOn: "$.type",
@@ -1750,15 +1750,15 @@ describe("test properties", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   type: {
-                    type: PropertyTypes.ENUM,
+                    type: PropertyTypes.STRING,
                     enum: ["A", "B"],
                   },
                   config: {
                     type: PropertyTypes.OBJECT,
                     strict: true,
                     properties: {
-                      optionA: { type: PropertyTypes.TEXT },
-                      optionB: { type: PropertyTypes.TEXT },
+                      optionA: { type: PropertyTypes.STRING },
+                      optionB: { type: PropertyTypes.STRING },
                     },
                     conditionalProperties: {
                       dependsOn: "$.type",
@@ -1824,22 +1824,22 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 mode: {
-                  type: PropertyTypes.ENUM,
+                  type: PropertyTypes.STRING,
                   enum: ["simple", "complex"],
                 },
                 config: {
                   type: PropertyTypes.OBJECT,
                   properties: {
                     subMode: {
-                      type: PropertyTypes.ENUM,
+                      type: PropertyTypes.STRING,
                       enum: ["A", "B"],
                     },
                     options: {
                       type: PropertyTypes.OBJECT,
                       strict: true,
                       properties: {
-                        optionA: { type: PropertyTypes.TEXT },
-                        optionB: { type: PropertyTypes.TEXT },
+                        optionA: { type: PropertyTypes.STRING },
+                        optionB: { type: PropertyTypes.STRING },
                       },
                       conditionalProperties: {
                         dependsOn: "$.subMode",
@@ -1885,14 +1885,14 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             paymentMethod: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["creditCard", "paypal"],
             },
             paymentDetails: {
               type: PropertyTypes.OBJECT,
               properties: {
-                cardNumber: { type: PropertyTypes.TEXT },
-                paypalEmail: { type: PropertyTypes.TEXT },
+                cardNumber: { type: PropertyTypes.STRING },
+                paypalEmail: { type: PropertyTypes.STRING },
               },
               conditionalProperties: {
                 dependsOn: "paymentMethod",
@@ -1966,20 +1966,20 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             level1Type: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["typeA", "typeB"],
             },
             level1: {
               type: PropertyTypes.OBJECT,
               properties: {
                 level2Type: {
-                  type: PropertyTypes.ENUM,
+                  type: PropertyTypes.STRING,
                   enum: ["subType1", "subType2"],
                 },
                 level2: {
                   type: PropertyTypes.OBJECT,
                   properties: {
-                    property1: { type: PropertyTypes.TEXT },
+                    property1: { type: PropertyTypes.STRING },
                     property2: { type: PropertyTypes.NUMBER },
                   },
                   conditionalProperties: {
@@ -2022,14 +2022,14 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             status: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["active", "inactive", "unknown"],
             },
             details: {
               type: PropertyTypes.OBJECT,
               properties: {
-                activeProperty: { type: PropertyTypes.TEXT },
-                inactiveProperty: { type: PropertyTypes.TEXT },
+                activeProperty: { type: PropertyTypes.STRING },
+                inactiveProperty: { type: PropertyTypes.STRING },
               },
               conditionalProperties: {
                 dependsOn: "status",
@@ -2060,14 +2060,14 @@ describe("test properties", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             type: {
-              type: PropertyTypes.ENUM,
+              type: PropertyTypes.STRING,
               enum: ["type1", "type2", "type3"],
             },
             data: {
               type: PropertyTypes.OBJECT,
               properties: {
-                property1: { type: PropertyTypes.TEXT },
-                property2: { type: PropertyTypes.TEXT },
+                property1: { type: PropertyTypes.STRING },
+                property2: { type: PropertyTypes.STRING },
               },
               conditionalProperties: {
                 dependsOn: "type",
@@ -2101,7 +2101,7 @@ describe("test properties", () => {
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
+            [PropertyTypes.STRING]: class extends Property<PropertyTypes.STRING> {
               serializerMap = {
                 [Property.defaultSymbol]: testSerializer,
               };
@@ -2115,7 +2115,7 @@ describe("test properties", () => {
             obj: {
               type: PropertyTypes.OBJECT,
               additionalProperties: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },
@@ -2136,7 +2136,7 @@ describe("test properties", () => {
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: class TestPropertyText extends Property<PropertyTypes.TEXT> {
+            [PropertyTypes.STRING]: class TestPropertyString extends Property<PropertyTypes.STRING> {
               serializerMap = {
                 [Property.defaultSymbol]: testSerializer,
               };
@@ -2150,7 +2150,7 @@ describe("test properties", () => {
             obj: {
               type: PropertyTypes.OBJECT,
               additionalProperties: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },
@@ -2171,7 +2171,7 @@ describe("test properties", () => {
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: class extends Property<PropertyTypes.TEXT> {
+            [PropertyTypes.STRING]: class extends Property<PropertyTypes.STRING> {
               serializerMap = {
                 [Property.defaultSymbol]: testSerializer,
               };
@@ -2185,7 +2185,7 @@ describe("test properties", () => {
             obj: {
               type: PropertyTypes.OBJECT,
               additionalProperties: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
               properties: {
                 test: {
@@ -2212,7 +2212,7 @@ describe("test properties", () => {
 
         const _adapter = mockAdapter({
           propertiesMap: {
-            [PropertyTypes.TEXT]: class TestPropertyText extends Property<PropertyTypes.TEXT> {
+            [PropertyTypes.STRING]: class TestPropertyString extends Property<PropertyTypes.STRING> {
               validate = testValidator;
               serializerMap = {
                 [Property.defaultSymbol]: ({ value }: any) => value,
@@ -2228,7 +2228,7 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               strict: true,
               additionalProperties: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
               properties: {
                 test: {
@@ -2272,7 +2272,7 @@ describe("test properties", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 title: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -2769,7 +2769,7 @@ describe("test properties", () => {
               strict: true,
               properties: {
                 title: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -2847,7 +2847,7 @@ describe("test properties", () => {
             type: PropertyTypes.ARRAY,
             default: [],
             items: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         },
@@ -2868,7 +2868,7 @@ describe("test properties", () => {
             arr: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },
@@ -2886,7 +2886,7 @@ describe("test properties", () => {
             arr: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
               distinct: true,
             },
@@ -2911,7 +2911,7 @@ describe("test properties", () => {
             arr: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
               distinct: true,
             },
@@ -2938,7 +2938,7 @@ describe("test properties", () => {
               items: {
                 type: PropertyTypes.ARRAY,
                 items: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
                 distinct: true,
               },
@@ -2972,7 +2972,7 @@ describe("test properties", () => {
                   arr: {
                     type: PropertyTypes.ARRAY,
                     items: {
-                      type: PropertyTypes.TEXT,
+                      type: PropertyTypes.STRING,
                     },
                     distinct: true,
                   },
@@ -3005,7 +3005,7 @@ describe("test properties", () => {
                   arr: {
                     type: PropertyTypes.ARRAY,
                     items: {
-                      type: PropertyTypes.TEXT,
+                      type: PropertyTypes.STRING,
                     },
                     distinct: true,
                   },
@@ -3061,7 +3061,7 @@ describe("test properties", () => {
               items: {
                 type: PropertyTypes.ARRAY,
                 items: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
               distinct: true,
@@ -3093,7 +3093,7 @@ describe("test properties", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   title: {
-                    type: PropertyTypes.TEXT,
+                    type: PropertyTypes.STRING,
                   },
                 },
               },
@@ -3194,7 +3194,7 @@ describe("test properties", () => {
             arr: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
               distinct: true,
             },
@@ -3219,7 +3219,7 @@ describe("test properties", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   title: {
-                    type: PropertyTypes.TEXT,
+                    type: PropertyTypes.STRING,
                   },
                 },
               },
@@ -3300,7 +3300,7 @@ describe("test properties", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           status: {
-            type: PropertyTypes.ENUM,
+            type: PropertyTypes.STRING,
             enum: enumValues,
             default: defaultValue,
           },
@@ -3320,7 +3320,7 @@ describe("test properties", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           status: {
-            type: PropertyTypes.ENUM,
+            type: PropertyTypes.STRING,
             enum: enumValues,
           },
         },
@@ -3338,7 +3338,7 @@ describe("test properties", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           status: {
-            type: PropertyTypes.ENUM,
+            type: PropertyTypes.STRING,
             enum: enumValues,
           },
         },
@@ -3356,7 +3356,7 @@ describe("test properties", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           status: {
-            type: PropertyTypes.ENUM,
+            type: PropertyTypes.STRING,
             enum: enumValues,
           },
         },
@@ -3374,7 +3374,7 @@ describe("test properties", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           status: {
-            type: PropertyTypes.ENUM,
+            type: PropertyTypes.STRING,
             enum: enumValues,
           },
         },
@@ -3393,7 +3393,7 @@ describe("test properties", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           status: {
-            type: PropertyTypes.ENUM,
+            type: PropertyTypes.STRING,
             enum: enumValues,
           },
         },

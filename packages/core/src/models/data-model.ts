@@ -1,9 +1,10 @@
-import { defineConfiguration, Model } from "@/lib/model.js";
+import { Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { PropertyDefinition } from "@/types/index.js";
 import { Function } from "./function.js";
+import { defineModelConf } from "@/lib/utils.js";
 
 const functionRelationProperty = {
   type: PropertyTypes.ARRAY,
@@ -30,32 +31,32 @@ const functionRelationProperty = {
 @modelDecorator()
 export class DataModel extends Model {
   static __name = "DataModel";
-  static configuration = defineConfiguration({
+  static configuration = defineModelConf({
     slug: "datamodels",
     isEnvironmentScoped: true,
     realtime: true,
     loadDatamodel: false,
     keyProperty: "slug",
     properties: {
-      name: { type: PropertyTypes.TEXT },
-      slug: { type: PropertyTypes.TEXT },
+      name: { type: PropertyTypes.STRING },
+      slug: { type: PropertyTypes.STRING },
       properties: {
         type: PropertyTypes.OBJECT,
         additionalProperties: {
           type: PropertyTypes.OBJECT,
           properties: {
-            type: { type: PropertyTypes.ENUM, enum: Object.values(PropertyTypes) },
+            type: { type: PropertyTypes.STRING, enum: Object.values(PropertyTypes) },
             default: { type: PropertyTypes.DEFAULT },
             items: { type: PropertyTypes.OBJECT },
             validators: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.OBJECT } },
             distinct: { type: PropertyTypes.BOOLEAN },
-            enum: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.TEXT } },
+            enum: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.STRING } },
             strict: { type: PropertyTypes.BOOLEAN },
-            ref: { type: PropertyTypes.TEXT },
+            ref: { type: PropertyTypes.STRING },
             additionalProperties: { type: PropertyTypes.OBJECT },
             conditionalProperties: { type: PropertyTypes.OBJECT },
             properties: { type: PropertyTypes.OBJECT },
-            required: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.TEXT } },
+            required: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.STRING } },
             // options: {
             //   type: PropertyTypes.OBJECT,
             //   strict: true,
@@ -64,23 +65,23 @@ export class DataModel extends Model {
             //     items: { type: PropertyTypes.OBJECT },
             //     validators: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.OBJECT } },
             //     distinct: { type: PropertyTypes.BOOLEAN },
-            //     enum: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.TEXT } },
+            //     enum: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.STRING } },
             //     strict: { type: PropertyTypes.BOOLEAN },
-            //     ref: { type: PropertyTypes.TEXT },
+            //     ref: { type: PropertyTypes.STRING },
             //     additionalProperties: { type: PropertyTypes.OBJECT },
             //     conditionalProperties: { type: PropertyTypes.OBJECT },
             //     properties: { type: PropertyTypes.OBJECT },
-            //     required: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.TEXT } },
+            //     required: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.STRING } },
             //   },
             //   conditionalProperties: {
             //     dependsOn: "$.type",
             //     mappings: {
             //       [PropertyTypes.ARRAY]: ["items", "validators", "distinct"],
-            //       [PropertyTypes.TEXT]: ["default"],
+            //       [PropertyTypes.STRING]: ["default"],
             //       [PropertyTypes.RELATION]: ["ref"],
             //       [PropertyTypes.NUMBER]: ["default"],
             //       [PropertyTypes.INTEGER]: ["default"],
-            //       [PropertyTypes.ENUM]: ["default", "enum"],
+            //       [PropertyTypes.STRING]: ["default", "enum"],
             //       [PropertyTypes.OBJECT]: [
             //         "default",
             //         "additionalProperties",
@@ -103,12 +104,12 @@ export class DataModel extends Model {
           type: PropertyTypes.OBJECT,
           strict: true,
           properties: {
-            type: { type: PropertyTypes.ENUM, enum: Object.values(ValidatorTypes) },
-            property: { type: PropertyTypes.TEXT },
+            type: { type: PropertyTypes.STRING, enum: Object.values(ValidatorTypes) },
+            property: { type: PropertyTypes.STRING },
             min: { type: PropertyTypes.NUMBER },
             max: { type: PropertyTypes.NUMBER },
-            pattern: { type: PropertyTypes.TEXT },
-            options: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.TEXT } },
+            pattern: { type: PropertyTypes.STRING },
+            options: { type: PropertyTypes.ARRAY, items: { type: PropertyTypes.STRING } },
             // conditionalProperties: {
             //   dependsOn: "$.type",
             //   mappings: {
@@ -128,14 +129,14 @@ export class DataModel extends Model {
       },
       required: {
         type: PropertyTypes.ARRAY,
-        items: { type: PropertyTypes.TEXT },
+        items: { type: PropertyTypes.STRING },
       },
       single: {
         type: PropertyTypes.BOOLEAN,
         default: false,
       },
       keyProperty: {
-        type: PropertyTypes.TEXT,
+        type: PropertyTypes.STRING,
       },
       hooks: {
         type: PropertyTypes.OBJECT,
@@ -181,6 +182,7 @@ export class DataModel extends Model {
       },
       _doc: { type: PropertyTypes.OBJECT },
     },
+    required: ["slug"],
     validators: [{ type: ValidatorTypes.DATAMODEL }],
   });
 }

@@ -17,13 +17,13 @@ describe("test validators", () => {
       slug: faker.random.alphaNumeric(10),
       properties: {
         title: {
-          type: PropertyTypes.TEXT,
+          type: PropertyTypes.STRING,
         },
         obj: {
           type: PropertyTypes.OBJECT,
           properties: {
             title: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
           required: ["title"],
@@ -38,13 +38,13 @@ describe("test validators", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
           obj: {
             type: PropertyTypes.OBJECT,
             properties: {
               title: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
             required: ["title"],
@@ -289,7 +289,7 @@ describe("test validators", () => {
             arr: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
               validators: [
                 {
@@ -325,7 +325,7 @@ describe("test validators", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
         validators: [
@@ -417,7 +417,7 @@ describe("test validators", () => {
           arr: {
             type: PropertyTypes.ARRAY,
             items: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
             validators: [
               {
@@ -452,7 +452,7 @@ describe("test validators", () => {
       slug: faker.random.alphaNumeric(10),
       properties: {
         title: {
-          type: PropertyTypes.TEXT,
+          type: PropertyTypes.STRING,
         },
       },
       validators: [
@@ -493,7 +493,7 @@ describe("test validators", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -507,7 +507,7 @@ describe("test validators", () => {
         keyProperty: "title",
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -530,7 +530,7 @@ describe("test validators", () => {
         keyProperty: "test",
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -542,7 +542,7 @@ describe("test validators", () => {
         keyProperty: "title",
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
             options: {
               default: "default",
             },
@@ -572,7 +572,7 @@ describe("test validators", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           "invalid name": {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -600,7 +600,7 @@ describe("test validators", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             validname: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         }),
@@ -611,7 +611,7 @@ describe("test validators", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             "valid:name": {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         }),
@@ -622,7 +622,7 @@ describe("test validators", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             "valid-name": {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         }),
@@ -633,7 +633,7 @@ describe("test validators", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             valid_name: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         }),
@@ -646,7 +646,7 @@ describe("test validators", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             "invalid name": {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         }),
@@ -657,7 +657,7 @@ describe("test validators", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             "invalid.name": {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         }),
@@ -668,7 +668,7 @@ describe("test validators", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             "invalid!name": {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         }),
@@ -679,7 +679,7 @@ describe("test validators", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             _invalidName: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         }),
@@ -697,7 +697,7 @@ describe("test validators", () => {
       await expect(
         _create({
           _id: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
@@ -705,7 +705,7 @@ describe("test validators", () => {
       await expect(
         _create({
           model: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
@@ -713,7 +713,7 @@ describe("test validators", () => {
       await expect(
         _create({
           getData: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
@@ -721,7 +721,7 @@ describe("test validators", () => {
       await expect(
         _create({
           get: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         }),
       ).rejects.toBeInstanceOf(ValidationError);
@@ -734,7 +734,7 @@ describe("test validators", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             [propertyName]: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         }),
@@ -746,7 +746,7 @@ describe("test validators", () => {
         const properties: ModelJSON<typeof DataModel>["properties"] = {};
         for (let i = 0; i < propertiesCount; i++) {
           properties[`property${i}`] = {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           };
         }
 
@@ -768,7 +768,7 @@ describe("test validators", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
         validators: [
@@ -811,7 +811,7 @@ describe("test validators", () => {
                   nested: {
                     type: PropertyTypes.ARRAY,
                     items: {
-                      type: PropertyTypes.TEXT,
+                      type: PropertyTypes.STRING,
                     },
                     validators: [
                       {
@@ -962,7 +962,7 @@ describe("test validators", () => {
             arr: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },
@@ -1034,7 +1034,7 @@ describe("test validators", () => {
                     nested: {
                       type: PropertyTypes.ARRAY,
                       items: {
-                        type: PropertyTypes.TEXT,
+                        type: PropertyTypes.STRING,
                       },
                     },
                   },
@@ -1120,7 +1120,7 @@ describe("test validators", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
         validators: [
@@ -1225,12 +1225,12 @@ describe("test validators", () => {
       slug: faker.random.alphaNumeric(10),
       properties: {
         title: {
-          type: PropertyTypes.TEXT,
+          type: PropertyTypes.STRING,
         },
         arr: {
           type: PropertyTypes.ARRAY,
           items: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
           validators: [
             {
@@ -1244,7 +1244,7 @@ describe("test validators", () => {
             type: PropertyTypes.OBJECT,
             properties: {
               label: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
             validators: [
@@ -1363,7 +1363,7 @@ describe("test validators", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
         validators: [
@@ -1410,7 +1410,7 @@ describe("test validators", () => {
           arr: {
             type: PropertyTypes.ARRAY,
             items: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         },

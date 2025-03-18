@@ -1,5 +1,17 @@
 # @graphand/client-module-auth
 
+## 1.5.0
+
+### Minor Changes
+
+- Refactor models with json-schema properties support"
+
+### Patch Changes
+
+- Updated dependencies
+  - @graphand/client@1.6.0
+  - @graphand/core@1.8.0
+
 ## 1.4.3
 
 ### Patch Changes

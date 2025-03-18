@@ -22,9 +22,9 @@ import {
   ModelJSON,
   InferModel,
   ModelData,
-  ValidatorsDefinition,
   ModelObject,
   InferModelDefInput,
+  TModelConfiguration,
 } from "@/types/index.js";
 import { Adapter } from "@/lib/adapter.js";
 import { Validator } from "@/lib/validator.js";
@@ -38,32 +38,13 @@ import {
   assignDatamodel,
   getModelInitPromise,
   definePropertiesObject,
+  defineModelConf,
 } from "@/lib/utils.js";
 import { CoreError } from "@/lib/core-error.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
 import { DataModel } from "@/models/data-model.js";
 import { ModelList } from "./model-list.js";
 import { PropertyTypes } from "@/enums/property-types.js";
-
-export type TModelConfiguration<TSlug extends string = string> = {
-  slug: TSlug;
-  loadDatamodel?: boolean;
-  connectable?: boolean;
-  exposed?: boolean;
-  realtime?: boolean;
-  type?: "object";
-  blockMultipleOperations?: boolean;
-  freeMode?: boolean;
-  properties?: PropertiesDefinition;
-  keyProperty?: string;
-  single?: boolean | null;
-  validators?: ValidatorsDefinition;
-  isEnvironmentScoped?: boolean;
-  isDynamic?: boolean;
-  required?: string[];
-};
-
-export const defineConfiguration = <const C extends TModelConfiguration>(configuration: C) => configuration;
 
 const noPropertySymbol = Symbol("noProperty");
 
@@ -92,6 +73,7 @@ export class Model {
     _updatedBy: { type: PropertyTypes.IDENTITY },
   };
 
+  __propsDefined?: true | undefined;
   #data: unknown; // The document
 
   constructor(data: unknown = {}) {
@@ -117,7 +99,9 @@ export class Model {
   }
 
   static hydrate<T extends typeof Model>(this: T, data?: Partial<ModelData<T>>): ModelInstance<T> {
-    return new this((data ?? {}) as ModelData<T>) as ModelInstance<T>;
+    const instance = new this((data ?? {}) as ModelData<T>) as ModelInstance<T>;
+    instance.#checkDecorated();
+    return instance;
   }
 
   /**
@@ -234,7 +218,7 @@ export class Model {
     },
   ): T {
     // Get the base class of the current model
-    const extendedClass = this.getBaseClass();
+    let extendedClass = this.getBaseClass();
 
     // If the base class does not have a slug and the force option is not set, throw an error
     if (!extendedClass?.configuration?.slug && !opts.force) {
@@ -243,9 +227,15 @@ export class Model {
       });
     }
 
-    // @ts-expect-error Create a new class that extends the base class
+    // @ts-expect-error
     const model = class extends extendedClass {
       static __extendedClass = extendedClass;
+
+      constructor(data: ModelData<T>) {
+        super(data);
+
+        definePropertiesObject(this);
+      }
     };
 
     // If initOptions are provided, set them on the model
@@ -279,13 +269,6 @@ export class Model {
   static async initialize() {
     if (this.hasOwnProperty("__initPromise")) {
       return this.__initPromise;
-    }
-
-    const baseClass = this.getBaseClass();
-    if (!baseClass.hasOwnProperty("__isDecorated")) {
-      throw new CoreError({
-        message: `Model ${this.configuration.slug} is not decorated with modelDecorator. Please use the @modelDecorator() decorator on your model class.`,
-      });
     }
 
     if (!this.hasOwnProperty("__initOptions")) {
@@ -461,9 +444,8 @@ export class Model {
 
     // If the model is not fount yet, we deduce it to be a generic model extended with a datamodel instance (extensible and environment scoped)
     model ??= class extends Model {
-      static __isDecorated = true;
       static __name = `Data<${slug}>`;
-      static configuration = defineConfiguration({
+      static configuration = defineModelConf({
         slug: slug!,
         realtime,
         connectable: true,
@@ -496,6 +478,14 @@ export class Model {
     return model as any;
   }
 
+  #checkDecorated<T extends ModelInstance>(this: T) {
+    if (!this.__propsDefined) {
+      throw new CoreError({
+        message: `This model instance has been created on an invalid model class (${this.model().configuration.slug}). Please use the .extend() method or the modelDecorator() function to get the correct model class.`,
+      });
+    }
+  }
+
   /**
    * Get value for a specific property. model.get("property") is an equivalent to `model.property`
    * @param path - The path to the property
@@ -521,6 +511,8 @@ export class Model {
     ctx.outputFormat ??= format;
     const model = this.model();
     let propertiesPaths: Array<PropertiesPathItem | null> | undefined;
+
+    // this.#checkDecorated();
 
     if (path.includes(".") || path.includes("[")) {
       // Parse the path to handle cases like "property[0].subproperty" to follow the dot notation

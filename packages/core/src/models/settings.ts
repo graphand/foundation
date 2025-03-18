@@ -1,17 +1,18 @@
-import { Model, defineConfiguration } from "@/lib/model.js";
+import { Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
+import { defineModelConf } from "@/lib/utils.js";
 
 @modelDecorator()
 export class Settings extends Model {
   static __name = "Settings";
-  static configuration = defineConfiguration({
+  static configuration = defineModelConf({
     slug: "settings",
     blockMultipleOperations: true,
     loadDatamodel: false,
     keyProperty: "key",
     properties: {
-      key: { type: PropertyTypes.TEXT },
+      key: { type: PropertyTypes.STRING },
       data: {
         type: PropertyTypes.OBJECT,
         default: {},

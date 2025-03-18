@@ -16,14 +16,14 @@ export const commandModels = new Command("models")
       const list = await Promise.all(slugs.map(slug => client.model(slug as string)));
 
       const table = getTable({
-        fields: ["slug", "keyField"],
+        properties: ["slug", "keyProperty"],
         list: list,
-        getter: (item, field) => {
-          if (field === "keyField") {
-            return item.getKeyField();
+        getter: (item, property) => {
+          if (property === "keyProperty") {
+            return item.getKeyProperty();
           }
 
-          return item[field as keyof typeof item];
+          return item[property as keyof typeof item];
         },
       });
 
@@ -35,5 +35,5 @@ export const commandModels = new Command("models")
 
     await model.initialize();
 
-    console.log(colorizeJson(model.definition as JSONObject));
+    console.log(colorizeJson(model.configuration as JSONObject));
   });

@@ -21,7 +21,7 @@ export { PropertyIdentity } from "@/lib/properties/identity.js";
 export { PropertyObject } from "@/lib/properties/object.js";
 export { PropertyNumber } from "@/lib/properties/number.js";
 export { PropertyRelation } from "@/lib/properties/relation.js";
-export { PropertyText } from "@/lib/properties/text.js";
+export { PropertyString } from "@/lib/properties/string.js";
 export { Model } from "@/lib/model.js";
 export { ModelList } from "@/lib/model-list.js";
 export { PromiseModel } from "@/lib/promise-model.js";
@@ -88,4 +88,5 @@ export {
   getRelationModelsFromPath,
   createValidationError,
   assignDatamodel,
+  defineModelConf,
 } from "@/lib/utils.js";

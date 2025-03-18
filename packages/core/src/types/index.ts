@@ -267,10 +267,14 @@ export type LoginData<P extends AuthProviders = AuthProviders, M extends AuthMet
   options?: AuthMethodOptions<M>;
 };
 
-export type RegisterData<P extends AuthProviders = AuthProviders, M extends AuthMethods = AuthMethods> = {
+export type RegisterData<
+  A extends typeof Account = typeof Account,
+  P extends AuthProviders = AuthProviders,
+  M extends AuthMethods = AuthMethods,
+> = {
   provider?: P;
   method?: M;
-  account?: Omit<ModelJSON<typeof Account>, "role">;
+  account?: Omit<InferModelDefInput<A, "json">, "role">;
   configuration?: AuthProviderConfigurePayload<P>;
   options?: AuthMethodOptions<M>;
 };

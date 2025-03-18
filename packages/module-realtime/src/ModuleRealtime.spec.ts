@@ -119,7 +119,15 @@ describe("ModuleRealtime", () => {
       operation: "create",
       model: "testModel",
       ids: ["123"],
-      data: [{ _id: "123" }],
+      data: [
+        {
+          _id: "123",
+          _createdAt: new Date().toISOString(),
+          _createdBy: "123",
+          _updatedAt: new Date().toISOString(),
+          _updatedBy: "123",
+        },
+      ],
     };
 
     if (!socket) return;
@@ -220,7 +228,7 @@ describe("ModuleRealtime", () => {
       expect(_module.getSubscribedModels()).toHaveLength(0);
       const model = _client.model("testModel");
       model.subscribe(() => {});
-      expect(_module.getSubscribedModels()).toContain(model.slug);
+      expect(_module.getSubscribedModels()).toContain(model.configuration.slug);
     });
 
     it("should auto subscribe to models on Model.prototype.subscribe", async () => {
@@ -229,7 +237,7 @@ describe("ModuleRealtime", () => {
       const model = _client.model("testModel");
       const i = model.hydrate({});
       i.subscribe(() => {});
-      expect(_module.getSubscribedModels()).toContain(model.slug);
+      expect(_module.getSubscribedModels()).toContain(model.configuration.slug);
     });
 
     it("should auto subscribe to models on ModelList.prototype.subscribe", async () => {
@@ -238,7 +246,7 @@ describe("ModuleRealtime", () => {
       const model = _client.model("datamodels");
       const list = await model.getList({});
       list.subscribe(() => {});
-      expect(_module.getSubscribedModels()).toContain(model.slug);
+      expect(_module.getSubscribedModels()).toContain(model.configuration.slug);
     });
   });
 });

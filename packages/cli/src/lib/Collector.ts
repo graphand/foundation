@@ -115,13 +115,13 @@ class Collector {
   };
 
   static file = (value: string, previous?: Record<string, Promise<File>>): Record<string, Promise<File>> => {
-    let field: string;
+    let property: string;
     let path: string;
 
     if (value.includes("=")) {
-      [field, path] = value.split("=") as [string, string];
+      [property, path] = value.split("=") as [string, string];
     } else {
-      field = "file";
+      property = "file";
       path = value;
     }
 
@@ -150,7 +150,7 @@ class Collector {
     };
 
     previous ??= {};
-    previous[field] = _getFile(path);
+    previous[property] = _getFile(path);
 
     return previous;
   };

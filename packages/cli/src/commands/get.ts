@@ -2,11 +2,11 @@ import { Command } from "commander";
 import { colorizeJson, getClient, getTable, withSpinner } from "@/lib/utils.js";
 import qs from "qs";
 import {
-  getFieldsPathsFromPath,
+  getPropertiesPathsFromPath,
   getRelationModelsFromPath,
   ModelList,
   JSONQuery,
-  FieldTypes,
+  PropertyTypes,
   Populate,
   PopulateOption,
 } from "@graphand/core";
@@ -18,7 +18,7 @@ export const commandGet = new Command("get")
   .description("Get a model")
   .arguments("<modelName> [key]")
   .option("-q --query <query>", "URL encoded JSONQuery object")
-  .option("-f --fields <fields>", "Fields to display (comma separated)")
+  .option("-f --properties <properties>", "Properties to display (comma separated)")
   .option("-o --output <output>", "Output format (json, table, raw)")
   .option("-w --max-width <maxWidth>", "The max width of the output table (default: 70)")
   .option("-1", "Sort by -_id")
@@ -29,35 +29,35 @@ export const commandGet = new Command("get")
       const model = client.model(String(modelName));
       let list: ModelList<typeof model> | null;
 
-      console.info(`Initializing model ${model.slug} ...`);
+      console.info(`Initializing model ${model.configuration.slug} ...`);
 
       await model.initialize();
 
-      let fields = Array.from(new Set(["_id", model.getKeyField(), ...model.fieldsKeys.slice(0, 2)]));
+      let properties = Array.from(new Set(["_id", model.getKeyProperty(), ...model.propertiesKeys.slice(0, 2)]));
 
-      if (options.fields) {
-        if (options.fields.startsWith("+")) {
-          fields = fields.concat(options.fields.slice(1).split(","));
+      if (options.properties) {
+        if (options.properties.startsWith("+")) {
+          properties = properties.concat(options.properties.slice(1).split(","));
         } else {
-          fields = options.fields.split(",");
+          properties = options.properties.split(",");
         }
       }
 
       const populate: Populate = [];
 
-      const nestedFields = fields.filter(f => f.includes("."));
-      if (nestedFields.length) {
-        console.info(`Decoding populated fields ...`);
+      const nestedProperties = properties.filter(f => f.includes("."));
+      if (nestedProperties.length) {
+        console.info(`Decoding populated properties ...`);
 
-        for (const field of nestedFields) {
-          const models = await getRelationModelsFromPath(model, field);
+        for (const property of nestedProperties) {
+          const models = await getRelationModelsFromPath(model, property);
           await Promise.all(models.map(m => m.initialize()));
-          const paths = getFieldsPathsFromPath(model, field);
+          const paths = getPropertiesPathsFromPath(model, property);
           const pop: Partial<PopulateOption> = {};
           let cursor = pop;
           for (const p of paths) {
-            if (p?.field?.type === FieldTypes.RELATION) {
-              cursor.path = p.field.path;
+            if (p?.property?.type === PropertyTypes.RELATION) {
+              cursor.path = p.property.path;
               const subpop: Partial<PopulateOption> = {};
               cursor.populate = subpop as PopulateOption;
               cursor = subpop;
@@ -70,7 +70,7 @@ export const commandGet = new Command("get")
         }
       }
 
-      console.info(`Fetching ${model.slug} ${key ? `with key ${key}` : "list"} ...`);
+      console.info(`Fetching ${model.configuration.slug} ${key ? `with key ${key}` : "list"} ...`);
 
       const start = Date.now();
 
@@ -99,7 +99,7 @@ export const commandGet = new Command("get")
       }
 
       spinner.succeed(
-        `Fetched ${model.slug} ${key ? `with key ${key}` : "list"}: ${list.length} result${
+        `Fetched ${model.configuration.slug} ${key ? `with key ${key}` : "list"}: ${list.length} result${
           list.length > 1 ? "s" : ""
         } found of ${list.count} total in ${end - start}ms`,
       );
@@ -122,8 +122,8 @@ export const commandGet = new Command("get")
       }
 
       if (output === "json") {
-        if (options.fields) {
-          console.log(chalk.yellow("Fields option is not supported with json output"));
+        if (options.properties) {
+          console.log(chalk.yellow("Properties option is not supported with json output"));
         }
 
         console.log("");
@@ -134,15 +134,16 @@ export const commandGet = new Command("get")
       if (output === "table") {
         const table = getTable({
           maxWidth: options.maxWidth,
-          fields,
+          properties,
           list,
-          getter: (item, field) => item.get(field, "json"),
-          isImportantField: field => getFieldsPathsFromPath(model, field).pop()?.field?.type === FieldTypes.ID,
+          getter: (item, property) => item.get(property, "json"),
+          isImportantProperty: property =>
+            getPropertiesPathsFromPath(model, property).pop()?.property?.type === PropertyTypes.ID,
           getNaturalWidth: path => {
-            const field = getFieldsPathsFromPath(model, String(path)).pop()?.field;
-            const isIdField = field && field.type === FieldTypes.ID;
+            const property = getPropertiesPathsFromPath(model, String(path)).pop()?.property;
+            const isIdProperty = property && property.type === PropertyTypes.ID;
 
-            if (isIdField) {
+            if (isIdProperty) {
               // Pour les champs de type ID, fixer la largeur à 24
               return 24;
             } else {

@@ -6,32 +6,32 @@ import { ClientAdapter } from "./ClientAdapter.js";
 import {
   createValidationError,
   DataModel,
-  FieldTypes,
+  PropertyTypes,
   Model,
   ModelCrudEvent,
   modelDecorator,
-  ModelDefinition,
   ModelInstance,
   ModelList,
   PromiseModel,
   PromiseModelList,
   ValidationError,
   ValidatorTypes,
+  defineModelConf,
 } from "@graphand/core";
 import { FetchError } from "./FetchError.js";
 
 describe("ClientAdapter", () => {
   @modelDecorator()
   class MockModel extends Model {
-    static slug = "mockModel";
-    static loadDatamodel = false;
-    static definition = {
-      fields: {
+    static configuration = defineModelConf({
+      slug: "mockModel",
+      loadDatamodel: false,
+      properties: {
         name: {
-          type: FieldTypes.TEXT,
+          type: PropertyTypes.STRING,
         },
       },
-    };
+    });
   }
 
   let client: Client;
@@ -175,7 +175,7 @@ describe("ClientAdapter", () => {
         JSON.stringify({
           error: createValidationError({
             type: ValidatorTypes.REQUIRED,
-            options: { field: "name" },
+            property: "name",
           }).toJSON(),
         }),
         {
@@ -190,7 +190,7 @@ describe("ClientAdapter", () => {
     const p1 = model.create({ name: "" });
     await expect(p1).rejects.toThrow(ValidationError);
     const e: ValidationError = await p1.catch(e => e);
-    expect(e.fieldsPaths).toEqual(["name"]);
+    expect(e.propertiesPaths).toEqual(["name"]);
 
     fetchMock.mockResolvedValueOnce(
       new Response(
@@ -198,18 +198,16 @@ describe("ClientAdapter", () => {
           error: {
             type: "ValidationError",
             message: "Validation failed with 1 model validator (required) on path name",
-            fieldsPaths: ["name"],
+            propertiesPaths: ["name"],
             reason: {
-              fields: [
+              properties: [
                 {
-                  type: "ValidationFieldError",
+                  type: "ValidationPropertyError",
                   slug: "arr",
-                  field: {
+                  property: {
                     type: "array",
-                    options: {
-                      items: {
-                        type: "nested",
-                      },
+                    items: {
+                      type: "nested",
                     },
                     path: "obj.nested.arr",
                   },
@@ -232,7 +230,7 @@ describe("ClientAdapter", () => {
     const p2 = model.create({ name: "" });
     await expect(p2).rejects.toThrow(ValidationError);
     const e2: ValidationError = await p2.catch(e => e);
-    expect(e2.fieldsPaths).toEqual(["obj.nested.arr"]);
+    expect(e2.propertiesPaths).toEqual(["obj.nested.arr"]);
   });
 
   it("should use local cache when available", async () => {
@@ -259,12 +257,12 @@ describe("ClientAdapter", () => {
   it("should handle single models correctly", async () => {
     @modelDecorator()
     class MockModelSingle extends Model {
-      static slug = "mockModelSingle" as const;
-      static loadDatamodel = false;
-      static definition = {
-        ...MockModel.definition,
+      static configuration = defineModelConf({
+        ...MockModel.configuration,
+        slug: "mockModelSingle",
+        loadDatamodel: false,
         single: true,
-      };
+      });
     }
     fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "single", "name": "SingleTest"}}'));
     const result = await client.model(MockModelSingle).get({});
@@ -278,7 +276,15 @@ describe("ClientAdapter", () => {
       operation: "create",
       model: "otherModel",
       ids: ["123"],
-      data: [{ _id: "123" }],
+      data: [
+        {
+          _id: "123",
+          _updatedAt: new Date().toJSON(),
+          _createdAt: new Date().toJSON(),
+          _createdBy: "123",
+          _updatedBy: "123",
+        },
+      ],
     };
 
     expect(() => adapter.dispatch(event)).toThrow("Invalid model");
@@ -1000,132 +1006,102 @@ describe("ClientAdapter", () => {
   describe("Populated data", () => {
     @modelDecorator()
     class OtherRelatedModel extends Model {
-      static slug = "otherRelatedModel";
-      static loadDatamodel = false;
-      static definition = {
-        fields: {
+      static configuration = defineModelConf({
+        slug: "otherRelatedModel",
+        loadDatamodel: false,
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
-      } as const satisfies ModelDefinition;
+      });
     }
 
     @modelDecorator()
     class RelatedModel extends Model {
-      static slug = "relatedModel";
-      static loadDatamodel = false;
-      static definition = {
-        fields: {
+      static configuration = defineModelConf({
+        slug: "relatedModel",
+        loadDatamodel: false,
+        properties: {
           title: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
           other: {
-            type: FieldTypes.RELATION,
-            options: {
-              ref: OtherRelatedModel.slug,
-            },
+            type: PropertyTypes.RELATION,
+            ref: OtherRelatedModel.configuration.slug,
           },
         },
-      } as const satisfies ModelDefinition;
+      });
     }
 
     @modelDecorator()
     class MockModelWithRelation extends Model {
-      static slug = "mockModelWithRelation";
-      static loadDatamodel = false;
-      static definition = {
-        fields: {
+      static configuration = defineModelConf({
+        slug: "mockModelWithRelation",
+        loadDatamodel: false,
+        properties: {
           name: {
-            type: FieldTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
           related: {
-            type: FieldTypes.RELATION,
-            options: {
-              ref: RelatedModel.slug,
-            },
+            type: PropertyTypes.RELATION,
+            ref: RelatedModel.configuration.slug,
           },
           multiRelated: {
-            type: FieldTypes.ARRAY,
-            options: {
-              items: {
-                type: FieldTypes.RELATION,
-                options: {
-                  ref: RelatedModel.slug,
-                },
-              },
-              distinct: true,
+            type: PropertyTypes.ARRAY,
+            items: {
+              type: PropertyTypes.RELATION,
+              ref: RelatedModel.configuration.slug,
             },
+            distinct: true,
           },
           nested: {
-            type: FieldTypes.OBJECT,
-            options: {
-              fields: {
-                related: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: RelatedModel.slug,
-                  },
+            type: PropertyTypes.OBJECT,
+            properties: {
+              related: {
+                type: PropertyTypes.RELATION,
+                ref: RelatedModel.configuration.slug,
+              },
+              multiRelated: {
+                type: PropertyTypes.ARRAY,
+                items: {
+                  type: PropertyTypes.RELATION,
+                  ref: RelatedModel.configuration.slug,
                 },
-                multiRelated: {
-                  type: FieldTypes.ARRAY,
-                  options: {
-                    items: {
-                      type: FieldTypes.RELATION,
-                      options: {
-                        ref: RelatedModel.slug,
-                      },
-                    },
-                    distinct: true,
-                  },
-                },
-                circular: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: RelatedModel.slug,
-                  },
-                },
+                distinct: true,
+              },
+              circular: {
+                type: PropertyTypes.RELATION,
+                ref: RelatedModel.configuration.slug,
               },
             },
           },
           nestedArr: {
-            type: FieldTypes.ARRAY,
-            options: {
-              items: {
-                type: FieldTypes.OBJECT,
-                options: {
-                  fields: {
-                    related: {
-                      type: FieldTypes.RELATION,
-                      options: {
-                        ref: RelatedModel.slug,
-                      },
-                    },
-                    multiRelated: {
-                      type: FieldTypes.ARRAY,
-                      options: {
-                        items: {
-                          type: FieldTypes.RELATION,
-                          options: {
-                            ref: RelatedModel.slug,
-                          },
-                        },
-                        distinct: true,
-                      },
-                    },
-                    circular: {
-                      type: FieldTypes.RELATION,
-                      options: {
-                        ref: RelatedModel.slug,
-                      },
-                    },
+            type: PropertyTypes.ARRAY,
+            items: {
+              type: PropertyTypes.OBJECT,
+              properties: {
+                related: {
+                  type: PropertyTypes.RELATION,
+                  ref: RelatedModel.configuration.slug,
+                },
+                multiRelated: {
+                  type: PropertyTypes.ARRAY,
+                  items: {
+                    type: PropertyTypes.RELATION,
+                    ref: RelatedModel.configuration.slug,
                   },
+                  distinct: true,
+                },
+                circular: {
+                  type: PropertyTypes.RELATION,
+                  ref: RelatedModel.configuration.slug,
                 },
               },
             },
           },
         },
-      } as const satisfies ModelDefinition;
+      });
     }
 
     let modelRelated: typeof RelatedModel;
@@ -1419,48 +1395,38 @@ describe("ClientAdapter", () => {
       const dmOtherRelated = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-3",
-        definition: {
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-            },
+        keyProperty: "title",
+        properties: {
+          title: {
+            type: PropertyTypes.STRING,
           },
         },
       });
       const dmRelated = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-2",
-        definition: {
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-            },
-            otherRelated: {
-              type: FieldTypes.RELATION,
-              options: {
-                ref: dmOtherRelated.slug!,
-              },
-            },
+        keyProperty: "title",
+        properties: {
+          title: {
+            type: PropertyTypes.STRING,
+          },
+          otherRelated: {
+            type: PropertyTypes.RELATION,
+            ref: dmOtherRelated.slug!,
           },
         },
       });
       const dm = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-1",
-        definition: {
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-            },
-            related: {
-              type: FieldTypes.RELATION,
-              options: {
-                ref: dmRelated.slug!,
-              },
-            },
+        keyProperty: "title",
+        properties: {
+          title: {
+            type: PropertyTypes.STRING,
+          },
+          related: {
+            type: PropertyTypes.RELATION,
+            ref: dmRelated.slug!,
           },
         },
       });
@@ -1519,14 +1485,12 @@ describe("ClientAdapter", () => {
               data: {
                 _id: new ObjectId().toString(),
                 slug,
-                definition: {
-                  keyField: "title",
-                  fields: {
-                    title: { type: FieldTypes.TEXT },
-                    selfRef: {
-                      type: FieldTypes.RELATION,
-                      options: { ref: slug },
-                    },
+                keyProperty: "title",
+                properties: {
+                  title: { type: PropertyTypes.STRING },
+                  selfRef: {
+                    type: PropertyTypes.RELATION,
+                    ref: slug,
                   },
                 },
               },
@@ -1550,11 +1514,11 @@ describe("ClientAdapter", () => {
       });
 
       const model = client.model(slug) as typeof Model & {
-        definition: {
-          fields: {
-            title: { type: FieldTypes.TEXT };
+        configuration: {
+          properties: {
+            title: { type: PropertyTypes.STRING };
             selfRef: {
-              type: FieldTypes.RELATION;
+              type: PropertyTypes.RELATION;
             };
           };
         };
@@ -1578,24 +1542,18 @@ describe("ClientAdapter", () => {
       const dmNested = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug,
-        definition: {
-          keyField: "title",
-          fields: {
-            title: { type: FieldTypes.TEXT },
+        keyProperty: "title",
+        properties: {
+          title: { type: PropertyTypes.STRING },
+          items: {
+            type: PropertyTypes.ARRAY,
             items: {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.OBJECT,
-                  options: {
-                    fields: {
-                      name: { type: FieldTypes.TEXT },
-                      subItem: {
-                        type: FieldTypes.RELATION,
-                        options: { ref: slug },
-                      },
-                    },
-                  },
+              type: PropertyTypes.OBJECT,
+              properties: {
+                name: { type: PropertyTypes.STRING },
+                subItem: {
+                  type: PropertyTypes.RELATION,
+                  ref: slug,
                 },
               },
             },
@@ -1647,12 +1605,13 @@ describe("ClientAdapter", () => {
       expect(adapter.store.has(id3)).toBeTruthy();
       const instance = adapter.store.get(id1) as ModelInstance<
         typeof Model & {
-          definition: {
-            fields: {
+          configuration: {
+            properties: {
               items: {
-                type: FieldTypes.ARRAY;
-                options: {
-                  items: { type: FieldTypes.OBJECT; options: { fields: { subItem: { type: FieldTypes.RELATION } } } };
+                type: PropertyTypes.ARRAY;
+                items: {
+                  type: PropertyTypes.OBJECT;
+                  properties: { subItem: { type: PropertyTypes.RELATION } };
                 };
               };
             };
@@ -1667,25 +1626,21 @@ describe("ClientAdapter", () => {
       const dmDeep2 = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-deep-2",
-        definition: {
-          keyField: "title",
-          fields: {
-            title: { type: FieldTypes.TEXT },
-          },
+        keyProperty: "title",
+        properties: {
+          title: { type: PropertyTypes.STRING },
         },
       });
 
       const dmDeep1 = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-deep-1",
-        definition: {
-          keyField: "title",
-          fields: {
-            title: { type: FieldTypes.TEXT },
-            level2: {
-              type: FieldTypes.RELATION,
-              options: { ref: dmDeep2.slug! },
-            },
+        keyProperty: "title",
+        properties: {
+          title: { type: PropertyTypes.STRING },
+          level2: {
+            type: PropertyTypes.RELATION,
+            ref: dmDeep2.slug,
           },
         },
       });
@@ -1693,14 +1648,12 @@ describe("ClientAdapter", () => {
       const dmDeep = client.model(DataModel).hydrate({
         _id: new ObjectId().toString(),
         slug: faker.random.alphaNumeric(10) + "-deep",
-        definition: {
-          keyField: "title",
-          fields: {
-            title: { type: FieldTypes.TEXT },
-            level1: {
-              type: FieldTypes.RELATION,
-              options: { ref: dmDeep1.slug! },
-            },
+        keyProperty: "title",
+        properties: {
+          title: { type: PropertyTypes.STRING },
+          level1: {
+            type: PropertyTypes.RELATION,
+            ref: dmDeep1.slug,
           },
         },
       });
@@ -2072,8 +2025,8 @@ describe("ClientAdapter", () => {
     });
 
     it("should preserve all FormData entries when adding _json", async () => {
-      formData.append("field1", "value1");
-      formData.append("field2", "value2");
+      formData.append("property1", "value1");
+      formData.append("property2", "value2");
 
       fetchMock.mockResolvedValueOnce(new Response('{"data": {"_id": "123", "name": "Test"}}'));
 
@@ -2081,8 +2034,8 @@ describe("ClientAdapter", () => {
 
       const body = getLastCallBody();
       const form = body as unknown as FormData;
-      expect(form.get("field1")).toBe("value1");
-      expect(form.get("field2")).toBe("value2");
+      expect(form.get("property1")).toBe("value1");
+      expect(form.get("property2")).toBe("value2");
       expect(form.get("file")).toBeTruthy();
       expect(form.get("_json")).toBeTruthy();
     });

@@ -51,12 +51,12 @@ export class Validator<T extends ValidatorTypes = ValidatorTypes> {
   toJSON() {
     return {
       ...this.#definition,
-      _path: this.#path,
+      path: this.#path,
     };
   }
 
   static fromJSON(json: ReturnType<Validator["toJSON"]>) {
-    const { _path, ...definition } = json;
-    return new Validator(definition, _path);
+    const { path, ...definition } = json;
+    return new Validator(definition, path);
   }
 }

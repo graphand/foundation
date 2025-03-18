@@ -10,7 +10,7 @@ export const commandGdxPull = new Command("pull")
   .description("gdx pull")
   .option("-m --models <models>", "List of models to query separated by comma")
   .option("-q --query <query>", "The gdx query object")
-  .option("-s --include-system-fields", "Include system fields")
+  .option("-s --include-system-properties", "Include system properties")
   .option("-o --output <output>", "Output (json, file)")
   .option("-w --write <path>", "Write to gdx file")
   .action(async options => {
@@ -35,7 +35,7 @@ export const commandGdxPull = new Command("pull")
       const res = await client.execute(controllerGdxPull, {
         query: {
           omitMeta: true,
-          includeSystemFields: options.includeSystemFields,
+          includeSystemProperties: options.includeSystemProperties,
         },
         data: query as Record<string, JSONQuery | true>,
       });

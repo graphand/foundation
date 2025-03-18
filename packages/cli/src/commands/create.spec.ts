@@ -4,7 +4,7 @@ import { vi } from "vitest";
 import { getClient } from "@/lib/utils.js";
 import { _create, commandCreate } from "./create.js";
 import ora from "ora";
-import { controllerModelCreate, FieldTypes } from "@graphand/core";
+import { controllerModelCreate, PropertyTypes } from "@graphand/core";
 import { Subject } from "@graphand/client";
 import fs from "fs";
 import path from "path";
@@ -21,11 +21,9 @@ describe("Create Command", () => {
   const datamodel = {
     _id: new ObjectId().toString(),
     slug: faker.random.alphaNumeric(10),
-    definition: {
-      fields: {
-        title: {
-          type: FieldTypes.TEXT,
-        },
+    properties: {
+      title: {
+        type: PropertyTypes.STRING,
       },
     },
   };

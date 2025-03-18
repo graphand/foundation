@@ -1,16 +1,16 @@
 import {
-  FieldTypes,
-  FieldRelation as CoreFieldRelation,
-  Field,
-  FieldSerializerInput,
+  PropertyTypes,
+  PropertyRelation as CorePropertyRelation,
+  Property,
+  PropertySerializerInput,
   PromiseModel,
   Model,
 } from "@graphand/core";
 import { getCachedModel } from "../utils.js";
 
-class FieldRelation extends CoreFieldRelation {
+class PropertyRelation extends CorePropertyRelation {
   decodePopulate = (fn: any) => {
-    return (input: FieldSerializerInput) => {
+    return (input: PropertySerializerInput) => {
       let res;
       if (input.ctx?.hasNext) {
         const promise = this._sObject(input) as PromiseModel<typeof Model>;
@@ -21,11 +21,11 @@ class FieldRelation extends CoreFieldRelation {
     };
   };
 
-  serializerMap: Field<FieldTypes.RELATION>["serializerMap"] = {
+  serializerMap: Property<PropertyTypes.RELATION>["serializerMap"] = {
     object: this.decodePopulate(this._sObject),
     validation: ({ value }) => value,
-    [Field.defaultSymbol]: this.decodePopulate(this._sString),
+    [Property.defaultSymbol]: this.decodePopulate(this._sString),
   };
 }
 
-export default FieldRelation;
+export default PropertyRelation;

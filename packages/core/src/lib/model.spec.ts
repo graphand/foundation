@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 import { mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
 import { Property } from "@/lib/property.js";
-import { defineConfiguration, Model } from "@/lib/model.js";
+import { Model } from "@/lib/model.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { Validator } from "@/lib/validator.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
@@ -16,14 +16,14 @@ import { PromiseModel } from "@/lib/promise-model.js";
 import { faker } from "@faker-js/faker";
 import { Adapter } from "@/lib/adapter.js";
 import { ObjectId } from "bson";
-import { modelDecorator } from "./model-decorator.js";
+import { defineModelConf } from "./utils.js";
 
 describe("Test Model", () => {
   const BaseModel = mockModel({
     slug: faker.random.alphaNumeric(10),
     properties: {
       title: {
-        type: PropertyTypes.TEXT,
+        type: PropertyTypes.STRING,
       },
     },
     validators: [
@@ -70,7 +70,7 @@ describe("Test Model", () => {
   it("should be able to save a model with a model on a child adapter", async () => {
     class CustomAccount extends Account {
       static __name = "CustomAccount";
-      static configuration = defineConfiguration({
+      static configuration = defineModelConf({
         ...Account.configuration,
         slug: "accounts",
       });
@@ -93,7 +93,7 @@ describe("Test Model", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -180,14 +180,12 @@ describe("Test Model", () => {
 
     it("Model initialization should use initOptions", async () => {
       const adapter = mockAdapter();
-      const base = modelDecorator()(
-        class extends Model {
-          static configuration = defineConfiguration({
-            slug: faker.random.alphaNumeric(10),
-            loadDatamodel: true,
-          });
-        },
-      );
+      const base = class extends Model {
+        static configuration = defineModelConf({
+          slug: faker.random.alphaNumeric(10),
+          loadDatamodel: true,
+        });
+      };
 
       const model = base.extend({ adapterClass: adapter });
 
@@ -237,39 +235,35 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const slug1 = faker.random.alphaNumeric(10);
       const slug2 = faker.random.alphaNumeric(10);
-      const model = modelDecorator()(
-        class extends Model {
-          static configuration = defineConfiguration({
-            slug: slug1,
-            connectable: true,
-            loadDatamodel: true,
-            isEnvironmentScoped: true,
-            keyProperty: "test",
-          });
-        },
-      ).extend({ adapterClass: adapter });
+      const model = class extends Model {
+        static configuration = defineModelConf({
+          slug: slug1,
+          connectable: true,
+          loadDatamodel: true,
+          isEnvironmentScoped: true,
+          keyProperty: "test",
+        });
+      }.extend({ adapterClass: adapter });
 
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: slug2,
         keyProperty: "test2",
         properties: {
           test2: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
 
-      const model2 = modelDecorator()(
-        class extends model {
-          static configuration = defineConfiguration({
-            ...model.configuration,
-            slug: slug2,
-            connectable: true,
-            loadDatamodel: true,
-            isEnvironmentScoped: true,
-          });
-        },
-      ).extend({ adapterClass: adapter });
+      const model2 = class extends model {
+        static configuration = defineModelConf({
+          ...model.configuration,
+          slug: slug2,
+          connectable: true,
+          loadDatamodel: true,
+          isEnvironmentScoped: true,
+        });
+      }.extend({ adapterClass: adapter });
 
       await model2.initialize();
 
@@ -283,7 +277,7 @@ describe("Test Model", () => {
         keyProperty: "test2",
         properties: {
           test2: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -302,7 +296,7 @@ describe("Test Model", () => {
         single: true,
         properties: {
           test2: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -329,7 +323,7 @@ describe("Test Model", () => {
       await model.initialize();
 
       expect(model.propertiesMap.get("name")).toBeInstanceOf(Property);
-      expect(model.propertiesMap.get("name")?.type).toBe(PropertyTypes.TEXT);
+      expect(model.propertiesMap.get("name")?.type).toBe(PropertyTypes.STRING);
     });
   });
 
@@ -340,7 +334,7 @@ describe("Test Model", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           test: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
             default: "default",
           },
         },
@@ -356,7 +350,7 @@ describe("Test Model", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           test: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       }).extend({ adapterClass: adapter });
@@ -377,7 +371,7 @@ describe("Test Model", () => {
             type: PropertyTypes.OBJECT,
             properties: {
               nested: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },
@@ -403,7 +397,7 @@ describe("Test Model", () => {
           test: {
             type: PropertyTypes.ARRAY,
             items: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         },
@@ -431,7 +425,7 @@ describe("Test Model", () => {
             items: {
               type: PropertyTypes.ARRAY,
               items: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },
@@ -459,7 +453,7 @@ describe("Test Model", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   nested: {
-                    type: PropertyTypes.TEXT,
+                    type: PropertyTypes.STRING,
                   },
                 },
               },
@@ -553,7 +547,7 @@ describe("Test Model", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 nested: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -608,7 +602,7 @@ describe("Test Model", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 property2: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
                 property3: {
                   type: PropertyTypes.ARRAY,
@@ -616,7 +610,7 @@ describe("Test Model", () => {
                     type: PropertyTypes.OBJECT,
                     properties: {
                       property4: {
-                        type: PropertyTypes.TEXT,
+                        type: PropertyTypes.STRING,
                       },
                     },
                   },
@@ -800,7 +794,7 @@ describe("Test Model", () => {
             type: PropertyTypes.OBJECT,
             properties: {
               test: {
-                type: PropertyTypes.TEXT,
+                type: PropertyTypes.STRING,
               },
             },
           },
@@ -823,7 +817,7 @@ describe("Test Model", () => {
               type: PropertyTypes.OBJECT,
               properties: {
                 test: {
-                  type: PropertyTypes.TEXT,
+                  type: PropertyTypes.STRING,
                 },
               },
             },
@@ -856,13 +850,13 @@ describe("Test Model", () => {
       slug: faker.random.alphaNumeric(10),
       properties: {
         text: {
-          type: PropertyTypes.TEXT,
+          type: PropertyTypes.STRING,
         },
         obj: {
           type: PropertyTypes.OBJECT,
           properties: {
             nested: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         },
@@ -880,7 +874,7 @@ describe("Test Model", () => {
         arrOfText: {
           type: PropertyTypes.ARRAY,
           items: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
         complex: {
@@ -892,7 +886,7 @@ describe("Test Model", () => {
                 type: PropertyTypes.OBJECT,
                 properties: {
                   nested: {
-                    type: PropertyTypes.TEXT,
+                    type: PropertyTypes.STRING,
                   },
                 },
               },
@@ -1030,7 +1024,7 @@ describe("Test Model", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -1047,7 +1041,7 @@ describe("Test Model", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
         validators: [
@@ -1121,13 +1115,13 @@ describe("Test Model", () => {
     it("Model should validate with property from adapter", async () => {
       const testValidate = vi.fn(() => Promise.resolve(true));
 
-      class TestPropertyText extends Property<PropertyTypes.TEXT> {
+      class TestPropertyString extends Property<PropertyTypes.STRING> {
         validate = testValidate;
       }
 
       const _adapter = mockAdapter({
         propertiesMap: {
-          [PropertyTypes.TEXT]: TestPropertyText,
+          [PropertyTypes.STRING]: TestPropertyString,
         },
       });
 
@@ -1144,13 +1138,13 @@ describe("Test Model", () => {
     it("Model should throw error with property validator returning false", async () => {
       const testValidate = vi.fn(() => Promise.resolve(false));
 
-      class TestPropertyText extends Property<PropertyTypes.TEXT> {
+      class TestPropertyString extends Property<PropertyTypes.STRING> {
         validate = testValidate;
       }
 
       const _adapter = mockAdapter({
         propertiesMap: {
-          [PropertyTypes.TEXT]: TestPropertyText,
+          [PropertyTypes.STRING]: TestPropertyString,
         },
       });
 
@@ -1171,7 +1165,7 @@ describe("Test Model", () => {
       const testValidateProperty = vi.fn(() => Promise.resolve(true));
       const testValidateValidator = vi.fn(() => Promise.resolve(true));
 
-      class TestPropertyText extends Property<PropertyTypes.TEXT> {
+      class TestPropertyString extends Property<PropertyTypes.STRING> {
         validate = testValidateProperty;
       }
 
@@ -1181,7 +1175,7 @@ describe("Test Model", () => {
 
       const _adapter = mockAdapter({
         propertiesMap: {
-          [PropertyTypes.TEXT]: TestPropertyText,
+          [PropertyTypes.STRING]: TestPropertyString,
         },
         validatorsMap: {
           [ValidatorTypes.SAMPLE]: TestValidatorSample,
@@ -1203,7 +1197,7 @@ describe("Test Model", () => {
       const testValidateProperty = vi.fn(() => Promise.resolve(true));
       const testValidateValidator = vi.fn(() => Promise.resolve(true));
 
-      class TestPropertyText extends Property<PropertyTypes.TEXT> {
+      class TestPropertyString extends Property<PropertyTypes.STRING> {
         validate = testValidateProperty;
       }
 
@@ -1213,7 +1207,7 @@ describe("Test Model", () => {
 
       const _adapter = mockAdapter({
         propertiesMap: {
-          [PropertyTypes.TEXT]: TestPropertyText,
+          [PropertyTypes.STRING]: TestPropertyString,
         },
         validatorsMap: {
           [ValidatorTypes.SAMPLE]: TestValidatorSample,
@@ -1235,7 +1229,7 @@ describe("Test Model", () => {
       const testValidateProperty = vi.fn(() => Promise.resolve(true));
       const testValidateValidator = vi.fn(() => Promise.resolve(true));
 
-      class TestPropertyText extends Property<PropertyTypes.TEXT> {
+      class TestPropertyString extends Property<PropertyTypes.STRING> {
         validate = testValidateProperty;
       }
 
@@ -1245,7 +1239,7 @@ describe("Test Model", () => {
 
       const _adapter = mockAdapter({
         propertiesMap: {
-          [PropertyTypes.TEXT]: TestPropertyText,
+          [PropertyTypes.STRING]: TestPropertyString,
         },
         validatorsMap: {
           [ValidatorTypes.SAMPLE]: TestValidatorSample,
@@ -1325,7 +1319,7 @@ describe("Test Model", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -1360,7 +1354,7 @@ describe("Test Model", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -1396,7 +1390,7 @@ describe("Test Model", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -1481,14 +1475,14 @@ describe("Test Model", () => {
       single: true,
       properties: {
         test: {
-          type: PropertyTypes.TEXT,
+          type: PropertyTypes.STRING,
           default: "defaultValue",
         },
         nested: {
           type: PropertyTypes.OBJECT,
           properties: {
             subtitle: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         },
@@ -1917,7 +1911,7 @@ describe("Test Model", () => {
         slug: faker.random.alphaNumeric(10),
         properties: {
           property1: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
             default: "defaultValue",
           },
         },
@@ -1938,7 +1932,7 @@ describe("Test Model", () => {
       Object.assign(dm.getData(), {
         properties: {
           property2: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -1956,7 +1950,7 @@ describe("Test Model", () => {
         single: true,
         properties: {
           property1: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -1976,7 +1970,7 @@ describe("Test Model", () => {
       Object.assign(dm.getData(), {
         properties: {
           property2: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -1994,7 +1988,7 @@ describe("Test Model", () => {
         keyProperty: "property1",
         properties: {
           property1: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
         validators: [
@@ -2017,7 +2011,7 @@ describe("Test Model", () => {
         keyProperty: "property2",
         properties: {
           property2: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -2202,16 +2196,14 @@ describe("Test Model", () => {
         },
       ]);
 
-      const Model1 = modelDecorator()(
-        class extends Model {
-          static configuration = defineConfiguration({
-            slug: slug1,
-            connectable: true,
-            loadDatamodel: true,
-            isEnvironmentScoped: true,
-          });
-        },
-      ).extend({ adapterClass: adapter });
+      const Model1 = class extends Model {
+        static configuration = defineModelConf({
+          slug: slug1,
+          connectable: true,
+          loadDatamodel: true,
+          isEnvironmentScoped: true,
+        });
+      }.extend({ adapterClass: adapter });
 
       const i1 = await Model.getClass(slug1, adapter).create({});
 
@@ -2268,16 +2260,14 @@ describe("Test Model", () => {
 
       expect(i2.rel?.model).toHaveProperty("configuration.slug", slug1);
 
-      const Model1 = modelDecorator()(
-        class extends Model {
-          static configuration = defineConfiguration({
-            slug: slug1,
-            connectable: true,
-            loadDatamodel: true,
-            isEnvironmentScoped: true,
-          });
-        },
-      ).extend({ adapterClass: adapter, force: true });
+      const Model1 = class extends Model {
+        static configuration = defineModelConf({
+          slug: slug1,
+          connectable: true,
+          loadDatamodel: true,
+          isEnvironmentScoped: true,
+        });
+      }.extend({ adapterClass: adapter, force: true });
 
       const i3 = await Model.getClass<
         typeof Model & {
@@ -2316,16 +2306,14 @@ describe("Test Model", () => {
         },
       ]);
 
-      const Model1 = modelDecorator()(
-        class extends Model {
-          static configuration = defineConfiguration({
-            slug: slug1,
-            connectable: true,
-            loadDatamodel: true,
-            isEnvironmentScoped: true,
-          });
-        },
-      ).extend({ adapterClass: adapter });
+      const Model1 = class extends Model {
+        static configuration = defineModelConf({
+          slug: slug1,
+          connectable: true,
+          loadDatamodel: true,
+          isEnvironmentScoped: true,
+        });
+      }.extend({ adapterClass: adapter });
 
       const i1 = await Model.getClass(slug1, adapter).create({});
 
@@ -2351,12 +2339,12 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
 
       class CustomModel extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: "custom",
           loadDatamodel: false,
           properties: {
             customProperty: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         });
@@ -2375,12 +2363,12 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
 
       class CustomModel extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: "custom",
           loadDatamodel: false,
           properties: {
             customProperty: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         });
@@ -2399,12 +2387,12 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
 
       class CustomModel extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: "custom",
           loadDatamodel: false,
           properties: {
             customProperty: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         });
@@ -2424,12 +2412,12 @@ describe("Test Model", () => {
       const adapter2 = mockAdapter();
 
       class CustomModel extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: "custom",
           loadDatamodel: false,
           properties: {
             customProperty: {
-              type: PropertyTypes.TEXT,
+              type: PropertyTypes.STRING,
             },
           },
         });
@@ -2451,7 +2439,7 @@ describe("Test Model", () => {
         slug: "custom",
         properties: {
           customProperty: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -2464,7 +2452,7 @@ describe("Test Model", () => {
       expect(Model.getClass(model, adapter)).toBe(model);
 
       class CustomModel extends Model {
-        static configuration = defineConfiguration({
+        static configuration = defineModelConf({
           slug: "custom",
           loadDatamodel: false,
         });
@@ -2542,7 +2530,7 @@ describe("Test Model", () => {
         slug: "medias",
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
             default: "1",
           },
         },
@@ -2565,7 +2553,7 @@ describe("Test Model", () => {
         slug: "medias",
         properties: {
           title: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
             default: "1",
           },
         },
@@ -2592,7 +2580,7 @@ describe("Test Model", () => {
       slug,
       properties: {
         title: {
-          type: PropertyTypes.TEXT,
+          type: PropertyTypes.STRING,
           default: "1",
         },
       },
@@ -2626,7 +2614,7 @@ describe("Test Model", () => {
       $set: {
         properties: {
           subtitle: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       },
@@ -2643,14 +2631,12 @@ describe("Test Model", () => {
   describe("Model realtime", () => {
     it("should keep realtime flag when getting class from slug", () => {
       const adapter = mockAdapter();
-      const TestModel = modelDecorator()(
-        class extends Model {
-          static configuration = defineConfiguration({
-            slug: faker.random.alphaNumeric(10),
-            realtime: true,
-          });
-        },
-      ).extend({ adapterClass: adapter });
+      const TestModel = class extends Model {
+        static configuration = defineModelConf({
+          slug: faker.random.alphaNumeric(10),
+          realtime: true,
+        });
+      }.extend({ adapterClass: adapter });
 
       const ModelFromSlug = Model.getClass(TestModel.configuration.slug, adapter);
       expect(ModelFromSlug.configuration.realtime).toBe(true);
@@ -2658,14 +2644,12 @@ describe("Test Model", () => {
 
     it("should keep realtime flag when getting class from model", () => {
       const adapter = mockAdapter();
-      const TestModel = modelDecorator()(
-        class extends Model {
-          static configuration = defineConfiguration({
-            slug: faker.random.alphaNumeric(10),
-            realtime: true,
-          });
-        },
-      ).extend({ adapterClass: adapter });
+      const TestModel = class extends Model {
+        static configuration = defineModelConf({
+          slug: faker.random.alphaNumeric(10),
+          realtime: true,
+        });
+      }.extend({ adapterClass: adapter });
 
       const ModelFromClass = Model.getClass(TestModel, adapter);
       expect(ModelFromClass.configuration.realtime).toBe(true);
@@ -2680,7 +2664,7 @@ describe("Test Model", () => {
         realtime: true,
         properties: {
           test: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });
@@ -2693,22 +2677,20 @@ describe("Test Model", () => {
 
     it("should not override realtime flag from datamodel if defined in class", async () => {
       const adapter = mockAdapter();
-      const TestModel = modelDecorator()(
-        class extends Model {
-          static configuration = defineConfiguration({
-            slug: faker.random.alphaNumeric(10),
-            realtime: false,
-            loadDatamodel: true,
-          });
-        },
-      ).extend({ adapterClass: adapter });
+      const TestModel = class extends Model {
+        static configuration = defineModelConf({
+          slug: faker.random.alphaNumeric(10),
+          realtime: false,
+          loadDatamodel: true,
+        });
+      }.extend({ adapterClass: adapter });
 
       await DataModel.extend({ adapterClass: adapter }).create({
         slug: TestModel.configuration.slug,
         realtime: true,
         properties: {
           test: {
-            type: PropertyTypes.TEXT,
+            type: PropertyTypes.STRING,
           },
         },
       });

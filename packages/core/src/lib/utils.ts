@@ -20,6 +20,7 @@ import {
   ValidatorDefinition,
   PropertyDefinition,
   ValidatorsDefinition,
+  TModelConfiguration,
 } from "@/types/index.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { Property } from "@/lib/property.js";
@@ -641,6 +642,7 @@ export const isObjectId = (input: unknown) => /^[a-f\d]{24}$/i.test(String(input
  */
 export const definePropertiesObject = (instance: Model) => {
   Object.defineProperties(instance, (instance as ModelInstance).model().propertiesObject);
+  instance.__propsDefined = true;
 };
 
 const _pathReplace = (property: Property, p: PropertiesPathItem, fp: string) => {
@@ -1277,7 +1279,7 @@ export const validateDatamodel = (data: ModelJSON<typeof DataModel>, adapter?: A
       throw new Error(`keyProperty not found in properties`);
     }
 
-    if (keyPropertyProperty.type !== PropertyTypes.TEXT) {
+    if (keyPropertyProperty.type !== PropertyTypes.STRING) {
       throw new Error(`keyProperty must be a text property`);
     }
 
@@ -1340,3 +1342,5 @@ export const createValidationError = (
     ],
   });
 };
+
+export const defineModelConf = <const C extends TModelConfiguration>(configuration: C) => configuration;

@@ -1,7 +1,7 @@
 import { Client, ClientOptions } from "@graphand/client";
 import { Ora } from "ora";
 import { Config } from "./lib/Config.js";
-import { DataModel, GDXType, JSONPrimitive, ModelJSON } from "@graphand/core";
+import { GDXDatamodels, GDXType, JSONPrimitive } from "@graphand/core";
 
 declare global {
   export var client: Client | undefined;
@@ -9,10 +9,6 @@ declare global {
   export var jobs: string[] | undefined;
   export var userConfig: Config | undefined;
 }
-
-export type GDXDatamodels = {
-  [slug: string]: ModelJSON<typeof DataModel>;
-};
 
 export type GDXCliType<D extends GDXDatamodels = GDXDatamodels> = {
   "$cli.set"?: Record<string, JSONPrimitive>;
@@ -22,11 +18,5 @@ export type GDXCliType<D extends GDXDatamodels = GDXDatamodels> = {
 
 export type UserConfig<D extends GDXDatamodels = {}> = {
   client: ClientOptions<D>;
-  gdx?:
-    | {
-        path: string;
-      }
-    | {
-        data: GDXCliType<D>;
-      };
+  gdx?: { path: string } | { data: GDXCliType<D> };
 };

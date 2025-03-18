@@ -1,16 +1,16 @@
 import {
-  FieldTypes,
-  FieldArray as CoreFieldArray,
-  Field,
-  FieldSerializerInput,
+  PropertyTypes,
+  PropertyArray as CorePropertyArray,
+  Property,
+  PropertySerializerInput,
   PromiseModelList,
   Model,
 } from "@graphand/core";
 import { getCachedModelList } from "../utils.js";
 
-class FieldArray extends CoreFieldArray {
+class PropertyArray extends CorePropertyArray {
   decodePopulate = (fn: any) => {
-    return (input: FieldSerializerInput) => {
+    return (input: PropertySerializerInput) => {
       let res;
       if (input.ctx?.hasNext) {
         const promise = this._sDefault({ ...input, format: "object" }) as PromiseModelList<typeof Model>;
@@ -21,10 +21,10 @@ class FieldArray extends CoreFieldArray {
     };
   };
 
-  serializerMap: Field<FieldTypes.ARRAY>["serializerMap"] = {
+  serializerMap: Property<PropertyTypes.ARRAY>["serializerMap"] = {
     validation: ({ value }) => value,
-    [Field.defaultSymbol]: this.decodePopulate(this._sDefault),
+    [Property.defaultSymbol]: this.decodePopulate(this._sDefault),
   };
 }
 
-export default FieldArray;
+export default PropertyArray;
