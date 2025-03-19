@@ -23,8 +23,8 @@ import {
   InferModel,
   ModelData,
   ModelObject,
-  InferModelDefInput,
   TModelConfiguration,
+  ModelInput,
 } from "@/types/index.js";
 import { Adapter } from "@/lib/adapter.js";
 import { Validator } from "@/lib/validator.js";
@@ -92,6 +92,16 @@ export class Model {
    */
   model<T extends ModelInstance>(this: T) {
     return this.constructor as InferModel<T>;
+  }
+
+  static get slug() {
+    if (!this.configuration.slug) {
+      throw new CoreError({
+        message: `Model ${this.name} has no slug`,
+      });
+    }
+
+    return this.configuration.slug;
   }
 
   static getKeyProperty(): string {
@@ -710,7 +720,7 @@ export class Model {
    */
   static async create<T extends typeof Model>(
     this: T,
-    payload: InferModelDefInput<T, "json">,
+    payload: ModelInput<T>,
     ctx?: TransactionCtx,
   ): Promise<ModelInstance<T>> {
     if (Array.isArray(payload)) {
@@ -722,26 +732,27 @@ export class Model {
 
     await this.initialize();
 
+    // const adapter = this.getAdapter(false);
+    // const dataFormat = adapter?.base.dataFormat;
+
+    // let data: InferModelDefInput<T, "data">;
+
+    // if (dataFormat !== "json") {
+    //   // Transform json payload into data format
+    //   const tmp = new this(payload) as ModelInstance<T>;
+
+    //   if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
+    //     await this.validate([tmp], ctx);
+    //   }
+
+    //   data = tmp.serialize(dataFormat, { defaults: false }, true) as InferModelDefInput<T, "data">;
+    // } else {
+    //   data = payload;
+    // }
+
+    const i = await this.execute("createOne", [payload], ctx);
+
     const adapter = this.getAdapter(false);
-    const dataFormat = adapter?.base.dataFormat;
-
-    let data: InferModelDefInput<T, "data">;
-
-    if (dataFormat !== "json") {
-      // Transform json payload into data format
-      const tmp = new this(payload) as ModelInstance<T>;
-
-      if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
-        await this.validate([tmp], ctx);
-      }
-
-      data = tmp.serialize(dataFormat, { defaults: false }, true) as InferModelDefInput<T, "data">;
-    } else {
-      data = payload;
-    }
-
-    const i = await this.execute("createOne", [data], ctx);
-
     if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
       await this.validate([i], ctx);
     }
@@ -765,32 +776,33 @@ export class Model {
    */
   static async createMultiple<T extends typeof Model>(
     this: T,
-    payload: Array<InferModelDefInput<T, "json">>,
+    payload: Array<ModelInput<T>>,
     ctx?: TransactionCtx,
   ): Promise<Array<ModelInstance<T>>> {
     await this.initialize();
 
     const array = Array.isArray(payload) ? payload : [payload];
 
+    // const adapter = this.getAdapter(false);
+    // const dataFormat = adapter?.base.dataFormat;
+
+    // let data: InferModelDefInput<T, "data">[];
+
+    // if (dataFormat !== "json") {
+    //   const tmp = array.map(p => new this(p) as ModelInstance<T>);
+
+    //   if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
+    //     await this.validate(tmp, ctx);
+    //   }
+
+    //   data = tmp.map(i => i.serialize(dataFormat, { defaults: false }, true) as InferModelDefInput<T, "data">);
+    // } else {
+    //   data = array;
+    // }
+
+    const list = await this.execute("createMultiple", [array], ctx);
+
     const adapter = this.getAdapter(false);
-    const dataFormat = adapter?.base.dataFormat;
-
-    let data: InferModelDefInput<T, "data">[];
-
-    if (dataFormat !== "json") {
-      const tmp = array.map(p => new this(p) as ModelInstance<T>);
-
-      if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
-        await this.validate(tmp, ctx);
-      }
-
-      data = tmp.map(i => i.serialize(dataFormat, { defaults: false }, true) as InferModelDefInput<T, "data">);
-    } else {
-      data = array;
-    }
-
-    const list = await this.execute("createMultiple", [data], ctx);
-
     if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
       await this.validate(list, ctx);
     }
@@ -811,8 +823,6 @@ export class Model {
   async update<T extends ModelInstance>(this: T, update: UpdateObject, ctx?: TransactionCtx): Promise<T> {
     await this.model().initialize();
 
-    const adapter = this.model().getAdapter(false);
-
     const res = await this.model().execute("updateOne", [String(this.get("_id")), update], ctx);
 
     if (!res?.getData?.()) {
@@ -821,6 +831,7 @@ export class Model {
       });
     }
 
+    const adapter = this.model().getAdapter(false);
     if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
       await this.model().validate([res], ctx);
     }
@@ -889,8 +900,6 @@ export class Model {
   ): Promise<Array<ModelInstance<T>>> {
     await this.initialize();
 
-    const adapter = this.getAdapter(false);
-
     if (typeof query === "string") {
       const updated = await this.execute("updateOne", [query, update], ctx);
 
@@ -898,6 +907,7 @@ export class Model {
         return [];
       }
 
+      const adapter = this.getAdapter(false);
       if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
         await this.validate([updated], ctx);
       }
@@ -907,6 +917,7 @@ export class Model {
 
     const list = await this.execute("updateMultiple", [query, update], ctx);
 
+    const adapter = this.getAdapter(false);
     if (list && adapter?.base.runWriteValidators && !ctx?.disableValidation) {
       await this.validate(list, ctx);
     }

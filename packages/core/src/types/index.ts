@@ -9,7 +9,14 @@ import type { AuthProviders } from "@/enums/auth-providers.js";
 import type { AuthMethods } from "@/enums/auth-methods.js";
 import type { MergeRequestTypes } from "@/enums/merge-request-types.js";
 import type { MergeRequestActionTypes } from "@/enums/merge-request-action-types.js";
-import type { PropertyDefinition, InferModelDef, InferModelDefInput, ModelJSON } from "@/types/properties.js";
+import type {
+  PropertyDefinition,
+  InferModelDef,
+  InferModelDefInput,
+  ModelJSON,
+  SerializerPropertiesMap,
+  ModelInput,
+} from "@/types/properties.js";
 import type { ValidatorDefinition } from "@/types/validators.js";
 import type { TransactionCtx } from "./ctx.js";
 import type { Account } from "@/models/account.js";
@@ -27,7 +34,7 @@ export * from "./gdx.js";
 
 export type Rule = NonNullable<ModelInstance<typeof Role>["rules"]>[number];
 export type PropertiesRestriction = NonNullable<ModelInstance<typeof Role>["propertiesRestrictions"]>[number];
-export type SerializerFormat = "json" | "object" | "validation" | "data";
+export type SerializerFormat = "json" | "object" | "validation" | "data" | keyof SerializerPropertiesMap;
 export type PropertiesDefinition = Record<string, PropertyDefinition>;
 export type ValidatorsDefinition = Array<ValidatorDefinition>;
 
@@ -134,11 +141,8 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   count: (_args: [query: string | JSONQuery], _ctx: TransactionCtx) => Promise<number | null>;
   get: (_args: [query: string | JSONQuery], _ctx: TransactionCtx) => Promise<ModelInstance<T> | null>;
   getList: (_args: [query: JSONQuery], _ctx: TransactionCtx) => Promise<any>;
-  createOne: (_args: [payload: InferModelDefInput<T, "data">], _ctx: TransactionCtx) => Promise<ModelInstance<T>>;
-  createMultiple: (
-    _args: [payload: Array<InferModelDefInput<T, "data">>],
-    _ctx: TransactionCtx,
-  ) => Promise<Array<ModelInstance<T>>>;
+  createOne: (_args: [payload: ModelInput<T>], _ctx: TransactionCtx) => Promise<ModelInstance<T>>;
+  createMultiple: (_args: [payload: Array<ModelInput<T>>], _ctx: TransactionCtx) => Promise<Array<ModelInstance<T>>>;
   updateOne: (
     _args: [query: string | JSONQuery, update: UpdateObject],
     _ctx: TransactionCtx,

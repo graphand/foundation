@@ -642,7 +642,12 @@ export const isObjectId = (input: unknown) => /^[a-f\d]{24}$/i.test(String(input
  */
 export const definePropertiesObject = (instance: Model) => {
   Object.defineProperties(instance, (instance as ModelInstance).model().propertiesObject);
-  instance.__propsDefined = true;
+  Object.defineProperty(instance, "__propsDefined", {
+    value: true,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
 };
 
 const _pathReplace = (property: Property, p: PropertiesPathItem, fp: string) => {

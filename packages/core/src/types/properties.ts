@@ -219,8 +219,10 @@ export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "
   InferSystemProperties<M, S>;
 
 export type InferModelDefInput<M extends typeof Model, S extends SerializerFormat = "object"> = {
-  [K in keyof InferModelDef<M, S> as K extends `_${string}` ? never : K]: InferModelDef<M, S>[K];
-};
+  -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` ? never : K]: InferModelDef<M, S>[K];
+} & Partial<{
+  -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` ? K : never]: InferModelDef<M, S>[K];
+}>;
 
 export type InferPropertyType<
   D extends PropertyDefinitionGeneric<PropertyTypes>,
@@ -245,7 +247,7 @@ export type ModelJSON<M extends typeof Model = typeof Model> = InferModelDef<M, 
 
 export type ModelData<M extends typeof Model = typeof Model> = InferModelDef<M, "data">;
 
-export type ModelInput<M extends typeof Model = typeof Model> = InferModelDefInput<M, "data">;
+export type ModelInput<M extends typeof Model = typeof Model> = InferModelDefInput<M, "json">;
 
 export type PropertySerializerInput<S extends SerializerFormat = SerializerFormat> = {
   value: unknown;

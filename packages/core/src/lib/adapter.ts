@@ -1,4 +1,4 @@
-import { AdapterFetcher, SerializerFormat } from "@/types/index.js";
+import { AdapterFetcher } from "@/types/index.js";
 import { Model } from "@/lib/model.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { Property } from "@/lib/property.js";
@@ -27,6 +27,8 @@ import { PropertyNull } from "./properties/null.js";
 export class Adapter<T extends typeof Model = typeof Model> {
   static __name = "Adapter";
 
+  static runWriteValidators: boolean; // If the adapter should run validators after a model create/update
+
   static propertiesMap: Partial<{ [T in PropertyTypes]: typeof Property<T> }> = {
     [PropertyTypes.ID]: PropertyId,
     [PropertyTypes.NUMBER]: PropertyNumber,
@@ -49,9 +51,6 @@ export class Adapter<T extends typeof Model = typeof Model> {
     [ValidatorTypes.LENGTH]: ValidatorLength,
     [ValidatorTypes.BOUNDARIES]: ValidatorBoundaries,
   };
-
-  static dataFormat: SerializerFormat = "data";
-  static runWriteValidators: boolean; // If the adapter should run validators after a model create/update
 
   static _modelsRegistry: Map<string, typeof Model>;
 

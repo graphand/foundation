@@ -29,7 +29,7 @@ import {
   DataModel,
   GDXDatamodels,
   PropertyDefinitionGeneric,
-  InferModelDefInput,
+  ModelInput,
 } from "@graphand/core";
 import { Client } from "./Client.js";
 import { Subject } from "./Subject.js";
@@ -138,7 +138,7 @@ export class ClientAdapter<T extends typeof Model = typeof Model> extends Adapte
     return update;
   }
 
-  #sanitizePayload(payload: InferModelDefInput<T, "json">): InferModelDefInput<T, "json"> {
+  #sanitizePayload(payload: ModelInput<T>): ModelInput<T> {
     return payload;
   }
 
