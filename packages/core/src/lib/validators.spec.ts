@@ -566,7 +566,7 @@ describe("test validators", () => {
     });
   });
 
-  describe("datamodelDefinition validator", () => {
+  describe("datamodel validator", () => {
     it("datamodel with invalid property name should throw error", async () => {
       const datamodel = DataModel_.create({
         slug: faker.random.alphaNumeric(10),

@@ -1148,7 +1148,10 @@ export const crossProperties = (
   return results;
 };
 
-export const assignDatamodel = async <T extends typeof Model>(model: T, datamodel: ModelJSON<typeof DataModel>) => {
+export const assignDatamodel = async <T extends typeof Model>(
+  model: T,
+  datamodel: ModelJSON<typeof DataModel> | ModelInstance<typeof DataModel>,
+) => {
   const baseClass = model.getBaseClass();
 
   model.configuration.realtime = Boolean(baseClass.configuration.realtime) || Boolean(datamodel?.realtime) || false;
@@ -1173,12 +1176,23 @@ export const assignDatamodel = async <T extends typeof Model>(model: T, datamode
     validators.push(...datamodel.validators);
   }
 
+  const required: string[] = [];
+
+  if (baseClass.configuration.required?.length) {
+    required.push(...baseClass.configuration.required);
+  }
+
+  if (datamodel?.required?.length) {
+    required.push(...datamodel.required);
+  }
+
   model.configuration = {
     ...model.configuration,
     keyProperty: baseClass.configuration.keyProperty || datamodel?.keyProperty || undefined,
     single: datamodel?.single || false,
     properties,
     validators,
+    required,
   };
 
   model.__memo = {};

@@ -4,6 +4,10 @@ import { PropertyTypes } from "@/enums/property-types.js";
 import { mockAdapter, mockModel } from "@/lib/test-utils.dev.js";
 import { faker } from "@faker-js/faker";
 import { modelDecorator } from "@/lib/model-decorator.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
+import { assignDatamodel } from "@/lib/utils.js";
+import { ModelJSON } from "@/types/properties.js";
+import { DataModel } from "@/models/data-model.js";
 
 describe("test utils", () => {
   describe("crossModelTree", () => {
@@ -769,6 +773,99 @@ describe("test utils", () => {
       expect(models).toBeInstanceOf(Array);
       expect(models.length).toBe(1);
       expect(models[0]?.configuration.slug).toBe(model1.configuration.slug);
+    });
+  });
+
+  describe("assignDatamodel", () => {
+    it("should assign properties and validators from datamodel", async () => {
+      const adapter = mockAdapter();
+      const baseModel = mockModel({
+        slug: "baseModel",
+        properties: {
+          baseProperty: {
+            type: PropertyTypes.STRING,
+          },
+        },
+        validators: [
+          {
+            type: ValidatorTypes.REQUIRED,
+            property: "baseProperty",
+          },
+        ],
+        required: ["baseProperty"],
+      }).extend({ adapterClass: adapter });
+
+      const datamodel: ModelJSON<typeof DataModel> = {
+        slug: "dataModel",
+        properties: {
+          dataProperty: {
+            type: PropertyTypes.NUMBER,
+          },
+        },
+        validators: [
+          {
+            type: ValidatorTypes.UNIQUE,
+            property: "dataProperty",
+          },
+        ],
+        required: ["dataProperty"],
+        _id: "some-id",
+        _createdAt: new Date().toISOString(),
+        _createdBy: "creator-id",
+        _updatedAt: new Date().toISOString(),
+        _updatedBy: "updater-id",
+      };
+
+      await assignDatamodel(baseModel, datamodel);
+
+      expect(baseModel.configuration.properties).toHaveProperty("baseProperty");
+      expect(baseModel.configuration.properties).toHaveProperty("dataProperty");
+      expect(baseModel.configuration.validators).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: ValidatorTypes.REQUIRED, property: "baseProperty" }),
+          expect.objectContaining({ type: ValidatorTypes.UNIQUE, property: "dataProperty" }),
+        ]),
+      );
+      expect(baseModel.configuration.required).toEqual(expect.arrayContaining(["baseProperty", "dataProperty"]));
+    });
+
+    it("should handle empty datamodel properties and validators", async () => {
+      const adapter = mockAdapter();
+      const baseModel = mockModel({
+        slug: "baseModel",
+        properties: {
+          baseProperty: {
+            type: PropertyTypes.STRING,
+          },
+        },
+        validators: [
+          {
+            type: ValidatorTypes.REQUIRED,
+            property: "baseProperty",
+          },
+        ],
+        required: ["baseProperty"],
+      }).extend({ adapterClass: adapter });
+
+      const datamodel: ModelJSON<typeof DataModel> = {
+        slug: "dataModel",
+        properties: {},
+        validators: [],
+        required: [],
+        _id: "some-id",
+        _createdAt: new Date().toISOString(),
+        _createdBy: "creator-id",
+        _updatedAt: new Date().toISOString(),
+        _updatedBy: "updater-id",
+      };
+
+      await assignDatamodel(baseModel, datamodel);
+
+      expect(baseModel.configuration.properties).toHaveProperty("baseProperty");
+      expect(baseModel.configuration.validators).toEqual(
+        expect.arrayContaining([expect.objectContaining({ type: ValidatorTypes.REQUIRED, property: "baseProperty" })]),
+      );
+      expect(baseModel.configuration.required).toEqual(expect.arrayContaining(["baseProperty"]));
     });
   });
 });
