@@ -227,11 +227,16 @@ export type InferModelDefInput<
   M extends typeof Model,
   S extends SerializerFormat = "object",
   Exclude extends string = never,
-> = {
-  -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` | Exclude ? never : K]: InferModelDef<M, S>[K];
-} & Partial<{
-  -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` ? K : never]: InferModelDef<M, S>[K];
-}>;
+> = PropertiesDefinition extends M["configuration"]["properties"]
+  ? any // any input for models without properties
+  : {
+      -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` | Exclude ? never : K]: InferModelDef<
+        M,
+        S
+      >[K];
+    } & Partial<{
+      -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` ? K : never]: InferModelDef<M, S>[K];
+    }>;
 
 export type InferPropertyType<
   D extends PropertyDefinitionGeneric<PropertyTypes>,

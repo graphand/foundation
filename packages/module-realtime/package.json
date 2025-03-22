@@ -14,7 +14,8 @@
   "main": "./dist/index.umd.js",
   "module": "./dist/index.es.js",
   "scripts": {
-    "lint": "eslint . --max-warnings 0",
+    "lint": "npm run eslint && npm run build:types && deno check dist/index.d.ts --unstable-sloppy-imports",
+    "eslint": "eslint . --max-warnings 0",
     "build": "vite build",
     "build:watch": "vite build --watch",
     "dev": "vite",

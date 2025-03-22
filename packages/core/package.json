@@ -17,10 +17,10 @@
   "scripts": {
     "lint": "npm run eslint && npm run build:types && deno check dist/index.d.ts --unstable-sloppy-imports",
     "eslint": "eslint . --max-warnings 0",
+    "build:types": "tsc --emitDeclarationOnly",
     "build": "vite build",
     "build:watch": "vite build --watch",
     "dev": "vite",
-    "build:types": "tsc --emitDeclarationOnly",
     "test": "vitest run"
   },
   "devDependencies": {
