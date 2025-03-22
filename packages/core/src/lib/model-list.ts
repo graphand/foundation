@@ -96,7 +96,7 @@ export class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
    * This method is useful to break the reference to the list (list.filter() will return an instance of ModelList but list.toArray().filter() will return an array).
    */
   toArray(): Array<ModelInstance<T>> {
-    const arr = [];
+    const arr: Array<ModelInstance<T>> = [];
     for (const item of this) {
       arr.push(item);
     }

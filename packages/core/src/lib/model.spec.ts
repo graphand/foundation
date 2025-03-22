@@ -2207,7 +2207,7 @@ describe("Test Model", () => {
 
       const i1 = await Model.getClass(slug1, adapter).create({});
 
-      i1.getData()._id = new ObjectId().toString();
+      Object.assign(i1.getData(), { _id: new ObjectId().toString() });
 
       const i2 = await Model.getClass<
         typeof Model & {
@@ -2317,7 +2317,7 @@ describe("Test Model", () => {
 
       const i1 = await Model.getClass(slug1, adapter).create({});
 
-      i1.getData()._id = new ObjectId().toString();
+      Object.assign(i1.getData(), { _id: new ObjectId().toString() });
 
       const i2 = await Model.getClass<
         typeof Model & {
