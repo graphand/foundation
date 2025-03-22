@@ -148,10 +148,10 @@ describe("defineGDX", () => {
 
     type Conf = InferModelConfigurationFromDatamodel<"list", typeof gdx.datamodels.list>;
 
-    type _TypeList = InferModelDef<typeof Model & { configuration: Conf }, "json">;
+    type TYPE_LIST = InferModelDef<typeof Model & { configuration: Conf }, "json">;
 
-    type _TypeListInput = InferModelDefInput<typeof Model & { configuration: Conf }, "json">;
+    type TYPE_LIST_INPUT = InferModelDefInput<typeof Model & { configuration: Conf }, "json">;
 
-    type _TypeListInputGDX = InferModelDefInputWithoutKey<typeof Model & { configuration: Conf }, "json">;
+    type TYPE_LIST_INPUT_GDX = InferModelDefInputWithoutKey<typeof Model & { configuration: Conf }, "json">;
   });
 });

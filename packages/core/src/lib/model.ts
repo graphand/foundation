@@ -25,6 +25,7 @@ import {
   ModelObject,
   TModelConfiguration,
   ModelInput,
+  InferValue,
 } from "@/types/index.js";
 import { Adapter } from "@/lib/adapter.js";
 import { Validator } from "@/lib/validator.js";
@@ -519,13 +520,7 @@ export class Model {
     format: S = "object" as S,
     ctx: SerializerCtx = {},
     override?: unknown,
-  ):
-    | (T extends ModelInstance<infer R extends typeof Model>
-        ? P extends keyof InferModelDef<R, S>
-          ? InferModelDef<R, S>[P]
-          : unknown
-        : unknown)
-    | undefined {
+  ): InferValue<T, P, S> | undefined {
     ctx.outputFormat ??= format;
     const model = this.model();
     let propertiesPaths: Array<PropertiesPathItem | null> | undefined;
