@@ -11,7 +11,6 @@ import {
   DecodeRefModel,
   PropertiesDefinition,
   ValidatorsDefinition,
-  TModelConfiguration,
 } from "../index.js";
 
 export type ConditionalPropertiesDefinition<Mappings extends Array<string> = Array<string>> = {
@@ -88,23 +87,18 @@ export type InferPropertiesDefinition<
   F extends PropertiesDefinition,
   S extends SerializerFormat,
   Required extends string[] | readonly string[] | undefined = undefined,
-> = {
-  [K in keyof F as K extends string
-    ? Required extends string[] | readonly string[]
-      ? K extends Required[number]
-        ? K
-        : never
-      : never
-    : never]: InferPropertyType<F[K], S>;
-} & Partial<{
-  [K in keyof F as K extends string
-    ? Required extends string[] | readonly string[]
-      ? K extends Required[number]
-        ? never
-        : K
-      : K
-    : K]?: InferPropertyType<F[K], S> | null | undefined;
-}>;
+> = Required extends string[] | readonly string[]
+  ? {
+      [K in keyof F as K extends string ? (K extends Required[number] ? K : never) : never]: InferPropertyType<F[K], S>;
+    } & Partial<{
+      [K in keyof F as K extends string ? (K extends Required[number] ? never : K) : K]?:
+        | InferPropertyType<F[K], S>
+        | null
+        | undefined;
+    }>
+  : Partial<{
+      [K in keyof F as K extends string ? K : K]?: InferPropertyType<F[K], S> | null | undefined;
+    }>;
 
 // Helper types to handle additionalProperties properly
 type WithDefaultProperty<Properties extends object, DefaultPropertyType> = Properties &
@@ -209,13 +203,11 @@ export type CombineRequired<T, K> = K extends string
     : undefined;
 
 export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "object"> = TModelDef<
-  M extends { configuration: infer C extends TModelConfiguration }
-    ? InferPropertiesDefinition<
-        C["properties"] extends PropertiesDefinition ? C["properties"] : PropertiesDefinition,
-        S,
-        CombineRequired<C["required"], C["keyProperty"]>
-      >
-    : unknown
+  InferPropertiesDefinition<
+    M["configuration"]["properties"] extends PropertiesDefinition ? M["configuration"]["properties"] : {},
+    S,
+    CombineRequired<M["configuration"]["required"], M["configuration"]["keyProperty"]>
+  >
 > &
   InferSystemProperties<M, S>;
 
@@ -229,7 +221,9 @@ export type InferModelDefInput<
   -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` | Exclude ? never : K]: InferModelDef<M, S>[K];
 } & Partial<{
   -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` ? K : never]: InferModelDef<M, S>[K];
-}>;
+}> & {
+    [x: string]: any;
+  };
 
 export type InferPropertyType<
   D extends PropertyDefinitionGeneric<PropertyTypes>,

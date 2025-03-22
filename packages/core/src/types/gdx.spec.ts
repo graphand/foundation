@@ -1,6 +1,6 @@
 import { Model } from "@/lib/model.js";
 import { defineGDX, InferModelConfigurationFromDatamodel, InferModelDefInputWithoutKey } from "./gdx.js";
-import { InferModelDefInput } from "./properties.js";
+import { InferModelDef, InferModelDefInput } from "./properties.js";
 
 describe("defineGDX", () => {
   it("should work with a simple gdx", () => {
@@ -148,8 +148,10 @@ describe("defineGDX", () => {
 
     type Conf = InferModelConfigurationFromDatamodel<"list", typeof gdx.datamodels.list>;
 
-    type TypeList = InferModelDefInput<typeof Model & { configuration: Conf }, "json">;
+    type _TypeList = InferModelDef<typeof Model & { configuration: Conf }, "json">;
 
-    type _TypeListGDX = InferModelDefInputWithoutKey<typeof Model & { configuration: Conf }, "json">;
+    type _TypeListInput = InferModelDefInput<typeof Model & { configuration: Conf }, "json">;
+
+    type _TypeListInputGDX = InferModelDefInputWithoutKey<typeof Model & { configuration: Conf }, "json">;
   });
 });

@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.8.4
+
+### Patch Changes
+
+- improve types
+
 ## 1.8.3
 
 ### Patch Changes

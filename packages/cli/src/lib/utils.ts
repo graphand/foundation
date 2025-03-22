@@ -134,7 +134,7 @@ export const loadGdx = async (
     json.functions ??= {};
     const functions = json.functions as Record<string, InferModelDefInput<typeof Function, "json">>;
     for (const [key, value] of Object.entries(_functions)) {
-      functions[key] ??= { name: key };
+      functions[key] ??= { name: key, runtime: "deno" };
       const f = functions[key]!;
       Object.assign(f, {
         exposed: f.exposed ?? true,

@@ -1159,7 +1159,7 @@ export class Model {
 
     const payloadAfter: HookCallbackArgs<"after", A, M> = {
       ...payloadBefore,
-      res: res as Awaited<ReturnType<NonNullable<AdapterFetcher[A]>>>,
+      res: res as Awaited<ReturnType<NonNullable<AdapterFetcher<M>[A]>>>,
     };
 
     await this.executeHooks("after", action, payloadAfter, transaction);
@@ -1172,7 +1172,7 @@ export class Model {
       throw payloadAfter.err.at(-1);
     }
 
-    return payloadAfter.res as ReturnType<NonNullable<AdapterFetcher[A]>>;
+    return payloadAfter.res as ReturnType<NonNullable<AdapterFetcher<M>[A]>>;
   }
 
   [Symbol.toPrimitive]<T extends ModelInstance>(this: T, hint: string): any {

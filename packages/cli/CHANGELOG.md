@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.1
+
+### Patch Changes
+
+- improve types
+
 ## 1.5.0
 
 ### Minor Changes
