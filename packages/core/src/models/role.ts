@@ -1,7 +1,7 @@
 import { Model } from "@/lib/model.js";
 import { modelDecorator } from "@/lib/model-decorator.js";
 import { PropertyTypes } from "@/enums/property-types.js";
-import { PropertiesRestriction, ModelInstance, Rule } from "@/types/index.js";
+import { PropertiesRestriction, Rule } from "@/types/index.js";
 import { RuleActions } from "@/enums/rule-actions.js";
 import { ValidatorTypes } from "@/enums/validator-types.js";
 import { Patterns } from "@/enums/patterns.js";
@@ -97,7 +97,7 @@ export class Role extends Model {
   });
 
   async getRulesInherited(): Promise<Array<Rule>> {
-    const i = this as ModelInstance<typeof Role>;
+    const i = this.asInstance<Role, typeof Role>();
     let rules = i.rules || [];
 
     const inheritedRoles = await i.inherits;
@@ -112,7 +112,7 @@ export class Role extends Model {
   }
 
   async getPropertiesRestrictionsInherited(): Promise<Array<PropertiesRestriction>> {
-    const i = this as ModelInstance<typeof Role>;
+    const i = this.asInstance<Role, typeof Role>();
     let propertiesRestrictions = i.propertiesRestrictions || [];
 
     const inheritedRoles = await i.inherits;

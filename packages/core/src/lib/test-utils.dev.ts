@@ -96,7 +96,7 @@ export const mockAdapter = ({
       createOne: async ([payload]) => {
         // @ts-ignore
         payload._id ??= String(new ObjectId());
-        const i = this.model.hydrate(payload as ModelData<T>);
+        const i = this.model.hydrate(payload as unknown as Partial<ModelData<T>>);
         this.thisCache.add(i as ModelInstance<T>);
         return Promise.resolve(i);
       },
@@ -104,7 +104,7 @@ export const mockAdapter = ({
         const created = payload.map(p => {
           // @ts-ignore
           p._id ??= String(new ObjectId());
-          return this.model.hydrate(p as ModelData<T>);
+          return this.model.hydrate(p as unknown as Partial<ModelData<T>>);
         });
         created.forEach(i => this.thisCache.add(i as ModelInstance<T>));
         return Promise.resolve(created);

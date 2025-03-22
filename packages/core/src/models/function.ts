@@ -41,6 +41,6 @@ export class Function extends Model {
       _checksum: { type: PropertyTypes.STRING },
       _size: { type: PropertyTypes.INTEGER },
     },
-    required: ["name"],
+    required: ["name", "runtime"],
   });
 }

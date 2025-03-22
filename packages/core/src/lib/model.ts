@@ -39,12 +39,14 @@ import {
   getModelInitPromise,
   definePropertiesObject,
   defineModelConf,
+  createValidationError,
 } from "@/lib/utils.js";
 import { CoreError } from "@/lib/core-error.js";
 import { ErrorCodes } from "@/enums/error-codes.js";
 import { DataModel } from "@/models/data-model.js";
 import { ModelList } from "./model-list.js";
 import { PropertyTypes } from "@/enums/property-types.js";
+import { ValidatorTypes } from "@/enums/validator-types.js";
 
 const noPropertySymbol = Symbol("noProperty");
 
@@ -136,6 +138,10 @@ export class Model {
 
     // Serialize the model instance into the specified format
     return i.serialize(format, ctx, clean);
+  }
+
+  asInstance<T extends InstanceType<M>, M extends typeof Model>(this: T): ModelInstance<M> {
+    return this as unknown as ModelInstance<M>;
   }
 
   /**
@@ -425,8 +431,9 @@ export class Model {
     }
 
     if (!slug) {
-      throw new CoreError({
-        message: `Invalid slug: ${slug}`,
+      throw createValidationError({
+        type: ValidatorTypes.REQUIRED,
+        property: "slug",
       });
     }
 
@@ -447,8 +454,9 @@ export class Model {
     }
 
     if (!model && !slug) {
-      throw new CoreError({
-        message: `Invalid slug: ${slug}`,
+      throw createValidationError({
+        type: ValidatorTypes.REQUIRED,
+        property: "slug",
       });
     }
 
@@ -732,32 +740,7 @@ export class Model {
 
     await this.initialize();
 
-    // const adapter = this.getAdapter(false);
-    // const dataFormat = adapter?.base.dataFormat;
-
-    // let data: InferModelDefInput<T, "data">;
-
-    // if (dataFormat !== "json") {
-    //   // Transform json payload into data format
-    //   const tmp = new this(payload) as ModelInstance<T>;
-
-    //   if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
-    //     await this.validate([tmp], ctx);
-    //   }
-
-    //   data = tmp.serialize(dataFormat, { defaults: false }, true) as InferModelDefInput<T, "data">;
-    // } else {
-    //   data = payload;
-    // }
-
-    const i = await this.execute("createOne", [payload], ctx);
-
-    const adapter = this.getAdapter(false);
-    if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
-      await this.validate([i], ctx);
-    }
-
-    return i as ModelInstance<T>;
+    return await this.execute("createOne", [payload], ctx);
   }
 
   /**
@@ -783,31 +766,7 @@ export class Model {
 
     const array = Array.isArray(payload) ? payload : [payload];
 
-    // const adapter = this.getAdapter(false);
-    // const dataFormat = adapter?.base.dataFormat;
-
-    // let data: InferModelDefInput<T, "data">[];
-
-    // if (dataFormat !== "json") {
-    //   const tmp = array.map(p => new this(p) as ModelInstance<T>);
-
-    //   if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
-    //     await this.validate(tmp, ctx);
-    //   }
-
-    //   data = tmp.map(i => i.serialize(dataFormat, { defaults: false }, true) as InferModelDefInput<T, "data">);
-    // } else {
-    //   data = array;
-    // }
-
-    const list = await this.execute("createMultiple", [array], ctx);
-
-    const adapter = this.getAdapter(false);
-    if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
-      await this.validate(list, ctx);
-    }
-
-    return list as Array<ModelInstance<T>>;
+    return await this.execute("createMultiple", [array], ctx);
   }
 
   /**
@@ -829,11 +788,6 @@ export class Model {
       throw new CoreError({
         message: `Unable to update instance on model ${this.model().configuration.slug}`,
       });
-    }
-
-    const adapter = this.model().getAdapter(false);
-    if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
-      await this.model().validate([res], ctx);
     }
 
     this.setData(res.getData());
@@ -907,22 +861,10 @@ export class Model {
         return [];
       }
 
-      const adapter = this.getAdapter(false);
-      if (adapter?.base.runWriteValidators && !ctx?.disableValidation) {
-        await this.validate([updated], ctx);
-      }
-
       return [updated];
     }
 
-    const list = await this.execute("updateMultiple", [query, update], ctx);
-
-    const adapter = this.getAdapter(false);
-    if (list && adapter?.base.runWriteValidators && !ctx?.disableValidation) {
-      await this.validate(list, ctx);
-    }
-
-    return list;
+    return await this.execute("updateMultiple", [query, update], ctx);
   }
 
   /**

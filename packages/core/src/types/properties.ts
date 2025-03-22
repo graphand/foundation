@@ -11,6 +11,7 @@ import {
   DecodeRefModel,
   PropertiesDefinition,
   ValidatorsDefinition,
+  TModelConfiguration,
 } from "../index.js";
 
 export type ConditionalPropertiesDefinition<Mappings extends Array<string> = Array<string>> = {
@@ -86,24 +87,24 @@ export type SystemProperties<M extends typeof Model> = Omit<SystemPropertiesBase
 export type InferPropertiesDefinition<
   F extends PropertiesDefinition,
   S extends SerializerFormat,
-  Required = undefined,
+  Required extends string[] | readonly string[] | undefined = undefined,
 > = {
   [K in keyof F as K extends string
-    ? Required extends [string, ...string[]] | readonly [string, ...string[]]
+    ? Required extends string[] | readonly string[]
       ? K extends Required[number]
         ? K
         : never
       : never
     : never]: InferPropertyType<F[K], S>;
-} & {
+} & Partial<{
   [K in keyof F as K extends string
-    ? Required extends [string, ...string[]] | readonly [string, ...string[]]
+    ? Required extends string[] | readonly string[]
       ? K extends Required[number]
         ? never
         : K
       : K
     : K]?: InferPropertyType<F[K], S> | null | undefined;
-};
+}>;
 
 // Helper types to handle additionalProperties properly
 type WithDefaultProperty<Properties extends object, DefaultPropertyType> = Properties &
@@ -191,11 +192,11 @@ export interface SerializerPropertiesMap<
 type StringToPropertyType<T extends string> = T extends `${infer U extends PropertyTypes}` ? U : never;
 
 export type InferSystemProperties<M extends typeof Model, S extends SerializerFormat = "object"> = {
-  [K in keyof SystemProperties<M>]: InferPropertyType<SystemProperties<M>[K], S>;
+  readonly [K in keyof SystemProperties<M>]: InferPropertyType<SystemProperties<M>[K], S>;
 };
 
 // Helper type to combine required properties with keyProperty if present
-type CombineRequired<T, K extends string | undefined> = K extends string
+export type CombineRequired<T, K> = K extends string
   ? string extends K
     ? T extends [string, ...string[]] | readonly [string, ...string[]]
       ? T
@@ -207,19 +208,25 @@ type CombineRequired<T, K extends string | undefined> = K extends string
     ? T
     : undefined;
 
-export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "object"> = (M extends {
-  configuration: { properties: infer R; required?: infer T; keyProperty?: infer K };
-}
-  ? InferPropertiesDefinition<
-      R extends PropertiesDefinition ? R : never,
-      S,
-      CombineRequired<T, K extends string ? K : undefined>
-    >
-  : unknown) &
+export type InferModelDef<M extends typeof Model, S extends SerializerFormat = "object"> = TModelDef<
+  M extends { configuration: infer C extends TModelConfiguration }
+    ? InferPropertiesDefinition<
+        C["properties"] extends PropertiesDefinition ? C["properties"] : PropertiesDefinition,
+        S,
+        CombineRequired<C["required"], C["keyProperty"]>
+      >
+    : unknown
+> &
   InferSystemProperties<M, S>;
 
-export type InferModelDefInput<M extends typeof Model, S extends SerializerFormat = "object"> = {
-  -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` ? never : K]: InferModelDef<M, S>[K];
+type TModelDef<T> = { [K in keyof T as string extends K ? never : number extends K ? never : K]: T[K] };
+
+export type InferModelDefInput<
+  M extends typeof Model,
+  S extends SerializerFormat = "object",
+  Exclude extends string = never,
+> = {
+  -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` | Exclude ? never : K]: InferModelDef<M, S>[K];
 } & Partial<{
   -readonly [K in keyof InferModelDef<M, S> as K extends `_${string}` ? K : never]: InferModelDef<M, S>[K];
 }>;

@@ -189,19 +189,19 @@ export type Hook<
 };
 
 export type Jsonified<T> =
-  T extends Promise<ModelInstance<infer M>>
+  T extends Promise<ModelInstance<infer M extends typeof Model>>
     ? InferModelDef<M, "json">
-    : T extends Promise<ModelInstance<infer M> | null>
+    : T extends Promise<ModelInstance<infer M extends typeof Model> | null>
       ? InferModelDef<M, "json"> | null
-      : T extends Promise<ModelInstance<infer M>[]>
+      : T extends Promise<ModelInstance<infer M extends typeof Model>[]>
         ? InferModelDef<M, "json">[]
-        : T extends ModelInstance<infer M>
+        : T extends ModelInstance<infer M extends typeof Model>
           ? InferModelDef<M, "json">
-          : T extends PromiseModelList<infer M>
+          : T extends PromiseModelList<infer M extends typeof Model>
             ? { rows: InferModelDef<M, "json">[]; count: number }
-            : T extends Promise<ModelList<infer M>>
+            : T extends Promise<ModelList<infer M extends typeof Model>>
               ? { rows: InferModelDef<M, "json">[]; count: number }
-              : T extends ModelList<infer M>
+              : T extends ModelList<infer M extends typeof Model>
                 ? { rows: InferModelDef<M, "json">[]; count: number }
                 : T extends Error
                   ? { message: string; code: string }

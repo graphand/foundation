@@ -1,4 +1,4 @@
-import { JSONQuery, ModelInstance } from "@/types/index.js";
+import { JSONQuery, ModelInstance, ModelJSON } from "@/types/index.js";
 import { Model } from "@/lib/model.js";
 
 /**
@@ -117,7 +117,10 @@ export class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
   /**
    * Returns a JSON representation of the list.
    */
-  toJSON() {
+  toJSON(): {
+    rows: Array<ModelJSON<T>>;
+    count: number;
+  } {
     return {
       rows: this.toArray().map(r => r.toJSON()),
       count: this.#count,

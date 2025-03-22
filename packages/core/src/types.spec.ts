@@ -488,6 +488,7 @@ describe("test types", () => {
             type: PropertyTypes.STRING,
           },
         },
+        required: ["property2"],
         keyProperty: "property1",
       });
     }
@@ -495,6 +496,7 @@ describe("test types", () => {
     const i = CustomModel.hydrate({ property1: "ok" });
 
     simulateTypeCheck<string>(i.property1);
+    simulateTypeCheck<string>(i.property2);
   });
 
   describe("hooks", () => {

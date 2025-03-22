@@ -5,6 +5,7 @@ declare global {
 export const __CORE_VERSION__ = JSON.stringify(__INTERNAL_CORE_VERSION__).replaceAll('"', "");
 
 import "@/register-models";
+import "@/hooks-validation";
 
 export * from "@/types/index.js";
 export * from "@/lib/controllers.js";

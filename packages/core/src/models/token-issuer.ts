@@ -17,7 +17,7 @@ export class TokenIssuer extends Model {
       name: { type: PropertyTypes.STRING },
       expiresAt: { type: PropertyTypes.DATE },
       neverExpires: { type: PropertyTypes.BOOLEAN, default: false }, // If true, the token never expires
-      lifetime: { type: PropertyTypes.INTEGER }, // By default, the token lifetime is the accessTokenLifetime in system settings. In seconds
+      lifetime: { type: PropertyTypes.NUMBER }, // By default, the token lifetime is the accessTokenLifetime in system settings. In seconds
       maxGen: { type: PropertyTypes.INTEGER },
       role: {
         type: PropertyTypes.RELATION,
