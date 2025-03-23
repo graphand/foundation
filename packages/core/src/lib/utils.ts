@@ -21,6 +21,9 @@ import {
   PropertyDefinition,
   ValidatorsDefinition,
   TModelConfiguration,
+  GDXDatamodels,
+  GDXType,
+  GDXTypeModels,
 } from "@/types/index.js";
 import { PropertyTypes } from "@/enums/property-types.js";
 import { Property } from "@/lib/property.js";
@@ -1363,3 +1366,7 @@ export const createValidationError = (
 };
 
 export const defineModelConf = <const C extends TModelConfiguration>(configuration: C) => configuration;
+
+export const defineDatamodels = <const D extends GDXDatamodels>(datamodels: D) => datamodels;
+
+export const defineGDX = <const D extends GDXDatamodels = GDXDatamodels>(gdx: GDXType<D> | GDXTypeModels) => gdx;

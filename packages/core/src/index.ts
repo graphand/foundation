@@ -90,4 +90,6 @@ export {
   createValidationError,
   assignDatamodel,
   defineModelConf,
+  defineDatamodels,
+  defineGDX,
 } from "@/lib/utils.js";

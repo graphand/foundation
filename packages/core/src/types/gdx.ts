@@ -22,16 +22,14 @@ export type GDXEntryModel<T extends TModelConfiguration> = T["single"] extends t
 
 export type GDXDatamodels = Record<string, InferModelDefInputWithoutKey<typeof DataModel, "json">>;
 
-export type GDXType<D extends GDXDatamodels = {}> = { datamodels: D } & {
-  [K in keyof D]?: D[K] extends { keyProperty: string } | { single: true }
-    ? GDXEntryModel<InferModelConfigurationFromDatamodel<K, D[K]>>
-    : never;
-} & {
+export type GDXTypeModels = {
   [K in keyof Models]?: Models[K] extends { configuration: infer C extends TModelConfiguration }
-    ? C extends { keyProperty: string } | { single: true }
-      ? GDXEntryModel<C>
-      : never
+    ? GDXEntryModel<C>
     : never;
+};
+
+export type GDXType<D extends GDXDatamodels = GDXDatamodels> = GDXTypeModels & { datamodels: D } & {
+  [K in keyof D]?: GDXEntryModel<InferModelConfigurationFromDatamodel<K, D[K]>>;
 };
 
 export type InferModelConfigurationFromDatamodel<
@@ -49,7 +47,3 @@ export type InferModelConfigurationFromDatamodel<
 
 // Extract the datamodels type from a GDX object
 export type InferGDXDatamodels<T> = T extends GDXType<infer D> ? D : never;
-
-export const defineDatamodels = <const D extends GDXDatamodels = {}>(datamodels: D) => datamodels;
-
-export const defineGDX = <const D extends GDXDatamodels = {}>(gdx: GDXType<D>) => gdx;

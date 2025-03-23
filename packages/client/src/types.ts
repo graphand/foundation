@@ -65,12 +65,12 @@ declare module "@graphand/core" {
   }
 
   export interface PromiseModel<T extends typeof Model> {
-    cached: ModelInstance<T> | null;
+    cached: ModelInstance<T>;
   }
 
   export interface PromiseModelList<T extends typeof Model> {
-    cached: ModelList<T> | null;
-    cachedPartial: ModelList<T> | null;
+    cached: ModelList<T>;
+    cachedPartial: ModelList<T>;
   }
 }
 

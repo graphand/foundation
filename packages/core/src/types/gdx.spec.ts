@@ -1,6 +1,8 @@
 import { Model } from "@/lib/model.js";
-import { defineGDX, InferModelConfigurationFromDatamodel, InferModelDefInputWithoutKey } from "./gdx.js";
+import { InferGDXDatamodels, InferModelConfigurationFromDatamodel, InferModelDefInputWithoutKey } from "./gdx.js";
 import { InferModelDef, InferModelDefInput } from "./properties.js";
+import { defineGDX } from "@/lib/utils.js";
+import { ObjectId } from "bson";
 
 describe("defineGDX", () => {
   it("should work with a simple gdx", () => {
@@ -146,12 +148,54 @@ describe("defineGDX", () => {
       page: {},
     });
 
-    type Conf = InferModelConfigurationFromDatamodel<"list", typeof gdx.datamodels.list>;
+    type Conf = InferModelConfigurationFromDatamodel<"list", InferGDXDatamodels<typeof gdx>["list"]>;
 
     type TYPE_LIST = InferModelDef<typeof Model & { configuration: Conf }, "json">;
 
     type TYPE_LIST_INPUT = InferModelDefInput<typeof Model & { configuration: Conf }, "json">;
 
     type TYPE_LIST_INPUT_GDX = InferModelDefInputWithoutKey<typeof Model & { configuration: Conf }, "json">;
+  });
+
+  it("should work without datamodels", () => {
+    defineGDX({
+      roles: {
+        role1: {
+          rules: [
+            {
+              ref: "todo",
+              // @ts-expect-error invalid
+              actions: ["invalid"],
+            },
+          ],
+        },
+        role2: {},
+      },
+    });
+
+    defineGDX({
+      roles: {
+        public: {},
+      },
+      authProviders: {
+        local: {
+          register: {
+            enabled: true,
+            role: "ref:public",
+          },
+        },
+      },
+    });
+  });
+
+  it("should work with accounts", () => {
+    defineGDX({
+      accounts: {
+        [new ObjectId().toString()]: {
+          role: "ref:admin",
+          _email: "test@test.com",
+        },
+      },
+    });
   });
 });
