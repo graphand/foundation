@@ -158,7 +158,7 @@ describe("defineGDX", () => {
   });
 
   it("should work without datamodels", () => {
-    defineGDX({
+    defineGDX<{}>({
       roles: {
         role1: {
           rules: [
@@ -170,6 +170,14 @@ describe("defineGDX", () => {
           ],
         },
         role2: {},
+      },
+      foo: {
+        bar: {
+          title: "test",
+        },
+        baz: {
+          title: "test",
+        },
       },
     });
 
@@ -194,6 +202,20 @@ describe("defineGDX", () => {
         [new ObjectId().toString()]: {
           role: "ref:admin",
           _email: "test@test.com",
+        },
+      },
+    });
+
+    defineGDX({
+      datamodels: {},
+      list: {
+        item1: {
+          title: "test",
+          rel: "ref:item2",
+        },
+        item2: {
+          title: "test",
+          rel: "ref:item1",
         },
       },
     });

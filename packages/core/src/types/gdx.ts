@@ -1,4 +1,12 @@
-import { DataModel, InferModelDefInput, Model, Models, SerializerFormat, TModelConfiguration } from "@/index.js";
+import {
+  DataModel,
+  InferModelDefInput,
+  JSONObject,
+  Model,
+  Models,
+  SerializerFormat,
+  TModelConfiguration,
+} from "@/index.js";
 
 export type InferModelDefInputWithoutKey<
   T extends typeof Model,
@@ -28,9 +36,10 @@ export type GDXTypeModels = {
     : never;
 };
 
-export type GDXType<D extends GDXDatamodels = GDXDatamodels> = GDXTypeModels & { datamodels: D } & {
+export type GDXType<D extends GDXDatamodels = GDXDatamodels> = { datamodels: D } & {
   [K in keyof D]?: GDXEntryModel<InferModelConfigurationFromDatamodel<K, D[K]>>;
-};
+} & GDXTypeModels &
+  Omit<Record<string, JSONObject>, keyof D | keyof Models>;
 
 export type InferModelConfigurationFromDatamodel<
   K,
