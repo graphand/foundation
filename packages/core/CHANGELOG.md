@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.8.8
+
+### Patch Changes
+
+- fix InferClientModel type
+
 ## 1.8.7
 
 ### Patch Changes

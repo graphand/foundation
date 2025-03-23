@@ -12,6 +12,7 @@ import {
 } from "@/types.js";
 import { Module, symbolModuleDestroy, symbolModuleInit } from "./Module.js";
 import {
+  Account,
   Adapter,
   Controller,
   controllerCurrentAccount,
@@ -336,7 +337,7 @@ export class Client<
       return null;
     }
 
-    const model = this.model("accounts");
+    const model = this.model("accounts") as typeof Account;
 
     if (useClaimToken) {
       try {

@@ -168,4 +168,5 @@ export const traverseObject = (
   return transform(result, undefined);
 };
 
-export const defineClientOptions = <D extends GDXDatamodels>(options: ClientOptions<D>): ClientOptions<D> => options;
+export const defineClientOptions = <const D extends GDXDatamodels>(options: ClientOptions<D>): ClientOptions<D> =>
+  options;
