@@ -271,6 +271,28 @@ export const controllerFunctionLogs: Controller<{
   secured: true,
 };
 
+export const controllerFunctionBindTunnel: Controller<{
+  data: {
+    tunnelUrl: string;
+    mapping: Record<string, string>;
+  };
+}> = {
+  path: "/functions/bind-tunnel",
+  methods: ["post"],
+  secured: true,
+};
+
+export const controllerFunctionUnbindTunnel: Controller<{
+  data: {
+    tunnelUrl: string;
+    mapping: Record<string, string>;
+  };
+}> = {
+  path: "/functions/unbind-tunnel",
+  methods: ["post"],
+  secured: true,
+};
+
 export const controllerJobLogs: Controller<{
   params: { id: string };
   query?: {

@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.8.9
+
+### Patch Changes
+
+- add bindTunnel and unbindTunnel controllers
+
 ## 1.8.8
 
 ### Patch Changes

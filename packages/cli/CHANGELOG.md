@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.2
+
+### Patch Changes
+
+- add bindTunnel and unbindTunnel controllers
+
 ## 1.5.1
 
 ### Patch Changes

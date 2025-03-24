@@ -23,6 +23,7 @@ import { commandSrc } from "./commands/src.js";
 import { commandModels } from "./commands/models.js";
 import { commandGdx } from "./commands/gdx/index.js";
 import { commandVersion } from "./commands/version.js";
+import { commandServe } from "./commands/serve.js";
 import "dotenv/config";
 
 program
@@ -51,6 +52,7 @@ program.addCommand(commandSrc);
 program.addCommand(commandModels);
 program.addCommand(commandGdx);
 program.addCommand(commandVersion);
+program.addCommand(commandServe);
 
 program.hook("postAction", async () => {
   const client = globalThis.client;
