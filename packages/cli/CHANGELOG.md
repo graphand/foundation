@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.6
+
+### Patch Changes
+
+- add types in build
+
 ## 1.5.5
 
 ### Patch Changes
