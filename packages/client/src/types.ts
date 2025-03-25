@@ -25,6 +25,7 @@ declare module "@graphand/core" {
     uploadId?: string;
     query?: Record<string, string>;
     onRequest?: (_req: RequestInit) => RequestInit;
+    onUrl?: (_url: string) => string;
   }
 
   export interface Model {

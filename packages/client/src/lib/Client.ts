@@ -16,6 +16,7 @@ import {
   Adapter,
   Controller,
   controllerCurrentAccount,
+  controllerFunctionRun,
   ControllerInput,
   controllerMediaPrivate,
   controllerMediaPublic,
@@ -219,8 +220,14 @@ export class Client<
     let path: string = controller.path;
 
     if (opts.params) {
-      path = controller.path.replace(/:(\w+)(\?)?/g, (_, p1) => {
-        return opts.params?.[p1] ? encodeURIComponent(String(opts.params[p1])) : "";
+      path = controller.path.replace(/:([\w|*]+)(\?)?/g, (_, param) => {
+        if (param.startsWith("*")) {
+          // Handle wildcard parameters
+          return opts.params?.[param.substring(1)] ? encodeURIComponent(String(opts.params[param.substring(1)])) : "";
+        }
+
+        // Handle regular parameters
+        return opts.params?.[param] ? encodeURIComponent(String(opts.params[param])) : "";
       });
     }
 
@@ -397,7 +404,7 @@ export class Client<
     const params = opts.params as Record<string, string>;
     const query = Object.assign({}, opts.query, opts.ctx?.query);
 
-    const url = this.buildUrl(controller, { params, query });
+    let url = this.buildUrl(controller, { params, query });
 
     let init: RequestInit = Object.assign({}, opts.init);
     init.headers = Object.assign({}, init.headers, {
@@ -432,6 +439,10 @@ export class Client<
 
     if (opts.data) {
       init.body ??= JSON.stringify(opts.data);
+    }
+
+    if (typeof opts.ctx?.onUrl === "function") {
+      url = opts.ctx.onUrl(url);
     }
 
     if (typeof opts.ctx?.onRequest === "function") {
@@ -573,5 +584,36 @@ export class Client<
 
   clone(options: Partial<ClientOptions<D>> = {}) {
     return new Client<D, T, M>({ ...this.options, ...options } as ClientOptions<D>, this.#clientModules);
+  }
+
+  runFunction(
+    idOrName: string,
+    opts: {
+      path?: string;
+      data?: JSONObject;
+      query?: JSONObject;
+      init?: RequestInit;
+      maxRetries?: number;
+    },
+  ) {
+    return this.execute(controllerFunctionRun, {
+      params: { id: idOrName },
+      data: opts?.data,
+      query: opts?.query,
+      init: opts?.init,
+      maxRetries: opts?.maxRetries,
+      ctx: {
+        onUrl: url => {
+          const _url = new URL(url);
+
+          if (opts.path) {
+            // Join the pathname with the path
+            _url.pathname = [_url.pathname, opts.path].join("/").replace(/\/+/g, "/");
+          }
+
+          return _url.toString();
+        },
+      },
+    });
   }
 }

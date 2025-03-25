@@ -967,6 +967,101 @@ describe("Client", () => {
     });
   });
 
+  describe("runFunction", () => {
+    let clientWithToken: Client;
+
+    beforeEach(() => {
+      clientWithToken = new Client({ accessToken: "test-token", project: null });
+      mockFetch.mockClear();
+    });
+
+    it("should execute a function by id correctly", async () => {
+      mockFetch.mockResolvedValueOnce(new Response('{"result":"success"}', { status: 200 }));
+      const result = await clientWithToken.runFunction("functionId", {});
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining("/functions/functionId/run"),
+        }),
+      );
+      expect(await result.json()).toEqual({ result: "success" });
+    });
+
+    it("should pass data to the function correctly", async () => {
+      mockFetch.mockResolvedValueOnce(new Response('{"result":"success"}', { status: 200 }));
+      await clientWithToken.runFunction("functionId", {
+        data: { foo: "bar" },
+      });
+
+      const calledRequest = mockFetch.mock.calls?.[0]?.[0] as Request;
+      expect(calledRequest).toBeDefined();
+      const body = await calledRequest.clone().json();
+      expect(body).toEqual({ foo: "bar" });
+    });
+
+    it("should pass query parameters correctly", async () => {
+      mockFetch.mockResolvedValueOnce(new Response('{"result":"success"}', { status: 200 }));
+      await clientWithToken.runFunction("functionId", {
+        query: { param1: "value1", param2: "value2" },
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringMatching(/\?param1=value1&param2=value2/),
+        }),
+      );
+    });
+
+    it("should pass pathname correctly", async () => {
+      mockFetch.mockResolvedValueOnce(new Response('{"result":"success"}', { status: 200 }));
+      await clientWithToken.runFunction("functionId", {
+        path: "/foo/bar",
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining("/foo/bar"),
+        }),
+      );
+    });
+
+    it("should handle custom request initialization", async () => {
+      mockFetch.mockResolvedValueOnce(new Response('{"result":"success"}', { status: 200 }));
+      await clientWithToken.runFunction("functionId", {
+        init: {
+          headers: { "X-Custom-Header": "TestValue" },
+        },
+      });
+
+      const calledRequest = mockFetch.mock.calls?.[0]?.[0] as Request;
+      expect(calledRequest).toBeDefined();
+      expect(calledRequest.headers.get("X-Custom-Header")).toBe("TestValue");
+    });
+
+    it("should handle function errors correctly", async () => {
+      mockFetch.mockResolvedValueOnce(new Response('{"error":{"message":"Function error"}}', { status: 400 }));
+
+      await expect(clientWithToken.runFunction("functionId", {})).rejects.toThrow("Function error");
+    });
+
+    it("should respect maxRetries option", async () => {
+      let attempts = 0;
+      clientWithToken.hook("beforeRequest", ({ transaction }) => {
+        attempts++;
+        throw transaction.retryToken;
+      });
+
+      mockFetch.mockResolvedValueOnce(new Response('{"result":"success"}', { status: 200 }));
+
+      await expect(clientWithToken.runFunction("functionId", { maxRetries: 2 })).rejects.toThrow("Too many retries");
+      expect(attempts).toBe(3); // Initial attempt + 2 retries
+    });
+
+    it("should throw an error when no access token is provided", async () => {
+      await expect(client.runFunction("functionId", {})).rejects.toThrow("Access token is required");
+    });
+  });
+
   describe("models management", () => {
     it("should register and retrieve a model correctly", async () => {
       const datamodels = defineDatamodels({
