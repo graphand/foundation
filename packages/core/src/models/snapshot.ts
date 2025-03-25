@@ -9,7 +9,7 @@ export class Snapshot extends Model {
   static __name = "Snapshot";
   static configuration = defineModelConf({
     slug: "snapshots",
-    blockMultipleOperations: true,
+    noBulk: true,
     loadDatamodel: false,
     properties: {
       _expiresAt: {

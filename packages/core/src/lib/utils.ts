@@ -1158,6 +1158,7 @@ export const assignDatamodel = async <T extends typeof Model>(
   const baseClass = model.getBaseClass();
 
   model.configuration.realtime = Boolean(baseClass.configuration.realtime) || Boolean(datamodel?.realtime) || false;
+  model.configuration.noBulk = Boolean(baseClass.configuration.noBulk) || Boolean(datamodel?.noBulk) || false;
 
   const properties: PropertiesDefinition = {};
 

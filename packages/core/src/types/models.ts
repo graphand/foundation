@@ -31,7 +31,7 @@ export type TModelConfiguration<TSlug extends string = string> = {
   restricted?: boolean;
   realtime?: boolean;
   type?: "object";
-  blockMultipleOperations?: boolean;
+  noBulk?: boolean;
   freeMode?: boolean;
   properties?: PropertiesDefinition;
   keyProperty?: string;

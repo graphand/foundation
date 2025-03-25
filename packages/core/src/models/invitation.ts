@@ -12,7 +12,7 @@ export class Invitation extends Model {
   static configuration = defineModelConf({
     slug: "invitations",
     isEnvironmentScoped: true,
-    blockMultipleOperations: true,
+    noBulk: true,
     loadDatamodel: false,
     properties: {
       firstname: { type: PropertyTypes.STRING },

@@ -933,10 +933,10 @@ export class Model {
     },
   ) {
     // if (
-    //   this.configuration.blockMultipleOperations &&
+    //   this.configuration.noBulk &&
     //   ["createMultiple", "updateMultiple", "deleteMultiple"].includes(action)
     // ) {
-    //   console.warn(`Useless hook ${action} on a model with blockMultipleOperations (${this.configuration?.slug})`);
+    //   console.warn(`Useless hook ${action} on a model with noBulk (${this.configuration?.slug})`);
     // }
 
     if (!this.hasOwnProperty("__hooks") || !this.__hooks) {
@@ -1087,13 +1087,10 @@ export class Model {
         });
       }
 
-      if (
-        this.configuration.blockMultipleOperations &&
-        ["createMultiple", "updateMultiple", "deleteMultiple"].includes(action)
-      ) {
+      if (this.configuration.noBulk && ["createMultiple", "updateMultiple", "deleteMultiple"].includes(action)) {
         throw new CoreError({
           code: ErrorCodes.INVALID_OPERATION,
-          message: `Cannot run ${action} operation a model with blockMultipleOperations (${this.configuration.slug})`,
+          message: `Cannot run ${action} operation a model with noBulk (${this.configuration.slug})`,
         });
       }
     }

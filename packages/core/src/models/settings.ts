@@ -8,7 +8,7 @@ export class Settings extends Model {
   static __name = "Settings";
   static configuration = defineModelConf({
     slug: "settings",
-    blockMultipleOperations: true,
+    noBulk: true,
     loadDatamodel: false,
     keyProperty: "key",
     properties: {

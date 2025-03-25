@@ -1,19 +1,13 @@
 import {
   DataModel,
+  InferModelConfigurationFromDatamodel,
   InferModelDefInput,
+  InferModelDefInputWithoutKey,
   JSONObject,
   Model,
   Models,
-  SerializerFormat,
   TModelConfiguration,
 } from "@/index.js";
-
-export type InferModelDefInputWithoutKey<
-  T extends typeof Model,
-  S extends SerializerFormat,
-> = T extends typeof Model & { configuration: infer C extends TModelConfiguration }
-  ? InferModelDefInput<T, S, C["keyProperty"] extends string ? C["keyProperty"] : never>
-  : never;
 
 export type GDXEntryModelInput<T extends TModelConfiguration> =
   | (InferModelDefInputWithoutKey<typeof Model & { configuration: T }, "json"> &
@@ -40,19 +34,6 @@ export type GDXType<D extends GDXDatamodels = GDXDatamodels> = { datamodels: D }
   [K in keyof D]?: GDXEntryModel<InferModelConfigurationFromDatamodel<K, D[K]>>;
 } & GDXTypeModels &
   Omit<Record<string, JSONObject>, keyof D | keyof Models>;
-
-export type InferModelConfigurationFromDatamodel<
-  K,
-  D extends InferModelDefInputWithoutKey<typeof DataModel, "json">,
-> = {
-  readonly slug: K extends string ? K : "";
-  readonly keyProperty: D["keyProperty"] extends TModelConfiguration["keyProperty"] ? D["keyProperty"] : undefined;
-  readonly single: D["single"] extends TModelConfiguration["single"] ? D["single"] : undefined;
-  readonly properties: D["properties"] extends TModelConfiguration["properties"] ? D["properties"] : undefined;
-  readonly validators: D["validators"] extends TModelConfiguration["validators"] ? D["validators"] : undefined;
-  readonly realtime: D["realtime"] extends TModelConfiguration["realtime"] ? D["realtime"] : undefined;
-  readonly required: D["required"] extends TModelConfiguration["required"] ? D["required"] : undefined;
-};
 
 // Extract the datamodels type from a GDX object
 export type InferGDXDatamodels<T> = T extends GDXType<infer D> ? D : never;

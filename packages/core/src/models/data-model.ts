@@ -180,6 +180,10 @@ export class DataModel extends Model {
         type: PropertyTypes.BOOLEAN,
         default: false,
       },
+      noBulk: {
+        type: PropertyTypes.BOOLEAN,
+        default: false,
+      },
       _doc: { type: PropertyTypes.OBJECT },
     },
     required: ["slug"],

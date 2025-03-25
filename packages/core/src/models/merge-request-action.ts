@@ -11,7 +11,7 @@ export class MergeRequestAction extends Model {
   static __name = "MergeRequestAction";
   static configuration = defineModelConf({
     slug: "mergeRequestActions",
-    blockMultipleOperations: true,
+    noBulk: true,
     properties: {
       type: {
         type: PropertyTypes.STRING,

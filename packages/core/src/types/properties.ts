@@ -11,6 +11,7 @@ import {
   DecodeRefModel,
   PropertiesDefinition,
   ValidatorsDefinition,
+  TModelConfiguration,
 } from "../index.js";
 
 export type ConditionalPropertiesDefinition<Mappings extends Array<string> = Array<string>> = {
@@ -254,6 +255,13 @@ type InferPropertyTypeByMapping<D extends PropertyDefinitionGeneric<PropertyType
         `${D["type"]}` extends keyof Mapping
         ? Mapping[`${D["type"]}`]
         : unknown;
+
+export type InferModelDefInputWithoutKey<
+  T extends typeof Model,
+  S extends SerializerFormat,
+> = T extends typeof Model & { configuration: infer C extends TModelConfiguration }
+  ? InferModelDefInput<T, S, C["keyProperty"] extends string ? C["keyProperty"] : never>
+  : never;
 
 export type ModelObject<M extends typeof Model = typeof Model> = InferModelDef<M, "object">;
 

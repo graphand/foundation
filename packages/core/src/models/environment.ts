@@ -11,7 +11,7 @@ export class Environment extends Model {
   static __name = "Environment";
   static configuration = defineModelConf({
     slug: "environments",
-    blockMultipleOperations: true,
+    noBulk: true,
     loadDatamodel: false,
     keyProperty: "name",
     properties: {

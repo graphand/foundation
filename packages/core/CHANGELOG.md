@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.8.11
+
+### Patch Changes
+
+- rename blockMultipleOperations to noBulk and add noBulk support on datamodel
+
 ## 1.8.10
 
 ### Patch Changes

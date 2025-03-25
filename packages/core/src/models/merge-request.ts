@@ -10,7 +10,7 @@ export class MergeRequest extends Model {
   static __name = "MergeRequest";
   static configuration = defineModelConf({
     slug: "mergeRequests",
-    blockMultipleOperations: true,
+    noBulk: true,
     realtime: true,
     loadDatamodel: false,
     keyProperty: "slug",

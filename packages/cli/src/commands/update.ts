@@ -42,7 +42,7 @@ export const commandUpdate = new Command("update")
 
       let updated: Array<ModelInstance<typeof model>>;
 
-      if (!model.configuration.blockMultipleOperations) {
+      if (!model.configuration.noBulk) {
         const ids = list.getIds();
         updated = await model.update({ ids }, { $set: options.set });
       } else {

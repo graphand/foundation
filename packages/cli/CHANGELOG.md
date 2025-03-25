@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.5
+
+### Patch Changes
+
+- rename blockMultipleOperations to noBulk and add noBulk support on datamodel
+
 ## 1.5.4
 
 ### Patch Changes
