@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.4
+
+### Patch Changes
+
+- improve serve command
+
 ## 1.5.3
 
 ### Patch Changes

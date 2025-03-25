@@ -9,6 +9,7 @@ export interface TunnelOptions {
   directory: string;
   client: any;
   force?: boolean;
+  mappingFile?: string;
 }
 
 export interface TunnelState {
@@ -38,19 +39,40 @@ export const setupTunnel = async (options: TunnelOptions): Promise<TunnelState> 
     }
 
     // Check for tunnel-mapping.json file
-    const mappingFilePath = path.resolve(process.cwd(), directory, "tunnel-mapping.json");
-    if (!fs.existsSync(mappingFilePath)) {
-      console.error(chalk.red(`tunnel-mapping.json not found in ${path.resolve(process.cwd(), directory)}`));
-      console.error(chalk.red(`This file is required when using the --tunnel option`));
-      process.exit(1);
-    }
-
+    const mappingFilePath = path.resolve(process.cwd(), directory, options.mappingFile || "tunnel-mapping.json");
     try {
-      const mappingContent = fs.readFileSync(mappingFilePath, "utf8");
-      tunnelState.mapping = JSON.parse(mappingContent);
-      console.log(chalk.gray(`Loaded tunnel mapping from ${mappingFilePath}`));
+      if (fs.existsSync(mappingFilePath)) {
+        const mappingContent = fs.readFileSync(mappingFilePath, "utf8");
+        tunnelState.mapping = JSON.parse(mappingContent);
+        console.log(chalk.gray(`Loaded tunnel mapping from ${mappingFilePath}`));
+      } else {
+        // Create fallback mapping from subdirectories
+        console.log(
+          chalk.yellow(
+            `${options.mappingFile || "tunnel-mapping.json"} not found in ${path.resolve(process.cwd(), directory)}`,
+          ),
+        );
+        console.log(chalk.cyan("Creating default mapping from subdirectories..."));
+
+        const items = fs.readdirSync(path.resolve(process.cwd(), directory), { withFileTypes: true });
+        const subdirs = items.filter(item => item.isDirectory()).map(item => item.name);
+
+        tunnelState.mapping = subdirs.reduce((acc, dir) => ({ ...acc, [dir]: dir }), {});
+
+        if (Object.keys(tunnelState.mapping).length > 0) {
+          console.log(
+            chalk.gray(`Created default mapping with ${Object.keys(tunnelState.mapping).length} functions directories`),
+          );
+        } else {
+          console.log(chalk.yellow("No subdirectories found to create mapping"));
+          console.log(
+            chalk.yellow("Please create subdirectories in your functions folder or provide a tunnel-mapping.json file"),
+          );
+          process.exit(1);
+        }
+      }
     } catch (error: any) {
-      console.error(chalk.red(`Error reading tunnel-mapping.json: ${error.message}`));
+      console.error(chalk.red(`Error handling tunnel mapping: ${error.message}`));
       process.exit(1);
     }
 

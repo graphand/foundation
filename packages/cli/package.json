@@ -1,6 +1,6 @@
 {
   "name": "@graphand/cli",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "private": false,
   "type": "module",
   "exports": {

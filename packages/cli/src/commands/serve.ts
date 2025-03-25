@@ -19,6 +19,7 @@ export const commandServe = new Command("serve")
   .option("--function-logs", "Display function logs in the CLI")
   .option("--tunnel", "Create ngrok tunnel to expose the server")
   .option("--force-tunnel", "Force tunnel binding even if functions are already bound to another tunnel")
+  .option("--tunnel-mapping <file>", "Path to tunnel mapping file (default: tunnel-mapping.json)")
   .option("-e --env <env>", "Server environment variables", "")
   .option("--env-file <file>", "Path to .env file with environment variables")
   .option("--no-watch", "Disable watching env file for changes")
@@ -51,6 +52,7 @@ export const commandServe = new Command("serve")
       functionLogs,
       tunnel,
       forceTunnel,
+      tunnelMapping,
     } = options;
 
     const client = await getClient();
@@ -303,7 +305,7 @@ export const commandServe = new Command("serve")
     // Start ngrok tunnel if enabled
     let tunnelState: TunnelState | undefined;
     if (tunnel) {
-      tunnelState = await setupTunnel({ port, directory, client, force: forceTunnel });
+      tunnelState = await setupTunnel({ port, directory, client, force: forceTunnel, mappingFile: tunnelMapping });
     }
 
     // Set up cleanup handler
