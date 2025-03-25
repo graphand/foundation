@@ -1,5 +1,11 @@
 # @graphand/client
 
+## 1.6.5
+
+### Patch Changes
+
+- f4a8ce6: add Client.runFunction method
+
 ## 1.6.4
 
 ### Patch Changes
