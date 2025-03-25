@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.8.10
+
+### Patch Changes
+
+- minor change on controller function-bind-tunnel
+
 ## 1.8.9
 
 ### Patch Changes

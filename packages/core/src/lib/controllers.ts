@@ -272,6 +272,7 @@ export const controllerFunctionLogs: Controller<{
 };
 
 export const controllerFunctionBindTunnel: Controller<{
+  query?: { force?: boolean };
   data: {
     tunnelUrl: string;
     mapping: Record<string, string>;
@@ -285,7 +286,7 @@ export const controllerFunctionBindTunnel: Controller<{
 export const controllerFunctionUnbindTunnel: Controller<{
   data: {
     tunnelUrl: string;
-    mapping: Record<string, string>;
+    mapping?: Record<string, string>;
   };
 }> = {
   path: "/functions/unbind-tunnel",

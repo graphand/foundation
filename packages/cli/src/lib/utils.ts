@@ -150,6 +150,8 @@ export const loadGdx = async (
 
       const bind = func ? func._checksum !== checksum : true;
 
+      console.log(func?._checksum, checksum);
+
       if (bind) {
         const zip = await Collector.decodeZip(value);
         file ??= {};

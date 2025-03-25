@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.3
+
+### Patch Changes
+
+- minor change on controller function-bind-tunnel
+
 ## 1.5.2
 
 ### Patch Changes
