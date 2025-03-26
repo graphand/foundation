@@ -151,7 +151,7 @@ describe("test properties", () => {
           },
         },
       });
-      expect(i.get("definition.properties.test.options", "json")).toBe(undefined);
+      expect(i.get("properties.test.options", "json")).toBe(undefined);
     });
 
     it("should not bind default values with defaults=false", async () => {

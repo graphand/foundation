@@ -160,7 +160,7 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
         value = targetProperty.definition.default as typeof value;
       }
 
-      if (value === undefined || value === null) {
+      if (value === undefined) {
         return value;
       }
 

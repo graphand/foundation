@@ -70,4 +70,5 @@ export type Models = Omit<ModelsBase, keyof ModelsOverrides> & ModelsOverrides;
 
 export type DecodeRefModel<T extends string | keyof Models> = T extends keyof Models ? Models[T] : typeof Model;
 
-export type ModelInstance<M extends typeof Model = typeof Model> = InstanceType<M> & InferModelDef<M, "object">;
+export type ModelInstance<M extends typeof Model = typeof Model> = (InstanceType<M> & InferModelDef<M, "object">) &
+  (typeof Model extends M ? { [x: string]: any } : unknown);

@@ -65,7 +65,10 @@ export type PropertyDefinitions = {
   [K in PropertyTypes]: PropertyDefinitionGeneric<K>;
 }[PropertyTypes];
 
-export type PropertyDefinitionGeneric<T extends PropertyTypes> = { type: T | `${T}` } & PropertyOptionsMap[T];
+export type PropertyDefinitionGeneric<T extends PropertyTypes> = {
+  type: T | `${T}`;
+  default?: unknown;
+} & PropertyOptionsMap[T];
 
 export type PropertyDefinition = {
   [K in PropertyTypes]: PropertyDefinitionGeneric<K>;
@@ -95,15 +98,18 @@ export type InferPropertiesDefinition<
           F[K],
           S
         >;
-      } & Partial<{
+      } & {
         [K in keyof F as K extends string ? (K extends Required[number] ? never : K) : K]?:
           | InferPropertyType<F[K], S>
           | null
-          | undefined;
-      }>
-    : Partial<{
-        [K in keyof F as K extends string ? K : K]?: InferPropertyType<F[K], S> | null | undefined;
-      }>
+          | (never | undefined extends F[K]["default"] ? undefined : null);
+      }
+    : {
+        [K in keyof F as K extends string ? K : K]?:
+          | InferPropertyType<F[K], S>
+          | null
+          | (never | undefined extends F[K]["default"] ? undefined : null);
+      }
   : {};
 
 // Helper types to handle additionalProperties properly

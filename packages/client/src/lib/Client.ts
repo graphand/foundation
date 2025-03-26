@@ -107,12 +107,21 @@ export class Client<
     return { ...DEFAULT_OPTIONS, ...options } as ClientOptions<D>;
   }
 
-  get<N extends T[number]["moduleName"]>(_name: N): InstanceType<Extract<T[number], { moduleName: N }>>;
-  get<M extends Module>(_name: string): M;
-  get<M extends ModuleConstructor>(_module: M): InstanceType<M>;
-  get(module: string | typeof Module): Module | null {
+  get<C extends Client, N extends T[number]["moduleName"]>(
+    this: C,
+    _name: N,
+  ): InstanceType<Extract<T[number], { moduleName: N }>> & { client: C };
+  get<C extends Client, M extends Module>(this: C, _name: string): M & { client: C };
+  get<C extends Client, M extends ModuleConstructor>(this: C, _module: M): InstanceType<M> & { client: C };
+  get<C extends Client>(this: C, module: string | typeof Module): Module & { client: C } {
     const name = String(typeof module === "string" ? module : module.moduleName);
-    return this.#modules.get(name) || null;
+    const res = this.#modules.get(name);
+
+    if (!res) {
+      throw new Error(`Module ${name} not found`);
+    }
+
+    return res as Module & { client: C };
   }
 
   useModule<U extends ModuleConstructor>(...m: ModuleWithConfig<U>): Client<D, [...T, U], M> {
@@ -126,7 +135,7 @@ export class Client<
       throw new Error(`Module ${moduleClass.moduleName} is already registered`);
     }
 
-    const module = new moduleClass(conf, this as Client);
+    const module = new moduleClass(conf, this as unknown as Client);
     this.#modules.set(moduleClass.moduleName, module);
 
     // Waiting for the client to have finished registering all modules and dependencies bezfore initializing them
@@ -154,7 +163,7 @@ export class Client<
       return;
     }
 
-    for (const dependency of module.dependencies) {
+    for (const dependency of module.dependencies as ModuleConstructor[]) {
       if (dependency.moduleName && !this.#modules.has(dependency.moduleName)) {
         this.useModule(dependency);
       }
@@ -176,9 +185,9 @@ export class Client<
 
         promises.set(module.moduleName, null);
 
-        module.dependencies?.forEach(dep => {
+        (module.dependencies as ModuleConstructor[])?.forEach(dep => {
           if (!promises.has(dep.moduleName)) {
-            const m = this.get(dep.moduleName);
+            const m = (this as any).get(dep.moduleName);
             m && _initModule(m);
           }
         });
@@ -270,7 +279,7 @@ export class Client<
         }
 
         executed.add(hook);
-        await hook.fn.call(this as Client, payload);
+        await hook.fn.call(this as unknown as Client, payload);
       }, Promise.resolve());
     } catch (e) {
       if (transaction.abortToken === e) {
@@ -292,7 +301,7 @@ export class Client<
 
         try {
           executed.add(h);
-          await h.fn.call(this as Client, payload);
+          await h.fn.call(this as unknown as Client, payload);
         } catch (e) {
           payload.err ??= [];
           payload.err.push(e as Error);

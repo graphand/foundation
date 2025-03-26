@@ -202,7 +202,7 @@ describe("Client", () => {
       class HookModule extends Module {
         static moduleName = "HookModule" as const;
         async [symbolModuleInit]() {
-          this.client().hook("beforeRequest", hookMock);
+          this.client.hook("beforeRequest", hookMock);
         }
       }
       const client = new Client({ project: null }, [[HookModule, {}]]);
@@ -262,7 +262,7 @@ describe("Client", () => {
       class AccessModule extends Module {
         static moduleName = "AccessModule" as const;
         getClientEndpoint() {
-          return this.client().options.endpoint;
+          return this.client.options.endpoint;
         }
       }
       const client = new Client({ endpoint: "test.api.com", project: null }, [[AccessModule, {}]]);
@@ -681,7 +681,7 @@ describe("Client", () => {
       class TestModule extends Module {
         static moduleName = "TestModule" as const;
         async [Symbol.for("ModuleInit")]() {
-          this.client().hook("beforeRequest", () => {
+          this.client.hook("beforeRequest", () => {
             // Do something
           });
         }
@@ -1089,6 +1089,13 @@ describe("Client", () => {
       const model = client.model("test");
       expect(model).toBeDefined();
       expect(model.configuration.slug).toBe("test");
+    });
+
+    it("should infer any field on unknown model to any type", async () => {
+      const client = new Client({ project: "test" });
+      const model = client.model("unknown");
+      const i = model.hydrate();
+      expect(i.foo?.bar).toBeUndefined();
     });
 
     it("should hydrate model instances correctly", async () => {

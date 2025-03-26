@@ -78,11 +78,9 @@ declare module "@graphand/core" {
 export type InferModelFromList<T extends ModelList<typeof Model>> = T extends ModelList<infer M> ? M : typeof Model;
 
 // Define a base type for classes with constructors
-export type ModuleConstructor<T extends Module = Module<any, any[]>> = (new (_conf: any, _client: Client) => T) & {
+export type ModuleConstructor<T extends Module = Module> = (new (_conf: any, _client: Client) => T) & {
   moduleName: string | undefined;
 };
-
-export type InferModuleDependencies<T extends Module> = T extends Module<any, infer Deps> ? Deps : never;
 
 // Define the ModuleWithConfig type
 export type ModuleWithConfig<T extends ModuleConstructor = ModuleConstructor> = [T, ConstructorParameters<T>[0]] | [T];

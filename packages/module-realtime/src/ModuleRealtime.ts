@@ -33,7 +33,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
     });
 
     if (this.conf.autoConnect) {
-      this.#unsubscribeOptions = this.client().subscribeOptions((options, previousOptions) => {
+      this.#unsubscribeOptions = this.client.subscribeOptions((options, previousOptions) => {
         // First time initialization
         if (!previousOptions && !options.accessToken) {
           return;
@@ -55,8 +55,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
 
     if (this.conf.autoSubscribe) {
       const _module = this as ModuleRealtime;
-      const client = this.client();
-      const adapterClass = client.getAdapterClass();
+      const adapterClass = this.client.getAdapterClass();
       const subscribe = adapterClass.prototype.subscribe;
       adapterClass.prototype.subscribe = function (...args: Parameters<typeof subscribe>) {
         const adapter = this as ClientAdapter;
@@ -90,15 +89,13 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
   }
 
   connect(force: boolean = false) {
-    const client = this.client();
-
-    if (!client.options.accessToken) {
+    if (!this.client.options.accessToken) {
       throw new Error("Access token is required to connect to the socket");
     }
 
     let socket = this.getSocket(false);
-    const scheme = client.options.ssl ? "wss" : "ws";
-    const url = client.getBaseUrl(scheme);
+    const scheme = this.client.options.ssl ? "wss" : "ws";
+    const url = this.client.getBaseUrl(scheme);
 
     // Check the current socket uri
     // @ts-expect-error - uri exists on io
@@ -121,8 +118,8 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
         rejectUnauthorized: false,
         transports: this.conf.transports,
         auth: {
-          accessToken: client.options.accessToken,
-          project: client.options.project,
+          accessToken: this.client.options.accessToken,
+          project: this.client.options.project,
         },
       });
 
@@ -142,7 +139,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
           return;
         }
 
-        const model = client.model(event.model);
+        const model = this.client.model(event.model);
         const adapter = model.getAdapter() as ClientAdapter;
 
         Object.assign(event, { __socketId: socket?.id });

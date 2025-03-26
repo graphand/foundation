@@ -24,7 +24,7 @@ import { ValidatorRequired } from "./validators/required.js";
 import { PropertyInteger } from "./properties/integer.js";
 import { PropertyNull } from "./properties/null.js";
 
-export class Adapter<T extends typeof Model = typeof Model> {
+export class Adapter<T extends typeof Model = any> {
   static __name = "Adapter";
 
   static runWriteValidators: boolean; // If the adapter should run validators after a model create/update

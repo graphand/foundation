@@ -1,4 +1,4 @@
-import { FetchError, Module, symbolModuleDestroy, symbolModuleInit } from "@graphand/client";
+import { FetchError, InferClientModel, Module, symbolModuleDestroy, symbolModuleInit } from "@graphand/client";
 import {
   AuthMethodOptions,
   AuthMethods,
@@ -25,7 +25,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
   }
 
   async [symbolModuleInit]() {
-    const client = this.client();
+    const client = this.client;
 
     if (this.conf.autoRefreshToken) {
       client.hook(
@@ -60,7 +60,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
   async [symbolModuleDestroy]() {}
 
   #setClientToken(accessToken: string | undefined) {
-    this.client().setOptions({ accessToken });
+    this.client.setOptions({ accessToken });
 
     if (typeof this.conf.handleAccessToken === "function") {
       this.conf.handleAccessToken(accessToken);
@@ -72,7 +72,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       return this.conf.storagePrefix;
     }
 
-    const client = this.client();
+    const client = this.client;
     return client.options.project ? `graphand-auth:${client.options.project}` : "graphand-auth";
   }
 
@@ -97,12 +97,16 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     return input;
   };
 
-  async login<P extends AuthProviders = AuthProviders.LOCAL, M extends AuthMethods = AuthMethods.WINDOW>(
+  async login<
+    A extends typeof Account = InferClientModel<(typeof this)["client"], "accounts">,
+    P extends AuthProviders = AuthProviders.LOCAL,
+    M extends AuthMethods = AuthMethods.WINDOW,
+  >(
     providerOrData: LoginData<P, M> | P,
     methodOrData?: Omit<LoginData<P, M>, "provider"> | M,
     _data?: Omit<LoginData<P, M>, "provider" | "method">,
     _query?: Record<string, string>,
-  ): Promise<ParsedAuthResult | undefined> {
+  ): Promise<ParsedAuthResult<A> | undefined> {
     let data: LoginData<P, M>;
 
     if (_data && typeof _data === "object") {
@@ -137,20 +141,24 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       options.redirect ??= new URL(await this.conf.getRedirectUrl()).toString();
     }
 
-    const res = await this.client().execute(controllerLogin, { data });
+    const res = await this.client.execute(controllerLogin, { data });
 
     const json = await res.json();
 
     return this.handleAuthResult(json.data, data.method, data.options);
   }
 
-  async register<P extends AuthProviders = AuthProviders.LOCAL, M extends AuthMethods = AuthMethods.WINDOW>(
-    providerOrData: RegisterData<typeof Account, P, M> | P,
-    methodOrData?: Omit<RegisterData<typeof Account, P, M>, "provider"> | M,
-    _data?: Omit<RegisterData<typeof Account, P, M>, "provider" | "method">,
+  async register<
+    A extends typeof Account = InferClientModel<(typeof this)["client"], "accounts">,
+    P extends AuthProviders = AuthProviders.LOCAL,
+    M extends AuthMethods = AuthMethods.WINDOW,
+  >(
+    providerOrData: RegisterData<A, P, M> | P,
+    methodOrData?: Omit<RegisterData<A, P, M>, "provider"> | M,
+    _data?: Omit<RegisterData<A, P, M>, "provider" | "method">,
     query?: NonNullable<InferControllerInput<typeof controllerRegister>>["query"],
-  ): Promise<ParsedAuthResult | undefined> {
-    let data: RegisterData<typeof Account, P, M>;
+  ): Promise<ParsedAuthResult<A> | undefined> {
+    let data: RegisterData<A, P, M>;
 
     if (_data && typeof _data === "object") {
       data = _data;
@@ -184,7 +192,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       options.redirect ??= new URL(await this.conf.getRedirectUrl()).toString();
     }
 
-    const res = await this.client().execute(controllerRegister, { data, query });
+    const res = await this.client.execute(controllerRegister, { data, query });
 
     const json = await res.json();
 
@@ -206,7 +214,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       throw new Error("No access token available");
     }
 
-    const res = await this.client().execute(controllerRefreshToken, {
+    const res = await this.client.execute(controllerRefreshToken, {
       data: { accessToken, refreshToken },
     });
 
@@ -217,11 +225,10 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
     return json.data;
   }
 
-  async handleAuthResult<M extends AuthMethods>(
-    result: AuthResult,
-    method: M,
-    options?: AuthMethodOptions<M>,
-  ): Promise<ParsedAuthResult | undefined> {
+  async handleAuthResult<
+    A extends typeof Account = InferClientModel<(typeof this)["client"], "accounts">,
+    M extends AuthMethods = AuthMethods,
+  >(result: AuthResult, method: M, options?: AuthMethodOptions<M>): Promise<ParsedAuthResult<A> | undefined> {
     if ("url" in result) {
       if (!this.conf.handleCallback) {
         throw new Error(`handleCallback option must be defined to handle the callback url for method ${method}`);
@@ -244,8 +251,11 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
       await this.setTokens({ accessToken, refreshToken });
     }
 
+    const accountModel = this.client.model("accounts") as A;
+    const accountInstance = accountModel.hydrateAndCache(account as any);
+
     return {
-      account: this.client().model("accounts").hydrateAndCache(account),
+      account: accountInstance,
       accessToken,
       refreshToken,
     };
@@ -269,7 +279,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
   }
 
   async handleCode(code: string) {
-    const res = await this.client().execute(controllerCodeAuth, { query: { code } });
+    const res = await this.client.execute(controllerCodeAuth, { query: { code } });
 
     const json = await res.json();
 

@@ -10,6 +10,7 @@ import {
   ErrorCodes,
   controllerModelRead,
   InferModelDefInput,
+  modelDecorator,
 } from "@graphand/core";
 import ModuleAuth from "./ModuleAuth.js";
 import { AuthStorage } from "./types.js";
@@ -205,6 +206,45 @@ describe("ModuleAuth", () => {
       expect(customStorage.getItem).toHaveBeenCalledTimes(1);
       expect(customClient.options.accessToken).toEqual("test-access-token");
       customClient.destroy();
+    });
+
+    it("should be able to register with a custom account model", async () => {
+      @modelDecorator()
+      class CustomAccount extends Account {
+        foo() {
+          return "bar";
+        }
+      }
+      const g = new Client(
+        {
+          project: "test",
+          datamodels: {
+            accounts: {
+              properties: {
+                firstname: {
+                  type: "string",
+                },
+              },
+            },
+          },
+        },
+        [[ModuleAuth]],
+        [CustomAccount],
+      );
+
+      const email = faker.internet.email();
+      const password = faker.internet.password();
+
+      const res = await g.get("auth").register({
+        configuration: { email, password },
+        account: {
+          firstname: "test",
+        },
+      });
+
+      expect(res).toHaveProperty("account._id");
+      expect(res).toHaveProperty("accessToken");
+      expect(res).toHaveProperty("refreshToken");
     });
   });
 

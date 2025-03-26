@@ -36,8 +36,8 @@ export type AuthResult =
       url: string;
     };
 
-export type ParsedAuthResult = {
-  account: ModelInstance<typeof Account>;
+export type ParsedAuthResult<A extends typeof Account> = {
+  account: ModelInstance<A>;
   accessToken: string;
   refreshToken: string;
 };

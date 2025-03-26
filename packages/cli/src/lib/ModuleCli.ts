@@ -7,7 +7,7 @@ class ModuleCli extends Module {
   defaults = {};
 
   async [symbolModuleInit]() {
-    const client = this.client() as unknown as Awaited<ReturnType<typeof getClient>>;
+    const client = this.client as unknown as Awaited<ReturnType<typeof getClient>>;
 
     client.hook(
       "afterRequest",

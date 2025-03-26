@@ -339,9 +339,7 @@ describe("test types", () => {
               };
               property: {
                 type: PropertyTypes.RELATION;
-                options: {
-                  ref: "accounts";
-                };
+                ref: "accounts";
               };
             };
           };
@@ -390,6 +388,26 @@ describe("test types", () => {
     simulateTypeCheck<string | null | undefined>(i.property); // Check the property is a string
   });
 
+  // TODO: fix this
+  // it("should not infer type with undefined value if default is provided", () => {
+  //   const model = Model.getClass<
+  //     typeof Model & {
+  //       configuration: {
+  //         properties: {
+  //           property: {
+  //             type: PropertyTypes.STRING;
+  //             default: "test";
+  //           };
+  //         };
+  //       };
+  //     }
+  //   >("test");
+
+  //   const i = model.hydrate();
+
+  //   simulateTypeCheck<string | null>(i.property);
+  // });
+
   it("should ...", () => {
     const ModelFromSlug = Model.getClass("customModel");
 
@@ -436,6 +454,13 @@ describe("test types", () => {
 
     simulateTypeCheck<string | null | undefined>(i.get("property1", "json")); // Check the property is a string
     simulateTypeCheck<number | null | undefined>(i.get("property2", "json")); // Check the property is a string
+  });
+
+  it("should infer any type for any field on typeof Model", () => {
+    const i = modelDecorator()(Model).hydrate();
+
+    simulateTypeCheck<any>(i.foo);
+    simulateTypeCheck<any>(i.bar);
   });
 
   it("should ...", () => {
