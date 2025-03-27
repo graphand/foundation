@@ -112,6 +112,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
 
     // Trying to recycle the current socket
     if (!socket) {
+      const project = this.client.getProject();
       socket = io(url, {
         reconnection: true,
         reconnectionDelayMax: this.conf.connectTimeout,
@@ -119,7 +120,7 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
         transports: this.conf.transports,
         auth: {
           accessToken: this.client.options.accessToken,
-          project: this.client.options.project,
+          project,
         },
       });
 

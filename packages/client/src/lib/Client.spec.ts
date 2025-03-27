@@ -67,6 +67,30 @@ describe("Client", () => {
       expect(initMock).toHaveBeenCalled();
     });
 
+    it("should be able to create a client with url", async () => {
+      const project = new ObjectId().toString();
+      const endpoint = "api.graphand.test";
+      const url = `https://${project}.${endpoint}`;
+      const client = new Client({ url });
+      expect(client.getProject()).toBe(project);
+      expect(client.getEndpoint()).toBe(endpoint);
+      expect(client.getProtocol()).toBe("https:");
+      expect(client.getBaseUrl()).toBe(url);
+    });
+
+    it("should be able to create a client without url", async () => {
+      const project = new ObjectId().toString();
+      const endpoint = "api.graphand.test";
+      const client = new Client({
+        endpoint,
+        project,
+      });
+      expect(client.getProject()).toBe(project);
+      expect(client.getEndpoint()).toBe(endpoint);
+      expect(client.getProtocol()).toBe("https:");
+      expect(client.getBaseUrl()).toBe(`https://${project}.${endpoint}`);
+    });
+
     // Test 4: Module destruction
     it("should call symbolModuleDestroy during client destruction", async () => {
       const destroyMock = vi.fn();

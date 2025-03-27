@@ -25,6 +25,7 @@ import {
   GDXDatamodels,
   IdentityTypes,
   InferControllerInput,
+  isObjectId,
   JSONObject,
   Media,
   MediaTransformOptions,
@@ -205,24 +206,83 @@ export class Client<
     return Promise.all(this.#modulesInitPromises.values());
   }
 
-  getBaseUrl(scheme?: string, excludeEnvironment = false): string {
-    const { endpoint, project, ssl, environment } = this.options;
+  getProject() {
+    const { project, url } = this.options;
+
+    if (url) {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname;
+
+      const [project] = hostname.split(".");
+
+      if (isObjectId(project)) {
+        return project;
+      }
+    }
+
+    if (project) {
+      return project;
+    }
+
+    return null;
+  }
+
+  getEndpoint() {
+    const { endpoint, url } = this.options;
+
+    if (url) {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname;
+
+      const [project, ...endpoint] = hostname.split(".");
+
+      if (isObjectId(project)) {
+        return endpoint.join(".");
+      }
+
+      return hostname;
+    }
+
+    if (endpoint) {
+      return endpoint;
+    }
+
+    return null;
+  }
+
+  getProtocol() {
+    const { ssl, url } = this.options;
+
+    if (url) {
+      const urlObj = new URL(url);
+      return urlObj.protocol;
+    }
+
+    if (ssl !== undefined) {
+      return ssl ? "https:" : "http:";
+    }
+
+    return "http:";
+  }
+
+  getBaseUrl(protocol?: string, excludeEnvironment = false): string {
+    const project = this.getProject();
+    const endpoint = this.getEndpoint();
 
     if (!endpoint) {
       throw new Error("Endpoint is required in client options");
     }
 
-    // Determine scheme (protocol)
-    const protocol = scheme ?? (ssl ? "https" : "http");
+    protocol ??= this.getProtocol();
 
-    // Build base domain
     const domain = project ? `${project}.${endpoint}` : endpoint;
 
     // Add environment prefix if needed
+    const { environment } = this.options;
     const shouldIncludeEnv = environment && !excludeEnvironment;
     const finalDomain = shouldIncludeEnv ? `${environment}-${domain}` : domain;
 
-    return `${protocol}://${finalDomain}`;
+    return `${protocol}//${finalDomain}`;
   }
 
   buildUrl(controller: Controller, opts: { params?: Record<string, string>; query?: JSONObject }) {

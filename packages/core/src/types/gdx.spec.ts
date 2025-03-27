@@ -1,8 +1,9 @@
 import { Model } from "@/lib/model.js";
-import { InferGDXDatamodels, InferModelConfigurationFromDatamodel, InferModelDefInputWithoutKey } from "./gdx.js";
-import { InferModelDef, InferModelDefInput } from "./properties.js";
+import { InferGDXDatamodels } from "./gdx.js";
+import { InferModelDef, InferModelDefInput, InferModelDefInputWithoutKey } from "./properties.js";
 import { defineGDX } from "@/lib/utils.js";
 import { ObjectId } from "bson";
+import { InferModelConfigurationFromDatamodel } from "./helpers.js";
 
 describe("defineGDX", () => {
   it("should work with a simple gdx", () => {

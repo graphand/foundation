@@ -90,17 +90,25 @@ export type ClientModules<T extends ModuleConstructor[] = []> = {
 };
 
 // Define the ClientOptions type
-export type ClientOptions<D extends GDXDatamodels = {}> = { datamodels?: D } & {
-  project: string | null;
-  endpoint?: string;
-  ssl?: boolean;
-  maxRetries?: number;
-  environment?: string;
-  accessToken?: string;
-  headers?: Record<string, string>;
-  disableCache?: boolean | Array<string>;
-  disableStore?: boolean | Array<string>;
-};
+export type ClientOptions<D extends GDXDatamodels = {}> = { datamodels?: D } & (
+  | {
+      project: string | null;
+      url?: string;
+    }
+  | {
+      url: string;
+      project?: string | null;
+    }
+) & {
+    endpoint?: string;
+    ssl?: boolean;
+    maxRetries?: number;
+    environment?: string;
+    accessToken?: string;
+    headers?: Record<string, string>;
+    disableCache?: boolean | Array<string>;
+    disableStore?: boolean | Array<string>;
+  };
 
 export type SubjectObserver<T> = (_value: T, _previousValue?: T) => void;
 
