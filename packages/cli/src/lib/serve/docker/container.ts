@@ -1,4 +1,4 @@
-import { execSync, spawn } from "child_process";
+import { execSync } from "child_process";
 import chalk from "chalk";
 import os from "os";
 

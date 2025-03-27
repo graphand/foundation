@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.8
+
+### Patch Changes
+
+- add ROLE to IdentityTypes enum
+
 ## 1.5.7
 
 ### Patch Changes

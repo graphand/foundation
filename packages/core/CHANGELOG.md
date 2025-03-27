@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.8.13
+
+### Patch Changes
+
+- add ROLE to IdentityTypes enum
+
 ## 1.8.12
 
 ### Patch Changes
