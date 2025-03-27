@@ -18,6 +18,7 @@ import JobHandler from "./JobHandler.js";
 import Collector from "./Collector.js";
 import storage from "node-persist";
 import os from "os";
+import { GDXCliType } from "@/types.js";
 
 export const getGdxPath = async (config: Config): Promise<string | null> => {
   if (config.gdx && "path" in config.gdx) {
@@ -97,7 +98,7 @@ export const loadGdx = async (
         const importedConfig = await import(pathToFileURL(tempFilePath).href);
 
         if (importedConfig.default) {
-          json = importedConfig.default as JSONObject;
+          json = importedConfig.default as GDXCliType;
         }
       } finally {
         // Ensure temp file is deleted even if an error occurs
@@ -136,10 +137,6 @@ export const loadGdx = async (
     for (const [key, value] of Object.entries(_functions)) {
       functions[key] ??= { name: key, runtime: "deno" };
       const f = functions[key]!;
-      Object.assign(f, {
-        exposed: f.exposed ?? true,
-        runtime: f.runtime ?? "deno",
-      });
 
       const functionPath = path.join(process.cwd(), value);
       const checksum = await checksumDirectory(functionPath);
@@ -148,11 +145,10 @@ export const loadGdx = async (
         .get(key)
         .catch(() => null);
 
-      if (func) {
-        Object.assign(f, {
-          runtime: undefined,
-        });
-      }
+      Object.assign(f, {
+        exposed: f.exposed ?? func?.exposed ?? true,
+        runtime: f.runtime ?? (func ? undefined : "deno"),
+      });
 
       const bind = func ? func._checksum !== checksum : true;
 

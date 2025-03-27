@@ -9,18 +9,19 @@ import {
   TModelConfiguration,
 } from "@/index.js";
 
+type GDXFields = Partial<{
+  $dependency: boolean;
+  $force: boolean;
+}>;
+
 export type GDXEntryModelInput<T extends TModelConfiguration> =
-  | (InferModelDefInputWithoutKey<typeof Model & { configuration: T }, "json"> &
-      Partial<{
-        $dependency: boolean;
-        $force: boolean;
-      }>)
+  | (InferModelDefInputWithoutKey<typeof Model & { configuration: T }, "json"> & GDXFields)
   | "$delete"
   | "$ignore";
 
 export type GDXEntryModel<T extends TModelConfiguration> = T["single"] extends true
-  ? InferModelDefInput<typeof Model & { configuration: T }, "json">
-  : Record<string, InferModelDefInputWithoutKey<typeof Model & { configuration: T }, "json">>;
+  ? InferModelDefInput<typeof Model & { configuration: T }, "json"> & GDXFields
+  : Record<string, GDXEntryModelInput<T>>;
 
 export type GDXDatamodels = Record<string, InferModelDefInputWithoutKey<typeof DataModel, "json">>;
 
