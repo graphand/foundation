@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.9
+
+### Patch Changes
+
+- set runtime to undefined in deploy command and loadGdx utility for function updates
+
 ## 1.5.8
 
 ### Patch Changes

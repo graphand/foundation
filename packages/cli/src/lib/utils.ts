@@ -148,6 +148,12 @@ export const loadGdx = async (
         .get(key)
         .catch(() => null);
 
+      if (func) {
+        Object.assign(f, {
+          runtime: undefined,
+        });
+      }
+
       const bind = func ? func._checksum !== checksum : true;
 
       if (bind) {

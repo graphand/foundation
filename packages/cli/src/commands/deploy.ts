@@ -68,6 +68,10 @@ export const commandDeploy = new Command("deploy")
         if (func) {
           console.info(`Updating function ${functionName} ...`);
 
+          Object.assign(payload, {
+            runtime: undefined,
+          });
+
           await func.update({ $set: payload }, { formData });
 
           spinner.succeed(`Updated function ${functionName} successfully`);
