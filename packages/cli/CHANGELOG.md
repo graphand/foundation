@@ -1,5 +1,14 @@
 # @graphand/cli
 
+## 1.5.7
+
+### Patch Changes
+
+- fixes & improvements
+- Updated dependencies
+  - @graphand/client@1.6.6
+  - @graphand/client-module-auth@1.5.1
+
 ## 1.5.6
 
 ### Patch Changes
