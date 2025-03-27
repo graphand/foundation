@@ -94,8 +94,8 @@ class ModuleRealtime extends Module<ModuleRealtimeOptions> {
     }
 
     let socket = this.getSocket(false);
-    const scheme = this.client.options.ssl ? "wss" : "ws";
-    const url = this.client.getBaseUrl(scheme);
+    const protocol = this.client.getProtocol().replace("http", "ws");
+    const url = this.client.getBaseUrl(protocol);
 
     // Check the current socket uri
     // @ts-expect-error - uri exists on io
