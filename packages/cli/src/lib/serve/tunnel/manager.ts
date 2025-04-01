@@ -18,6 +18,17 @@ export interface TunnelState {
   mapping: Record<string, string>;
 }
 
+// Function to check if ngrok is installed
+export const checkNgrokInstallation = (): void => {
+  try {
+    execSync("ngrok --version", { stdio: "pipe" });
+  } catch (error) {
+    console.error(chalk.red("ngrok is not installed. Please install ngrok and try again."));
+    console.log(chalk.yellow("You can install ngrok with: npm install -g ngrok"));
+    process.exit(1);
+  }
+};
+
 export const setupTunnel = async (options: TunnelOptions): Promise<TunnelState> => {
   const { port, directory, client } = options;
   const tunnelState: TunnelState = {
@@ -110,14 +121,18 @@ export const setupTunnel = async (options: TunnelOptions): Promise<TunnelState> 
             if (client) {
               try {
                 console.log(chalk.cyan("Binding tunnel to functions..."));
-                await client.execute(controllerFunctionBindTunnel, {
+                const res: Response = await client.execute(controllerFunctionBindTunnel, {
                   query: { force: options.force },
                   data: {
                     tunnelUrl: publicUrl,
                     mapping: tunnelState.mapping,
                   },
                 });
-                console.log(chalk.green("Tunnel bound successfully."));
+
+                const json = await res.json();
+                const ids = json.data.ids || [];
+
+                console.log(chalk.green(`Tunnel bound successfully for ${ids.length} function(s): ${ids.join(", ")}`));
               } catch (error: any) {
                 console.error(chalk.red(`Error binding tunnel: ${error.message}`));
               }

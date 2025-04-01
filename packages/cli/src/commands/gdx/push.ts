@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { getClient, loadGdx, withSpinner } from "@/lib/utils.js";
-import { controllerGdxPush, JSONObject, ModelJSON } from "@graphand/core";
+import { controllerGdxPush, JSONObject } from "@graphand/core";
 import { Command } from "commander";
 import { confirm } from "@inquirer/prompts";
 
@@ -162,42 +162,10 @@ export const commandGdxPush = new Command("push")
       return;
     }
 
+    // This is not good as ids other than created can change
+    // Ex in datamodels hooks
     await withSpinner(async () => {
-      let confirmChecksum: string | undefined;
-
-      if (data?.$checksum) {
-        confirmChecksum = data.$checksum as unknown as string;
-
-        Object.keys(data).forEach(model => {
-          if (!data || !data[model]) {
-            return;
-          }
-
-          const { create } = data[model]!;
-
-          if (!create) {
-            return;
-          }
-
-          Object.keys(create).forEach(key => {
-            const created = create[key] as ModelJSON;
-            const createdId = created?._id;
-
-            if (!createdId) {
-              return;
-            }
-
-            // @ts-ignore
-            const obj = json[model][key];
-
-            if (obj) {
-              obj._id = createdId;
-            }
-          });
-        });
-      }
-
-      const res = await _push({ json, file }, confirmChecksum);
+      const res = await _push({ json, file }, data?.$checksum as unknown as string | undefined);
 
       if (options.verbose) {
         return res;

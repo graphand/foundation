@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.11
+
+### Patch Changes
+
+- improve serve & gpx push commands
+
 ## 1.5.10
 
 ### Patch Changes

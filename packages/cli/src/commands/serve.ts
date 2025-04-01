@@ -8,7 +8,7 @@ import { getClient } from "@/lib/utils.js";
 import { checkDockerInstallation, startContainer, stopContainer } from "../lib/serve/docker/container.js";
 import { areEnvVarsEqual, prepareEnvVars } from "../lib/serve/env/variables.js";
 import { startWatchingFunctionLogs } from "../lib/serve/logs/monitor.js";
-import { setupTunnel, TunnelState } from "../lib/serve/tunnel/manager.js";
+import { setupTunnel, TunnelState, checkNgrokInstallation } from "../lib/serve/tunnel/manager.js";
 import { setupCleanup } from "../lib/serve/cleanup/index.js";
 
 export const commandServe = new Command("serve")
@@ -305,6 +305,8 @@ export const commandServe = new Command("serve")
     // Start ngrok tunnel if enabled
     let tunnelState: TunnelState | undefined;
     if (tunnel) {
+      // Check if ngrok is installed before setting up tunnel
+      checkNgrokInstallation();
       tunnelState = await setupTunnel({ port, directory, client, force: forceTunnel, mappingFile: tunnelMapping });
     }
 
