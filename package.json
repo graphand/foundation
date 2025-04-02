@@ -20,6 +20,7 @@
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/eslint": "^8.56.5",
     "@types/node": "^20.14.8",
+    "deno": "^2.2.6",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.1",
     "prettier": "^3.2.5",
