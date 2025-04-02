@@ -12,6 +12,7 @@ import {
 type GDXFields = Partial<{
   $dependency: boolean;
   $force: boolean;
+  $patch: boolean;
 }>;
 
 export type GDXEntryModelInput<T extends TModelConfiguration> =

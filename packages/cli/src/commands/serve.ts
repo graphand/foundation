@@ -130,7 +130,7 @@ export const commandServe = new Command("serve")
     };
 
     // Function to start container with current options
-    const startContainerWithOptions = (): void => {
+    const startContainerWithOptions = async (): Promise<void> => {
       if (isRestarting) return;
       isRestarting = true;
 
@@ -155,6 +155,26 @@ export const commandServe = new Command("serve")
 
         // Build environment variables arguments for docker
         let envArgs = "";
+
+        if (!envVars.GRAPHAND_URL) {
+          const url = client.getBaseUrl();
+          envVars.GRAPHAND_URL = url;
+        }
+
+        if (!envVars.GRAPHAND_ADMIN_TOKEN) {
+          const me = await client.me();
+          const role = await me?.role;
+
+          if (!role?._admin) {
+            throw new Error("Unable to bind GRAPHAND_ADMIN_TOKEN env to container, you are not an admin.");
+          }
+
+          if (!client.options.accessToken) {
+            throw new Error("Unable to bind GRAPHAND_ADMIN_TOKEN env to container, you are not logged in.");
+          }
+
+          envVars.GRAPHAND_ADMIN_TOKEN = client.options.accessToken;
+        }
 
         // Add all loaded environment variables
         Object.entries(envVars).forEach(([key, value]) => {

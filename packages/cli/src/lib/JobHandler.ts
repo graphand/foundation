@@ -75,7 +75,7 @@ class JobHandler {
   async #fetch(): Promise<ModelInstance<typeof Job> | null> {
     const job = await this.client
       .model(Job)
-      .get(this.jobId)
+      .get(this.jobId, { disableCache: true })
       .catch(() => null);
 
     if (job) {
@@ -122,12 +122,12 @@ class JobHandler {
 
     let racePromise: Promise<void>;
 
-    const pollInterval = this.#params.pollInterval ?? 2000;
+    const pollInterval = this.#params.pollInterval ?? 1000;
     if (pollInterval) {
       const pollPromise = new Promise<void>(async (resolve, reject) => {
         try {
           while (job._status && ![JobStatus.COMPLETED, JobStatus.FAILED].includes(job._status as JobStatus)) {
-            job = (await this.#fetch()) as ModelInstance<typeof Job>;
+            await job.refreshData({ disableCache: true });
             await new Promise(resolve => setTimeout(resolve, pollInterval));
           }
           resolve();

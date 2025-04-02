@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.8.15
+
+### Patch Changes
+
+- minor improvements
+
 ## 1.8.14
 
 ### Patch Changes
