@@ -74,7 +74,7 @@ class ModuleAuth extends Module<ModuleAuthOptions> {
 
     const client = this.client;
     const project = client.getProject();
-    return project ? `graphand-auth:${project}` : "graphand-auth";
+    return project ? `graphand-auth_${project}` : "graphand-auth";
   }
 
   getStorageKey(key: string) {

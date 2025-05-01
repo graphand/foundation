@@ -118,10 +118,6 @@ export class Config {
       throw new Error("No valid configuration found in file");
     }
 
-    if (!this.#config.client?.project) {
-      throw new Error("No project found in configuration (client.project is undefined)");
-    }
-
     return this;
   }
 

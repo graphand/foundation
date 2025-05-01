@@ -571,7 +571,7 @@ describe("ModuleAuth", () => {
   describe("Storage Prefix and Key", () => {
     it("should generate correct storage prefix", () => {
       const _client = new Client({ project: "test-project" }, [[ModuleAuth]]);
-      expect(_client.get("auth").getStoragePrefix()).toBe("graphand-auth:test-project");
+      expect(_client.get("auth").getStoragePrefix()).toBe("graphand-auth_test-project");
       _client.destroy();
     });
 
@@ -583,7 +583,7 @@ describe("ModuleAuth", () => {
 
     it("should generate correct storage key", () => {
       const _client = new Client({ project: "test-project" }, [[ModuleAuth]]);
-      expect(_client.get("auth").getStorageKey("accessToken")).toBe("graphand-auth:test-project:accessToken");
+      expect(_client.get("auth").getStorageKey("accessToken")).toBe("graphand-auth_test-project:accessToken");
       _client.destroy();
     });
   });

@@ -13,10 +13,10 @@ export const commandUpdate = new Command("update")
     "Set properties with URL encoded key=value (property1=value1&property2=value2)",
     Collector.setter,
   )
-  .action(async (modelName, key, options) => {
+  .action(async (modelName: string, key: string | undefined, options) => {
     await withSpinner(async spinner => {
       const client = await getClient({ realtime: true });
-      const model = client.model(String(modelName));
+      const model = client.model(modelName);
 
       console.info(`Initializing model ${model.configuration.slug} ...`);
 

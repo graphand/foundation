@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.8.16
+
+### Patch Changes
+
+- global improvements & add controllerDeploymentRestart
+
 ## 1.8.15
 
 ### Patch Changes

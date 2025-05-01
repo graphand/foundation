@@ -1,5 +1,13 @@
 # @graphand/client
 
+## 1.6.7
+
+### Patch Changes
+
+- global improvements & add controllerDeploymentRestart
+- Updated dependencies
+  - @graphand/core@1.8.16
+
 ## 1.6.6
 
 ### Patch Changes

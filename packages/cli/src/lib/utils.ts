@@ -9,7 +9,7 @@ import open from "open";
 import ModuleCli from "./ModuleCli.js";
 import ora, { Ora } from "ora";
 import Table from "cli-table3";
-import { AuthMethods, Function, isObjectId, JSONType, JSONObject, InferModelDefInput } from "@graphand/core";
+import { AuthMethods, Function, isObjectId, JSONType, JSONObject, InferModelDefInput, GDXType } from "@graphand/core";
 import LogProcessor from "./LogProcessor.js";
 import crypto from "crypto";
 import { pathToFileURL } from "url";
@@ -18,7 +18,6 @@ import JobHandler from "./JobHandler.js";
 import Collector from "./Collector.js";
 import storage from "node-persist";
 import os from "os";
-import { GDXCliType } from "@/types.js";
 
 export const getGdxPath = async (config: Config): Promise<string | null> => {
   if (config.gdx && "path" in config.gdx) {
@@ -57,18 +56,19 @@ export const loadGdx = async (
     ignoreProjectData?: boolean;
     client?: Client;
     models?: string[];
+    file?: string;
   } = {},
 ): Promise<{ json: JSONObject; file: Record<string, Promise<File>> | undefined }> => {
   let json: JSONObject | undefined;
 
   const config = await new Config().load();
 
-  if (config.gdx && "data" in config.gdx) {
+  if (!opts.file && config.gdx && "data" in config.gdx) {
     json = config.gdx.data as JSONObject;
   }
 
   if (!json) {
-    const gdxPath = await getGdxPath(config);
+    const gdxPath = opts.file ? path.join(process.cwd(), opts.file) : await getGdxPath(config);
     if (!gdxPath) {
       throw new Error("No gdx file found");
     }
@@ -98,7 +98,7 @@ export const loadGdx = async (
         const importedConfig = await import(pathToFileURL(tempFilePath).href);
 
         if (importedConfig.default) {
-          json = importedConfig.default as GDXCliType;
+          json = importedConfig.default as GDXType;
         }
       } finally {
         // Ensure temp file is deleted even if an error occurs
@@ -209,8 +209,9 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
   const configClient = (config.client || {}) as ClientOptions;
 
   // Initialize node-persist storage in user's home directory
+  const _tmp = new Client(configClient);
   await storage.init({
-    dir: path.join(os.homedir(), ".graphand", "cli", configClient.project || "head"),
+    dir: path.join(os.homedir(), ".graphand", "cli", _tmp.getBaseUrl() || "head"),
     stringify: JSON.stringify,
     parse: JSON.parse,
     encoding: "utf8",

@@ -1,5 +1,14 @@
 # @graphand/client-module-auth
 
+## 1.5.2
+
+### Patch Changes
+
+- global improvements & add controllerDeploymentRestart
+- Updated dependencies
+  - @graphand/client@1.6.7
+  - @graphand/core@1.8.16
+
 ## 1.5.1
 
 ### Patch Changes

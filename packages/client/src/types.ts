@@ -165,21 +165,32 @@ export interface TraverseOptions {
   transform?: TransformFunction;
 }
 
+export type WithConfiguration<M extends typeof Model, Configuration> = M & {
+  configuration: Configuration;
+};
+
 /**
  * Infers the model type returned by Client.getModel based on the input parameter
  */
 export type InferClientModel<C extends Client<any, any, any>, Input> =
   C extends Client<infer D extends GDXDatamodels, any, infer M>
     ? Input extends typeof Model
-      ? Input &
-          (Input["configuration"]["slug"] extends keyof D ? { configuration: D[Input["configuration"]["slug"]] } : {})
+      ? Input["configuration"]["slug"] extends keyof D
+        ? WithConfiguration<Input, D[Input["configuration"]["slug"]]>
+        : Input
       : Input extends string
         ? Input extends Extract<M[number]["configuration"]["slug"], string>
-          ? Extract<M[number], { configuration: { slug: Input } }> &
-              (Input extends keyof D ? { configuration: D[Input] } : {})
+          ? Input extends keyof D
+            ? WithConfiguration<Extract<M[number], { configuration: { slug: Input } }>, D[Input]>
+            : Extract<M[number], { configuration: { slug: Input } }>
           : Input extends keyof D | keyof Models
-            ? (Input extends keyof Models ? Models[Input & keyof Models] : typeof Model) &
-                (Input extends keyof D ? { configuration: D[Input] } : {})
+            ? Input extends keyof Models
+              ? Input extends keyof D
+                ? WithConfiguration<Models[Input & keyof Models], D[Input]>
+                : Models[Input & keyof Models]
+              : Input extends keyof D
+                ? WithConfiguration<typeof Model, D[Input]>
+                : typeof Model
             : typeof Model
         : never
     : never;

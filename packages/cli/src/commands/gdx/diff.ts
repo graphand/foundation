@@ -2,13 +2,11 @@ import chalk from "chalk";
 import { getClient, loadGdx, withSpinner } from "@/lib/utils.js";
 import { controllerGdxPush, JSONObject } from "@graphand/core";
 import { Command } from "commander";
-import { confirm } from "@inquirer/prompts";
 
 type GDXData = Record<string, { create: JSONObject; update: JSONObject; delete: JSONObject }>;
 
 type GdxPushOptions = Partial<{
   clean: boolean;
-  force: boolean;
   skipRealtimeUpload: boolean;
   ignoreProjectData: boolean;
   verbose: boolean;
@@ -16,10 +14,9 @@ type GdxPushOptions = Partial<{
   file: string;
 }>;
 
-export const commandGdxPush = new Command("push")
-  .description("gdx push")
+export const commandGdxDiff = new Command("diff")
+  .description("gdx diff")
   .option("--clean", "Clean")
-  .option("--force", "Force")
   .option("-m --models <models>", "List of models to push separated by comma")
   .option("--skip-realtime-upload", "Skip realtime upload")
   .option("--ignore-project-data", "Ignore project data. All data on project-scope models will be ignored")
@@ -57,10 +54,7 @@ export const commandGdxPush = new Command("push")
       return lines;
     };
 
-    const _push = async (
-      input: { json: JSONObject; file?: Record<string, Promise<File>> },
-      confirmChecksum?: string,
-    ) => {
+    const _push = async (input: { json: JSONObject; file?: Record<string, Promise<File>> }) => {
       let uploadId: string | undefined;
       let uploadResolve: (typeof Promise<void>)["resolve"] | undefined;
       let body: RequestInit["body"];
@@ -102,9 +96,7 @@ export const commandGdxPush = new Command("push")
 
       const res = await client.execute(controllerGdxPush, {
         query: {
-          force: options.force,
           clean: options.clean,
-          confirmChecksum,
         },
         init: {
           body,
@@ -142,7 +134,7 @@ export const commandGdxPush = new Command("push")
       return;
     }
 
-    const lines = _getLines(data, options.force);
+    const lines = _getLines(data);
 
     if (!lines.length) {
       console.log(chalk.gray("Already up to date"));
@@ -155,31 +147,4 @@ export const commandGdxPush = new Command("push")
     }
 
     lines.forEach(line => console.log(chalk.green(line)));
-
-    if (options.force || !lines.length || !data.$checksum) {
-      return;
-    }
-
-    const _confirm = await confirm({
-      message: "Do you want to confirm the changes ?",
-      default: false,
-    });
-
-    if (!_confirm) {
-      return;
-    }
-
-    // This is not good as ids other than created can change
-    // Ex in datamodels hooks
-    await withSpinner(async () => {
-      const res = await _push({ json, file }, data?.$checksum as unknown as string | undefined);
-
-      if (options.verbose) {
-        return res;
-      }
-
-      const lines = _getLines(res, true);
-
-      lines.forEach(line => console.log(chalk.green(line)));
-    });
   });

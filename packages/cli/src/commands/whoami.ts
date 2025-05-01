@@ -13,8 +13,7 @@ export const commandWhoami = new Command("whoami")
       const account = await client.me();
 
       if (!account) {
-        const environment = client.options.environment;
-        throw new Error(`Account not found in ${environment} environment. Use \`graphand login\``);
+        throw new Error(`Account not found. Use \`graphand login\``);
       }
 
       spinner.succeed("Fetched current account successfully");

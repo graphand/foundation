@@ -1306,12 +1306,7 @@ export const validateDatamodel = (data: ModelJSON<typeof DataModel>, adapter?: A
       throw new Error(`keyProperty must be a text property`);
     }
 
-    if (
-      typeof keyPropertyProperty?.options === "object" &&
-      keyPropertyProperty.options &&
-      "default" in keyPropertyProperty.options &&
-      keyPropertyProperty.options.default !== undefined
-    ) {
+    if (keyPropertyProperty.default !== undefined) {
       throw new Error(`keyProperty must not have a default value`);
     }
   }
@@ -1370,4 +1365,9 @@ export const defineModelConf = <const C extends TModelConfiguration>(configurati
 
 export const defineDatamodels = <const D extends GDXDatamodels>(datamodels: D) => datamodels;
 
-export const defineGDX = <const D extends GDXDatamodels = GDXDatamodels>(gdx: GDXType<D> | GDXTypeModels) => gdx;
+export const defineGDX = <
+  const D extends GDXDatamodels = GDXDatamodels,
+  const G extends GDXType<D> | GDXTypeModels = GDXType<D> | GDXTypeModels,
+>(
+  gdx: G,
+) => gdx;

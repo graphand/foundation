@@ -1,6 +1,6 @@
 {
   "name": "@graphand/core",
-  "version": "1.8.15",
+  "version": "1.8.16",
   "private": false,
   "type": "module",
   "exports": {
