@@ -211,7 +211,7 @@ export const getClient = async ({ realtime }: { realtime?: boolean } = {}): Prom
   // Initialize node-persist storage in user's home directory
   const _tmp = new Client(configClient);
   await storage.init({
-    dir: path.join(os.homedir(), ".graphand", "cli", _tmp.getBaseUrl() || "head"),
+    dir: path.join(os.homedir(), ".graphand", "cli", _tmp.getProject() || "head"),
     stringify: JSON.stringify,
     parse: JSON.parse,
     encoding: "utf8",

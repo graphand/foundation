@@ -1,5 +1,11 @@
 # @graphand/core
 
+## 1.8.17
+
+### Patch Changes
+
+- remove MIGRATE_PROJECT job type
+
 ## 1.8.16
 
 ### Patch Changes

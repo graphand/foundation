@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.14
+
+### Patch Changes
+
+- remove MIGRATE_PROJECT job type
+
 ## 1.5.13
 
 ### Patch Changes

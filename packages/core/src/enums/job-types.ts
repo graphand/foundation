@@ -10,7 +10,6 @@ export enum JobTypes {
   INIT_PROJECT = "initProject",
   UPGRADE_PROJECT = "upgradeProject",
   RESTART_PROJECT = "restartProject",
-  MIGRATE_PROJECT = "migrateProject",
   REMOVE_PROJECT = "removeProject",
   REMOVE_FUNCTION = "removeFunction",
   REMOVE_ENVIRONMENT = "removeEnvironment",
