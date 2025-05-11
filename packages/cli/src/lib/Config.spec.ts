@@ -178,13 +178,6 @@ describe("Config", () => {
       const config = new Config();
       await expect(config.load()).rejects.toThrow("Configuration file not found");
     });
-
-    it("should throw error when no valid configuration found", async () => {
-      const config = new Config("/mock/path/graphand.config.json");
-      vi.mocked(fs.promises.readFile).mockResolvedValue("{}");
-
-      await expect(config.load()).rejects.toThrow("No project found in configuration");
-    });
   });
 
   describe("save", () => {

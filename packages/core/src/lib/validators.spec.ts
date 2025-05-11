@@ -543,9 +543,7 @@ describe("test validators", () => {
         properties: {
           title: {
             type: PropertyTypes.STRING,
-            options: {
-              default: "default",
-            },
+            default: "default",
           },
         },
       });
@@ -638,6 +636,17 @@ describe("test validators", () => {
           },
         }),
       ).resolves.toBeTruthy();
+
+      await expect(
+        DataModel_.create({
+          slug: faker.random.alphaNumeric(10),
+          properties: {
+            valid0: {
+              type: PropertyTypes.STRING,
+            },
+          },
+        }),
+      ).resolves.toBeTruthy();
     });
 
     it("datamodel with invalid property name should throw error", async () => {
@@ -679,6 +688,28 @@ describe("test validators", () => {
           slug: faker.random.alphaNumeric(10),
           properties: {
             _invalidName: {
+              type: PropertyTypes.STRING,
+            },
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      await expect(
+        DataModel_.create({
+          slug: faker.random.alphaNumeric(10),
+          properties: {
+            0: {
+              type: PropertyTypes.STRING,
+            },
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      await expect(
+        DataModel_.create({
+          slug: faker.random.alphaNumeric(10),
+          properties: {
+            1: {
               type: PropertyTypes.STRING,
             },
           },

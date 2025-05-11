@@ -126,6 +126,10 @@ export class PropertyObject extends Property<PropertyTypes.OBJECT> {
     const conditionalKeys = this._getConditionalKeys(from, input.nextData);
 
     const _get = (target: any, prop: string) => {
+      if (typeof prop === "symbol") {
+        return target[prop];
+      }
+
       let targetProperty = propertiesMap.get(prop);
       let value = target[prop];
 

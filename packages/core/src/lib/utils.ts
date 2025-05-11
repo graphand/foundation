@@ -124,7 +124,13 @@ export const getPropertiesPathsFromPath = (
   }
 
   for (let i = 1; i < paths.length; i++) {
-    const key = paths[i] as string;
+    let key = paths[i] as string;
+
+    // if the key is a number, we need to add square brackets to it
+    if (!Number.isNaN(Number(key))) {
+      key = `[${key}]`;
+    }
+
     const prevProperty = result[result.length - 1]?.property;
     const pathStr = result.map(item => item?.key).join(".");
 
@@ -1297,6 +1303,8 @@ export const validateDatamodel = (data: ModelJSON<typeof DataModel>, adapter?: A
 
   if (keyProperty) {
     const keyPropertyProperty = properties?.[keyProperty];
+
+    console.log(keyPropertyProperty);
 
     if (!keyPropertyProperty) {
       throw new Error(`keyProperty not found in properties`);
