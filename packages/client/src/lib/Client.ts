@@ -80,6 +80,9 @@ export class Client<
       throw new Error("Duplicate module names are not allowed");
     }
 
+    // This will throw an error if the url is invalid
+    this.getBaseUrl();
+
     this.#hooks = new Set();
     this.#modules = new Map();
 
@@ -209,45 +212,49 @@ export class Client<
   getProject() {
     const { project, url } = this.options;
 
+    let urlProject: string | undefined;
+
     if (url) {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname;
 
-      const [project] = hostname.split(".");
+      const segments = hostname.split(".");
 
-      if (isObjectId(project)) {
-        return project;
+      if (isObjectId(segments[1])) {
+        urlProject = segments[1];
+      } else if (isObjectId(segments[0])) {
+        urlProject = segments[0];
       }
     }
 
-    if (project) {
-      return project;
+    if (project && urlProject && project !== urlProject) {
+      throw new Error(`Project ${project} does not match project in url ${url}`);
     }
 
-    return null;
+    return urlProject ?? project;
   }
 
   getEndpoint() {
     const { endpoint, url } = this.options;
 
+    let urlEndpoint: string | undefined;
+
     if (url) {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname;
 
-      const [project, ...endpoint] = hostname.split(".");
+      const segments = hostname.split(".");
 
-      if (isObjectId(project)) {
-        return endpoint.join(".");
+      if (isObjectId(segments[1])) {
+        urlEndpoint = segments.slice(2).join(".");
       }
 
-      return hostname;
+      if (isObjectId(segments[0])) {
+        urlEndpoint = segments.slice(1).join(".");
+      }
     }
 
-    if (endpoint) {
-      return endpoint;
-    }
-
-    return null;
+    return urlEndpoint ?? endpoint;
   }
 
   getProtocol() {
@@ -265,6 +272,29 @@ export class Client<
     return "http:";
   }
 
+  getEnvironment() {
+    const { environment, url } = this.options;
+
+    let urlEnvironment: string | undefined;
+
+    if (url) {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname;
+
+      const segments = hostname.split(".");
+
+      if (isObjectId(segments[1])) {
+        urlEnvironment = segments[0];
+      }
+    }
+
+    if (environment && urlEnvironment && urlEnvironment !== environment) {
+      throw new Error(`Environment ${environment} does not match environment in url`);
+    }
+
+    return urlEnvironment ?? environment;
+  }
+
   getBaseUrl(protocol?: string, excludeEnvironment = false): string {
     const project = this.getProject();
     const endpoint = this.getEndpoint();
@@ -278,9 +308,9 @@ export class Client<
     const domain = project ? `${project}.${endpoint}` : endpoint;
 
     // Add environment prefix if needed
-    const { environment } = this.options;
+    const environment = this.getEnvironment();
     const shouldIncludeEnv = environment && !excludeEnvironment;
-    const finalDomain = shouldIncludeEnv ? `${environment}-${domain}` : domain;
+    const finalDomain = shouldIncludeEnv ? `${environment}.${domain}` : domain;
 
     return `${protocol}//${finalDomain}`;
   }
@@ -497,8 +527,9 @@ export class Client<
       Object.assign(init.headers, { Authorization: `Bearer ${this.options.accessToken}` });
     }
 
-    if (this.options.environment && (!init.headers || !("Content-Environment" in init.headers))) {
-      Object.assign(init.headers, { "Content-Environment": this.options.environment });
+    const environment = this.getEnvironment();
+    if (environment && (!init.headers || !("Content-Environment" in init.headers))) {
+      Object.assign(init.headers, { "Content-Environment": environment });
     }
 
     const _isFormData = init.body instanceof FormData || opts?.ctx?.formData;

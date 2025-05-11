@@ -78,6 +78,40 @@ describe("Client", () => {
       expect(client.getBaseUrl()).toBe(url);
     });
 
+    it("should be able to set environment from url", async () => {
+      const project = new ObjectId().toString();
+      const endpoint = "api.graphand.test";
+      const url = `https://develop.${project}.${endpoint}`;
+      const client = new Client({ url });
+      expect(client.getProject()).toBe(project);
+      expect(client.getEndpoint()).toBe(endpoint);
+      expect(client.getProtocol()).toBe("https:");
+      expect(client.getBaseUrl()).toBe(url);
+    });
+
+    it("should be able to create a client with url and environment in options", async () => {
+      const project = new ObjectId().toString();
+      const endpoint = "api.graphand.test";
+      const url = `https://${project}.${endpoint}`;
+      const client = new Client({ url, environment: "develop" });
+      expect(client.getEnvironment()).toBe("develop");
+      expect(client.getBaseUrl()).toBe(`https://develop.${project}.${endpoint}`);
+    });
+
+    it("should throw an error if environment does not match url", async () => {
+      const project = new ObjectId().toString();
+      const endpoint = "api.graphand.test";
+      const url = `https://develop.${project}.${endpoint}`;
+      expect(() => new Client({ url, environment: "production" })).toThrow("Environment production does not match");
+    });
+
+    it("should throw an error if project does not match url", async () => {
+      const project = new ObjectId().toString();
+      const endpoint = "api.graphand.test";
+      const url = `https://develop.${project}.${endpoint}`;
+      expect(() => new Client({ url, project: "wrong" })).toThrow("Project wrong does not match");
+    });
+
     it("should be able to create a client without url", async () => {
       const project = new ObjectId().toString();
       const endpoint = "api.graphand.test";
