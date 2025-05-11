@@ -1304,8 +1304,6 @@ export const validateDatamodel = (data: ModelJSON<typeof DataModel>, adapter?: A
   if (keyProperty) {
     const keyPropertyProperty = properties?.[keyProperty];
 
-    console.log(keyPropertyProperty);
-
     if (!keyPropertyProperty) {
       throw new Error(`keyProperty not found in properties`);
     }

@@ -68,7 +68,7 @@ describe("test properties", () => {
       expect(typeof i.title).toBe("string");
     });
 
-    it("should not be able to save an _id in a TEXT property", async () => {
+    it("should not be able to save an _id in a string property", async () => {
       const model = mockModel({
         slug: faker.random.alphaNumeric(10),
         properties: {

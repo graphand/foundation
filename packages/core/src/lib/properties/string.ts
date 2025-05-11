@@ -18,7 +18,9 @@ export class PropertyString extends Property<PropertyTypes.STRING> {
       }
 
       if (isObjectId(v)) {
-        throw new Error(`value is an ObjectId. string properties do not accept ObjectId values`);
+        throw new Error(
+          `value is an ObjectId. string properties do not accept ObjectId values. Use a relation field instead.`,
+        );
       }
     });
 
