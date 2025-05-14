@@ -1,5 +1,11 @@
 # @graphand/cli
 
+## 1.5.16
+
+### Patch Changes
+
+- refactor: remove subscription controllers and add usage controller
+
 ## 1.5.15
 
 ### Patch Changes

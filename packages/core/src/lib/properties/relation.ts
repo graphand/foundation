@@ -23,23 +23,15 @@ export class PropertyRelation extends Property<PropertyTypes.RELATION> {
     return true;
   };
 
-  _sString = ({ value, format }: PropertySerializerInput) => {
-    if (!value) {
-      return null;
-    }
-
+  _sString = ({ value }: PropertySerializerInput) => {
     let id: string;
 
-    if (typeof value === "object" && "_id" in value) {
+    if (typeof value === "object" && value && "_id" in value) {
       id = String(value._id);
     } else if (value instanceof PromiseModel && typeof value.query === "string") {
       id = value.query;
     } else {
       id = String(value);
-    }
-
-    if (!isObjectId(id) && !["validation"].includes(format)) {
-      return undefined;
     }
 
     return id;

@@ -1,5 +1,17 @@
 # @graphand/core
 
+## 1.8.20
+
+### Patch Changes
+
+- refactor: remove subscription controllers and add usage controller
+
+## 1.8.19
+
+### Patch Changes
+
+- minor fix
+
 ## 1.8.18
 
 ### Patch Changes

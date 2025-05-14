@@ -192,25 +192,8 @@ export const controllerMediaPrivate: Controller<{
   secured: true,
 };
 
-export const controllerSubscriptionsUpgrade: Controller<{
-  data: {
-    plan?: string;
-    priceId?: string;
-  };
-}> = {
-  path: "/subscriptions/upgrade",
-  methods: ["post"],
-  secured: true,
-};
-
-export const controllerSubscriptionsCurrent: Controller = {
-  path: "/subscriptions/current",
-  methods: ["get"],
-  secured: true,
-};
-
-export const controllerSubscriptionsPortal: Controller = {
-  path: "/subscriptions/portal",
+export const controllerUsage: Controller = {
+  path: "/usage",
   methods: ["get"],
   secured: true,
 };

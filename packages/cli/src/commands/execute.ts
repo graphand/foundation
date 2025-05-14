@@ -13,13 +13,11 @@ import {
   controllerModelQuery,
   controllerModelRead,
   controllerModelUpdate,
-  controllerSubscriptionsCurrent,
   controllerJobLogs,
   controllerFunctionLogs,
   controllerGenTokenIssuerToken,
   controllerSnapshotsRestore,
-  controllerSubscriptionsPortal,
-  controllerSubscriptionsUpgrade,
+  controllerUsage,
 } from "@graphand/core";
 
 const controllers = {
@@ -32,13 +30,11 @@ const controllers = {
   currentAccount: controllerCurrentAccount,
   entry: controllerEntry,
   functionRun: controllerFunctionRun,
-  subscriptionsCurrent: controllerSubscriptionsCurrent,
-  subscriptionsPortal: controllerSubscriptionsPortal,
-  subscriptionsUpgrade: controllerSubscriptionsUpgrade,
   jobLogs: controllerJobLogs,
   functionLogs: controllerFunctionLogs,
   genTokenIssuerToken: controllerGenTokenIssuerToken,
   snapshotRestore: controllerSnapshotsRestore,
+  usage: controllerUsage,
 };
 
 export const commandExecute = new Command("execute")
