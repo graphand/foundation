@@ -44,7 +44,6 @@
     "packages/client-modules/realtime",
     "packages/core",
     "packages/server",
-    "packages/server-modules/example",
-    "examples/react-sample"
+    "packages/server-modules/example"
   ]
 }
