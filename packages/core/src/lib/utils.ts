@@ -1371,9 +1371,11 @@ export const defineModelConf = <const C extends TModelConfiguration>(configurati
 
 export const defineDatamodels = <const D extends GDXDatamodels>(datamodels: D) => datamodels;
 
-export const defineGDX = <
-  const D extends GDXDatamodels = GDXDatamodels,
-  const G extends GDXType<D> | GDXTypeModels = GDXType<D> | GDXTypeModels,
->(
-  gdx: G,
-) => gdx;
+// export const defineGDX = <
+//   const D extends GDXDatamodels = GDXDatamodels,
+//   const G extends GDXType<D> | GDXTypeModels = GDXType<D> | GDXTypeModels,
+// >(
+//   gdx: G,
+// ) => gdx;
+
+export const defineGDX = <const D extends GDXDatamodels = GDXDatamodels>(gdx: GDXType<D> | GDXTypeModels) => gdx;

@@ -40,9 +40,11 @@
     "configs/typescript-config",
     "packages/cli",
     "packages/client",
+    "packages/client-modules/auth",
+    "packages/client-modules/realtime",
     "packages/core",
-    "packages/module-auth",
-    "packages/module-realtime",
+    "packages/server",
+    "packages/server-modules/example",
     "examples/react-sample"
   ]
 }
