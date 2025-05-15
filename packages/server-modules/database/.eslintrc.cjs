@@ -7,12 +7,4 @@ module.exports = {
     project: "./tsconfig.lint.json",
     tsconfigRootDir: __dirname,
   },
-  overrides: [
-    {
-      files: [".eslintrc.cjs"],
-      parserOptions: {
-        project: null,
-      },
-    },
-  ],
 };

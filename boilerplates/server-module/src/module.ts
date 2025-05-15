@@ -1,15 +1,13 @@
 import { Module, symbolModuleInit, symbolModuleDestroy } from "@graphand/server";
 import { RouteEntry } from "./routes/entry.js";
-import { z } from "zod";
 
-const ModuleExampleSchema = z.object({
-  foo: z.string().optional(),
-  bar: z.number().optional(),
-});
+type ModuleExampleOptions = {
+  foo?: string;
+  bar?: number;
+};
 
-export class ModuleExample extends Module<typeof ModuleExampleSchema.shape> {
+export class ModuleExample extends Module<ModuleExampleOptions> {
   static moduleName = "example" as const;
-  schema = ModuleExampleSchema;
   defaults = {};
 
   async [symbolModuleInit]() {

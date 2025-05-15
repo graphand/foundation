@@ -1,4 +1,6 @@
 import { ModuleConstructor, ModuleWithConfig } from "@/types.js";
+import { Model } from "@graphand/core";
+import { ServerAdapter } from "./adapter.js";
 
 export const decodeServerModule = <T extends ModuleConstructor>(
   module: ModuleWithConfig<T>,
@@ -19,4 +21,9 @@ export const decodeServerModule = <T extends ModuleConstructor>(
   }
 
   return { moduleClass, conf: conf || {} };
+};
+
+export const getRequestHelper = (model: typeof Model) => {
+  const adapter = model.getAdapter() as ServerAdapter;
+  return adapter.getRequestHelper();
 };

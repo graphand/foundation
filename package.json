@@ -44,6 +44,11 @@
     "packages/client-modules/realtime",
     "packages/core",
     "packages/server",
-    "packages/server-modules/example"
-  ]
+    "packages/server-modules/example",
+    "packages/server-modules/database"
+  ],
+  "dependencies": {
+    "mongodb": "^6.16.0",
+    "zod": "^3.24.4"
+  }
 }

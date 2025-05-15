@@ -15,12 +15,13 @@
   "scripts": {
     "lint": "npm run eslint",
     "eslint": "eslint . --max-warnings 0",
-    "dev": "bun --watch src/entries/run.ts",
-    "start": "bun src/entries/run.ts"
+    "dev": "bun --watch --env-file=.env src/entries/run.ts",
+    "start": "bun --env-file=.env src/entries/run.ts"
   },
   "dependencies": {
     "@graphand/core": "*",
-    "@graphand/server-module-example": "*"
+    "@graphand/server-module-example": "*",
+    "@graphand/server-module-database": "*"
   },
   "devDependencies": {
     "@types/bun": "latest",

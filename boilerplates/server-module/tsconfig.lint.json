@@ -3,11 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "dist",
-    "rootDir": ".",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "types": ["bun-types"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

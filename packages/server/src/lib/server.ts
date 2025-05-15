@@ -3,18 +3,26 @@ import { Module, symbolModuleDestroy, symbolModuleInit } from "@/lib/module.js";
 import { decodeServerModule } from "@/lib/utils.js";
 import { Route } from "./route.js";
 import { RequestHelper } from "./request-helper.js";
+
 const DEFAULT_OPTIONS: Partial<ServerOptions> = {
   port: 3000,
 };
 
 export class Server<T extends ModuleConstructor[] = []> {
+  #appName: string;
   #options: ServerOptions;
   #serverModules: ServerModules<T>;
   #modules: Map<string, Module>;
   #modulesInitPromises: Map<string, Promise<void> | void> | undefined;
   #routes = new Set<Route>();
 
-  constructor(options: ServerOptions = {}, modules: ServerModules<T> = [] as ServerModules<T>) {
+  constructor(options: ServerOptions, modules: ServerModules<T> = [] as ServerModules<T>) {
+    if (!options?.appName) {
+      throw new Error("appName is required");
+    }
+
+    this.#appName = options.appName;
+
     this.#options = { ...DEFAULT_OPTIONS, ...options };
     this.#serverModules = modules;
 
@@ -43,6 +51,10 @@ export class Server<T extends ModuleConstructor[] = []> {
     this.init().catch(() => null);
   }
 
+  get appName() {
+    return this.#appName;
+  }
+
   get options() {
     return this.#options;
   }
@@ -59,6 +71,7 @@ export class Server<T extends ModuleConstructor[] = []> {
     }
 
     const module = new moduleClass(conf, this as unknown as Server);
+    module.parse();
     this.#modules.set(moduleClass.moduleName, module);
 
     // Waiting for the client to have finished registering all modules and dependencies bezfore initializing them
@@ -70,6 +83,18 @@ export class Server<T extends ModuleConstructor[] = []> {
       }
 
       this.#modulesInitPromises.set(moduleClass.moduleName, module[symbolModuleInit]());
+    }
+
+    return this as unknown as Server<[...T, U]>;
+  }
+
+  checkModule<U extends ModuleConstructor>(module: U): Server<[...T, U]> {
+    if (!module.moduleName) {
+      throw new Error("Module name is required");
+    }
+
+    if (!this.#modules.has(module.moduleName)) {
+      throw new Error(`Module ${module.moduleName} is not registered`);
     }
 
     return this as unknown as Server<[...T, U]>;
@@ -148,6 +173,23 @@ export class Server<T extends ModuleConstructor[] = []> {
     this.#routes.add(route);
   }
 
+  get<C extends Server<any>, N extends T[number]["moduleName"]>(
+    this: C,
+    _name: N,
+  ): InstanceType<Extract<T[number], { moduleName: N }>> & { server: C };
+  get<C extends Server<any>, M extends Module>(this: C, _name: string): M & { server: C };
+  get<C extends Server<any>, M extends ModuleConstructor>(this: C, _module: M): InstanceType<M> & { server: C };
+  get<C extends Server<any>>(this: C, module: string | typeof Module): Module & { server: C } {
+    const name = String(typeof module === "string" ? module : module.moduleName);
+    const res = this.#modules.get(name);
+
+    if (!res) {
+      throw new Error(`Module ${name} not found`);
+    }
+
+    return res as Module & { server: C };
+  }
+
   fetch(req: Request) {
     const firstRoute = this.#routes.values().next().value;
 
@@ -155,7 +197,7 @@ export class Server<T extends ModuleConstructor[] = []> {
       return new Response("No routes found", { status: 404 });
     }
 
-    const requestHelper = new RequestHelper(req);
+    const requestHelper = new RequestHelper(req, this);
 
     return firstRoute.fetch(requestHelper);
   }

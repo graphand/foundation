@@ -7,4 +7,13 @@ module.exports = {
     project: "./tsconfig.json",
     tsconfigRootDir: __dirname,
   },
+  overrides: [
+    {
+      // Define files to exclude from TypeScript linting
+      files: [".eslintrc.cjs"],
+      parserOptions: {
+        project: null, // Disable TypeScript linting for these files
+      },
+    },
+  ],
 };
