@@ -12,6 +12,7 @@ import { getRequestHelper, HTTPStatusCodes, ServerError } from "@graphand/server
 import { Filter, FindOptions, MongoError, ObjectId } from "mongodb";
 import { decodeSubquery } from "./subquery.js";
 import { decodeLeftquery } from "./leftquery.js";
+import { Redis, RedisOptions, Cluster, ClusterOptions } from "ioredis";
 
 export const isRetryableMongoError = (e: Error) => {
   if (!(e instanceof MongoError)) {
@@ -284,3 +285,48 @@ export const parseModelObject = async (obj: JSONObject, from: ModelInstance, pat
     }
   }
 };
+
+export function createRedisClient(options: { uri: string; password?: string; cluster?: boolean }): Redis | Cluster {
+  const { uri, password, cluster } = options;
+
+  if (cluster) {
+    const clusterOptions: ClusterOptions = {
+      enableAutoPipelining: true,
+      lazyConnect: true,
+    };
+
+    if (password) {
+      clusterOptions.redisOptions = { password };
+    }
+
+    return new Cluster([{ host: uri, port: 6379 }], clusterOptions);
+  } else {
+    const redisOptions: RedisOptions = {
+      lazyConnect: true,
+      enableAutoPipelining: true,
+    };
+
+    if (password) {
+      redisOptions.password = password;
+    }
+
+    // Parse URI to get host and port
+    let host = uri;
+    let port = 6379;
+
+    if (uri.includes(":")) {
+      const [hostPart, portPart] = uri.split(":");
+      if (hostPart) {
+        host = hostPart;
+      }
+      if (portPart) {
+        port = parseInt(portPart, 10) || 6379;
+      }
+    }
+
+    redisOptions.host = host;
+    redisOptions.port = port;
+
+    return new Redis(redisOptions);
+  }
+}

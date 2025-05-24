@@ -6,3 +6,4 @@ export { RequestHelper } from "./lib/request-helper.js";
 export { getRequestHelper } from "./lib/utils.js";
 export { ServerError } from "./lib/server-error.js";
 export { HTTPStatusCodes } from "./enums/http-status-codes.js";
+export { DataDoc } from "./lib/models/DataDoc.js";

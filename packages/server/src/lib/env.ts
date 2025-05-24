@@ -9,6 +9,13 @@ const envSchema = z.object({
   DATABASE_MONGO_URI: z.string().min(1),
   DATABASE_MONGO_USERNAME: z.string().optional(),
   DATABASE_MONGO_PASSWORD: z.string().optional(),
+  // Redis connection
+  DATABASE_REDIS_URI: z.string().optional().default("localhost:6379"),
+  DATABASE_REDIS_PASSWORD: z.string().optional(),
+  DATABASE_REDIS_CLUSTER: z
+    .string()
+    .optional()
+    .transform(val => val === "true"),
 });
 
 export const env = envSchema.parse(process.env);

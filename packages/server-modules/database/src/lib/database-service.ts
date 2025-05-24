@@ -1,25 +1,47 @@
 import { JSONObject, Model, ModelData, ModelInstance } from "@graphand/core";
 import { ModuleDatabase } from "../module.js";
 import { MongoService } from "./mongo-service.js";
+import { RedisService } from "./redis-service.js";
 import SessionManager from "./session-manager.js";
 import { ParsedQuery } from "@/types.js";
 import { ServerError } from "@graphand/server";
+import { SerializerService } from "./serializer-service.js";
 
 export class DatabaseService {
   #module: ModuleDatabase;
   #mongo: MongoService;
+  #redis: RedisService;
+  #serializer: SerializerService;
 
   constructor(module: ModuleDatabase) {
     this.#module = module;
     this.#mongo = new MongoService(module);
+    this.#redis = new RedisService(module);
+    this.#serializer = new SerializerService(module);
   }
 
   get mongo() {
     return this.#mongo;
   }
 
+  get redis() {
+    return this.#redis;
+  }
+
+  get serializer() {
+    return this.#serializer;
+  }
+
   async init() {
-    await this.#mongo.getClient();
+    await Promise.all([this.#serializer.init(), this.#mongo.getClient()]);
+
+    // Do not await this as the database service should work even if redis is not ready to improve startup time
+    this.#redis.getClient();
+  }
+
+  async destroy() {
+    await this.#redis.close();
+    // MongoDB client is closed automatically when the process exits
   }
 
   async exists(opts: {
@@ -32,6 +54,10 @@ export class DatabaseService {
   }): Promise<boolean> {
     const count = await this.count(opts);
     return count > 0;
+  }
+
+  get cacheEnabled() {
+    return this.#module.conf.cache.enabled && this.#redis.isReady();
   }
 
   async count(opts: {
@@ -52,28 +78,29 @@ export class DatabaseService {
       options.session = await opts.sessionManager.getSessionForModel(opts.model);
     }
 
-    // const cacheEnabled = !opts.disableCache && !model.disableCache && this.#cacheStrategy.isReady();
-    // const cacheKey =
-    //   cacheEnabled &&
-    //   this.getOperationCacheKey({
-    //     model,
-    //     filter,
-    //     options,
-    //     operation: "count",
-    //   });
+    const cacheEnabled = this.cacheEnabled && !opts.disableCache && !opts.model.disableCache;
 
-    // if (cacheEnabled) {
-    //   const cached = await this.#cacheStrategy.get(cacheKey);
-    //   if (cached) {
-    //     return parseInt(cached.toString());
-    //   }
-    // }
+    const cacheKey =
+      cacheEnabled &&
+      this.#redis.getOperationCacheKey({
+        model: opts.model,
+        filter,
+        options,
+        operation: "count",
+      });
+
+    if (cacheEnabled && cacheKey) {
+      const cached = await this.#redis.get(cacheKey);
+      if (cached) {
+        return parseInt(cached.toString());
+      }
+    }
 
     const count = await this.#mongo.count({ model: opts.model, filter, options });
 
-    // if (cacheEnabled && !options.session) {
-    //   this.#cacheStrategy.set(cacheKey, Buffer.from(count.toString()), cacheDataTTL);
-    // }
+    if (cacheEnabled && !options.session && cacheKey) {
+      this.#redis.set(cacheKey, Buffer.from(count.toString()), this.#module.conf.cache.ttl);
+    }
 
     return count || 0;
   }
@@ -93,28 +120,28 @@ export class DatabaseService {
       options.session = await opts.sessionManager.getSessionForModel(opts.model);
     }
 
-    // const cacheEnabled = !opts.disableCache && !model.disableCache && this.#cacheStrategy.isReady();
-    // const cacheKey =
-    //   cacheEnabled &&
-    //   this.getOperationCacheKey({
-    //     model,
-    //     filter,
-    //     options,
-    //     operation: "findDocument",
-    //   });
+    const cacheEnabled = this.cacheEnabled && !opts.disableCache && !opts.model.disableCache;
+    const cacheKey =
+      cacheEnabled &&
+      this.#redis.getOperationCacheKey({
+        model: opts.model,
+        filter,
+        options,
+        operation: "findDocument",
+      });
 
-    // if (cacheEnabled) {
-    //   const cached = await this.#cacheStrategy.get(cacheKey);
-    //   if (cached) {
-    //     return ModelService.get(model).fromBuffer(cached) as InferModelDef<M, "data">;
-    //   }
-    // }
+    if (cacheEnabled && cacheKey) {
+      const cached = await this.#redis.get(cacheKey);
+      if (cached) {
+        return this.#serializer.fromBuffer<M>(cached);
+      }
+    }
 
     const document = await this.#mongo.findOne({ model: opts.model, filter, options });
 
-    // if (cacheEnabled && !options.session) {
-    //   this.#cacheStrategy.set(cacheKey, ModelService.get(model).toBuffer(document), cacheDataTTL);
-    // }
+    if (cacheEnabled && !options.session && cacheKey) {
+      this.#redis.set(cacheKey, this.#serializer.toBuffer(document), this.#module.conf.cache.ttl);
+    }
 
     return document;
   }
@@ -148,28 +175,28 @@ export class DatabaseService {
       options.session = await opts.sessionManager.getSessionForModel(opts.model);
     }
 
-    // const cacheEnabled = !opts.disableCache && !model.disableCache && this.#cacheStrategy.isReady();
-    // const cacheKey =
-    //   cacheEnabled &&
-    //   this.getOperationCacheKey({
-    //     model,
-    //     filter,
-    //     options,
-    //     operation: "findMultiple",
-    //   });
+    const cacheEnabled = this.cacheEnabled && !opts.disableCache && !opts.model.disableCache;
+    const cacheKey =
+      cacheEnabled &&
+      this.#redis.getOperationCacheKey({
+        model,
+        filter,
+        options,
+        operation: "findMultiple",
+      });
 
-    // if (cacheEnabled) {
-    //   const cached = await this.#cacheStrategy.get(cacheKey);
-    //   if (cached) {
-    //     return ModelService.get(model).fromBufferList(cached) as Array<InferModelDef<M, "data">>;
-    //   }
-    // }
+    if (cacheEnabled && cacheKey) {
+      const cached = await this.#redis.get(cacheKey);
+      if (cached) {
+        return this.#serializer.fromBufferList<M>(cached) || [];
+      }
+    }
 
     const documents = await this.#mongo.findMany({ model, filter, options });
 
-    // if (cacheEnabled && !options.session) {
-    //   this.#cacheStrategy.set(cacheKey, ModelService.get(model).toBufferList(documents), cacheDataTTL);
-    // }
+    if (cacheEnabled && !options.session && cacheKey) {
+      this.#redis.set(cacheKey, this.#serializer.toBufferList(documents), this.#module.conf.cache.ttl);
+    }
 
     return documents;
   }
@@ -223,16 +250,16 @@ export class DatabaseService {
       });
     }
 
-    // await this.clearCacheForModel(model);
+    await this.#redis.clearCacheForModel(model);
 
-    // if (!options?.session) {
-    //   const cacheKey = this.getOperationCacheKey({
-    //     model,
-    //     filter: { _id: inserted._id },
-    //     operation: "findDocument",
-    //   });
-    //   this.#cacheStrategy.set(cacheKey, ModelService.get(model).toBuffer(inserted), cacheDataTTL);
-    // }
+    if (!options?.session) {
+      const cacheKey = this.#redis.getOperationCacheKey({
+        model,
+        filter: { _id: inserted._id },
+        operation: "findDocument",
+      });
+      this.#redis.set(cacheKey, this.#serializer.toBuffer(inserted), this.#module.conf.cache.ttl);
+    }
 
     return model.hydrate(inserted);
   }
@@ -256,16 +283,16 @@ export class DatabaseService {
 
     const inserted = await this.#mongo.insertMany({ model, documents, options });
 
-    // await this.clearCacheForModel(model);
+    await this.#redis.clearCacheForModel(model);
 
-    // if (!options?.session) {
-    //   const cacheKey = this.getOperationCacheKey({
-    //     model,
-    //     filter: { _id: { $in: inserted.map(d => d._id) } },
-    //     operation: "findMultiple",
-    //   });
-    //   this.#cacheStrategy.set(cacheKey, ModelService.get(model).toBufferList(inserted), cacheDataTTL);
-    // }
+    if (!options?.session) {
+      const cacheKey = this.#redis.getOperationCacheKey({
+        model,
+        filter: { _id: { $in: inserted.map(d => d._id) } },
+        operation: "findMultiple",
+      });
+      this.#redis.set(cacheKey, this.#serializer.toBufferList(inserted), this.#module.conf.cache.ttl);
+    }
 
     return inserted.map(d => model.hydrate(d));
   }
@@ -291,16 +318,16 @@ export class DatabaseService {
 
     const updated = await this.#mongo.updateOne({ model, filter, update, options });
 
-    // await this.clearCacheForModel(model);
+    await this.#redis.clearCacheForModel(model);
 
-    // if (!options?.session) {
-    //   const cacheKey = this.getOperationCacheKey({
-    //     model,
-    //     filter,
-    //     operation: "findDocument",
-    //   });
-    //   this.#cacheStrategy.set(cacheKey, ModelService.get(model).toBuffer(updated), cacheDataTTL);
-    // }
+    if (!options?.session) {
+      const cacheKey = this.#redis.getOperationCacheKey({
+        model,
+        filter,
+        operation: "findDocument",
+      });
+      this.#redis.set(cacheKey, this.#serializer.toBuffer(updated), this.#module.conf.cache.ttl);
+    }
 
     return updated;
   }
@@ -332,16 +359,16 @@ export class DatabaseService {
       });
     }
 
-    // await this.clearCacheForModel(model);
+    await this.#redis.clearCacheForModel(model);
 
-    // if (!options?.session) {
-    //   const cacheKey = this.getOperationCacheKey({
-    //     model,
-    //     filter,
-    //     operation: "findMultiple",
-    //   });
-    //   this.#cacheStrategy.set(cacheKey, ModelService.get(model).toBufferList(updated), cacheDataTTL);
-    // }
+    if (!options?.session) {
+      const cacheKey = this.#redis.getOperationCacheKey({
+        model,
+        filter,
+        operation: "findMultiple",
+      });
+      this.#redis.set(cacheKey, this.#serializer.toBufferList(updated), this.#module.conf.cache.ttl);
+    }
 
     return updated.map(d => model.hydrate(d));
   }
@@ -370,7 +397,7 @@ export class DatabaseService {
       });
     }
 
-    // await this.clearCacheForModel(model);
+    await this.#redis.clearCacheForModel(model);
 
     return true;
   }
@@ -393,9 +420,9 @@ export class DatabaseService {
 
     const deletedIds = await this.#mongo.deleteMany({ model, filter, options });
 
-    // if (deletedIds.length) {
-    //   await this.clearCacheForModel(model);
-    // }
+    if (deletedIds.length) {
+      await this.#redis.clearCacheForModel(model);
+    }
 
     return deletedIds;
   }

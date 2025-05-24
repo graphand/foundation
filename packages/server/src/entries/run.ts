@@ -21,14 +21,26 @@ const run = async () => {
       [
         ModuleDatabase,
         {
-          uri: env.DATABASE_MONGO_URI,
-          username: env.DATABASE_MONGO_USERNAME,
-          password: env.DATABASE_MONGO_PASSWORD,
-          mongoMaxTimeMS: 10000,
-          mongoMaxCount: 100000,
+          mongo: {
+            uri: env.DATABASE_MONGO_URI,
+            username: env.DATABASE_MONGO_USERNAME,
+            password: env.DATABASE_MONGO_PASSWORD,
+            maxTimeMS: 10000,
+            maxCount: 100000,
+            maxLimit: 1000,
+          },
+          redis: {
+            uri: env.DATABASE_REDIS_URI,
+            password: env.DATABASE_REDIS_PASSWORD,
+            cluster: env.DATABASE_REDIS_CLUSTER,
+          },
           hooks: {
             orderBefore: -2,
             orderAfter: 2,
+          },
+          cache: {
+            enabled: true,
+            ttl: 60 * 60 * 24, // 1 day
           },
         },
       ],

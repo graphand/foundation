@@ -17,9 +17,20 @@ const ModuleDatabaseSchema = z.object({
     maxLimit: z.number(),
   }),
 
+  redis: z.object({
+    uri: z.string().min(1),
+    password: z.string().optional(),
+    cluster: z.boolean().optional(),
+  }),
+
   hooks: z.object({
     orderBefore: z.number(),
     orderAfter: z.number(),
+  }),
+
+  cache: z.object({
+    enabled: z.boolean(),
+    ttl: z.number(),
   }),
 });
 
@@ -34,6 +45,15 @@ export class ModuleDatabase extends Module<typeof ModuleDatabaseSchema.shape> {
       maxTimeMS: 10000,
       maxCount: 100000,
       maxLimit: 1000,
+    },
+    redis: {
+      uri: "localhost:6379",
+      password: "",
+      cluster: false,
+    },
+    cache: {
+      enabled: true,
+      ttl: 60 * 60 * 24,
     },
     hooks: {
       orderBefore: -2,
@@ -64,5 +84,6 @@ export class ModuleDatabase extends Module<typeof ModuleDatabaseSchema.shape> {
 
   async [symbolModuleDestroy]() {
     console.log("ModuleDatabase destroy");
+    await this.service.destroy();
   }
 }
