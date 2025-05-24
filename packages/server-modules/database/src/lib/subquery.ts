@@ -35,19 +35,19 @@ export const decodeSubquery = async <T extends typeof Model>(model: T, object: J
             throw new Error(`Property "${path.concat(key.split("."))}" is not a relation`);
           }
 
-          const subqueryModel = model.getClass(ref);
+          const targetModel = model.getClass(ref);
 
-          await subqueryModel.initialize();
+          await targetModel.initialize();
 
-          const { filter, options } = await parseQuery(subqueryModel, {
+          const parsedQuery = await parseQuery(targetModel, {
             filter: input[key].$subquery,
-            limit: input[key].$subqueryLimit,
+            limit: input[key].$subqueryLimit || 1000,
           });
 
           const request = getRequestHelper(model);
           const subqueryResults = await request.server
             .get(ModuleDatabase)
-            .service.findMany({ model: subqueryModel, filter, options });
+            .service.findMany({ model: targetModel, parsedQuery });
           const ids = subqueryResults.map(r => r._id);
 
           input[key] = { $in: ids };

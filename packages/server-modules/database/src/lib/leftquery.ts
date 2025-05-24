@@ -27,8 +27,9 @@ export const decodeLeftquery = async <T extends typeof Model>(model: T, object: 
         }
 
         const leftquery = input[key].$leftquery;
+
         if (!leftquery.from || !leftquery.filter || !leftquery.property) {
-          continue;
+          throw new Error("Invalid leftquery object");
         }
 
         const request = getRequestHelper(model);
@@ -71,14 +72,12 @@ export const decodeLeftquery = async <T extends typeof Model>(model: T, object: 
           throw new Error(`Property "${leftquery.property}" is not a relation or an array of relations`);
         }
 
-        const { filter, options } = await parseQuery(targetModel, {
+        const parsedQuery = await parseQuery(targetModel, {
           filter: leftquery.filter,
-          limit: leftquery.$leftqueryLimit || 1000,
+          limit: input[key].$leftqueryLimit || 1000,
         });
 
-        const results = await request.server
-          .get(ModuleDatabase)
-          .service.findMany({ model: targetModel, filter, options });
+        const results = await request.server.get(ModuleDatabase).service.findMany({ model: targetModel, parsedQuery });
 
         // Extract the property values from the results
         const propertyValues: Array<ObjectId> = [];
