@@ -1,4 +1,4 @@
-import { Adapter, Model, ModelList, TransactionCtx } from "@graphand/core";
+import { Adapter, Model, ModelList } from "@graphand/core";
 import { RequestHelper } from "./request-helper.js";
 import { ModuleDatabase } from "@graphand/server-module-database";
 import { DataDoc } from "./models/DataDoc.js";
@@ -13,7 +13,7 @@ export class ServerAdapter<T extends typeof Model = typeof Model> extends Adapte
   }
 
   fetcher: Adapter<T>["fetcher"] = {
-    count: async (_, ctx: TransactionCtx) => {
+    count: async (_, ctx) => {
       const request = this.getRequestHelper();
       const service = request.server.get(ModuleDatabase).service;
 
@@ -29,7 +29,7 @@ export class ServerAdapter<T extends typeof Model = typeof Model> extends Adapte
 
       return await service.count({ ...ctx, model: this.model });
     },
-    get: async (_, ctx: TransactionCtx) => {
+    get: async (_, ctx) => {
       const request = this.getRequestHelper();
       const service = request.server.get(ModuleDatabase).service;
 
@@ -56,7 +56,7 @@ export class ServerAdapter<T extends typeof Model = typeof Model> extends Adapte
         model: this.model,
       });
     },
-    getList: async ([query], ctx: TransactionCtx) => {
+    getList: async ([query], ctx) => {
       if (this.model.configuration.single) {
         return;
       }
@@ -83,7 +83,7 @@ export class ServerAdapter<T extends typeof Model = typeof Model> extends Adapte
 
       return new ModelList(this.model, rows, query, count);
     },
-    createOne: async (_, ctx: TransactionCtx) => {
+    createOne: async (_, ctx) => {
       if (this.model.configuration.single) {
         throw new Error("Single model cannot be created");
       }
@@ -95,7 +95,7 @@ export class ServerAdapter<T extends typeof Model = typeof Model> extends Adapte
         model: this.model,
       });
     },
-    createMultiple: async (_, ctx: TransactionCtx) => {
+    createMultiple: async (_, ctx) => {
       if (this.model.configuration.single) {
         throw new Error("Single model cannot be created");
       }
@@ -103,6 +103,68 @@ export class ServerAdapter<T extends typeof Model = typeof Model> extends Adapte
       const service = this.getRequestHelper().server.get(ModuleDatabase).service;
 
       return await service.insertMany({
+        ...ctx,
+        model: this.model,
+      });
+    },
+    updateOne: async ([, update], ctx) => {
+      let model: typeof Model = this.model;
+
+      if (model.configuration.single) {
+        const DocModel = this.getRequestHelper().model(DataDoc);
+        DocModel.modelSlug = model.configuration.slug;
+        model = DocModel;
+      }
+
+      if (Array.isArray(update)) {
+        throw new Error("Update one does not support array of updates");
+      }
+
+      const service = this.getRequestHelper().server.get(ModuleDatabase).service;
+
+      const data = await service.updateOne({
+        ...ctx,
+        model,
+      });
+
+      if (!data || typeof data !== "object") {
+        throw new Error("Failed to update document");
+      }
+
+      return this.model.hydrate(data);
+    },
+    updateMultiple: async ([_, update], ctx) => {
+      if (Array.isArray(update)) {
+        throw new Error("Update one does not support array of updates");
+      }
+
+      const service = this.getRequestHelper().server.get(ModuleDatabase).service;
+
+      return await service.updateMany({
+        ...ctx,
+        model: this.model,
+      });
+    },
+    deleteOne: async (_, ctx) => {
+      if (this.model.configuration.single) {
+        throw new Error("Single model cannot be deleted");
+      }
+
+      const service = this.getRequestHelper().server.get(ModuleDatabase).service;
+
+      return await service.deleteOne({
+        ...ctx,
+        model: this.model,
+      });
+    },
+    deleteMultiple: async (_, ctx) => {
+      if (this.model.configuration.single) {
+        throw new Error("Single model cannot be deleted");
+      }
+
+      const service = this.getRequestHelper().server.get(ModuleDatabase).service;
+
+      return await service.deleteMany({
         ...ctx,
         model: this.model,
       });

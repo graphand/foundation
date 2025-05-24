@@ -265,4 +265,134 @@ export class DatabaseService {
 
     return inserted.map(d => model.hydrate(d));
   }
+
+  async updateOne<M extends typeof Model>(opts: {
+    model: M;
+    parsedQuery?: ParsedQuery;
+    parsedPayload?: JSONObject;
+    mergeFilter?: Record<string, any>;
+    mergeOptions?: Record<string, any>;
+    mergeUpdate?: Record<string, any>;
+    sessionManager?: SessionManager;
+  }): Promise<ModelData<M>> {
+    const { model } = opts;
+    const options = Object.assign({}, opts?.parsedQuery?.options, opts?.mergeOptions);
+    const filter = Object.assign({}, opts?.parsedQuery?.filter, opts?.mergeFilter);
+
+    if (opts.sessionManager && !options.session) {
+      options.session = await opts.sessionManager.getSessionForModel(opts.model);
+    }
+
+    const update = (opts.parsedPayload || opts.mergeUpdate) as ModelData<M>;
+
+    const updated = await this.#mongo.updateOne({ model, filter, update, options });
+
+    // await this.clearCacheForModel(model);
+
+    // if (!options?.session) {
+    //   const cacheKey = this.getOperationCacheKey({
+    //     model,
+    //     filter,
+    //     operation: "findDocument",
+    //   });
+    //   this.#cacheStrategy.set(cacheKey, ModelService.get(model).toBuffer(updated), cacheDataTTL);
+    // }
+
+    return updated;
+  }
+
+  async updateMany<M extends typeof Model>(opts: {
+    model: M;
+    parsedQuery?: ParsedQuery;
+    parsedPayload?: JSONObject;
+    mergeFilter?: Record<string, any>;
+    mergeOptions?: Record<string, any>;
+    mergeUpdate?: Record<string, any>;
+    sessionManager?: SessionManager;
+  }): Promise<Array<ModelInstance<M>>> {
+    const { model } = opts;
+    const options = Object.assign({}, opts?.parsedQuery?.options, opts?.mergeOptions);
+    const filter = Object.assign({}, opts?.parsedQuery?.filter, opts?.mergeFilter);
+
+    if (opts.sessionManager && !options.session) {
+      options.session = await opts.sessionManager.getSessionForModel(opts.model);
+    }
+
+    const update = (opts.parsedPayload || opts.mergeUpdate) as ModelData<M>;
+
+    const updated = await this.#mongo.updateMany({ model, filter, update, options });
+
+    if (!updated) {
+      throw new ServerError({
+        message: "Failed to update documents",
+      });
+    }
+
+    // await this.clearCacheForModel(model);
+
+    // if (!options?.session) {
+    //   const cacheKey = this.getOperationCacheKey({
+    //     model,
+    //     filter,
+    //     operation: "findMultiple",
+    //   });
+    //   this.#cacheStrategy.set(cacheKey, ModelService.get(model).toBufferList(updated), cacheDataTTL);
+    // }
+
+    return updated.map(d => model.hydrate(d));
+  }
+
+  async deleteOne<M extends typeof Model>(opts: {
+    model: M;
+    parsedQuery?: ParsedQuery;
+    mergeFilter?: Record<string, any>;
+    mergeOptions?: Record<string, any>;
+    disableCache?: boolean;
+    sessionManager?: SessionManager;
+  }): Promise<true> {
+    const { model } = opts;
+    const options = Object.assign({}, opts?.parsedQuery?.options, opts?.mergeOptions);
+    const filter = Object.assign({}, opts?.parsedQuery?.filter, opts?.mergeFilter);
+
+    if (opts.sessionManager && !options.session) {
+      options.session = await opts.sessionManager.getSessionForModel(opts.model);
+    }
+
+    const deleted = await this.#mongo.deleteOne({ model, filter, options });
+
+    if (!deleted) {
+      throw new ServerError({
+        message: "Failed to delete document",
+      });
+    }
+
+    // await this.clearCacheForModel(model);
+
+    return true;
+  }
+
+  async deleteMany<M extends typeof Model>(opts: {
+    model: M;
+    parsedQuery?: ParsedQuery;
+    mergeFilter?: Record<string, any>;
+    mergeOptions?: Record<string, any>;
+    disableCache?: boolean;
+    sessionManager?: SessionManager;
+  }): Promise<string[]> {
+    const { model } = opts;
+    const options = Object.assign({}, opts?.parsedQuery?.options, opts?.mergeOptions);
+    const filter = Object.assign({}, opts?.parsedQuery?.filter, opts?.mergeFilter);
+
+    if (opts.sessionManager && !options.session) {
+      options.session = await opts.sessionManager.getSessionForModel(opts.model);
+    }
+
+    const deletedIds = await this.#mongo.deleteMany({ model, filter, options });
+
+    // if (deletedIds.length) {
+    //   await this.clearCacheForModel(model);
+    // }
+
+    return deletedIds;
+  }
 }

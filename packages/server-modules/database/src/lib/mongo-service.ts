@@ -1,11 +1,14 @@
 import {
   CountDocumentsOptions,
+  DeleteOptions,
   Document,
+  FindOneAndUpdateOptions,
   FindOptions,
   InsertOneOptions,
   MongoClient,
   MongoClientOptions,
   MongoServerError,
+  ObjectId,
 } from "mongodb";
 import {
   JSONObject,
@@ -83,6 +86,16 @@ export class MongoService {
     }
 
     return this.#client;
+  }
+
+  async getIds(opts: { model: typeof Model; filter: Record<string, any>; options?: Record<string, any> }) {
+    const documents = await this.findMany(opts);
+
+    if (!documents?.length) {
+      return [];
+    }
+
+    return documents.map((doc: any) => doc._id) as ObjectId[];
   }
 
   getDbName(): string {
@@ -295,6 +308,117 @@ export class MongoService {
       }
 
       return retrieved;
+    } catch (e) {
+      throw this.parseWriteError(e);
+    }
+  }
+
+  async updateOne<M extends typeof Model>(opts: {
+    model: M;
+    filter: Record<string, any>;
+    update: Record<string, any>;
+    options?: CustomOptions<FindOneAndUpdateOptions>;
+  }): Promise<ModelData<M>> {
+    const { model, filter, update, options } = opts;
+    const collection = await this.modelCollection(model);
+
+    try {
+      const res = await collection.findOneAndUpdate(filter, update, {
+        ...options,
+        returnDocument: "after",
+        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+      });
+
+      return res as ModelData<M>;
+    } catch (e) {
+      throw this.parseWriteError(e);
+    }
+  }
+
+  async updateMany<M extends typeof Model>(opts: {
+    model: M;
+    filter: Record<string, any>;
+    update: Record<string, any>;
+    options?: CustomOptions<FindOneAndUpdateOptions>;
+  }): Promise<ModelData<M>[]> {
+    const { model, update, options } = opts;
+    const collection = await this.modelCollection(model);
+
+    const ids = await this.getIds(opts);
+
+    if (!ids.length) {
+      return [];
+    }
+
+    try {
+      const filter = { _id: { $in: ids } };
+      const res = await collection.updateMany(filter, update, {
+        ...options,
+        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+      });
+
+      if (!res.matchedCount) {
+        return [];
+      }
+
+      return this.findMany({ model, filter, options });
+    } catch (e) {
+      throw this.parseWriteError(e);
+    }
+  }
+
+  async deleteOne<M extends typeof Model>(opts: {
+    model: M;
+    filter: Record<string, any>;
+    options?: CustomOptions<DeleteOptions>;
+  }): Promise<boolean> {
+    const { model, filter, options } = opts;
+    const collection = await this.modelCollection(model);
+
+    try {
+      const res = await collection.deleteOne(filter, {
+        ...options,
+        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+      });
+
+      return res.deletedCount === 1;
+    } catch (e) {
+      throw this.parseWriteError(e);
+    }
+  }
+
+  async deleteMany<M extends typeof Model>(opts: {
+    model: M;
+    filter: Record<string, any>;
+    options?: CustomOptions<DeleteOptions>;
+  }): Promise<string[]> {
+    const { model, filter, options } = opts;
+    const collection = await this.modelCollection(model);
+
+    // First get the IDs of documents to be deleted
+    const ids = await this.getIds({ model, filter, options });
+
+    if (!ids.length) {
+      return [];
+    }
+
+    try {
+      const deleteFilter = { _id: { $in: ids } };
+      const res = await collection.deleteMany(deleteFilter, {
+        ...options,
+        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+      });
+
+      if (res.deletedCount !== ids.length) {
+        throw new Error("Failed to delete documents");
+      }
+
+      if (!res.deletedCount) {
+        return [];
+      }
+
+      // Return the string representation of the deleted IDs
+      return ids.map(id => String(id));
     } catch (e) {
       throw this.parseWriteError(e);
     }
