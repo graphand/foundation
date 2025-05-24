@@ -6,10 +6,14 @@ export type ParsedQuery = Awaited<ReturnType<typeof parseQuery>>;
 
 declare module "@graphand/core" {
   export namespace Model {
+    // eslint-disable-next-line no-unused-vars
     let isSystem: boolean;
+    // eslint-disable-next-line no-unused-vars
     let disableCache: boolean;
+    // eslint-disable-next-line no-unused-vars
     let dbSlug: string;
-    let ttl: number; // The ttl in seconds for the model data
+    // eslint-disable-next-line no-unused-vars
+    let ttl: number;
   }
 
   export interface TransactionCtx {

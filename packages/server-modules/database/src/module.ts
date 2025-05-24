@@ -8,12 +8,14 @@ import { init as initHooksParseQuery } from "./hooks/parse-query.js";
 import { init as initHooksSystemFields } from "./hooks/system-fields.js";
 
 const ModuleDatabaseSchema = z.object({
-  uri: z.string().min(1),
-  username: z.string().optional(),
-  password: z.string().optional(),
-
-  mongoMaxTimeMS: z.number(),
-  mongoMaxCount: z.number(),
+  mongo: z.object({
+    uri: z.string().min(1),
+    username: z.string().optional(),
+    password: z.string().optional(),
+    maxTimeMS: z.number(),
+    maxCount: z.number(),
+    maxLimit: z.number(),
+  }),
 
   hooks: z.object({
     orderBefore: z.number(),
@@ -25,13 +27,18 @@ export class ModuleDatabase extends Module<typeof ModuleDatabaseSchema.shape> {
   static moduleName = "database" as const;
   schema = ModuleDatabaseSchema;
   defaults = {
-    uri: "",
+    mongo: {
+      uri: "",
+      username: "",
+      password: "",
+      maxTimeMS: 10000,
+      maxCount: 100000,
+      maxLimit: 1000,
+    },
     hooks: {
       orderBefore: -2,
       orderAfter: 2,
     },
-    mongoMaxTimeMS: 10000,
-    mongoMaxCount: 100000,
   };
 
   service: DatabaseService;

@@ -14,6 +14,10 @@ export class DatabaseService {
     this.#mongo = new MongoService(module);
   }
 
+  get mongo() {
+    return this.#mongo;
+  }
+
   async init() {
     await this.#mongo.getClient();
   }

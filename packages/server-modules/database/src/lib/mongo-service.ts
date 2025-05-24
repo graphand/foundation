@@ -58,7 +58,7 @@ export class MongoService {
   }
 
   getUri(db?: string) {
-    let uri = this.#module.conf.uri;
+    let uri = this.#module.conf.mongo.uri;
 
     if (db) {
       uri = uri.replace(/\/[^/?]*(?=[?]|$)|(?<=\w)(?=[?]|$)/, `/${db}`);
@@ -77,7 +77,7 @@ export class MongoService {
       const options: MongoClientOptions = {
         appName: this.#module.server.appName,
       };
-      const { username, password } = this.#module.conf;
+      const { username, password } = this.#module.conf.mongo;
       if (username && password) {
         options.authSource = "admin";
         options.auth = { username, password };
@@ -120,7 +120,7 @@ export class MongoService {
     const client = await this.getClient();
     const session = client.startSession();
     session.startTransaction({
-      maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+      maxTimeMS: this.#module.conf.mongo.maxTimeMS,
     });
     return session;
   }
@@ -166,8 +166,8 @@ export class MongoService {
     try {
       let count: number;
 
-      const maxCount = this.#module.conf.mongoMaxCount;
-      const maxTimeMS = this.#module.conf.mongoMaxTimeMS;
+      const maxCount = this.#module.conf.mongo.maxCount;
+      const maxTimeMS = this.#module.conf.mongo.maxTimeMS;
 
       if (filter && Object.keys(filter).length) {
         count = await collection.countDocuments(filter, {
@@ -203,7 +203,7 @@ export class MongoService {
     try {
       const doc = await collection.findOne(filter, {
         ...options,
-        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+        maxTimeMS: this.#module.conf.mongo.maxTimeMS,
       });
 
       if (!doc) {
@@ -235,7 +235,7 @@ export class MongoService {
       const documents = await collection
         .find(filter, {
           ...options,
-          maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+          maxTimeMS: this.#module.conf.mongo.maxTimeMS,
         })
         .toArray();
 
@@ -262,7 +262,7 @@ export class MongoService {
     try {
       const res = await collection.insertOne(document as Document, {
         ...options,
-        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+        maxTimeMS: this.#module.conf.mongo.maxTimeMS,
       });
 
       if (!res.insertedId) {
@@ -293,7 +293,7 @@ export class MongoService {
       const res = await collection.insertMany(documents as Document[], {
         ...options,
         ordered: true,
-        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+        maxTimeMS: this.#module.conf.mongo.maxTimeMS,
       });
 
       if (!res.insertedIds) {
@@ -326,7 +326,7 @@ export class MongoService {
       const res = await collection.findOneAndUpdate(filter, update, {
         ...options,
         returnDocument: "after",
-        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+        maxTimeMS: this.#module.conf.mongo.maxTimeMS,
       });
 
       return res as ModelData<M>;
@@ -354,7 +354,7 @@ export class MongoService {
       const filter = { _id: { $in: ids } };
       const res = await collection.updateMany(filter, update, {
         ...options,
-        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+        maxTimeMS: this.#module.conf.mongo.maxTimeMS,
       });
 
       if (!res.matchedCount) {
@@ -378,7 +378,7 @@ export class MongoService {
     try {
       const res = await collection.deleteOne(filter, {
         ...options,
-        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+        maxTimeMS: this.#module.conf.mongo.maxTimeMS,
       });
 
       return res.deletedCount === 1;
@@ -406,7 +406,7 @@ export class MongoService {
       const deleteFilter = { _id: { $in: ids } };
       const res = await collection.deleteMany(deleteFilter, {
         ...options,
-        maxTimeMS: this.#module.conf.mongoMaxTimeMS,
+        maxTimeMS: this.#module.conf.mongo.maxTimeMS,
       });
 
       if (res.deletedCount !== ids.length) {

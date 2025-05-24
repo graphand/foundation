@@ -72,12 +72,11 @@ class SessionManager {
       throw new Error(`Session has ended. Unable to get session for model ${model.slug}`);
     }
 
-    const server = this.#request.server.checkModule(ModuleDatabase);
-    const service = server.get("database").service;
-    const dbName = service.getDbNameForModel(model);
+    const service = this.#request.server.get(ModuleDatabase).service;
+    const dbName = service.mongo.getDbNameForModel(model);
 
     if (!this.#sessionsMap.has(dbName)) {
-      const session = service.createSession();
+      const session = service.mongo.createSession();
       this.#sessionsMap.set(dbName, session);
 
       return await session;
